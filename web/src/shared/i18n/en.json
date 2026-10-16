@@ -216,7 +216,7 @@
     "thinkingOff": "Disabled",
     "contextTokens": "8,192 tokens",
     "benchmark": "Test speed",
-    "benchmarkHint": "Ratings are relative. Measure actual speed on your computer.",
+    "benchmarkHint": "Speed is measured on your computer and saved. Selecting a model starts a test automatically.",
     "benchmarkResult": "Measured on your PC",
     "benchmarkSpeed": "{speed} tokens/s",
     "benchmarkLatency": "{ms} ms",
@@ -310,7 +310,7 @@
     "flows": {
         "title": "Workflows",
         "selectFlow": "Select workflow",
-        "create": "Create",
+        "create": "Create workflow",
         "newFlow": "New workflow",
         "welcome": "Hi, '{{sender}}'!",
         "name": "Workflow name",
@@ -354,7 +354,11 @@
         "noReply": "Workflow completed without a message",
         "empty": "Build your own bot",
         "emptyHint": "Connect commands, AI, conditions and local data.",
-        "testTitle": "Test scenario"
+        "testTitle": "Test scenario",
+        "active": "Enabled",
+        "inactive": "Disabled",
+        "back": "Back to workflows",
+        "chatCount": "{count} chats"
     },
     "speed": {
         "fastest": "Very fast",
@@ -372,7 +376,7 @@
     "memoryRequirement": "from {gb} GB",
     "thinkingOn": "Reasoning",
     "benchmarkInput": "Reply in one short sentence: how are you?",
-    "modelResourceHint": "RAM and speed are estimates. Use the test button to measure your hardware; download sizes come from the Ollama catalog.",
+    "modelResourceHint": "Context is the model’s maximum capacity listed by Ollama. The app uses an 8,192-token window to limit memory use. Speed depends on your hardware, conversation length and reasoning.",
     "metricsNav": "Resource charts",
     "flowsNav": "Workflows",
     "modelFamily": {
@@ -487,5 +491,12 @@
         "count": "{count} of {total} models",
         "empty": "No matching models",
         "clear": "Clear search"
-    }
+    },
+    "cancelDownload": "Cancel download",
+    "cancelDownloadAction": "Cancel",
+    "cancellingDownload": "Cancelling…",
+    "benchmarkPending": "Test required",
+    "benchmarkAfterInstall": "After installation",
+    "modelDefaultOption": "Default · {name}",
+    "modelDefaultHint": "This conversation follows the model selected in Models. You can choose a separate model."
 }

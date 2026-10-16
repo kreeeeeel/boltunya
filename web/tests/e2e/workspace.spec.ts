@@ -80,7 +80,9 @@ test.beforeEach(async ({page}) => {
                     chat.rule = request.postDataJSON();
                 }
             }
-            await route.fulfill({json: request.method() === 'GET' ? history : {ok: true}});
+            const before = new URL(request.url()).searchParams.get('before');
+            const page = before ? history.filter((message) => Number(message.id) < Number(before)) : history;
+            await route.fulfill({json: request.method() === 'GET' ? page : {ok: true}});
         } else if (path === '/api/settings') {
             Object.assign(state.settings, request.postDataJSON());
             await route.fulfill({json: {ok: true}});
@@ -122,6 +124,7 @@ test('chat selection, sending, filtering and saving a rule use the real API flow
     const savedRule = (await saved).postDataJSON();
     expect(savedRule.contextMessages).toBeGreaterThan(0);
     expect(savedRule.model).toBe('gemma3:4b');
+    expect(savedRule.useDefaultModel).toBe(false);
     expect(savedRule.internetAccess).toBe(false);
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.getByRole('textbox', {name: 'Поиск по диалогам'}).fill('Марк');
@@ -718,7 +721,7 @@ test('model cards compare capabilities and measure actual local response speed',
     const table = page.getByRole('table', {name: 'Qwen 3 · 0.6B', exact: true});
     await expect(table).toContainText('Скорость ответа');
     await expect(table).toContainText('Рассуждения');
-    await expect(table).toContainText('8 192 токенов');
+    await expect(table).toContainText('40 960 токенов');
     const request = page.waitForRequest('**/api/preview');
     await page.getByRole('button', {name: 'Проверить скорость', exact: true}).first().click();
     const body = (await request).postDataJSON();
@@ -921,6 +924,18 @@ test('all writing styles have emoji and rough styles and imitation survive savin
     });
     expect(aligned).toBeLessThanOrEqual(1);
     await rough.click();
+    const selectedStyle = page.getByRole('combobox', {name: 'Стиль общения', exact: true});
+    await expect(selectedStyle).toContainText('Быдланский');
+    const selectedBounds = await selectedStyle.evaluate((field) => {
+        const bounds = field.getBoundingClientRect();
+        const emoji = field.querySelector('[data-qa="style-emoji"]')?.getBoundingClientRect();
+        const name = field.querySelector('[data-qa="style-name"]')?.getBoundingClientRect();
+        return [emoji, name].map((child) =>
+            child ? Math.abs(child.y + child.height / 2 - bounds.y - bounds.height / 2) : Infinity,
+        );
+    });
+    selectedBounds.forEach((offset) => expect(offset).toBeLessThanOrEqual(1));
+    await page.screenshot({path: '../docs/resources/communication-settings.png', animations: 'disabled'});
     await expect(page.getByRole('switch', {name: 'Подстраиваться под мою переписку'})).toBeChecked();
     const save = page.waitForRequest(
         (request) => request.method() === 'PUT' && request.url().endsWith('/api/chats/41/rule'),
@@ -1126,17 +1141,32 @@ test('download progress stays inside its model card and the models page scrolls 
         'aria-valuenow',
         '43',
     );
+    const download = card.getByRole('button', {name: 'Отменить загрузку', exact: true});
+    await expect(download).toContainText('43%');
+    await expect(download.getByText('43%', {exact: true})).toHaveCSS('opacity', '1');
+    await download.scrollIntoViewIfNeeded();
+    await page.screenshot({path: '../docs/resources/model-download.png', animations: 'disabled'});
+    await download.hover();
+    await expect(download.getByText('43%', {exact: true})).toHaveCSS('opacity', '0');
+    await expect(download.getByText('Отменить', {exact: true})).toHaveCSS('opacity', '1');
     state.engine.progress = 78;
     await expect(card.getByRole('progressbar', {name: 'Прогресс загрузки'})).toHaveAttribute(
         'aria-valuenow',
         '78',
     );
     await page.setViewportSize({width: 900, height: 580});
-    const footer = page.getByText(/Оценки относительные. Проверьте реальную скорость/);
+    const footer = page.getByText(/Скорость измеряется на вашем компьютере и сохраняется/);
     await footer.scrollIntoViewIfNeeded();
     await expect(footer).toBeInViewport();
     const bounds = await footer.boundingBox();
     expect((bounds?.y ?? 0) + (bounds?.height ?? 0)).toBeLessThanOrEqual(580);
+    await page.route('**/api/models/cancel', async (route) => {
+        state.engine.downloading = '';
+        await route.fulfill({json: {ok: true}});
+    });
+    await download.click();
+    await expect(card.getByRole('progressbar')).toHaveCount(0);
+    await expect(card.getByRole('button', {name: 'Скачать модель', exact: true})).toBeVisible();
 });
 
 test('empty activity is centered and uses the generated illustration', async ({page}) => {
@@ -1272,7 +1302,11 @@ test('visual flow draft can be tested without saving or sending messages', async
         await route.fulfill({json: {text: 'Привет, Тест!'}});
     });
     await page.locator('[data-qa="nav-flows"]').click();
-    await page.getByRole('button', {name: 'Создать', exact: true}).click();
+    await expect(page.locator('[data-qa="flow-toolbar"]')).toHaveCount(0);
+    await expect(
+        page.locator('[data-qa="flow-empty"]').getByRole('button', {name: 'Создать сценарий', exact: true}),
+    ).toBeVisible();
+    await page.getByRole('button', {name: 'Создать сценарий', exact: true}).click();
     await expect(page.locator('.react-flow__node')).toHaveCount(2);
     for (const qa of ['flow-toolbar', 'flow-palette', 'flow-canvas']) {
         await expect(page.locator(`[data-qa="${qa}"]`)).toHaveCSS('border-radius', '18px');
@@ -1309,6 +1343,15 @@ test('visual flow draft can be tested without saving or sending messages', async
         })
         .toBe(true);
     await page.screenshot({path: '../docs/resources/flows.png', animations: 'disabled'});
+    await page.getByRole('button', {name: 'К сценариям', exact: true}).click();
+    const card = page.locator('[data-qa="flow-card"]');
+    await expect(card).toHaveCount(1);
+    await expect(card).toContainText('/start');
+    await expect(card).toContainText('Выключен');
+    await page.screenshot({path: '../docs/resources/flow-library.png', animations: 'disabled'});
+    await expect(page.locator('[data-qa="flow-toolbar"]')).toHaveCount(0);
+    await card.click();
+    await expect(page.locator('.react-flow__node')).toHaveCount(2);
 });
 
 test('group settings support per-chat mention mode and disabled global default', async ({page}) => {

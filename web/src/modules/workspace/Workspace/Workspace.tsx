@@ -547,6 +547,7 @@ export function Workspace() {
                     key={`rule:${editing.id}`}
                     chat={editing}
                     engine={state?.engine}
+                    defaultModel={state.settings.defaultModel}
                     customStyles={state.settings.customStyles ?? []}
                     onClose={() => setEditing(null)}
                     onCollectContext={() => setContextChat(editing)}

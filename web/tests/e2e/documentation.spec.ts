@@ -118,7 +118,7 @@ test('documents the workspace using synthetic conversations and verifies the ref
     await page.screenshot({path: '../docs/resources/readme-models.png', animations: 'disabled'});
 
     await page.locator('[data-qa="nav-flows"]').click();
-    await page.getByRole('button', {name: 'Create', exact: true}).click();
+    await page.getByRole('button', {name: 'Create workflow', exact: true}).click();
     await expect(page.locator('.react-flow__node')).toHaveCount(2);
     await page.waitForTimeout(350);
     await page.screenshot({path: '../docs/resources/readme-flows.png', animations: 'disabled'});

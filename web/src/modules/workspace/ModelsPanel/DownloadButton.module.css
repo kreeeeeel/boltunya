@@ -1,0 +1,57 @@
+.button {
+    position: relative;
+    width: 100%;
+    min-width: 148px;
+    height: 36px;
+    flex-shrink: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: var(--g-border-radius-l);
+    background: var(--tiho-selected);
+    color: var(--g-color-text-brand);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.button:focus-visible {
+    outline: 2px solid var(--g-color-line-focus);
+    outline-offset: 2px;
+}
+
+.fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: var(--g-color-base-brand);
+    opacity: 0.23;
+    transition: width 250ms ease;
+}
+
+.content {
+    position: relative;
+    display: grid;
+    place-items: center;
+    height: 100%;
+}
+
+.percent,
+.cancel {
+    grid-area: 1 / 1;
+    transition: opacity 120ms ease;
+}
+
+.cancel {
+    opacity: 0;
+}
+
+.button:is(:hover, :focus-visible, :disabled) .percent {
+    opacity: 0;
+}
+
+.button:is(:hover, :focus-visible, :disabled) .cancel {
+    opacity: 1;
+}
+
+.button:disabled {
+    cursor: wait;
+}

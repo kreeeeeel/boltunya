@@ -29,6 +29,7 @@ export function RuleDialog({
     chat,
     engine,
     customStyles,
+    defaultModel,
     onClose,
     onCollectContext,
     onDeleted,
@@ -134,14 +135,18 @@ export function RuleDialog({
                         <Select
                             width="max"
                             size="l"
+                            controlClassName={styles.styleControl}
+                            renderSelectedOption={(option) => <>{option.content}</>}
                             value={[rule.styleId ? 'preset:' + rule.styleId : rule.style]}
                             options={[
                                 ...communicationStyles.map(({value, emoji}) => ({
                                     value,
+                                    text: t(value),
                                     content: <StyleOption emoji={emoji} name={t(value)} />,
                                 })),
                                 ...customStyles.map((style) => ({
                                     value: 'preset:' + style.id,
+                                    text: style.name,
                                     content: <StyleOption emoji={style.emoji} name={style.name} />,
                                 })),
                             ]}
@@ -168,15 +173,33 @@ export function RuleDialog({
                             <Select
                                 width="max"
                                 size="l"
-                                value={[rule.model]}
-                                options={(engine?.models ?? []).map((model) => ({
-                                    value: model.id,
-                                    content: model.name + (model.installed ? '' : ' · ' + t('notInstalled')),
-                                }))}
-                                onUpdate={(value) => setRule({...rule, model: value[0]})}
+                                value={[(rule.useDefaultModel ?? true) ? 'default' : rule.model]}
+                                options={[
+                                    {
+                                        value: 'default',
+                                        content: t('modelDefaultOption', {
+                                            name:
+                                                engine.models.find((model) => model.id === defaultModel)
+                                                    ?.name ?? defaultModel,
+                                        }),
+                                    },
+                                    ...(engine?.models ?? []).map((model) => ({
+                                        value: model.id,
+                                        content:
+                                            model.name + (model.installed ? '' : ' · ' + t('notInstalled')),
+                                    })),
+                                ]}
+                                onUpdate={([model]) =>
+                                    setRule({
+                                        ...rule,
+                                        model: model === 'default' ? defaultModel : model,
+                                        useDefaultModel: model === 'default',
+                                    })
+                                }
                                 aria-label={t('model')}
                             />
                         )}
+                        <Text className={styles.hint}>{t('modelDefaultHint')}</Text>
                     </Box>
                     <Box>
                         <Text className={styles.label}>{t('instructions')}</Text>
@@ -299,7 +322,12 @@ export function RuleDialog({
                             loading={busy === 'test'}
                             disabled={
                                 !!busy ||
-                                !engine?.models.some((model) => model.id === rule.model && model.installed)
+                                !engine?.models.some(
+                                    (model) =>
+                                        model.id ===
+                                            ((rule.useDefaultModel ?? true) ? defaultModel : rule.model) &&
+                                        model.installed,
+                                )
                             }
                         >
                             <Icon data={Sparkles} />

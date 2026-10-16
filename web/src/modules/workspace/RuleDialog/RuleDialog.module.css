@@ -11,6 +11,16 @@
     padding: 8px 0 16px;
 }
 
+.styleControl {
+    padding-block: 4px;
+}
+
+.styleControl :global(.g-select-control__option-text) {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
 .enable {
     padding: 18px;
     border-radius: 14px;

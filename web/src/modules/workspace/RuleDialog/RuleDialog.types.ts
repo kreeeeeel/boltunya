@@ -4,6 +4,7 @@ export interface RuleDialogProps {
     readonly chat: Chat;
     readonly customStyles: NonNullable<AppState['settings']['customStyles']>;
     readonly engine: Engine | undefined;
+    readonly defaultModel: string;
     readonly onClose: () => void;
     readonly onCollectContext: () => void;
     readonly onDeleted: () => void;

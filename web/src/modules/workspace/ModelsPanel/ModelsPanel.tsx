@@ -6,7 +6,7 @@ import {useState} from 'react';
 import type {ModelsPanelProps} from '@/modules/workspace/ModelsPanel/ModelsPanel.types';
 import styles from '@/modules/workspace/ModelsPanel/ModelsPanel.module.css';
 import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
-import {DownloadProgress} from '@/modules/workspace/ModelsPanel/DownloadProgress';
+import {DownloadButton} from '@/modules/workspace/ModelsPanel/DownloadButton';
 import {defaultRule} from '@/shared/api/client';
 import type {Reply} from '@/shared/api/client';
 import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
@@ -20,18 +20,29 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
     const [search, setSearch] = useState('');
     const [measurements, setMeasurements] = useState<Record<string, Reply>>({});
 
-    async function benchmark(model: string) {
-        await action('benchmark-' + model, async () => {
-            const reply = dataOrThrow(
-                await api.POST('/api/preview', {
-                    body: {
-                        text: t('benchmarkInput'),
-                        rule: {...defaultRule, model, style: 'concise', maxTokens: 64},
+    async function measure(model: string) {
+        const reply = dataOrThrow(
+            await api.POST('/api/preview', {
+                body: {
+                    text: t('benchmarkInput'),
+                    rule: {
+                        ...defaultRule,
+                        model,
+                        useDefaultModel: false,
+                        style: 'concise',
+                        maxTokens: 64,
+                        internetAccess: false,
+                        useMemory: false,
+                        matchMyStyle: false,
                     },
-                }),
-            );
-            setMeasurements((previous) => ({...previous, [model]: reply}));
-        });
+                },
+            }),
+        );
+        setMeasurements((previous) => ({...previous, [model]: reply}));
+    }
+
+    async function cancelDownload() {
+        await action('cancel-download', async () => dataOrThrow(await api.POST('/api/models/cancel')));
     }
 
     async function action(name: string, callback: () => Promise<unknown>) {
@@ -80,9 +91,14 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
                                 <Text variant="subheader-2">
                                     {t(engine?.online ? 'engineOnline' : 'engineOffline')}
                                 </Text>
-                                <Text className={styles.hint}>
-                                    {t(engine.online ? 'engineReadyHint' : 'engineHint')}
-                                </Text>
+                                <Flex gap={2} alignItems="center">
+                                    {engine.warming && <Loader size="s" />}
+                                    <Text className={styles.hint}>
+                                        {engine.warming
+                                            ? t('warming', {name: engine.warming})
+                                            : t(engine.online ? 'engineReadyHint' : 'engineHint')}
+                                    </Text>
+                                </Flex>
                             </Flex>
                         </Flex>
                         {!engine?.online && (
@@ -97,18 +113,26 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
                                 >
                                     {t('startEngine')}
                                 </Button>
-                                <Button
-                                    view="action"
-                                    loading={busy === 'install'}
-                                    disabled={!!engine?.downloading}
-                                    onClick={() =>
-                                        void action('install', async () =>
-                                            dataOrThrow(await api.POST('/api/engine/install')),
-                                        )
-                                    }
-                                >
-                                    {t('installEngine')}
-                                </Button>
+                                {engine.downloading === 'Ollama' ? (
+                                    <DownloadButton
+                                        engine={engine}
+                                        busy={busy === 'cancel-download'}
+                                        onCancel={() => void cancelDownload()}
+                                    />
+                                ) : (
+                                    <Button
+                                        view="action"
+                                        loading={busy === 'install'}
+                                        disabled={!!engine?.downloading}
+                                        onClick={() =>
+                                            void action('install', async () =>
+                                                dataOrThrow(await api.POST('/api/engine/install')),
+                                            )
+                                        }
+                                    >
+                                        {t('installEngine')}
+                                    </Button>
+                                )}
                             </Flex>
                         )}
                         {engine?.online && (
@@ -117,15 +141,8 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
                             </Label>
                         )}
                     </Flex>
-                    {engine.downloading === 'Ollama' && <DownloadProgress engine={engine} />}
                 </Box>
                 {(error || engine?.error) && <Text color="danger">{error || engine?.error}</Text>}
-                {engine?.warming && (
-                    <Flex gap={3} alignItems="center" className={styles.download}>
-                        <Loader size="s" />
-                        <Text>{t('warming', {name: engine.warming})}</Text>
-                    </Flex>
-                )}
                 <Flex
                     alignItems="center"
                     justifyContent="space-between"
@@ -164,6 +181,10 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
                 <Box className={styles.cards}>
                     {models.map((model) => {
                         const index = engine.models.indexOf(model);
+                        const measurement = measurements[model.id] ?? model.measurement;
+                        const pendingMeasurement = t(
+                            model.installed ? 'benchmarkPending' : 'benchmarkAfterInstall',
+                        );
                         return (
                             <Flex
                                 direction="column"
@@ -239,21 +260,19 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
                                         ['compareSize', model.size],
                                         [
                                             'compareLatency',
-                                            measurements[model.id]
+                                            measurement
                                                 ? t('benchmarkLatency', {
-                                                      ms: measurements[model.id].durationMs,
+                                                      ms: measurement.durationMs,
                                                   })
-                                                : '—',
+                                                : pendingMeasurement,
                                         ],
                                         [
                                             'compareGeneration',
-                                            measurements[model.id]
+                                            measurement
                                                 ? t('benchmarkSpeed', {
-                                                      speed: measurements[model.id].tokensPerSecond.toFixed(
-                                                          1,
-                                                      ),
+                                                      speed: measurement.tokensPerSecond.toFixed(1),
                                                   })
-                                                : '—',
+                                                : pendingMeasurement,
                                         ],
                                     ].map(([label, value]) => (
                                         <Flex
@@ -274,27 +293,36 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
                                 </Flex>
                                 <Flex justifyContent="space-between" alignItems="center">
                                     <Text color="secondary">
-                                        {measurements[model.id] ? t('benchmarkResult') : model.size}
+                                        {measurement ? t('benchmarkResult') : model.size}
                                     </Text>
                                     <Label theme={model.installed ? 'success' : 'normal'} size="m">
                                         {t(model.installed ? 'installed' : 'notInstalled')}
                                     </Label>
                                 </Flex>
-                                {engine.downloading === model.id && <DownloadProgress engine={engine} />}
-                                {model.installed ? (
+                                {engine.downloading === model.id ? (
+                                    <DownloadButton
+                                        engine={engine}
+                                        busy={busy === 'cancel-download'}
+                                        onCancel={() => void cancelDownload()}
+                                    />
+                                ) : model.installed ? (
                                     <Button
                                         size="l"
                                         view={defaultModel === model.id ? 'outlined-info' : 'action'}
                                         disabled={defaultModel === model.id || !!busy}
                                         loading={busy === model.id}
                                         onClick={() =>
-                                            void action(model.id, async () =>
+                                            void action(model.id, async () => {
                                                 dataOrThrow(
                                                     await api.PATCH('/api/settings', {
                                                         body: {defaultModel: model.id},
                                                     }),
-                                                ),
-                                            )
+                                                );
+                                                await onRefresh();
+                                                if (!measurement) {
+                                                    await measure(model.id);
+                                                }
+                                            })
                                         }
                                     >
                                         {t(defaultModel === model.id ? 'chosen' : 'choose')}
@@ -324,7 +352,9 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
                                     view="flat-info"
                                     loading={busy === 'benchmark-' + model.id}
                                     disabled={!model.installed || !engine.online || !!busy}
-                                    onClick={() => void benchmark(model.id)}
+                                    onClick={() =>
+                                        void action('benchmark-' + model.id, () => measure(model.id))
+                                    }
                                 >
                                     <Icon data={Thunderbolt} size={16} />
                                     {t('benchmark')}
