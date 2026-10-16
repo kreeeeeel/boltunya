@@ -337,6 +337,27 @@
     margin-bottom: 4px;
 }
 
+.groupMessage {
+    width: 100%;
+    min-width: 0;
+}
+
+.senderAvatar {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+
+.groupMessage .bubble {
+    max-width: min(72%, 560px, calc(100% - 40px));
+}
+
+@media (width <= 680px) {
+    .groupMessage .bubble {
+        max-width: min(88%, calc(100% - 40px));
+    }
+}
+
 .replyQuote {
     padding: 5px 8px;
     border-left: 3px solid var(--g-color-text-brand);

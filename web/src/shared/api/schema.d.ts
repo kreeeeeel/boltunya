@@ -573,6 +573,7 @@ export interface components {
             mentionsMe?: boolean;
             topicId?: number;
             senderName?: string;
+            senderAvatarUrl?: string;
             replyToId?: string;
             replyText?: string;
             senderId?: string;

@@ -132,6 +132,94 @@ test('chat selection, sending, filtering and saving a rule use the real API flow
     expect(errors).toEqual([]);
 });
 
+test('group history shows author avatars at the end of each sender block', async ({page}) => {
+    const state = structuredClone(workspaceState);
+    state.chats[0].kind = 'group';
+    const base: Message = {
+        id: '101',
+        chatId: '41',
+        text: 'First message',
+        kind: 'text',
+        date: 1792060000,
+        outgoing: false,
+        group: true,
+        senderId: 'user:10',
+        senderName: 'Anna',
+        senderAvatarUrl: '/api/media/group-avatar',
+    };
+    await page.route('**/api/state', (route) => route.fulfill({json: state}));
+    await page.route('**/api/chats/41/messages*', (route) =>
+        route.fulfill({
+            json: [
+                base,
+                {...base, id: '102', text: 'Second message', date: base.date + 10},
+                {
+                    ...base,
+                    id: '103',
+                    text: 'Different author',
+                    date: base.date + 20,
+                    senderId: 'user:11',
+                    senderName: 'Mark',
+                    senderAvatarUrl: '',
+                },
+                {...base, id: '104', text: 'My reply', date: base.date + 30, outgoing: true},
+            ],
+        }),
+    );
+    await page.route('**/api/media/group-avatar', (route) =>
+        route.fulfill({
+            contentType: 'image/svg+xml',
+            body: '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" fill="#2878c9"/></svg>',
+        }),
+    );
+    await page.reload();
+    await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
+    const rows = page.locator('[data-qa="group-message"]');
+    await expect(rows).toHaveCount(3);
+    await expect(rows.nth(0).locator('[data-qa="message-sender-avatar"]')).toHaveCount(0);
+    await expect(rows.nth(1).locator('[data-qa="message-sender-avatar"] img')).toHaveCSS('opacity', '1');
+    await expect(rows.nth(2).locator('[data-qa="message-sender-avatar"]')).toBeVisible();
+    await expect(page.locator('[data-qa="message-sender-name"]')).toHaveText(['Anna', 'Mark']);
+    await expect(page.locator('[data-qa="message-outgoing"] [data-qa="message-sender-avatar"]')).toHaveCount(
+        0,
+    );
+    for (const width of [1440, 480]) {
+        await page.setViewportSize({width, height: 900});
+        const bounds = await rows.nth(1).evaluate((row) => {
+            const avatar = row.querySelector('[data-qa="message-sender-avatar"]')!.getBoundingClientRect();
+            const bubble = row.querySelector('[data-qa="message-incoming"]')!.getBoundingClientRect();
+            return {
+                gap: bubble.left - avatar.right,
+                bottom: Math.abs(avatar.bottom - bubble.bottom),
+                overflow: row.scrollWidth > row.clientWidth,
+            };
+        });
+        expect(bounds.gap).toBeCloseTo(8, 1);
+        expect(bounds.bottom).toBeLessThan(1);
+        expect(bounds.overflow).toBe(false);
+    }
+});
+
+test('model search icon is centered with consistent padding in both themes', async ({page}) => {
+    await page.locator('[data-qa="nav-models"]').click();
+    for (const dark of [false, true]) {
+        if (dark) await page.getByRole('button', {name: 'Сменить тему', exact: true}).click();
+        const bounds = await page.locator('[data-qa="model-search"]').evaluate((field) => {
+            const outer = field.getBoundingClientRect();
+            const icon = field.querySelector('svg')!.getBoundingClientRect();
+            const input = field.querySelector('input')!.getBoundingClientRect();
+            return {
+                center: Math.abs(icon.y + icon.height / 2 - outer.y - outer.height / 2),
+                left: icon.left - outer.left,
+                gap: input.left - icon.right,
+            };
+        });
+        expect(bounds.center).toBeLessThan(1);
+        expect(bounds.left).toBeGreaterThanOrEqual(12);
+        expect(bounds.gap).toBeGreaterThanOrEqual(8);
+    }
+});
+
 test('compact contacts align their two lines and show AI only on the avatar', async ({page}) => {
     const rows = page.locator('[data-qa="chat-row"]');
     await expect(rows.first().locator('[data-qa="chat-ai-badge"]')).toBeVisible();
@@ -196,9 +284,7 @@ test('Escape dismisses a dialog first and then closes the conversation', async (
     await expect(page.locator('[data-qa="message-incoming"]').first()).toBeVisible();
 });
 
-test('unavailable Telegram photo uses a stable fallback and switches to another chat palette', async ({
-    page,
-}) => {
+test('default and unavailable wallpapers use a plain theme background', async ({page}) => {
     const state = structuredClone(workspaceState);
     state.chats[0].wallpaper = {kind: 'wallpaper', url: '/api/media/missing-background'};
     await page.route('**/api/state', (route) => route.fulfill({json: state}));
@@ -206,19 +292,16 @@ test('unavailable Telegram photo uses a stable fallback and switches to another 
     await page.reload();
     await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
     const wallpaper = page.locator('[data-qa="chat-wallpaper"]');
-    await expect(wallpaper).toHaveCSS('background-size', '240px 240px, cover');
-    await expect
-        .poll(() => wallpaper.evaluate((element) => getComputedStyle(element).backgroundImage))
-        .toContain('chat-pattern.svg');
-    const first = await wallpaper.evaluate((element) => getComputedStyle(element).backgroundImage);
+    await expect(wallpaper).toHaveCSS('background-size', 'cover');
+    await expect(wallpaper).toHaveCSS('background-image', 'none');
+    await expect(wallpaper).toHaveCSS('background-color', 'rgb(231, 238, 234)');
     await page.getByRole('button', {name: 'Марк Волков', exact: true}).click();
-    await expect
-        .poll(() => wallpaper.evaluate((element) => getComputedStyle(element).backgroundImage))
-        .not.toBe(first);
+    await expect(wallpaper).toHaveCSS('background-image', 'none');
+    await page.getByRole('button', {name: 'Сменить тему', exact: true}).click();
+    await expect(wallpaper).toHaveCSS('background-color', 'rgb(23, 29, 36)');
     await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
-    await expect
-        .poll(() => wallpaper.evaluate((element) => getComputedStyle(element).backgroundImage))
-        .toBe(first);
+    await expect(wallpaper).toHaveCSS('background-image', 'none');
+    await expect(wallpaper).toHaveCSS('background-color', 'rgb(23, 29, 36)');
 });
 
 test('disconnected account explains Болтун and opens the external-label key guide', async ({page}) => {
@@ -401,7 +484,7 @@ test('inset chat rows, search icon, readable text and message edges stay aligned
     await expect(page.getByText('Общается так, как удобно вам', {exact: true})).toHaveCount(0);
 });
 
-test('global pattern and photo wallpapers cover the shell behind opaque controls at every window size', async ({
+test('plain and Telegram photo backgrounds cover the shell behind opaque controls at every window size', async ({
     page,
     context,
 }) => {

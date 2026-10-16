@@ -7,11 +7,14 @@ import ru.boltunya.domain.ChatMessage
 class TelegramMessageView @Inject constructor(
     private val cache: TelegramCache,
     private val mapper: TelegramMessageMapper,
+    private val files: TelegramMediaStore,
 ) {
     fun map(message: TdApi.Message): ChatMessage {
         val chat = cache.chats[message.chatId]
         val sender = (message.senderId as? TdApi.MessageSenderUser)?.userId
         val user = sender?.let(cache.users::get)
+        val senderChat = (message.senderId as? TdApi.MessageSenderChat)?.chatId?.let(cache.chats::get)
+        val avatar = user?.profilePhoto?.small ?: senderChat?.photo?.small
         val ownNames = cache.users[cache.ownId]?.usernames?.activeUsernames.orEmpty().map {
             "@" + it.lowercase()
         }.toSet()
@@ -26,7 +29,10 @@ class TelegramMessageView @Inject constructor(
             group = chat?.type is TdApi.ChatTypeBasicGroup || chat?.type is TdApi.ChatTypeSupergroup,
             mentionsMe = mention,
             topicId = (message.topicId as? TdApi.MessageTopicForum)?.forumTopicId ?: 0,
-            senderName = user?.let { (it.firstName + " " + it.lastName).trim() }.orEmpty(),
+            senderName = user?.let { (it.firstName + " " + it.lastName).trim() } ?: senderChat?.title.orEmpty(),
+            senderAvatarUrl = avatar?.let {
+                "/api/media/${files.register(it, "image/jpeg", "sender-avatar.jpg")}"
+            }.orEmpty(),
             senderId = when (val origin = message.senderId) {
                 is TdApi.MessageSenderUser -> "user:${origin.userId}"
                 is TdApi.MessageSenderChat -> "chat:${origin.chatId}"

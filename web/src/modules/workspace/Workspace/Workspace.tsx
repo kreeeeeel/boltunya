@@ -230,7 +230,6 @@ export function Workspace() {
         <Flex direction="column" className={styles.root} qa="workspace-shell">
             <ChatWallpaper
                 wallpaper={theme === 'dark' ? (chat?.darkWallpaper ?? chat?.wallpaper) : chat?.wallpaper}
-                chatId={selected ?? undefined}
             />
             <WindowBar state={state} onPause={pause} onError={setActionError} />
             {(error || actionError || quit) && (

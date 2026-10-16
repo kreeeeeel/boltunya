@@ -18,6 +18,7 @@ data class ChatMessage(
     val mentionsMe: Boolean = false,
     val topicId: Int = 0,
     val senderName: String = "",
+    val senderAvatarUrl: String = "",
     val replyToId: String = "",
     val replyText: String = "",
     val senderId: String = "",

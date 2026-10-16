@@ -6,28 +6,37 @@ import {isEmojiMessage} from '@/modules/workspace/model/messagePresentation';
 import {MessageMedia} from '@/modules/workspace/MessageMedia/MessageMedia';
 import {RichText} from '@/modules/workspace/RichText/RichText';
 import styles from '@/modules/workspace/Conversation/Conversation.module.css';
-const GROUP_INTERVAL_SECONDS = 300;
+import {TelegramAvatar} from '@/shared/ui/TelegramAvatar/TelegramAvatar';
+import {messagesGrouped} from '@/modules/workspace/model/messagesGrouped';
 export function MessageBubble({
     message,
     nextMessage,
+    previousMessage,
+    group = message.group,
     replyText,
 }: {
     readonly message: Message;
     readonly nextMessage?: Message;
+    readonly previousMessage?: Message;
+    readonly group?: boolean;
     readonly replyText?: string;
 }) {
     const t = useTranslations();
     const locale = useLocale();
-    return (
+    const continues = messagesGrouped(message, nextMessage, group);
+    const groupIncoming = group && !message.outgoing;
+    const bubble = (
         <Box
             qa={message.outgoing ? 'message-outgoing' : 'message-incoming'}
             data-message-id={message.id}
             data-message-kind={message.kind}
             data-message-deleted={message.deleted || undefined}
-            className={`${styles.bubble} ${message.outgoing ? styles.outgoing : styles.incoming} ${message.kind === 'sticker' || isEmojiMessage(message.text) ? styles.stickerBubble : ''} ${isEmojiMessage(message.text) ? styles.emojiBubble : ''} ${message.media ? styles.mediaBubble : ''} ${nextMessage?.outgoing === message.outgoing && nextMessage.date - message.date < GROUP_INTERVAL_SECONDS ? styles.grouped : styles.tail}`}
+            className={`${styles.bubble} ${message.outgoing ? styles.outgoing : styles.incoming} ${message.kind === 'sticker' || isEmojiMessage(message.text) ? styles.stickerBubble : ''} ${isEmojiMessage(message.text) ? styles.emojiBubble : ''} ${message.media ? styles.mediaBubble : ''} ${continues ? styles.grouped : styles.tail}`}
         >
-            {message.group && !message.outgoing && (
-                <Text className={styles.sender}>{message.senderName}</Text>
+            {groupIncoming && !messagesGrouped(message, previousMessage, group) && (
+                <Text className={styles.sender} qa="message-sender-name">
+                    {message.senderName}
+                </Text>
             )}
             {message.replyToId && (
                 <Box className={styles.replyQuote}>
@@ -76,5 +85,23 @@ export function MessageBubble({
                 {message.outgoing && <Icon data={message.read ? CheckDouble : Check} size={16} />}
             </Flex>
         </Box>
+    );
+    if (!groupIncoming) {
+        return bubble;
+    }
+    return (
+        <Flex className={styles.groupMessage} alignItems="flex-end" gap={2} qa="group-message">
+            <Box className={styles.senderAvatar}>
+                {!continues && (
+                    <TelegramAvatar
+                        qa="message-sender-avatar"
+                        title={message.senderName || '?'}
+                        url={message.senderAvatarUrl}
+                        size="m"
+                    />
+                )}
+            </Box>
+            {bubble}
+        </Flex>
     );
 }

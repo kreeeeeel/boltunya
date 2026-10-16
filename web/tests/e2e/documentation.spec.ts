@@ -70,6 +70,16 @@ test('documents the workspace using synthetic conversations and verifies the ref
     expect(font.applied.replaceAll('"', '')).toContain(
         font.declared.split(',')[0].trim().replaceAll('"', ''),
     );
+    const controlFonts = await page
+        .locator('.g-button, input, [data-qa="chat-row"] .g-text')
+        .evaluateAll((elements) => [
+            ...new Set(elements.map((element) => getComputedStyle(element).fontFamily)),
+        ]);
+    expect(
+        controlFonts.every((family) =>
+            family.replaceAll('"', '').includes(font.declared.split(',')[0].trim().replaceAll('"', '')),
+        ),
+    ).toBe(true);
     const row = page.locator('[data-qa="chat-row"]').first();
     await expect(row).toHaveCSS('border-radius', '12px');
     await expect(page.locator('[data-qa="conversation-header"]')).toHaveCSS('border-radius', '16px');

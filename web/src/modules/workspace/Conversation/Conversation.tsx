@@ -253,6 +253,10 @@ export function Conversation({
                                 <MessageBubble
                                     message={message}
                                     nextMessage={messages[index + 1]}
+                                    previousMessage={messages[index - 1]}
+                                    group={
+                                        chat.kind === 'group' || chat.kind === 'supergroup' || message.group
+                                    }
                                     replyText={messages.find((item) => item.id === message.replyToId)?.text}
                                 />
                             </Fragment>

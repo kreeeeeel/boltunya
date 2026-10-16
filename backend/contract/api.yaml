@@ -2059,6 +2059,9 @@
           "senderName": {
             "type": "string"
           },
+          "senderAvatarUrl": {
+            "type": "string"
+          },
           "replyToId": {
             "type": "string"
           },
