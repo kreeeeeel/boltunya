@@ -8,7 +8,7 @@ Electron owns the frameless native window, tray and startup registration. It sta
 - `backend/`: Kotlin under `ru.boltunya`, Google Guice constructor injection and explicit singleton bindings. `ApplicationRuntime` starts and closes services and owns the profile lock.
 - `http/`: session checks, routing, input validation, resources and feature-specific endpoints. `SettingKey` validates PATCH value types.
 - `telegram/`: connection state, cache, versioned update handlers, chat directory, history, media/wallpaper mapping and threaded message sending.
-- `ai/`: Ollama protocol, resource-based model catalog, installation, prompt construction and personal writing samples; `research/` provides web and weather lookup.
+- `ai/`: Spring AI integration, typed conversation context, resource-based model catalog, local model management and personal writing samples; `model/` owns inference and final responses, while `research/` provides web and weather lookup. See [AI services](../ai/en.md).
 - `automation/`: sequential reply queue, debounce, stale-result cancellation, pacing and Telegram flood-wait handling.
 - `flows/`: validated acyclic node graphs, command/agent/reply/storage/condition execution, per-flow/per-chat JSON storage and side-effect-free draft previews.
 - `monitoring/`: OSHI CPU/RAM/process/network samples and optional NVIDIA GPU readings.

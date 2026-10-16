@@ -8,6 +8,7 @@
   <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-111111?logo=nextdotjs">
   <img alt="Gravity UI" src="https://img.shields.io/badge/Gravity_UI-7-FFBE5C">
   <img alt="Google Guice" src="https://img.shields.io/badge/Google_Guice-7-4285F4">
+  <img alt="Spring AI" src="https://img.shields.io/badge/Spring_AI-2.0-6DB33F?logo=spring">
   <img alt="Ollama" src="https://img.shields.io/badge/Ollama-local_AI-111111?logo=ollama">
   <img alt="Windows x64" src="https://img.shields.io/badge/Windows-x64-0078D4">
 </p>
@@ -84,6 +85,10 @@ Full exit stops the application-managed Ollama process. An independently managed
 | `complie/` | Generated EXE and SHA-256 checksum; intentionally ignored by Git |
 
 The Kotlin package is `ru.boltunya`. Prompts, regex language packs, errors and model metadata live in backend resources. The OpenAPI contract is `backend/contract/api.yaml`; `openapi-typescript` generates the frontend types. The local API uses a private loopback session and Host/Origin checks. The renderer has no Node.js access.
+
+Spring AI's Ollama adapter provides typed requests, structured responses, separate thinking output and inference statistics. `ConversationService` coordinates search and reply quality; `ChatCompletionService` owns inference, and `OllamaRuntime` owns local model management. Spring AI `ChatMemory` builds the recent conversation window; the Markdown memory bank retains long-term summaries and owner facts. Guice wires these services without starting a Spring Boot application. See [AI architecture](docs/ai/en.md).
+
+Conversations follow the global model selection by default; an explicit per-chat override remains available. Speed measurements persist across restarts and run automatically when you select an unmeasured installed model. Downloads use an inline progress button with cancellation. Saved workflows appear as cards; the empty library offers a central create button.
 
 ## Development
 
