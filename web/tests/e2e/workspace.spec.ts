@@ -132,6 +132,95 @@ test('chat selection, sending, filtering and saving a rule use the real API flow
     expect(errors).toEqual([]);
 });
 
+test('compact contacts align their two lines and show AI only on the avatar', async ({page}) => {
+    const rows = page.locator('[data-qa="chat-row"]');
+    await expect(rows.first().locator('[data-qa="chat-ai-badge"]')).toBeVisible();
+    await expect(rows.nth(2).locator('[data-qa="chat-ai-badge"]')).toHaveCount(0);
+    await expect(rows.getByText(/^(Вручную|Дружелюбно|Деловой)$/)).toHaveCount(0);
+    const geometry = await rows.evaluateAll((items) =>
+        items.map((item) => {
+            const row = item.getBoundingClientRect();
+            const avatar = item.querySelector('[data-qa="chat-avatar"]')!.getBoundingClientRect();
+            const name = item.querySelector('[data-qa="chat-name"]')!.getBoundingClientRect();
+            const preview = item.querySelector('[data-qa="chat-preview"]')!.getBoundingClientRect();
+            return {
+                height: row.height,
+                avatarOffset: Math.abs(avatar.y + avatar.height / 2 - row.y - row.height / 2),
+                textOffset: Math.abs((name.y + preview.bottom) / 2 - row.y - row.height / 2),
+            };
+        }),
+    );
+    expect(geometry.every((row) => row.height === 66 && row.avatarOffset < 1 && row.textOffset < 1)).toBe(
+        true,
+    );
+});
+
+test('Telegram uses separate theme backgrounds and does not tile gradient fills', async ({page}) => {
+    const state = structuredClone(workspaceState);
+    state.chats[0].wallpaper = {kind: 'fill', colors: ['#abcdef', '#123456'], rotation: 45};
+    state.chats[0].darkWallpaper = {kind: 'fill', colors: ['#112233', '#334455'], rotation: 90};
+    await page.route('**/api/state', (route) => route.fulfill({json: state}));
+    await page.reload();
+    await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
+    const wallpaper = page.locator('[data-qa="chat-wallpaper"]');
+    await expect(wallpaper).toHaveCSS('background-size', 'cover');
+    await expect(wallpaper).toHaveCSS('background-repeat', 'no-repeat');
+    await expect(wallpaper).toHaveCSS(
+        'background-image',
+        'linear-gradient(45deg, rgb(171, 205, 239), rgb(18, 52, 86))',
+    );
+    await page.getByRole('button', {name: 'Сменить тему', exact: true}).click();
+    await expect(wallpaper).toHaveCSS(
+        'background-image',
+        'linear-gradient(90deg, rgb(17, 34, 51), rgb(51, 68, 85))',
+    );
+});
+
+test('Escape dismisses a dialog first and then closes the conversation', async ({page}) => {
+    await page.getByRole('button', {name: 'Параметры общения', exact: true}).click();
+    await expect(page.locator('[data-qa="conversation-settings"]')).toHaveCSS('border-radius', '18px');
+    await page.getByRole('button', {name: 'Закрыть', exact: true}).click();
+    await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await expect(page.locator('[data-qa="communication-dialog"] .g-modal__content')).toHaveCSS(
+        'border-radius',
+        '24px',
+    );
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page.locator('[data-qa="conversation-header"]')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('[data-qa="conversation-header"]')).toHaveCount(0);
+    await expect(page.getByText('Выберите диалог', {exact: true})).toBeVisible();
+    await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
+    await expect(page.locator('[data-qa="message-incoming"]').first()).toBeVisible();
+});
+
+test('unavailable Telegram photo uses a stable fallback and switches to another chat palette', async ({
+    page,
+}) => {
+    const state = structuredClone(workspaceState);
+    state.chats[0].wallpaper = {kind: 'wallpaper', url: '/api/media/missing-background'};
+    await page.route('**/api/state', (route) => route.fulfill({json: state}));
+    await page.route('**/api/media/missing-background', (route) => route.fulfill({status: 404}));
+    await page.reload();
+    await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
+    const wallpaper = page.locator('[data-qa="chat-wallpaper"]');
+    await expect(wallpaper).toHaveCSS('background-size', '240px 240px, cover');
+    await expect
+        .poll(() => wallpaper.evaluate((element) => getComputedStyle(element).backgroundImage))
+        .toContain('chat-pattern.svg');
+    const first = await wallpaper.evaluate((element) => getComputedStyle(element).backgroundImage);
+    await page.getByRole('button', {name: 'Марк Волков', exact: true}).click();
+    await expect
+        .poll(() => wallpaper.evaluate((element) => getComputedStyle(element).backgroundImage))
+        .not.toBe(first);
+    await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
+    await expect
+        .poll(() => wallpaper.evaluate((element) => getComputedStyle(element).backgroundImage))
+        .toBe(first);
+});
+
 test('disconnected account explains Болтун and opens the external-label key guide', async ({page}) => {
     await page.route('**/api/state', (route) =>
         route.fulfill({
@@ -211,7 +300,7 @@ test('dark/light dialogs follow the active palette and preferences survive reloa
             background: getComputedStyle(element).backgroundColor,
             panel: getComputedStyle(element).getPropertyValue('--tiho-panel').trim(),
         }));
-        const expected = dark ? 'rgb(32, 43, 54)' : 'rgb(255, 255, 255)';
+        const expected = dark ? 'rgb(36, 42, 52)' : 'rgb(255, 255, 255)';
         expect(palette.background).toBe(expected);
         await page.getByRole('button', {name: 'Отмена', exact: true}).click();
     }
@@ -312,8 +401,9 @@ test('inset chat rows, search icon, readable text and message edges stay aligned
     await expect(page.getByText('Общается так, как удобно вам', {exact: true})).toHaveCount(0);
 });
 
-test('pattern and blurred photo wallpapers stay below the profile header at every window size', async ({
+test('global pattern and photo wallpapers cover the shell behind opaque controls at every window size', async ({
     page,
+    context,
 }) => {
     await page.route('**/api/media/wallpaper-test', (route) =>
         route.fulfill({
@@ -328,22 +418,45 @@ test('pattern and blurred photo wallpapers stay below the profile header at ever
         const state = structuredClone(workspaceState);
         state.chats[0].wallpaper = wallpaper;
         await page.route('**/api/state', (route) => route.fulfill({json: state}));
+        await context.addCookies([
+            {name: 'tiho-theme', value: wallpaper ? 'dark' : 'light', url: page.url()},
+        ]);
         await page.reload();
         await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
         for (const width of [1440, 1000, 480]) {
             await page.setViewportSize({width, height: 900});
             await expect(page.locator('[data-qa="chat-wallpaper"]')).toBeAttached();
-            const offset = await page.evaluate(() => {
-                const header = document
-                    .querySelector('[data-qa="conversation-header"]')!
-                    .getBoundingClientRect();
+            const bounds = await page.evaluate(() => {
+                const shell = document.querySelector('[data-qa="workspace-shell"]')!.getBoundingClientRect();
                 const wallpaper = document
                     .querySelector('[data-qa="chat-wallpaper"]')!
                     .getBoundingClientRect();
-                return wallpaper.top - header.bottom;
+                return {
+                    shell: {x: shell.x, y: shell.y, width: shell.width, height: shell.height},
+                    wallpaper: {
+                        x: wallpaper.x,
+                        y: wallpaper.y,
+                        width: wallpaper.width,
+                        height: wallpaper.height,
+                    },
+                };
             });
-            expect(offset).toBeGreaterThanOrEqual(0);
-            await expect(page.locator('[data-qa="conversation-body"]')).toHaveCSS('overflow', 'hidden');
+            expect(bounds.wallpaper).toEqual(bounds.shell);
+            await expect(page.locator('[data-qa="chat-wallpaper"]')).toHaveCSS('z-index', '-1');
+            await expect(page.locator('[data-qa="sidebar"]')).toHaveCSS(
+                'background-color',
+                'rgba(0, 0, 0, 0)',
+            );
+            await expect(page.locator('[data-qa="sidebar-navigation"]')).toHaveCSS('border-radius', '18px');
+            await expect(page.locator('[data-qa="window-bar"]')).toHaveCSS('border-bottom-width', '0px');
+            await expect(page.locator('[data-qa="conversation-header"]')).toHaveCSS(
+                'background-color',
+                wallpaper ? 'rgb(36, 42, 52)' : 'rgb(255, 255, 255)',
+            );
+            await expect(page.locator('[data-qa="message-composer"]')).toHaveCSS(
+                'background-color',
+                wallpaper ? 'rgb(36, 42, 52)' : 'rgb(255, 255, 255)',
+            );
         }
         if (wallpaper) {
             await expect(page.locator('[data-qa="chat-wallpaper"]')).toHaveCSS('filter', 'blur(8px)');

@@ -95,7 +95,7 @@
     grid-template-columns: 42px minmax(0, 1fr) 54px;
     align-items: center;
     column-gap: 11px;
-    height: 76px;
+    height: 66px;
     padding: 8px 12px;
     position: relative;
     isolation: isolate;
@@ -122,12 +122,39 @@
     width: 100%;
     height: 100%;
     z-index: 1;
-    border-radius: 0;
+    border-radius: inherit;
 }
 
 .hitArea:focus-visible {
     outline: 2px solid var(--g-color-line-focus);
     outline-offset: -2px;
+}
+
+.avatarWrap {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    pointer-events: none;
+}
+
+.aiBadge {
+    position: absolute;
+    right: -3px;
+    bottom: -3px;
+    width: 21px;
+    height: 21px;
+    border: 2px solid var(--tiho-panel);
+    border-radius: 50%;
+    background: var(--g-color-base-brand);
+    color: #fff;
+}
+
+.selected .aiBadge {
+    border-color: var(--tiho-selected);
+}
+
+.row:hover:not(.selected) .aiBadge {
+    border-color: var(--tiho-bg);
 }
 
 .avatar {
@@ -141,7 +168,7 @@
 
 .chatText {
     min-width: 0;
-    gap: 3px;
+    gap: 4px;
     pointer-events: none;
 }
 
@@ -167,22 +194,10 @@
     color: var(--tiho-ink);
 }
 
-.meta {
-    height: 18px;
-    gap: 4px;
-    color: var(--tiho-muted);
-    font-size: 13px;
-    line-height: 18px;
-}
-
-.aiMeta {
-    color: var(--g-color-text-brand);
-}
-
 .aside {
-    gap: 9px;
+    gap: 2px;
     justify-content: center;
-    height: 100%;
+    height: 40px;
     min-width: 0;
     pointer-events: none;
 }
@@ -195,7 +210,7 @@
 }
 
 .controls {
-    min-height: 18px;
+    min-height: 20px;
     position: relative;
     z-index: 2;
     pointer-events: auto;

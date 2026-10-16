@@ -129,16 +129,17 @@ export function ScrollArea({
                                 return;
                             }
                             const destinations: Record<string, number> = {
-                                ArrowDown: metrics.top + 40,
-                                ArrowUp: metrics.top - 40,
-                                PageDown: metrics.top + metrics.height,
-                                PageUp: metrics.top - metrics.height,
+                                ArrowDown: element.scrollTop + 40,
+                                ArrowUp: element.scrollTop - 40,
+                                PageDown: element.scrollTop + element.clientHeight,
+                                PageUp: element.scrollTop - element.clientHeight,
                                 Home: 0,
-                                End: overflow,
+                                End: element.scrollHeight - element.clientHeight,
                             };
                             if (event.key in destinations) {
                                 event.preventDefault();
                                 element.scrollTop = destinations[event.key];
+                                measure();
                             }
                         }}
                     />

@@ -1,6 +1,6 @@
 .root {
     height: 100%;
-    background: var(--tiho-bg);
+    background: transparent;
 }
 
 .content {

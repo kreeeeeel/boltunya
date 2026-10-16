@@ -1,5 +1,14 @@
+.modal {
+    --g-modal-border-radius: 24px;
+    --g-modal-margin: 24px;
+}
+
+.dialog {
+    padding-block: 6px;
+}
+
 .body {
-    padding: 4px 0 12px;
+    padding: 8px 0 16px;
 }
 
 .enable {

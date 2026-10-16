@@ -1967,6 +1967,10 @@
             "$ref": "#/components/schemas/ChatWallpaper",
             "nullable": true
           },
+          "darkWallpaper": {
+            "$ref": "#/components/schemas/ChatWallpaper",
+            "nullable": true
+          },
           "lastMessageId": {
             "type": "string"
           },

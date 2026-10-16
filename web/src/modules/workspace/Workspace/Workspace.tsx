@@ -25,6 +25,7 @@ import {SettingsDialog} from '@/modules/workspace/SettingsDialog/SettingsDialog'
 import {WindowBar} from '@/modules/workspace/WindowBar/WindowBar';
 import {TelegramAvatar} from '@/shared/ui/TelegramAvatar/TelegramAvatar';
 import {Conversation} from '@/modules/workspace/Conversation/Conversation';
+import {ChatWallpaper} from '@/modules/workspace/ChatWallpaper/ChatWallpaper';
 import {Inspector} from '@/modules/workspace/Inspector/Inspector';
 import {ModelsPanel} from '@/modules/workspace/ModelsPanel/ModelsPanel';
 import {MetricsPanel} from '@/modules/monitoring/MetricsPanel/MetricsPanel';
@@ -47,7 +48,7 @@ import {PanelSkeleton} from '@/shared/ui/PanelSkeleton/PanelSkeleton';
 
 export function Workspace() {
     const t = useTranslations();
-    const {toggleTheme} = usePreferences();
+    const {toggleTheme, theme} = usePreferences();
     const languageItems = useLanguageItems();
     const [tab, setTab] = useState('chats');
     const [selected, setSelected] = useState<string | null>(null);
@@ -72,6 +73,26 @@ export function Workspace() {
     const chats = state?.chats ?? [];
     const chat = chats.find((item) => item.id === selected);
     const paused = state?.settings.paused ?? true;
+    useEffect(() => {
+        if (!selected || tab !== 'chats') {
+            return;
+        }
+        const closeChat = (event: KeyboardEvent) => {
+            if (
+                event.key !== 'Escape' ||
+                event.defaultPrevented ||
+                document.querySelector('[role="dialog"], [role="menu"], [role="listbox"]')
+            ) {
+                return;
+            }
+            selectedChat.current = null;
+            setSelected(null);
+            setMessages([]);
+            setInspector(false);
+        };
+        window.addEventListener('keydown', closeChat);
+        return () => window.removeEventListener('keydown', closeChat);
+    }, [selected, tab, setMessages]);
     async function saveRule(target: Chat, rule: ChatRule) {
         dataOrThrow(
             await api.PUT('/api/chats/{chatId}/rule', {params: {path: {chatId: target.id}}, body: rule}),
@@ -185,7 +206,8 @@ export function Workspace() {
 
     if (state?.telegram.state !== 'ready') {
         return (
-            <Flex direction="column" className={styles.root}>
+            <Flex direction="column" className={styles.root} qa="workspace-shell">
+                <ChatWallpaper />
                 <WindowBar state={state} onPause={pause} onError={setActionError} />
                 <Welcome
                     state={state}
@@ -205,7 +227,11 @@ export function Workspace() {
     }
 
     return (
-        <Flex direction="column" className={styles.root}>
+        <Flex direction="column" className={styles.root} qa="workspace-shell">
+            <ChatWallpaper
+                wallpaper={theme === 'dark' ? (chat?.darkWallpaper ?? chat?.wallpaper) : chat?.wallpaper}
+                chatId={selected ?? undefined}
+            />
             <WindowBar state={state} onPause={pause} onError={setActionError} />
             {(error || actionError || quit) && (
                 <Flex className={styles.error} gap={3} alignItems="center">
@@ -224,8 +250,8 @@ export function Workspace() {
                 </Flex>
             )}
             <Flex className={styles.main}>
-                <Flex direction="column" alignItems="center" className={styles.rail}>
-                    <Flex direction="column" className={styles.nav}>
+                <Flex direction="column" alignItems="center" className={styles.rail} qa="sidebar">
+                    <Flex direction="column" className={styles.nav} qa="sidebar-navigation">
                         {[
                             {id: 'chats', icon: Comments},
                             {id: 'models', icon: Sparkles},
@@ -380,7 +406,12 @@ export function Workspace() {
                                     }}
                                     onSend={send}
                                     onDraft={draft}
-                                    onBack={() => setSelected(null)}
+                                    onBack={() => {
+                                        selectedChat.current = null;
+                                        setSelected(null);
+                                        setMessages([]);
+                                        setInspector(false);
+                                    }}
                                     onEarlier={earlier}
                                 />
                             </Box>

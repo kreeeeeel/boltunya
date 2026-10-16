@@ -74,6 +74,9 @@ export function RuleDialog({
 
     return (
         <Dialog
+            modalClassName={styles.modal}
+            className={styles.dialog}
+            qa="communication-dialog"
             contentOverflow="auto"
             open
             onClose={onClose}

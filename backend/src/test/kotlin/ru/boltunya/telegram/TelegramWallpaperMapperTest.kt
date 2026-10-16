@@ -34,6 +34,24 @@ class TelegramWallpaperMapperTest {
     }
 
     @Test
+    fun `uses the default background only when the chat has no own background`() {
+        val files = TelegramMediaStore(directory) { error("Should not download during mapping") }
+        val mapper = TelegramWallpaperMapper(files)
+        val default = TdApi.Background().apply {
+            type = TdApi.BackgroundTypeFill(TdApi.BackgroundFillSolid(0x123456))
+        }
+        assertEquals(listOf("#123456"), assertNotNull(mapper.map(null, default)).colors)
+        val chat = TdApi.ChatBackground().apply {
+            background = TdApi.Background().apply {
+                type = TdApi.BackgroundTypeFill(TdApi.BackgroundFillSolid(0xabcdef))
+            }
+        }
+        assertEquals(listOf("#abcdef"), assertNotNull(mapper.map(chat, default)).colors)
+        assertEquals(null, mapper.map(null))
+        assertEquals(null, mapper.map(null, TdApi.Background()))
+    }
+
+    @Test
     fun `maps gradient colors and orientation`() {
         val files = TelegramMediaStore(directory) { error("Should not download") }
         val wallpaper = TdApi.ChatBackground().apply {

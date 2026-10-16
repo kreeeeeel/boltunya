@@ -56,7 +56,15 @@ class TelegramChatDirectoryTest {
                     TdApi.MessageText().apply { text = TdApi.FormattedText("Привет", emptyArray()) }
             }
         cache.supergroups[30] = TdApi.Supergroup().apply { memberCount = 12345 }
+        cache.lightBackground = TdApi.Background().apply {
+            type = TdApi.BackgroundTypeFill(TdApi.BackgroundFillSolid(0xabcdef))
+        }
+        cache.darkBackground = TdApi.Background().apply {
+            type = TdApi.BackgroundTypeFill(TdApi.BackgroundFillSolid(0x123456))
+        }
         val result = chats.list().associateBy { it.id }
+        assertEquals(listOf("#abcdef"), result["10"]?.wallpaper?.colors)
+        assertEquals(listOf("#123456"), result["10"]?.darkWallpaper?.colors)
         assertEquals("first_handle", result["10"]?.username)
         assertEquals(true, result["10"]?.lastMessageOutgoing)
         assertEquals(false, result["20"]?.lastMessageOutgoing)
@@ -68,6 +76,9 @@ class TelegramChatDirectoryTest {
         cache.supergroups[30]?.memberCount = 0
         assertEquals("", chats.list().single { it.id == "10" }.username)
         assertEquals(null, chats.list().single { it.id == "30" }.memberCount)
+        cache.clear()
+        assertEquals(null, cache.lightBackground)
+        assertEquals(null, cache.darkBackground)
     }
 
     @Test

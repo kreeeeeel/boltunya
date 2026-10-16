@@ -37,7 +37,8 @@ class TelegramChatDirectory @Inject constructor(
                 is TdApi.ChatTypeSupergroup -> "supergroup"
                 else -> "private"
             },
-            wallpaper = wallpaper.map(chat.background),
+            wallpaper = wallpaper.map(chat.background, cache.lightBackground),
+            darkWallpaper = wallpaper.map(chat.background, cache.darkBackground ?: cache.lightBackground),
             lastMessageId = chat.lastMessage?.id?.toString().orEmpty(),
             joined = joined(chat.type),
             username = (chat.type as? TdApi.ChatTypePrivate)?.let {

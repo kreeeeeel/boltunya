@@ -105,17 +105,17 @@ textarea,
 .g-root_theme_dark {
     --g-color-text-brand: #65abef;
     --g-color-text-link: #65abef;
-    --tiho-bg: #17212b;
-    --tiho-panel: #202b36;
-    --tiho-chat: #15212b;
-    --tiho-bubble: #253443;
-    --tiho-outgoing: #2b5278;
-    --tiho-selected: #2a4056;
-    --tiho-rail: #192530;
-    --tiho-muted: #8c9caa;
-    --tiho-ink: #e0e8ef;
+    --tiho-bg: #171b22;
+    --tiho-panel: #242a34;
+    --tiho-chat: #171d24;
+    --tiho-bubble: #2c3541;
+    --tiho-outgoing: #315577;
+    --tiho-selected: #2d4053;
+    --tiho-rail: #242a34;
+    --tiho-muted: #9caab8;
+    --tiho-ink: #e7edf3;
     --tiho-green: #83c6aa;
-    --tiho-line: #2d3b48;
+    --tiho-line: #343e4b;
     --tiho-scrollbar: #455768;
     --tiho-shadow: 0 1px 2px rgb(0 0 0 / 8%);
 }

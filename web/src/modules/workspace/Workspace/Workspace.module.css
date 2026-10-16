@@ -1,4 +1,8 @@
 .root {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: var(--tiho-chat);
     height: 100dvh;
     min-height: 560px;
 }
@@ -13,8 +17,7 @@
 .rail {
     width: 64px;
     flex-shrink: 0;
-    background: var(--tiho-rail);
-    padding: 12px 0;
+    padding: 10px 0;
     justify-content: space-between;
     gap: 20px;
     overflow-y: auto;
@@ -23,7 +26,10 @@
 
 .nav,
 .navBottom {
-    width: 100%;
+    width: 52px;
+    padding: 6px;
+    border-radius: 18px;
+    background: var(--tiho-panel);
     align-items: center;
     gap: 8px;
 }
@@ -75,6 +81,8 @@
 
 .inspector {
     width: 288px;
+    margin: 10px 10px 10px 0;
+    min-height: 0;
     flex-shrink: 0;
     animation: inspector-enter 180ms var(--tiho-ease);
 }
@@ -96,7 +104,7 @@
 .infoPanel {
     padding: 0;
     flex: 1;
-    background: var(--tiho-bg);
+    background: transparent;
 }
 
 .infoDescription {
@@ -162,7 +170,13 @@
 
 @media (width <= 680px) {
     .rail {
-        width: 50px;
+        width: 56px;
+    }
+
+    .nav,
+    .navBottom {
+        width: 48px;
+        padding: 4px;
     }
 
     .navButton {

@@ -86,7 +86,6 @@ export function ChatList({chats, selected, loading = false, onSelect}: ChatListP
                                 <Flex direction="column" gap={2}>
                                     <Skeleton width="68%" height={12} />
                                     <Skeleton width="90%" height={11} />
-                                    <Skeleton width="40%" height={9} />
                                 </Flex>
                                 <Flex direction="column" alignItems="flex-end" gap={3}>
                                     <Skeleton width={28} height={9} />

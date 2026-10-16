@@ -31,16 +31,30 @@ export function ChatListRow({
                 aria-pressed={selected}
                 onClick={() => onSelect(chat.id)}
             />
-            <TelegramAvatar
-                qa="chat-avatar"
-                title={chat.title}
-                url={chat.avatarUrl}
-                size="l"
-                className={[
-                    styles.avatar,
-                    styles['avatar' + ((chat.id.charCodeAt(chat.id.length - 1) || 0) % 6)],
-                ].join(' ')}
-            />
+            <Box className={styles.avatarWrap}>
+                <TelegramAvatar
+                    qa="chat-avatar"
+                    title={chat.title}
+                    url={chat.avatarUrl}
+                    size="l"
+                    className={[
+                        styles.avatar,
+                        styles['avatar' + ((chat.id.charCodeAt(chat.id.length - 1) || 0) % 6)],
+                    ].join(' ')}
+                />
+                {chat.rule.enabled && (
+                    <Flex
+                        qa="chat-ai-badge"
+                        className={styles.aiBadge}
+                        alignItems="center"
+                        justifyContent="center"
+                        role="img"
+                        aria-label={t('aiOn')}
+                    >
+                        <Icon data={Sparkles} size={12} />
+                    </Flex>
+                )}
+            </Box>
             <Flex direction="column" className={styles.chatText}>
                 <Text qa="chat-name" className={styles.name}>
                     {chat.title}
@@ -52,13 +66,6 @@ export function ChatListRow({
                     {author && chat.preview ? `${author}: ` : ''}
                     {chat.preview}
                 </Text>
-                <Flex
-                    alignItems="center"
-                    className={[styles.meta, chat.rule.enabled ? styles.aiMeta : ''].join(' ')}
-                >
-                    {chat.rule.enabled && <Icon data={Sparkles} size={13} />}
-                    <Text>{t(chat.rule.enabled ? chat.rule.style : 'manual')}</Text>
-                </Flex>
             </Flex>
             <Flex direction="column" alignItems="flex-end" className={styles.aside}>
                 <Text className={styles.time}>

@@ -13,6 +13,7 @@ data class ChatSummary(
     val avatarUrl: String = "",
     val kind: String = "private",
     val wallpaper: ChatWallpaper? = null,
+    val darkWallpaper: ChatWallpaper? = null,
     val lastMessageId: String = "",
     val joined: Boolean? = null,
     val username: String = "",

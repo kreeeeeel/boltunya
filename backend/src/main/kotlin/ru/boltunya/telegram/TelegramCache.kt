@@ -12,6 +12,10 @@ class TelegramCache @Inject constructor() {
     val supergroups = ConcurrentHashMap<Long, TdApi.Supergroup>()
 
     @Volatile var ownId: Long = 0
+
+    @Volatile var lightBackground: TdApi.Background? = null
+
+    @Volatile var darkBackground: TdApi.Background? = null
     val startedAt: Long = Instant.now().epochSecond
 
     fun updateChat(id: Long, update: (TdApi.Chat) -> Unit) {
@@ -33,5 +37,7 @@ class TelegramCache @Inject constructor() {
         basicGroups.clear()
         supergroups.clear()
         ownId = 0
+        lightBackground = null
+        darkBackground = null
     }
 }

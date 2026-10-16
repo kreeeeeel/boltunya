@@ -12,7 +12,6 @@ import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
 import {ChatHeading} from '@/modules/workspace/ChatHeading/ChatHeading';
 import {ReplySkeleton} from '@/shared/ui/ReplySkeleton/ReplySkeleton';
 import {MessageBubble} from '@/modules/workspace/Conversation/MessageBubble';
-import {ChatWallpaper} from '@/modules/workspace/ChatWallpaper/ChatWallpaper';
 
 export function Conversation({
     chat,
@@ -214,7 +213,6 @@ export function Conversation({
                 </Flex>
             </Flex>
             <Flex direction="column" className={styles.body} qa="conversation-body">
-                <ChatWallpaper wallpaper={chat.wallpaper} />
                 <ScrollArea
                     viewportRef={scroll}
                     qa="conversation-messages"
@@ -271,7 +269,7 @@ export function Conversation({
                 </ScrollArea>
                 <Box className={styles.composerArea}>
                     {(error || localError) && <Text color="danger">{localError || error}</Text>}
-                    <Flex alignItems="flex-end" gap={2} className={styles.composer}>
+                    <Flex alignItems="flex-end" gap={2} className={styles.composer} qa="message-composer">
                         <Tooltip content={t('draft')}>
                             <Button
                                 size="m"

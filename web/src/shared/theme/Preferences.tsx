@@ -17,7 +17,8 @@ const PreferencesContext = createContext<{
     toggleTheme: () => void;
     changeLocale: (locale: Locale) => void;
     locale: Locale;
-}>({toggleTheme: () => {}, changeLocale: () => {}, locale: 'ru'});
+    theme: 'light' | 'dark';
+}>({toggleTheme: () => {}, changeLocale: () => {}, locale: 'ru', theme: 'light'});
 
 export const usePreferences = () => useContext(PreferencesContext);
 
@@ -53,7 +54,7 @@ export function Preferences({children}: {children: ReactNode}) {
     }
 
     return (
-        <PreferencesContext.Provider value={{toggleTheme, changeLocale, locale}}>
+        <PreferencesContext.Provider value={{toggleTheme, changeLocale, locale, theme}}>
             <NextIntlClientProvider locale={locale} messages={messages[locale]} timeZone="Europe/Moscow">
                 <ThemeProvider theme={theme} lang={locale === 'ru' ? 'ru' : 'en'}>
                     {children}

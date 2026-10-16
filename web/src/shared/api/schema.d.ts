@@ -546,6 +546,7 @@ export interface components {
             /** @enum {string} */
             kind?: "private" | "group" | "supergroup" | "channel";
             wallpaper?: components["schemas"]["ChatWallpaper"];
+            darkWallpaper?: components["schemas"]["ChatWallpaper"];
             lastMessageId?: string;
             /** @description Current Telegram group membership, or null while the group status is unknown. */
             joined?: boolean | null;

@@ -2,7 +2,7 @@
     min-width: 0;
     min-height: 0;
     height: 100%;
-    background: var(--tiho-chat);
+    background: transparent;
     position: relative;
     animation: conversation-enter 180ms var(--tiho-ease);
 }
@@ -175,7 +175,7 @@
 
 .empty {
     height: 100%;
-    background: var(--tiho-chat);
+    background: transparent;
     padding: 28px;
     text-align: center;
     animation: conversation-enter 180ms var(--tiho-ease);

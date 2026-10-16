@@ -58,6 +58,14 @@ class TelegramUpdateHandler @Inject constructor(
                     update.background
             }
         }
+        builder.addUpdateHandler(TdApi.UpdateDefaultBackground::class.java) { update ->
+            if (connection.version != version) return@addUpdateHandler
+            if (update.forDarkTheme) {
+                cache.darkBackground = update.background
+            } else {
+                cache.lightBackground = update.background
+            }
+        }
         builder.addUpdateHandler(TdApi.UpdateChatPhoto::class.java) { update ->
             if (connection.version != version) return@addUpdateHandler
             cache.updateChat(update.chatId) {

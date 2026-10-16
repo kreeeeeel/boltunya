@@ -3,8 +3,7 @@
     height: 36px;
     min-height: 36px;
     flex-shrink: 0;
-    background: var(--tiho-rail);
-    border-bottom: 1px solid var(--tiho-line);
+    background: color-mix(in srgb, var(--tiho-panel) 96%, transparent);
     user-select: none;
 }
 

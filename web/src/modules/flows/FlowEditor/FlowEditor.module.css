@@ -1,7 +1,7 @@
 .root {
     height: 100%;
     min-height: 0;
-    background: var(--tiho-bg);
+    background: transparent;
 }
 
 .toolbar {

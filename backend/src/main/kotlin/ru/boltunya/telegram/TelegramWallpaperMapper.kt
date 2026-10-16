@@ -8,9 +8,14 @@ import java.util.Arrays
 private const val RGB_MASK = 0xffffff
 
 class TelegramWallpaperMapper @Inject constructor(private val files: TelegramMediaStore) {
-    fun map(chat: TdApi.ChatBackground?): ChatWallpaper? {
-        val background = chat?.background ?: return null
+    fun map(chat: TdApi.ChatBackground?, default: TdApi.Background? = null): ChatWallpaper? {
+        val background = chat?.background ?: default ?: return null
         val type = background.type
+        if (type !is TdApi.BackgroundTypeWallpaper &&
+            type !is TdApi.BackgroundTypePattern && type !is TdApi.BackgroundTypeFill
+        ) {
+            return null
+        }
         val fill = when (type) {
             is TdApi.BackgroundTypeFill -> type.fill
             is TdApi.BackgroundTypePattern -> type.fill
@@ -34,7 +39,7 @@ class TelegramWallpaperMapper @Inject constructor(private val files: TelegramMed
             colors = colors,
             rotation = (fill as? TdApi.BackgroundFillGradient)?.rotationAngle ?: 0,
             blurred = (type as? TdApi.BackgroundTypeWallpaper)?.isBlurred ?: false,
-            dimming = chat.darkThemeDimming,
+            dimming = chat?.darkThemeDimming ?: 0,
             intensity = (type as? TdApi.BackgroundTypePattern)?.intensity ?: 50,
         )
     }

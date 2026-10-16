@@ -73,12 +73,17 @@ test('documents the workspace using synthetic conversations and verifies the ref
     const row = page.locator('[data-qa="chat-row"]').first();
     await expect(row).toHaveCSS('border-radius', '12px');
     await expect(page.locator('[data-qa="conversation-header"]')).toHaveCSS('border-radius', '16px');
-    const wallpaperOffset = await page.evaluate(() => {
-        const header = document.querySelector('[data-qa="conversation-header"]')!.getBoundingClientRect();
+    const wallpaperBounds = await page.evaluate(() => {
+        const shell = document.querySelector('[data-qa="workspace-shell"]')!.getBoundingClientRect();
         const wallpaper = document.querySelector('[data-qa="chat-wallpaper"]')!.getBoundingClientRect();
-        return wallpaper.top - header.bottom;
+        return {
+            shell: {x: shell.x, y: shell.y, width: shell.width, height: shell.height},
+            wallpaper: {x: wallpaper.x, y: wallpaper.y, width: wallpaper.width, height: wallpaper.height},
+        };
     });
-    expect(wallpaperOffset).toBeGreaterThanOrEqual(0);
+    expect(wallpaperBounds.wallpaper).toEqual(wallpaperBounds.shell);
+    await expect(page.locator('[data-qa="chat-wallpaper"]')).toHaveCSS('z-index', '-1');
+    await expect(page.locator('[data-qa="window-bar"]')).toHaveCSS('border-bottom-width', '0px');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({path: '../docs/resources/readme-chat-light.png', animations: 'disabled'});
 
