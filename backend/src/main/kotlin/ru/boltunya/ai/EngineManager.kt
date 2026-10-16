@@ -242,13 +242,6 @@ class EngineManager @Inject constructor(
         executor.shutdownNow()
         ollama.releaseModels()
         val active = managedServer ?: return
-        active.descendants().use { descendants -> descendants.forEach { it.destroy() } }
-        active.destroy()
-        try {
-            active.onExit().get(3, java.util.concurrent.TimeUnit.SECONDS)
-        } catch (exception: java.util.concurrent.TimeoutException) {
-            active.descendants().use { descendants -> descendants.forEach { it.destroyForcibly() } }
-            active.destroyForcibly()
-        }
+        terminateEngineProcess(active)
     }
 }
