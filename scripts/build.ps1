@@ -1,9 +1,14 @@
-param([switch]$SkipChecks, [switch]$SkipShortcut, [string]$Version='2.6.0')
+param([switch]$SkipChecks, [switch]$SkipShortcut, [string]$Version='2.6.0', [string]$OutputDirectory='complie')
 $ErrorActionPreference='Stop'
 $projectRoot=Split-Path -Parent $PSScriptRoot
 Push-Location $projectRoot
 try {
     if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw 'Version must be major.minor.patch' }
+    $compileDirectory=if([System.IO.Path]::IsPathRooted($OutputDirectory)) {
+        [System.IO.Path]::GetFullPath($OutputDirectory)
+    } else {
+        [System.IO.Path]::GetFullPath((Join-Path $projectRoot $OutputDirectory))
+    }
     $env:JAVA_TOOL_OPTIONS='-Djdk.net.unixdomain.tmpdir=C:/tiho-no-unix-sockets'
     foreach ($directory in @('web','desktop')) {
         if (-not (Test-Path -LiteralPath "$directory/node_modules")) {
@@ -28,9 +33,8 @@ try {
         & (Join-Path $jdkBin 'jlink.exe') --output $runtime --strip-debug --no-header-files --no-man-pages --add-modules java.base,java.desktop,java.net.http,jdk.httpserver,jdk.crypto.ec,java.logging,java.management,jdk.management,jdk.unsupported,java.naming,java.sql,jdk.charsets
         if ($LASTEXITCODE -ne 0) { throw 'Bundled Java runtime build failed' }
     }
-    npm.cmd run package --prefix desktop -- --config.extraMetadata.version=$Version --config.portable.unpackDirName=boltunya-$Version --publish never
+    npm.cmd run package --prefix desktop -- --config.extraMetadata.version=$Version --config.portable.unpackDirName=boltunya-$Version "--config.directories.output=$compileDirectory" --publish never
     if ($LASTEXITCODE -ne 0) { throw 'Electron portable build failed' }
-    $compileDirectory=Join-Path $projectRoot 'complie'
     $executable=Join-Path $compileDirectory 'Болтунья.exe'
     (Get-FileHash -Algorithm SHA256 -LiteralPath $executable).Hash.ToLowerInvariant() + '  Болтунья.exe' | Set-Content -Encoding utf8 (Join-Path $compileDirectory 'SHA256.txt')
     if(-not $SkipShortcut) {

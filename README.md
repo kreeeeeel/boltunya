@@ -21,7 +21,7 @@ Boltunya is a Windows desktop application for reading Telegram conversations and
 
 ## What it does
 
-- **A familiar conversation view.** Avatars, formatted text, clickable links, replies, photos, video, audio, documents, spoilers and static/animated stickers. History loads as you scroll without losing your position.
+- **A familiar conversation view.** Avatars, formatted text, clickable links, replies, photos, video, audio, documents, spoilers and static/animated stickers. The selected conversation's wallpaper spans the workspace behind opaque panels and floating navigation. History loads as you scroll without losing your position.
 - **Replies in your voice.** Real outgoing messages and a shared owner profile inform vocabulary, punctuation and tone. Known AI replies are excluded from owner-style samples. Built-in tones and custom emoji styles are available per conversation.
 - **Local models with a useful catalog.** Search 27 downloadable models across Qwen, Gemma, DeepSeek, GPT-OSS, Llama, Mistral and Phi. Compare memory estimates, context, reasoning, license and download size; measure speed on your own machine. Install Ollama and models from the application with progress feedback.
 - **Current information, naturally phrased.** Keyless search, Open-Meteo weather, dated news and official exchange rates. Short follow-ups retain the previous topic. Replies are instructed to preserve significant digits and dates while matching your style; links are limited to retrieved sources and follow your preferences.
@@ -30,6 +30,8 @@ Boltunya is a Windows desktop application for reading Telegram conversations and
 - **Deliberate automation.** Sequential replies, configurable delays and intervals, optional typing indicators, per-chat controls and group mention/all-message modes. Group automation starts disabled.
 - **A proper desktop shell.** A draggable title bar, maximize within the Windows work area, compact tray menu, optional startup in the tray, and separate startup/resume preferences. Resource charts show application and system activity.
 - **Four languages, two themes.** English, Russian, Kazakh and Ukrainian; light/dark themes and bundled Noto Sans typography.
+
+The chat list uses two-line previews and a small AI badge on enabled conversations' avatars. Press **Esc** to close the current chat; an open dialog is dismissed first. Telegram chat-specific and default light/dark wallpapers are supported when TDLib provides them. Unavailable images use varied built-in backgrounds that stay stable for each chat.
 
 <table>
   <tr><td><img src="docs/resources/readme-chat-dark.png" alt="Dark conversation view"></td><td><img src="docs/resources/readme-models.png" alt="Searchable model comparison catalog"></td></tr>
@@ -95,6 +97,8 @@ npm.cmd run test:smoke --prefix desktop
 ```
 
 The build runs Kotlin, frontend and Electron checks, exports the web interface, creates a minimal Java runtime and writes `complie/Болтунья.exe` plus `SHA256.txt`. Browser tests serve the static export on a temporary local port. Native smoke tests use an isolated data directory and do not sign in to Telegram.
+
+For a staging build, pass `-OutputDirectory complie/.staging -SkipShortcut`. Native smoke tests accept `BOLTUNYA_TEST_EXECUTABLE` to select the staging package's unpacked executable. CI skips local shortcut creation and publishes only after validation.
 
 For targeted checks:
 
