@@ -3,6 +3,7 @@ package ru.boltunya.ai
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
+import ru.boltunya.ai.research.ResearchContext
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ChatRule
 import ru.boltunya.memory.MemoryContext
@@ -15,6 +16,23 @@ import kotlin.test.assertTrue
 
 class PromptBuilderTest {
     private val builder = PromptBuilder()
+
+    @Test
+    fun `includes contextual calm boundaries in conversation and research prompts`() {
+        listOf(ResearchContext(), ResearchContext("search", "Verified facts")).stream().forEach { research ->
+            val prompt = builder.build(
+                ChatRule(),
+                listOf(ChatMessage("1", "42", "Как убить время в дороге?", false, 1)),
+                research = research,
+            )
+            val system = prompt.first().jsonObject["content"]?.jsonPrimitive?.content.orEmpty()
+            assertTrue(system.contains("Границы разговора"))
+            assertTrue(system.contains("против такого поступка"))
+            assertTrue(system.contains("На обычные вопросы отвечай нормально"))
+            assertFalse(system.contains("{{boundaries}}"))
+            assertEquals("Как убить время в дороге?", prompt.last().jsonObject["content"]?.jsonPrimitive?.content)
+        }
+    }
 
     @Test
     fun `includes bounded long term memory while keeping recent messages and marking memory as data`() {
