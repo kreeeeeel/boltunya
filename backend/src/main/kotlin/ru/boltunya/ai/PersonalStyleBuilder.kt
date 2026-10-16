@@ -10,7 +10,7 @@ private val resources = ResourceCatalog()
 class PersonalStyleBuilder @Inject constructor() {
     fun build(history: List<ChatMessage>): String {
         val samples = history.asReversed().stream()
-            .filter { it.outgoing && it.kind == "text" && it.text.isNotBlank() }
+            .filter { it.outgoing && !it.automated && it.kind == "text" && it.text.isNotBlank() }
             .map { it.text.trim() }
             .filter { it.length <= 600 && !boilerplate(it) }
             .distinct().limit(40).toList()

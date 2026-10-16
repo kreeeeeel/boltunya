@@ -1,1 +1,1 @@
-(?iu)(?:mezhdunarodnaya-panorama|/world/|В мире|Международн)
+(?iu)(?:mezhdunarodnaya-panorama|/world/|(?:^|\.\s)(?:В мире|Международные новости)(?:;|$))

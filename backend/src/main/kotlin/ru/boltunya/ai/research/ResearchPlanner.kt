@@ -128,7 +128,16 @@ class ResearchPlanner(private val clock: Clock = Clock.systemDefaultZone()) {
             add(
                 buildJsonObject {
                     put("role", "user")
-                    put("content", dialogue.toString())
+                    put(
+                        "content",
+                        resources.prompt(
+                            "ru/research/planner-request",
+                            mapOf(
+                                "history" to dialogue.toString(),
+                                "latest" to history.lastOrNull { !it.outgoing }?.text.orEmpty().take(800),
+                            ),
+                        ),
+                    )
                 },
             )
         }

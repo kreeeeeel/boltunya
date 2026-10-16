@@ -60,7 +60,7 @@ class PromptBuilder(
             ""
         }
         val baseSystem = resources.prompt(
-            "ru/conversation/system",
+            if (research.status == "none") "ru/conversation/system" else "ru/research/system",
             mapOf(
                 "tone" to (tone),
                 "emoji" to (emoji),

@@ -7,6 +7,20 @@ import kotlin.test.assertTrue
 
 class ReplyQualityGuardTest {
     @Test
+    fun `verified fact updates may share phrasing while exact copies and boilerplate still retry`() {
+        val previous = "83.76 ₽ по ЦБ на 16.10.2026"
+        val history = listOf(
+            ChatMessage("1", "42", previous, true, 0, automated = true),
+            ChatMessage("2", "42", "А евро?", false, 0),
+        )
+        val updated = "93.7693 ₽ по ЦБ на 16.10.2026"
+        assertTrue(guard.needsRetry(updated, history))
+        assertFalse(guard.needsRetry(updated, history, compareSimilarReplies = false))
+        assertTrue(guard.needsRetry(previous, history, compareSimilarReplies = false))
+        assertTrue(guard.needsRetry("Я — ИИ-помощник", history, compareSimilarReplies = false))
+    }
+
+    @Test
     fun `retries verbatim copying of multiword owner samples instead of answering the latest message`() {
         val sample = ChatMessage("1", "42", "ща гляну))", true, 0)
         val incoming = ChatMessage("2", "42", "Мне плохо, поговори со мной", false, 0)

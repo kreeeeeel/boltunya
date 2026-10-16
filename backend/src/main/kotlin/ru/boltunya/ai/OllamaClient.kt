@@ -137,7 +137,15 @@ class OllamaClient(
         val messages = prompts.build(rule, history, globalPrompt, research, styleHistory, memory)
         var response = generate(messages)
         var text = response["message"]?.jsonObject?.get("content")?.jsonPrimitive?.contentOrNull.orEmpty().trim()
-        if (quality.needsRetry(text, history, instructions, styleHistory)) {
+        if (quality.needsRetry(
+                text,
+                history,
+                instructions,
+                styleHistory,
+                compareSimilarReplies =
+                research.status == "none",
+            )
+        ) {
             val retryBase = prompts.build(
                 rule.copy(matchMyStyle = false),
                 history,
@@ -164,7 +172,15 @@ class OllamaClient(
         if (text.isBlank()) {
             throw EmptyModelReplyException()
         }
-        if (quality.needsRetry(text, history, instructions, styleHistory)) {
+        if (quality.needsRetry(
+                text,
+                history,
+                instructions,
+                styleHistory,
+                compareSimilarReplies =
+                research.status == "none",
+            )
+        ) {
             throw RepetitiveModelReplyException()
         }
         text = links.format(text, rule, history, research)

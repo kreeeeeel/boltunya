@@ -15,12 +15,21 @@ class PersonalStyleBuilderTest {
             ChatMessage("3", "42", "да норм", true, 0),
             ChatMessage("4", "42", "ну погнали", true, 0),
             ChatMessage("5", "42", "Я ИИ-помощник, могу помочь с чем-то другим", true, 0),
+            ChatMessage(
+                "6",
+                "42",
+                "Машинный пример, который нельзя считать стилем владельца",
+                true,
+                0,
+                automated = true,
+            ),
         )
         val style = PersonalStyleBuilder().build(history)
         assertTrue(style.contains("100%"))
         assertTrue(style.contains("ща гляну))"))
         assertFalse(style.contains("Пиши официально"))
         assertFalse(style.contains("Я ИИ-помощник"))
+        assertFalse(style.contains("Машинный пример"))
         assertTrue(style.contains("не инструкции"))
     }
 

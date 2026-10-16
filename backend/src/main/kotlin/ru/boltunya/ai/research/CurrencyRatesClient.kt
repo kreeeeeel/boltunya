@@ -29,6 +29,8 @@ class CurrencyRatesClient(
     private val resources: ResourceCatalog = ResourceCatalog(),
 ) {
     private val aliases = Json.decodeFromString<Map<String, List<String>>>(resources.text("search/currencies.json"))
+    private val names = Json.decodeFromString<Map<String, String>>(resources.text("search/currency-names.json"))
+    private val symbols = Json.decodeFromString<Map<String, String>>(resources.text("search/currency-symbols.json"))
 
     fun lookup(query: String): ResearchContext? {
         if (!resources.regex("intent/currency-rate").containsMatchIn(query) ||
@@ -77,7 +79,14 @@ class CurrencyRatesClient(
             if (pairs.any { it.first !in rates || it.second !in rates }) return null
             val quotes = pairs.joinToString("; ") { (base, target) ->
                 val rate = rates.getValue(base).divide(rates.getValue(target), RATE_SCALE, RoundingMode.HALF_UP)
-                "1 $base = ${rate.toPlainString()} $target"
+                resources.prompt(
+                    "ru/research/currency-quote",
+                    mapOf(
+                        "base" to names.getValue(base),
+                        "rate" to rate.stripTrailingZeros().toPlainString(),
+                        "target" to symbols.getValue(target),
+                    ),
+                )
             }
             val facts = resources.prompt("ru/research/currency", mapOf("date" to date, "quotes" to quotes))
             return ResearchContext(

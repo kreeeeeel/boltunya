@@ -13,6 +13,7 @@ class ReplyQualityGuard @Inject constructor() {
         history: List<ChatMessage>,
         instructions: String = "",
         styleHistory: List<ChatMessage> = history,
+        compareSimilarReplies: Boolean = true,
     ): Boolean {
         val answer = normalize(reply)
         val latestIncoming = normalize(history.lastOrNull { !it.outgoing }?.text.orEmpty())
@@ -54,7 +55,8 @@ class ReplyQualityGuard @Inject constructor() {
         val previousShingles = shingles(lastAnswer)
         val shared = currentShingles.intersect(previousShingles).size
         return answer == lastAnswer ||
-            shared >= 3 && shared.toDouble() / minOf(currentShingles.size, previousShingles.size) > 0.65
+            compareSimilarReplies && shared >= 3 &&
+            shared.toDouble() / minOf(currentShingles.size, previousShingles.size) > 0.65
     }
 
     private fun normalize(text: String): String = text.lowercase(Locale.ROOT)
