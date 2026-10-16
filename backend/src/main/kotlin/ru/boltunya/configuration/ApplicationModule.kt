@@ -278,7 +278,7 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
     @Provides @Singleton
     fun media(gateway: Provider<TdLightGateway>): TelegramMediaStore = TelegramMediaStore(
         configuration.directory.resolve("telegram/files"),
-        listOf("profile_photos", "stickers", "thumbnails").map {
+        listOf("profile_photos", "stickers", "thumbnails", "wallpapers").map {
             configuration.directory.resolve("telegram/data/" + it)
         },
     ) { gateway.get().downloadFile(it) }

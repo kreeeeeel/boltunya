@@ -47,6 +47,20 @@ class TelegramMediaStoreTest {
     }
 
     @Test
+    fun `serves TDLib wallpaper cache while rejecting adjacent database files`() {
+        val downloads = Files.createDirectories(directory.resolve("files"))
+        val cache = Files.createDirectories(directory.resolve("data/wallpapers"))
+        val wallpaper = Files.write(cache.resolve("wallpaper.jpg"), byteArrayOf(1, 2, 3))
+        val file = localFile(wallpaper)
+        val store = TelegramMediaStore(downloads, listOf(cache)) { file }
+        store.register(file, "image/jpeg", "wallpaper.jpg")
+        assertEquals(wallpaper.toRealPath(), store.get(1).path)
+        assertEquals("image/jpeg", store.get(1).mimeType)
+        file.local.path = Files.write(directory.resolve("data/database.bin"), byteArrayOf(4)).toString()
+        assertFailsWith<InvalidInputException> { store.get(1) }
+    }
+
+    @Test
     fun `rejects large files before downloading`() {
         var downloaded = false
         val file = TdApi.File().apply {
