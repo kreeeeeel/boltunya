@@ -1,9 +1,8 @@
 'use client';
 
-import {Box, Button, Dialog, Flex, Label, Text, TextArea} from '@gravity-ui/uikit';
+import {Box, Button, Dialog, Flex, Label, Skeleton, Text, TextArea} from '@gravity-ui/uikit';
 import {useLocale, useTranslations} from 'next-intl';
 import {useMemoryDocument} from '@/modules/memory/model/useMemoryDocument';
-import {PanelSkeleton} from '@/shared/ui/PanelSkeleton/PanelSkeleton';
 import styles from '@/modules/memory/MemoryDialog/MemoryDialog.module.css';
 
 export function MemoryDialog({
@@ -31,7 +30,27 @@ export function MemoryDialog({
             <Dialog.Header caption={t(chatId ? 'memory.chatTitle' : 'memory.title', {name: title})} />
             <Dialog.Body>
                 {!document && !memory.error ? (
-                    <PanelSkeleton />
+                    <Flex
+                        direction="column"
+                        gap={4}
+                        role="status"
+                        aria-label={t('loading')}
+                        qa="memory-skeleton"
+                    >
+                        <Skeleton height={40} />
+                        <Flex justifyContent="space-between">
+                            <Skeleton width={100} height={20} />
+                            <Skeleton width={140} height={20} />
+                        </Flex>
+                        <Box>
+                            <Skeleton width={180} height={20} />
+                            <Skeleton height={100} />
+                        </Box>
+                        <Box>
+                            <Skeleton width={160} height={20} />
+                            <Skeleton height={120} />
+                        </Box>
+                    </Flex>
                 ) : (
                     document && (
                         <Flex direction="column" gap={4}>

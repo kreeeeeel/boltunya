@@ -28,6 +28,13 @@
     line-height: 1.6;
 }
 
+.chartSkeleton {
+    padding: 20px;
+    border-radius: 16px;
+    background: var(--tiho-panel);
+    min-width: 0;
+}
+
 @media (width <= 1000px) {
     .grid {
         grid-template-columns: 1fr;

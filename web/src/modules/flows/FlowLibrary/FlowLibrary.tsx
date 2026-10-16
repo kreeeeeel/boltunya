@@ -1,4 +1,4 @@
-import {Box, Button, Flex, Icon, Label, Text} from '@gravity-ui/uikit';
+import {Box, Button, Flex, Icon, Label, Skeleton, Text} from '@gravity-ui/uikit';
 import {Plus, NodesRight, ChevronRight, Persons} from '@gravity-ui/icons';
 import {useTranslations} from 'next-intl';
 import type {AutomationFlow} from '@/modules/flows/model/flowTypes';
@@ -9,12 +9,42 @@ export function FlowLibrary({
     flows,
     onCreate,
     onOpen,
+    loading = false,
 }: {
     readonly flows: AutomationFlow[];
     readonly onCreate: () => void;
     readonly onOpen: (flow: AutomationFlow) => void;
+    readonly loading?: boolean;
 }) {
     const t = useTranslations();
+    if (loading) {
+        return (
+            <ScrollArea className={styles.library}>
+                <Box role="status" aria-label={t('loading')} qa="flows-skeleton">
+                    <Flex className={styles.header} alignItems="center" justifyContent="space-between">
+                        <Skeleton width={180} height={24} />
+                        <Skeleton width={160} height={36} />
+                    </Flex>
+                    <Box className={styles.grid}>
+                        {Array.from({length: 3}, (_, index) => (
+                            <Box key={index} className={styles.card}>
+                                <Flex justifyContent="space-between" alignItems="center">
+                                    <Skeleton width={48} height={48} />
+                                    <Skeleton width={80} height={20} />
+                                </Flex>
+                                <Skeleton width="70%" height={24} />
+                                <Skeleton width="50%" height={20} />
+                                <Skeleton height={20} />
+                                <Box className={styles.footer}>
+                                    <Skeleton width="60%" height={20} />
+                                </Box>
+                            </Box>
+                        ))}
+                    </Box>
+                </Box>
+            </ScrollArea>
+        );
+    }
     if (flows.length === 0) {
         return (
             <Flex

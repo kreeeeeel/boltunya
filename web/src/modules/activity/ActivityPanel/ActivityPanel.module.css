@@ -1,0 +1,53 @@
+.root {
+    flex: 1;
+    min-height: 0;
+}
+
+.content {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.toolbar {
+    padding: 14px 18px;
+    background: var(--tiho-panel);
+    border-radius: 18px;
+}
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+    gap: 16px;
+    align-items: stretch;
+}
+
+.privacy {
+    display: block;
+    margin: 14px 4px 20px;
+    line-height: 1.6;
+}
+
+.empty {
+    min-height: calc(100dvh - 84px);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.illustration {
+    width: 250px;
+    height: 250px;
+    object-fit: contain;
+    max-width: 70%;
+}
+
+@media (width <= 800px) {
+    .content {
+        padding: 16px;
+    }
+
+    .empty {
+        min-height: calc(100dvh - 68px);
+    }
+}

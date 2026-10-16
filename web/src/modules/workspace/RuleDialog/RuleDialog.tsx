@@ -136,6 +136,7 @@ export function RuleDialog({
                             width="max"
                             size="l"
                             controlClassName={styles.styleControl}
+                            renderOption={(option) => <>{option.content}</>}
                             renderSelectedOption={(option) => <>{option.content}</>}
                             value={[rule.styleId ? 'preset:' + rule.styleId : rule.style]}
                             options={[
@@ -234,35 +235,33 @@ export function RuleDialog({
                         />
                         <Text className={styles.hint}>{t('contextNote')}</Text>
                     </Box>
-                    <Flex gap={6} className={styles.sliders}>
-                        <Box className={styles.half}>
-                            <Flex className={styles.label} justifyContent="space-between">
-                                <Text>{t('length')}</Text>
-                                <Text color="secondary">{rule.maxTokens}</Text>
-                            </Flex>
-                            <Slider
-                                value={rule.maxTokens}
-                                min={32}
-                                max={512}
-                                step={32}
-                                onUpdate={(maxTokens) => setRule({...rule, maxTokens})}
-                                aria-label={t('length')}
-                            />
-                        </Box>
-                        <Box className={styles.half}>
-                            <Flex className={styles.label} justifyContent="space-between">
-                                <Text>{t('delay')}</Text>
-                                <Text color="secondary">{t('seconds', {count: rule.delaySeconds})}</Text>
-                            </Flex>
-                            <Slider
-                                value={rule.delaySeconds}
-                                min={0}
-                                max={60}
-                                onUpdate={(delaySeconds) => setRule({...rule, delaySeconds})}
-                                aria-label={t('delay')}
-                            />
-                        </Box>
-                    </Flex>
+                    <Box qa="response-length-setting">
+                        <Flex className={styles.label} justifyContent="space-between">
+                            <Text>{t('length')}</Text>
+                            <Text color="secondary">{rule.maxTokens}</Text>
+                        </Flex>
+                        <Slider
+                            value={rule.maxTokens}
+                            min={32}
+                            max={512}
+                            step={32}
+                            onUpdate={(maxTokens) => setRule({...rule, maxTokens})}
+                            aria-label={t('length')}
+                        />
+                    </Box>
+                    <Box qa="reply-delay-setting">
+                        <Flex className={styles.label} justifyContent="space-between">
+                            <Text>{t('delay')}</Text>
+                            <Text color="secondary">{t('seconds', {count: rule.delaySeconds})}</Text>
+                        </Flex>
+                        <Slider
+                            value={rule.delaySeconds}
+                            min={0}
+                            max={60}
+                            onUpdate={(delaySeconds) => setRule({...rule, delaySeconds})}
+                            aria-label={t('delay')}
+                        />
+                    </Box>
                     <Box>
                         <Flex className={styles.label} justifyContent="space-between">
                             <Text>{t('creativity')}</Text>

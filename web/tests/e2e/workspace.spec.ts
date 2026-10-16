@@ -314,6 +314,110 @@ test('conversation background appears only for an open chat on the chats page', 
     await expect(wallpaper).toHaveCount(0);
 });
 
+test('Escape clears pointer focus on the chat row while keyboard focus remains visible', async ({page}) => {
+    const chat = page.getByRole('button', {name: 'Аня Смирнова', exact: true});
+    await chat.click();
+    await expect(chat).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(page.getByText('Выберите диалог', {exact: true})).toBeVisible();
+    await expect(chat).not.toBeFocused();
+    expect(await chat.evaluate((element) => element.matches(':focus-visible'))).toBe(false);
+    await chat.focus();
+    await expect(chat).toHaveCSS('outline-style', 'solid');
+});
+
+[1440, 640].forEach((width) => {
+    test(`conversation skeleton preserves the header and composer geometry at ${width}px`, async ({page}) => {
+        await page.setViewportSize({width, height: 900});
+        await page.emulateMedia({reducedMotion: 'reduce'});
+        await page.keyboard.press('Escape');
+        let release: () => void = () => {};
+        const gate = new Promise<void>((resolve) => {
+            release = resolve;
+        });
+        await page.route('**/api/chats/41/messages', async (route) => {
+            await gate;
+            await route.fulfill({json: testHistory('41')});
+        });
+        await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
+        const skeleton = page.locator('[data-qa="conversation-skeleton"]');
+        await expect(skeleton).toBeVisible();
+        const geometry = await skeleton.evaluate((element) =>
+            ['skeleton-conversation-header', 'skeleton-message-composer'].map((qa) => {
+                const rect = element.querySelector(`[data-qa="${qa}"]`)!.getBoundingClientRect();
+                return {x: rect.x, y: rect.y, width: rect.width, height: rect.height};
+            }),
+        );
+        if (width === 1440) {
+            await page.screenshot({
+                path: '../docs/resources/conversation-loading.png',
+                animations: 'disabled',
+            });
+        }
+        release();
+        await expect(skeleton).toHaveCount(0);
+        await page.locator('[data-qa="conversation-header"]').evaluate(async (element) => {
+            await Promise.all(element.parentElement!.getAnimations().map((animation) => animation.finished));
+        });
+        const loaded = await page.evaluate(() =>
+            ['conversation-header', 'message-composer'].map((qa) => {
+                const rect = document.querySelector(`[data-qa="${qa}"]`)!.getBoundingClientRect();
+                return {x: rect.x, y: rect.y, width: rect.width, height: rect.height};
+            }),
+        );
+        loaded.forEach((rect, index) =>
+            Object.entries(rect).forEach(([key, value]) => {
+                expect(
+                    Math.abs(value - geometry[index][key as keyof typeof rect]),
+                    JSON.stringify({geometry, loaded}),
+                ).toBeLessThanOrEqual(1);
+            }),
+        );
+    });
+});
+
+test('model placeholders follow the engine search and card grid layout', async ({page}) => {
+    let loading = true;
+    const engine = {
+        ...workspaceState.engine,
+        models: Array.from({length: 12}, (_, index) => ({
+            ...workspaceState.engine.models[index % workspaceState.engine.models.length],
+            id: `test-model-${index}`,
+        })),
+    };
+    await page.route('**/api/state', (route) =>
+        route.fulfill({json: {...workspaceState, engine: loading ? undefined : engine}}),
+    );
+    await page.reload();
+    await page.getByRole('button', {name: 'Модели ИИ', exact: true}).click();
+    await page.emulateMedia({reducedMotion: 'reduce'});
+    await expect(page.locator('[data-qa="models-skeleton"]')).toBeVisible();
+    const skeleton = await page.locator('[data-qa="skeleton-engine-card"]').boundingBox();
+    const cards = await page.locator('[data-qa="model-card-skeleton"]').evaluateAll((elements) =>
+        elements.map((element) => {
+            const rect = element.getBoundingClientRect();
+            return {x: rect.x, y: rect.y, width: rect.width};
+        }),
+    );
+    await page.screenshot({path: '../docs/resources/models-loading.png', animations: 'disabled'});
+    loading = false;
+    await expect(page.locator('[data-qa="models-skeleton"]')).toHaveCount(0);
+    const engineBounds = await page.locator('[data-qa="engine-card"]').boundingBox();
+    expect(Math.abs(engineBounds!.x - skeleton!.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(engineBounds!.width - skeleton!.width)).toBeLessThanOrEqual(1);
+    const actual = await page.locator('[data-qa="model-card"]').evaluateAll((elements) =>
+        elements.slice(0, 3).map((element) => {
+            const rect = element.getBoundingClientRect();
+            return {x: rect.x, y: rect.y, width: rect.width};
+        }),
+    );
+    actual.forEach((rect, index) =>
+        Object.entries(rect).forEach(([key, value]) => {
+            expect(Math.abs(value - cards[index][key as keyof typeof rect])).toBeLessThanOrEqual(2);
+        }),
+    );
+});
+
 test('default and unavailable wallpapers use a plain theme background', async ({page}) => {
     const state = structuredClone(workspaceState);
     state.chats[0].wallpaper = {kind: 'wallpaper', url: '/api/media/missing-background'};
@@ -893,7 +997,7 @@ test('settings persist reply pacing, typing, tray and Windows startup options', 
     await dialog.getByRole('switch', {name: 'Показывать «печатает…»'}).click();
     await dialog.getByRole('switch', {name: 'При закрытии скрывать в трей'}).click();
     await dialog.getByText('Запускать с Windows', {exact: true}).click();
-    await dialog.getByText('Включать ИИ при запуске с Windows', {exact: true}).click();
+    await dialog.getByText('Включать ИИ при запуске приложения', {exact: true}).click();
     await dialog.getByRole('slider', {name: 'Общая задержка перед ответом'}).focus();
     await page.keyboard.press('Home');
     await page.keyboard.press('ArrowRight');
@@ -926,6 +1030,16 @@ test('all writing styles have emoji and rough styles and imitation survive savin
         return emoji && name ? Math.abs(emoji.y + emoji.height / 2 - name.y - name.height / 2) : Infinity;
     });
     expect(aligned).toBeLessThanOrEqual(1);
+    const rowOffsets = await page.getByRole('option').evaluateAll((options) =>
+        options.flatMap((option) => {
+            const row = option.getBoundingClientRect();
+            return ['style-emoji', 'style-name'].map((qa) => {
+                const child = option.querySelector(`[data-qa="${qa}"]`)?.getBoundingClientRect();
+                return child ? Math.abs(child.top + child.height / 2 - row.top - row.height / 2) : Infinity;
+            });
+        }),
+    );
+    rowOffsets.forEach((offset) => expect(offset).toBeLessThanOrEqual(1));
     await rough.click();
     const selectedStyle = page.getByRole('combobox', {name: 'Стиль общения', exact: true});
     await expect(selectedStyle).toContainText('Быдланский');
@@ -945,6 +1059,64 @@ test('all writing styles have emoji and rough styles and imitation survive savin
     );
     await page.getByRole('button', {name: 'Сохранить настройки', exact: true}).click();
     expect((await save).postDataJSON()).toMatchObject({style: 'rough'});
+});
+
+test('reply length and delay occupy separate full-width rows and retain their values', async ({page}) => {
+    await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.locator('[data-qa="reply-delay-setting"]').scrollIntoViewIfNeeded();
+    const geometry = await dialog.evaluate((element) => {
+        const length = element.querySelector('[data-qa="response-length-setting"]')!.getBoundingClientRect();
+        const delay = element.querySelector('[data-qa="reply-delay-setting"]')!.getBoundingClientRect();
+        return {
+            gap: delay.top - length.bottom,
+            left: Math.abs(length.left - delay.left),
+            width: Math.abs(length.width - delay.width),
+        };
+    });
+    expect(geometry.gap).toBeGreaterThanOrEqual(16);
+    expect(geometry.left).toBeLessThanOrEqual(1);
+    expect(geometry.width).toBeLessThanOrEqual(1);
+    await dialog.getByRole('slider', {name: 'Длина ответа', exact: true}).press('End');
+    await dialog.getByRole('slider', {name: 'Задержка перед ответом', exact: true}).press('Home');
+    await dialog.getByRole('slider', {name: 'Задержка перед ответом', exact: true}).press('ArrowRight');
+    await page.screenshot({path: '../docs/resources/communication-pacing.png', animations: 'disabled'});
+    const saved = page.waitForRequest(
+        (request) => request.method() === 'PUT' && request.url().endsWith('/api/chats/41/rule'),
+    );
+    await dialog.getByRole('button', {name: 'Сохранить настройки', exact: true}).click();
+    expect((await saved).postDataJSON()).toMatchObject({maxTokens: 512, delaySeconds: 1});
+    await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
+    await expect(page.getByRole('slider', {name: 'Длина ответа', exact: true})).toHaveAttribute(
+        'aria-valuenow',
+        '512',
+    );
+    await expect(page.getByRole('slider', {name: 'Задержка перед ответом', exact: true})).toHaveAttribute(
+        'aria-valuenow',
+        '1',
+    );
+});
+
+test('style option content is centered within every dropdown row in dark theme', async ({page}) => {
+    await page.context().addCookies([{name: 'tiho-theme', value: 'dark', url: page.url()}]);
+    await page.reload();
+    await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
+    await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
+    await page.getByRole('combobox', {name: 'Стиль общения', exact: true}).click();
+    const offsets = await page.getByRole('option').evaluateAll((options) =>
+        options.flatMap((option) => {
+            const bounds = option.getBoundingClientRect();
+            return Array.from(option.querySelectorAll('[data-qa="style-emoji"], [data-qa="style-name"]')).map(
+                (child) => {
+                    const rect = child.getBoundingClientRect();
+                    return Math.abs(rect.top + rect.height / 2 - bounds.top - bounds.height / 2);
+                },
+            );
+        }),
+    );
+    expect(offsets.length).toBeGreaterThan(4);
+    offsets.forEach((offset) => expect(offset).toBeLessThanOrEqual(1));
+    await page.screenshot({path: '../docs/resources/communication-styles-dark.png', animations: 'disabled'});
 });
 
 test('Electron title bar uses its isolated bridge and native drag region', async ({page}) => {

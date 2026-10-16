@@ -13,6 +13,10 @@ export type AppState = components['schemas']['State'] & {window?: DesktopWindowS
 export type Reply = components['schemas']['Reply'];
 export type Engine = components['schemas']['Engine'];
 export type Telegram = components['schemas']['Telegram'];
+export type Activity = components['schemas']['Activity'];
+export type ActivityDetails = components['schemas']['ActivityDetails'];
+export type ActivityAttempt = components['schemas']['ActivityAttempt'];
+export type ReplyQueue = components['schemas']['ReplyQueue'];
 
 export function dataOrThrow<T>(result: {data?: T; error?: {message: string}; response: Response}): T {
     if (result.error || result.data === undefined) {

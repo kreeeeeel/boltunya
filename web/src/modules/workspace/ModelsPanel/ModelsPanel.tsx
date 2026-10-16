@@ -1,4 +1,4 @@
-import {Box, Button, Flex, Icon, Label, Loader, Text, TextInput} from '@gravity-ui/uikit';
+import {Box, Button, Flex, Icon, Label, Loader, Skeleton, Text, TextInput} from '@gravity-ui/uikit';
 import {Check, ArrowDownToLine, HardDrive, Sparkles, Thunderbolt, Magnifier} from '@gravity-ui/icons';
 import {useLocale, useTranslations} from 'next-intl';
 import {useState} from 'react';
@@ -10,7 +10,6 @@ import {DownloadButton} from '@/modules/workspace/ModelsPanel/DownloadButton';
 import {defaultRule} from '@/shared/api/client';
 import type {Reply} from '@/shared/api/client';
 import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
-import {PanelSkeleton} from '@/shared/ui/PanelSkeleton/PanelSkeleton';
 
 export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}: ModelsPanelProps) {
     const t = useTranslations();
@@ -58,11 +57,79 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
         }
     }
 
+    const Container = embedded ? Box : ScrollArea;
     if (!engine) {
-        return <PanelSkeleton />;
+        return (
+            <Container className={[styles.root, embedded ? styles.embedded : ''].join(' ')}>
+                <Box className={styles.content} role="status" aria-label={t('loading')} qa="models-skeleton">
+                    <Box className={styles.eyebrow}>
+                        <Skeleton width={96} height={16} />
+                    </Box>
+                    <Box className={styles.engineCard} qa="skeleton-engine-card">
+                        <Flex alignItems="center" justifyContent="space-between" gap={4}>
+                            <Flex gap={3} alignItems="center">
+                                <Skeleton width={23} height={23} />
+                                <Flex direction="column" className={styles.engineText}>
+                                    <Skeleton width={160} height={20} />
+                                    <Skeleton width={220} height={20} />
+                                </Flex>
+                            </Flex>
+                            <Skeleton width={100} height={28} />
+                        </Flex>
+                    </Box>
+                    <Flex
+                        className={styles.searchRow}
+                        alignItems="center"
+                        justifyContent="space-between"
+                        gap={3}
+                    >
+                        <Skeleton className={styles.searchInput} height={40} />
+                        <Skeleton width={100} height={20} />
+                    </Flex>
+                    <Box className={styles.cards}>
+                        {Array.from({length: 12}, (_, index) => (
+                            <Flex
+                                key={index}
+                                className={styles.card}
+                                direction="column"
+                                gap={4}
+                                qa="model-card-skeleton"
+                            >
+                                <Flex alignItems="center" justifyContent="space-between">
+                                    <Skeleton width={48} height={48} />
+                                    <Skeleton width={90} height={28} />
+                                </Flex>
+                                <Flex direction="column" gap={2}>
+                                    <Skeleton width="65%" height={24} />
+                                    <Skeleton width="40%" height={20} />
+                                </Flex>
+                                <Skeleton height={45} />
+                                <Flex direction="column" className={styles.comparison}>
+                                    {Array.from({length: 9}, (_, feature) => (
+                                        <Flex
+                                            key={feature}
+                                            className={styles.feature}
+                                            justifyContent="space-between"
+                                            gap={3}
+                                        >
+                                            <Skeleton width="42%" height={21} />
+                                            <Skeleton width="36%" height={21} />
+                                        </Flex>
+                                    ))}
+                                </Flex>
+                                <Flex justifyContent="space-between" alignItems="center">
+                                    <Skeleton width={64} height={20} />
+                                    <Skeleton width={100} height={28} />
+                                </Flex>
+                                <Skeleton height={36} />
+                            </Flex>
+                        ))}
+                    </Box>
+                </Box>
+            </Container>
+        );
     }
 
-    const Container = embedded ? Box : ScrollArea;
     const query = search.trim().toLocaleLowerCase(locale);
     const models = engine.models.filter((model) =>
         [model.id, model.name, model.description].some((value) =>
@@ -76,7 +143,7 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
                     <Icon data={Sparkles} size={16} />
                     <Text>{t('models')}</Text>
                 </Flex>
-                <Box className={styles.engineCard}>
+                <Box className={styles.engineCard} qa="engine-card">
                     <Flex
                         className={styles.engine}
                         alignItems="center"

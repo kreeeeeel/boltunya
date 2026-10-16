@@ -1,12 +1,11 @@
 'use client';
 
-import {Box, Flex, Label, Text} from '@gravity-ui/uikit';
+import {Box, Flex, Label, Skeleton, Text} from '@gravity-ui/uikit';
 import {useEffect, useState} from 'react';
 import {useTranslations} from 'next-intl';
 import type {components} from '@/shared/api/schema';
 import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
 import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
-import {PanelSkeleton} from '@/shared/ui/PanelSkeleton/PanelSkeleton';
 import {ResourceChart} from '@/modules/monitoring/ResourceChart/ResourceChart';
 import styles from '@/modules/monitoring/MetricsPanel/MetricsPanel.module.css';
 
@@ -44,7 +43,34 @@ export function MetricsPanel() {
         };
     }, []);
     if (!samples && !error) {
-        return <PanelSkeleton />;
+        return (
+            <ScrollArea className={styles.root}>
+                <Box className={styles.content} role="status" aria-label={t('loading')} qa="metrics-skeleton">
+                    <Flex justifyContent="space-between" alignItems="center">
+                        <Skeleton width={180} height={28} />
+                        <Skeleton width={100} height={20} />
+                    </Flex>
+                    <Box className={styles.description}>
+                        <Skeleton width="65%" height={20} />
+                    </Box>
+                    <Box className={styles.grid}>
+                        {Array.from({length: 5}, (_, index) => (
+                            <Flex key={index} direction="column" className={styles.chartSkeleton} gap={3}>
+                                <Flex justifyContent="space-between">
+                                    <Skeleton width={100} height={24} />
+                                    <Skeleton width={80} height={24} />
+                                </Flex>
+                                <Skeleton height={200} />
+                                <Skeleton width="50%" height={18} />
+                            </Flex>
+                        ))}
+                        <Box className={styles.details}>
+                            <Skeleton height={220} />
+                        </Box>
+                    </Box>
+                </Box>
+            </ScrollArea>
+        );
     }
     const last = samples?.at(-1);
     const points = (samples ?? []).map((sample) => ({

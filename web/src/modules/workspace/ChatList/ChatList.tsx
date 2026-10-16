@@ -39,7 +39,7 @@ export function ChatList({chats, selected, loading = false, onSelect}: ChatListP
             </Flex>
             <Box className={styles.search}>
                 {loading ? (
-                    <Skeleton height={36} />
+                    <Skeleton height={40} />
                 ) : (
                     <TextInput
                         qa="chat-search"
@@ -81,15 +81,15 @@ export function ChatList({chats, selected, loading = false, onSelect}: ChatListP
                 {pending ? (
                     <Box role="status" aria-label={t('loadingChats')} qa="chat-list-skeleton">
                         {Array.from({length: 8}, (_, index) => (
-                            <Box className={styles.row} key={index}>
+                            <Box className={styles.row} key={index} qa="chat-row-skeleton">
                                 <Skeleton variant="circle" width={42} height={42} />
-                                <Flex direction="column" gap={2}>
-                                    <Skeleton width="68%" height={12} />
-                                    <Skeleton width="90%" height={11} />
+                                <Flex direction="column" className={styles.chatText}>
+                                    <Skeleton width="68%" height={18} />
+                                    <Skeleton width="90%" height={18} />
                                 </Flex>
-                                <Flex direction="column" alignItems="flex-end" gap={3}>
-                                    <Skeleton width={28} height={9} />
-                                    <Skeleton width={16} height={16} />
+                                <Flex direction="column" alignItems="flex-end" className={styles.aside}>
+                                    <Skeleton width={38} height={18} />
+                                    <Skeleton width={20} height={20} />
                                 </Flex>
                             </Box>
                         ))}

@@ -1,6 +1,6 @@
 .option {
     width: 100%;
-    min-height: 28px;
+    height: 100%;
     gap: 10px;
 }
 
@@ -16,6 +16,7 @@
 }
 
 .name {
+    min-width: 0;
     font-size: 14px;
     line-height: 24px;
     overflow: hidden;

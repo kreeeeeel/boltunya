@@ -11,14 +11,11 @@
     padding: 8px 0 16px;
 }
 
-.styleControl {
-    padding-block: 4px;
-}
-
 .styleControl :global(.g-select-control__option-text) {
     display: flex;
     align-items: center;
     height: 100%;
+    min-width: 0;
 }
 
 .enable {
@@ -47,11 +44,6 @@
     margin-top: 8px;
 }
 
-.half {
-    width: 50%;
-    min-width: 0;
-}
-
 .test {
     padding: 20px;
     background: var(--tiho-bg);
@@ -65,14 +57,4 @@
     border-radius: 12px;
     line-height: 1.7;
     white-space: pre-wrap;
-}
-
-@media (width <= 480px) {
-    .sliders {
-        flex-direction: column;
-    }
-
-    .half {
-        width: 100%;
-    }
 }

@@ -10,8 +10,10 @@ export function useWorkspace(chatId: string | null) {
     const [state, setState] = useState<AppState | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [error, setError] = useState('');
-    const [historyError, setHistoryError] = useState('');
-    const [resolvedChatId, setResolvedChatId] = useState<string | null>(null);
+    const [historyStatus, setHistoryStatus] = useState({chatId, resolved: false, error: ''});
+    if (historyStatus.chatId !== chatId) {
+        setHistoryStatus({chatId, resolved: false, error: ''});
+    }
 
     const refresh = useCallback(async () => {
         try {
@@ -64,13 +66,11 @@ export function useWorkspace(chatId: string | null) {
                 );
                 if (active) {
                     setMessages((previous) => mergeMessages(previous, result));
-                    setHistoryError('');
-                    setResolvedChatId(chatId);
+                    setHistoryStatus({chatId, resolved: true, error: ''});
                 }
             } catch (cause) {
                 if (active) {
-                    setHistoryError(errorMessage(cause));
-                    setResolvedChatId(chatId);
+                    setHistoryStatus({chatId, resolved: true, error: errorMessage(cause)});
                 }
             } finally {
                 if (active) {
@@ -89,9 +89,9 @@ export function useWorkspace(chatId: string | null) {
         state,
         messages,
         error,
-        historyError: resolvedChatId === chatId ? historyError : '',
+        historyError: historyStatus.error,
         stateLoading: state === null && !error,
-        historyLoading: chatId !== null && resolvedChatId !== chatId,
+        historyLoading: chatId !== null && !historyStatus.resolved,
         refresh,
         setMessages,
     };

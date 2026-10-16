@@ -1,0 +1,82 @@
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    padding: 18px;
+    border-radius: 16px;
+    background: var(--tiho-bg);
+    font-variant-numeric: tabular-nums;
+}
+
+.timeline {
+    line-height: 1.8;
+}
+
+.message,
+.traceBlock {
+    border-radius: 14px;
+    background: var(--tiho-bg);
+    padding: 16px;
+    min-width: 0;
+}
+
+.traceBlock .message {
+    background: var(--tiho-panel);
+}
+
+.requestBlock {
+    background: var(--g-color-base-info-light);
+}
+
+.thinkingBlock {
+    background: var(--g-color-base-utility-light);
+}
+
+.responseBlock {
+    background: var(--g-color-base-positive-light);
+}
+
+.blockHeading {
+    margin-bottom: 12px;
+}
+
+.attempt {
+    min-width: 0;
+}
+
+.delivered {
+    border-radius: 14px;
+    padding: 16px;
+    background: var(--tiho-selected);
+}
+
+.traceContent {
+    margin-top: 16px;
+}
+
+.pre {
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    user-select: text;
+    margin: 12px 0 0;
+}
+
+.meta {
+    font-variant-numeric: tabular-nums;
+}
+
+.footer {
+    flex-shrink: 0;
+    padding: 16px 24px 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+@media (width <= 650px) {
+    .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

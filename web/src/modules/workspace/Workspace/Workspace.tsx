@@ -1,6 +1,6 @@
 'use client';
 
-import {Box, Button, DropdownMenu, Flex, Icon, Label, Text, Tooltip} from '@gravity-ui/uikit';
+import {Box, Button, DropdownMenu, Flex, Icon, Text, Tooltip} from '@gravity-ui/uikit';
 import {
     ArrowRightFromSquare,
     Clock,
@@ -18,6 +18,7 @@ import {
 import {useTranslations} from 'next-intl';
 import {useEffect, useRef, useState} from 'react';
 
+import {ActivityPanel} from '@/modules/activity/ActivityPanel/ActivityPanel';
 import {ChatList} from '@/modules/workspace/ChatList/ChatList';
 import {GlobalPromptDialog} from '@/modules/workspace/GlobalPromptDialog/GlobalPromptDialog';
 import {StylesDialog} from '@/modules/workspace/StylesDialog/StylesDialog';
@@ -38,13 +39,11 @@ import styles from '@/modules/workspace/Workspace/Workspace.module.css';
 import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
 import type {Chat, ChatRule} from '@/shared/api/client';
 import {usePreferences} from '@/shared/theme/Preferences';
-import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
 import {useLanguageItems} from '@/shared/ui/LanguageMenu/LanguageMenu';
 import {desktopBridge} from '@/shared/desktop/bridge';
 import {MemoryDialog} from '@/modules/memory/MemoryDialog/MemoryDialog';
 import {ContextCollectionDialog} from '@/modules/memory/ContextCollectionDialog/ContextCollectionDialog';
 import {DeletedMessagesDialog} from '@/modules/workspace/DeletedMessagesDialog/DeletedMessagesDialog';
-import {PanelSkeleton} from '@/shared/ui/PanelSkeleton/PanelSkeleton';
 
 export function Workspace() {
     const t = useTranslations();
@@ -85,6 +84,11 @@ export function Workspace() {
             ) {
                 return;
             }
+            const focused = document.activeElement;
+            if (focused instanceof HTMLElement && focused.matches('[data-qa="chat-open"]')) {
+                focused.blur();
+            }
+            event.preventDefault();
             selectedChat.current = null;
             setSelected(null);
             setMessages([]);
@@ -365,11 +369,6 @@ export function Workspace() {
                     </Flex>
                 </Flex>
                 <Flex key={tab} className={styles.view} qa="workspace-view">
-                    {stateLoading && tab !== 'chats' && (
-                        <Box className={styles.panel}>
-                            <PanelSkeleton />
-                        </Box>
-                    )}
                     {tab === 'chats' && (
                         <>
                             <Box className={`${styles.chatList} ${selected ? styles.hideOnMobile : ''}`}>
@@ -449,51 +448,12 @@ export function Workspace() {
                         </Box>
                     )}
                     {tab === 'activity' && !stateLoading && (
-                        <ScrollArea className={styles.infoPanel}>
-                            <Box className={styles.activityContent}>
-                                {!!state?.activity.length && (
-                                    <>
-                                        <Text variant="header-2">{t('activityTitle')}</Text>
-                                        <Text className={styles.infoDescription}>
-                                            {t('activityDescription')}
-                                        </Text>
-                                    </>
-                                )}
-                                {!state?.activity.length && (
-                                    <Flex
-                                        direction="column"
-                                        gap={3}
-                                        className={styles.emptyActivity}
-                                        qa="empty-activity"
-                                    >
-                                        <Box
-                                            as="img"
-                                            src="/assets/illustrations/activity.png"
-                                            alt=""
-                                            className={styles.emptyIllustration}
-                                        />
-                                        <Text variant="header-1">{t('noActivity')}</Text>
-                                        <Text color="secondary">{t('noActivityText')}</Text>
-                                    </Flex>
-                                )}
-                                {state?.activity.map((item) => (
-                                    <Flex
-                                        key={item.id}
-                                        gap={4}
-                                        justifyContent="space-between"
-                                        className={styles.activityRow}
-                                    >
-                                        <Flex direction="column" gap={2}>
-                                            <Text variant="subheader-2">{item.title}</Text>
-                                            <Text color="secondary">{item.detail}</Text>
-                                        </Flex>
-                                        <Label theme={item.status === 'error' ? 'danger' : 'info'}>
-                                            {t(item.status)}
-                                        </Label>
-                                    </Flex>
-                                ))}
-                            </Box>
-                        </ScrollArea>
+                        <ActivityPanel
+                            entries={state?.activity ?? []}
+                            queue={state?.replyQueue}
+                            assistantPaused={paused}
+                            onRefresh={refresh}
+                        />
                     )}
                 </Flex>
             </Flex>

@@ -13,27 +13,46 @@ export function ConversationSkeleton() {
             aria-label={t('loadingConversation')}
             qa="conversation-skeleton"
         >
-            <Flex alignItems="center" className={styles.header} gap={3}>
-                <Skeleton variant="circle" width={34} height={34} />
-                <Flex direction="column" gap={2}>
-                    <Skeleton width={136} height={12} />
-                    <Skeleton width={96} height={9} />
+            <Flex
+                alignItems="center"
+                justifyContent="space-between"
+                className={styles.header}
+                qa="skeleton-conversation-header"
+            >
+                <Flex alignItems="center" gap={3}>
+                    <Skeleton className={styles.back} width={32} height={32} />
+                    <Skeleton variant="circle" width={32} height={32} />
+                    <Flex direction="column">
+                        <Skeleton width={136} height={18} />
+                        <Skeleton width={96} height={18} />
+                    </Flex>
+                </Flex>
+                <Flex alignItems="center" gap={2}>
+                    <Skeleton className={styles.model} width={90} height={18} />
+                    <Skeleton width={32} height={32} />
+                    <Skeleton width={32} height={32} />
+                    <Skeleton className={styles.inspector} width={32} height={32} />
                 </Flex>
             </Flex>
             <Flex direction="column" className={styles.messages}>
+                <Skeleton className={styles.date} width={72} height={24} />
                 {Array.from({length: 7}, (_, index) => (
                     <Box
                         key={index}
                         className={[styles.bubble, index % 3 === 1 ? styles.outgoing : ''].join(' ')}
                     >
-                        <Skeleton width={index % 2 === 0 ? 190 : 250} height={12} />
-                        {index % 2 === 1 && <Skeleton width={150} height={12} />}
-                        <Skeleton width={38} height={8} />
+                        <Skeleton width={index % 2 === 0 ? 190 : 250} height={18} />
+                        {index % 2 === 1 && <Skeleton width={150} height={18} />}
+                        <Skeleton className={styles.time} width={38} height={14} />
                     </Box>
                 ))}
             </Flex>
-            <Box className={styles.composer}>
-                <Skeleton height={40} />
+            <Box className={styles.composerArea}>
+                <Flex alignItems="center" gap={2} className={styles.composer} qa="skeleton-message-composer">
+                    <Skeleton width={32} height={32} />
+                    <Skeleton className={styles.input} height={18} />
+                    <Skeleton width={32} height={32} />
+                </Flex>
             </Box>
         </Flex>
     );

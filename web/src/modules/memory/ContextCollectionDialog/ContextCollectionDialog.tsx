@@ -1,8 +1,7 @@
-import {Dialog, Flex, Loader, RadioGroup, Text} from '@gravity-ui/uikit';
+import {Dialog, Flex, Loader, RadioGroup, Skeleton, Text} from '@gravity-ui/uikit';
 import {useState} from 'react';
 import {useTranslations} from 'next-intl';
 import {useMemoryDocument} from '@/modules/memory/model/useMemoryDocument';
-import {PanelSkeleton} from '@/shared/ui/PanelSkeleton/PanelSkeleton';
 import styles from '@/modules/memory/ContextCollectionDialog/ContextCollectionDialog.module.css';
 import {ContextCollectionStatus} from '@/modules/memory/ContextCollectionStatus/ContextCollectionStatus';
 
@@ -43,7 +42,11 @@ export function ContextCollectionDialog({
                     <Text variant="subheader-2">{title}</Text>
                     <Text color="secondary">{t(global ? 'context.globalHint' : 'context.hint')}</Text>
                     {!document && !memory.error ? (
-                        <PanelSkeleton />
+                        <Flex direction="column" gap={4} role="status" aria-label={t('loading')}>
+                            <Skeleton height={44} />
+                            <Skeleton height={44} />
+                            <Skeleton height={84} />
+                        </Flex>
                     ) : (
                         document && (
                             <>

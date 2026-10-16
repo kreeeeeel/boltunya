@@ -12,7 +12,6 @@ import {FlowTestDialog} from '@/modules/flows/FlowTestDialog/FlowTestDialog';
 import {FlowLibrary} from '@/modules/flows/FlowLibrary/FlowLibrary';
 import {initialFlow, type FlowCanvasNode} from '@/modules/flows/model/flowTypes';
 import {useFlowEditor} from '@/modules/flows/model/useFlowEditor';
-import {PanelSkeleton} from '@/shared/ui/PanelSkeleton/PanelSkeleton';
 import styles from '@/modules/flows/FlowEditor/FlowEditor.module.css';
 
 const nodeTypes = {block: FlowBlock};
@@ -70,7 +69,11 @@ export function FlowEditor({chats}: {readonly chats: Chat[]}) {
         };
     }, [current?.id]);
     if (!flows && !error) {
-        return <PanelSkeleton />;
+        return (
+            <Flex direction="column" className={styles.root}>
+                <FlowLibrary loading flows={[]} onCreate={create} onOpen={load} />
+            </Flex>
+        );
     }
     function create() {
         load(initialFlow(t('flows.newFlow'), t('flows.welcome')));
