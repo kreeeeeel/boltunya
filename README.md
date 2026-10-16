@@ -1,89 +1,132 @@
-# Болтунья
+<p align="center"><img src="web/public/assets/brand/boltunya.svg" width="88" alt="Boltunya logo"></p>
+<h1 align="center">Boltunya · Болтунья</h1>
+<p align="center">Your Telegram conversations. Local AI. Your own voice.</p>
+<p align="center">
+  <a href="https://github.com/kreeeeeel/boltunya/actions/workflows/release.yml"><img alt="Windows release" src="https://github.com/kreeeeeel/boltunya/actions/workflows/release.yml/badge.svg"></a>
+  <img alt="Kotlin 2.2" src="https://img.shields.io/badge/Kotlin-2.2-7F52FF?logo=kotlin&logoColor=white">
+  <img alt="Electron 44" src="https://img.shields.io/badge/Electron-44-47848F?logo=electron&logoColor=white">
+  <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-111111?logo=nextdotjs">
+  <img alt="Gravity UI" src="https://img.shields.io/badge/Gravity_UI-7-FFBE5C">
+  <img alt="Google Guice" src="https://img.shields.io/badge/Google_Guice-7-4285F4">
+  <img alt="Ollama" src="https://img.shields.io/badge/Ollama-local_AI-111111?logo=ollama">
+  <img alt="Windows x64" src="https://img.shields.io/badge/Windows-x64-0078D4">
+</p>
+<p align="center"><a href="https://github.com/kreeeeeel/boltunya/releases/latest">Download for Windows</a> · <a href="docs/ru.md">Русская документация</a> · <a href="#development">Development</a></p>
 
-Личное приложение для Telegram с локальным ИИ: переписка, ответы в вашем стиле, интернет для актуальных вопросов и конструктор сценариев.
+Boltunya is a Windows desktop application for reading Telegram conversations and managing a personal AI assistant. Choose who it can reply to, shape its tone, and let local models use conversation history and long-term memory. You can also write replies yourself, build command-based workflows, and look up current information without a paid search API.
 
-## Запуск
+![Telegram workspace in the light theme](docs/resources/readme-chat-light.png)
 
-Откройте `complie/Болтунья.exe` или ярлык `Болтунья.lnk`. В одном переносимом exe находятся Electron, Java, Kotlin и веб-интерфейс. При запуске приложение распаковывает свою оболочку в локальный кеш. Ollama и веса моделей устанавливаются отдельно через страницу моделей; в exe они не входят.
+*Screenshots use synthetic conversations and illustrative data. No personal Telegram history is included.*
 
-1. Подключите Telegram. В форме есть ссылка на [my.telegram.org/apps](https://my.telegram.org/apps) и инструкция получения API ID/API Hash. Код входа и облачный пароль не сохраняются.
-2. На странице моделей установите Ollama и нужную модель. В каталоге 27 вариантов Qwen, Gemma, DeepSeek, GPT-OSS, Llama, Mistral и Phi. Размеры, лицензии, требования RAM и относительная скорость показаны в карточках. Кнопка проверки измеряет скорость на вашем компьютере.
-3. Откройте настройки конкретного чата и включите автоответы. Выберите стиль, контекст, модель, инструкции и подстройку по вашей переписке. Свои стили создаются в меню профиля, эмодзи выбираются из списка.
-4. Запустите ИИ в верхней панели. По умолчанию обычный запуск ставит его на паузу. В настройках отдельно разрешаются запуск с Windows и включение ИИ при таком запуске.
+## What it does
 
-## Диалоги
+- **A familiar conversation view.** Avatars, formatted text, clickable links, replies, photos, video, audio, documents, spoilers and static/animated stickers. History loads as you scroll without losing your position.
+- **Replies in your voice.** Real outgoing messages and a shared owner profile inform vocabulary, punctuation and tone. Known AI replies are excluded from owner-style samples. Built-in tones and custom emoji styles are available per conversation.
+- **Local models with a useful catalog.** Search 27 downloadable models across Qwen, Gemma, DeepSeek, GPT-OSS, Llama, Mistral and Phi. Compare memory estimates, context, reasoning, license and download size; measure speed on your own machine. Install Ollama and models from the application with progress feedback.
+- **Current information, naturally phrased.** Keyless search, Open-Meteo weather, dated news and official exchange rates. Short follow-ups retain the previous topic. Replies are instructed to preserve significant digits and dates while matching your style; links are limited to retrieved sources and follow your preferences.
+- **A memory bank you control.** Shared owner facts and habits, per-chat summaries, editable notes, incremental background collection and manual deep rebuilds with progress, queue state and cancellation.
+- **Visual workflows.** Connect command, agent, reply, condition and local JSON storage nodes. Test a draft before saving it, without sending a Telegram message.
+- **Deliberate automation.** Sequential replies, configurable delays and intervals, optional typing indicators, per-chat controls and group mention/all-message modes. Group automation starts disabled.
+- **A proper desktop shell.** A draggable title bar, maximize within the Windows work area, compact tray menu, optional startup in the tray, and separate startup/resume preferences. Resource charts show application and system activity.
+- **Four languages, two themes.** English, Russian, Kazakh and Ukrainian; light/dark themes and bundled Noto Sans typography.
 
-Форматирование, кликабельные ссылки, цитаты, спойлеры, копирование кода, фото, видео, аудио, документы, статические/TGS/WebM-стикеры. История подгружается сверху с сохранением позиции; дата закрепляется при прокрутке. Обои Telegram отображаются, когда TDLib передаёт фон беседы, иначе используется собственный рисунок. Автоответы отмечены «ИИ» только в интерфейсе приложения. Отправленные сообщения привязываются как ответы к входящему сообщению.
+<table>
+  <tr><td><img src="docs/resources/readme-chat-dark.png" alt="Dark conversation view"></td><td><img src="docs/resources/readme-models.png" alt="Searchable model comparison catalog"></td></tr>
+  <tr><td colspan="2"><img src="docs/resources/readme-flows.png" alt="Visual workflow editor"></td></tr>
+</table>
 
-В настройках отдельно управляется автозагрузка фото, видео, аудио и файлов с ограничением размера. Там же отображается размер медиакеша и доступна его очистка. Полученные до удаления сообщения сохраняются локально с отметкой «Удалено»; отдельный список открывается кнопкой «Удалённые сообщения» в параметрах общения. [Вложения, кеш и сохранение удалённых сообщений](docs/storage/ru.md).
+## Get started
 
-Подстройка использует исходящие реплики и исключает известные автоответы. Контекст включает текстовые сообщения и подписи вложений. Распознавание содержимого фотографий, видео и речи не включено. Собственные ограничения выбранной модели сохраняются; программная проверка с фиксированным отказом удалена.
+**Windows x64** is supported. Download **Болтунья.exe** from [Releases](https://github.com/kreeeeeel/boltunya/releases/latest) and open it. The portable EXE includes Electron, the Kotlin application, a Java runtime and the static web interface. A separate Java or Node.js installation is not needed to run it. Ollama and model weights are additional downloads managed from the model page. TDLib may require the [Microsoft Visual C++ x64 runtime](https://aka.ms/vs/17/release/vc_redist.x64.exe).
 
-Личные чаты, обычные группы, супергруппы и темы форумов поддерживаются через TDLib. Ответы в группах по умолчанию отключены. Можно разрешить их при упоминании или для всего разговора, глобально либо для отдельной беседы. Каналы, боты и собственный аккаунт не включаются в список автоответов.
+1. **Connect Telegram.** Obtain your own API ID and API Hash at [my.telegram.org/apps](https://my.telegram.org/apps), then follow the sign-in form. In-app guidance explains these fields, the login code and two-step verification.
+2. **Choose a model.** Open **AI models**, install Ollama if needed, and download a model that fits your computer. Speed and memory labels are estimates; the benchmark measures actual local performance.
+3. **Configure a conversation.** Open its conversation settings, enable replies and choose a model, tone, context and writing-style adaptation. Review the global instructions in the profile menu.
+4. **Start AI.** Use the title-bar control. Ordinary launches pause automation; Windows startup and automatic resume must be enabled separately in settings.
 
-Очередь обрабатывает сообщения последовательно, объединяет быстрые реплики и учитывает задержки, ручные ответы, паузу и серверный FLOOD_WAIT. Задержка снижает частоту отправки, но не гарантирует отсутствие ограничений Telegram. Статус «печатает…» и игнорирование запросов вроде заданий помощнику настраиваются.
+Use the profile menu for language, theme, settings, custom styles, shared memory and sign-out. Conversation settings contain memory collection and per-chat preferences. Photos, other media and deleted-message snapshots have cache and retention controls.
 
-Для актуальных вопросов доступны бесплатный поиск DuckDuckGo с резервным Bing и Open-Meteo, без API-ключей. Официальные курсы берутся из XML Банка России, а обычные новости — из датированных RSS РБК и ТАСС. Короткие уточнения сохраняют последнюю проверенную тему и дату прогноза. Поиск включается отдельно для чата. Название города и короткий запрос передаются внешним сервисам; полная переписка и Telegram-ключи туда не отправляются. По умолчанию ссылки отправляются только по просьбе собеседника; в параметрах чата можно выбрать другой режим. Exa используется только как дополнительный резерв со своим ключом. Этот ключ настраивается в общих настройках и хранится через Windows DPAPI. [Устройство поиска, ограничения и управление](docs/internet/ru.md).
+## Data and privacy
 
-## Память
+Inference and conversation memory run locally through Ollama. Telegram connectivity uses TDLib. When web search is enabled, external services receive a short generated query; weather services receive a city. The application does not send entire conversations or Telegram credentials to search providers. Exa MCP is an **optional** fallback with your own key; the default search path needs no key.
 
-Профиль → **Память** открывает общие заметки и автоматически собранный профиль владельца: его стиль, привычки и факты из настоящих исходящих сообщений. Известные автоответы ИИ исключаются. Кнопка книги в беседе открывает её отдельную сводку. Для начального профиля используются до восьми недавних личных бесед, затем история разбирается глубоко, порциями, с сохранением курсоров. По умолчанию новые сообщения добавляются каждые 6 часов, интервал настраивается. Ответы имеют приоритет. Общий файл — `memory/MEMORY.md`, профиль аккаунта — `memory/<accountId>/PROFILE.md`, беседы — `memory/<accountId>/<chatId>/MEMORY.md` в каталоге данных. [Устройство памяти и управление](docs/memory/ru.md).
-## Сценарии и графики
+The persistent profile is `%LOCALAPPDATA%\Tiho` (the legacy directory is kept to preserve existing sessions):
 
-На странице «Сценарии» соединяются блоки команды, агента, ответа, хранилища и условия. Переменные: `{{message}}`, `{{sender}}`, `{{reply}}`, `{{data.key}}`. Локальное JSON-хранилище разделено по сценарию и чату. Проверка черновика ничего не отправляет, не сохраняет сценарий и не меняет данные. Включённые сценарии работают при запущенном ИИ с учётом разрешений групп.
+| Location | Purpose |
+| --- | --- |
+| `settings.json` | Preferences, conversation rules and instructions |
+| `telegram.credentials` | API credentials protected by Windows DPAPI |
+| `telegram/` | TDLib session database and downloaded media |
+| `memory/MEMORY.md`, `memory/<chat-id>/MEMORY.md` | Shared and conversation memory with editable notes |
+| `history/`, `automated-replies.json` | Observed message snapshots and known AI message IDs |
+| `engine/` | App-managed Ollama runtime |
 
-«Графики» показывают CPU компьютера и приложения, оперативную память, память процессов JVM/Electron/Ollama, сетевой трафик и GPU NVIDIA. История — последние 3 минуты, обновление каждые 2 секунды. Сеть относится к компьютеру целиком; GPU без поддерживаемого драйвера показывает отсутствие данных. Это не измерение потребления электричества.
+Login codes and Telegram two-step passwords are not persisted by the application. Local memory and message snapshots contain private information; the profile, credentials, build outputs and local logs are excluded from Git. Deleted messages can only be retained if the application observed them beforehand. Clearing downloaded media does not sign you out or remove your settings and memory.
 
-Окно использует нативное перемещение Electron. Разворачивание учитывает панель задач Windows. После входа доступен компактный трей: открыть, переключить ИИ, настройки, завершить. Полное завершение останавливает backend и экземпляр Ollama, расположенный в каталоге приложения; внешний Ollama не завершается. Запуск с Windows восстанавливает сессию и остаётся в трее; если нужен вход, показывает форму.
+Full exit stops the application-managed Ollama process. An independently managed Ollama server is left running. Closing to the tray keeps the application active according to your settings.
 
-## Структура
+## Project structure
 
-```text
-backend/                 Kotlin, Guice, TDLib, Ollama, HTTP, сценарии и мониторинг
-  contract/api.yaml      OpenAPI, из него генерируется TypeScript-клиент
-  src/main/kotlin/ru/boltunya/
-  src/main/resources/    prompts/, patterns/, errors/, models/, languages.json
-  src/test/              тесты Kotlin
-web/                     Next.js static export, Gravity UI, i18n RU/EN/KK/UK
-  src/modules/           workspace/, flows/, monitoring/
-desktop/                 Electron main/preload, окно, трей, lifecycle backend
-.github/workflows/       сборка Windows exe и GitHub Release при push в main
-docker/                  контейнерные инструменты разработки и проверок
-scripts/                 сборка exe и генерация иконки
-complie/                 готовый exe, SHA256 и промежуточная упаковка
-```
+| Directory | Responsibility |
+| --- | --- |
+| `desktop/` | Electron window, isolated preload, native lifecycle, tray and startup |
+| `backend/` | Kotlin/JVM, Google Guice, TDLib, automation, search, memory and local API |
+| `web/` | TypeScript, React, Next.js static export, Gravity UI and generated API types |
+| `.github/workflows/` | Windows checks, portable packaging and GitHub Releases |
+| `docker/` | Development/checking containers; not the signed-in desktop application |
+| `scripts/` | Windows build, icons and browser verification |
+| `docs/` | English/Russian feature documentation and synthetic screenshots |
+| `complie/` | Generated EXE and SHA-256 checksum; intentionally ignored by Git |
 
-Основной пакет — `ru.boltunya`. Зависимости внедряет Google Guice 7 через `jakarta.inject`; граф описан в `ApplicationModule`. SWT/WebView2 и Kotlin desktop-оболочка удалены. [Архитектура](docs/architecture/ru.md), [DI](docs/dependency-injection/ru.md).
+The Kotlin package is `ru.boltunya`. Prompts, regex language packs, errors and model metadata live in backend resources. The OpenAPI contract is `backend/contract/api.yaml`; `openapi-typescript` generates the frontend types. The local API uses a private loopback session and Host/Origin checks. The renderer has no Node.js access.
 
-Промпты и production-regex лежат в ресурсах. Для языка распознавания добавьте код в `languages.json` и соответствующие файлы в `patterns/intent/<intent>/`; интерфейс переводится словарём `web/src/shared/i18n`. Ошибки представлены отдельными типами `exception/impl`, кодами `ErrorCode` и текстами ресурсов.
+## Development
 
-## Сборка и проверки
-
-Windows x64, JDK 21, Node.js 24. TDLib использует Visual C++ Runtime x64. Electron portable включает собственный Java runtime; Java на компьютере пользователя не требуется.
+Use **Windows x64, JDK 21 and Node.js 24**. From the repository root:
 
 ```powershell
 npm.cmd ci --prefix web
 npm.cmd ci --prefix desktop
-npx.cmd --prefix web playwright install chromium
+npm.cmd exec --prefix web -- playwright install chromium
 ./scripts/build.ps1
+./scripts/test-web.ps1
+npm.cmd run test:smoke --prefix desktop
 ```
 
-Результат: `complie/Болтунья.exe`. Полная сборка запускает Kotlin и frontend проверки. Браузерные сценарии запускаются отдельно против статического экспорта:
+The build runs Kotlin, frontend and Electron checks, exports the web interface, creates a minimal Java runtime and writes `complie/Болтунья.exe` plus `SHA256.txt`. Browser tests serve the static export on a temporary local port. Native smoke tests use an isolated data directory and do not sign in to Telegram.
+
+For targeted checks:
 
 ```powershell
-node web/node_modules/serve/build/main.js web/out -l 3099 --no-clipboard
-# Во втором терминале:
-$env:TIHO_TEST_URL='http://127.0.0.1:3099'
-npm.cmd run test:e2e --prefix web
+$env:JAVA_TOOL_OPTIONS='-Djdk.net.unixdomain.tmpdir=C:/tiho-no-unix-sockets'
+./gradlew.bat check --no-daemon
+npm.cmd run check --prefix web
+npm.cmd run check --prefix desktop
 ```
 
-CI подготовлен локально; для публикации нужно позже разместить проект в GitHub-репозитории. Пока удалённый CI не запускался. Docker используется для инструментов разработки, не для Windows desktop-сессии Telegram; подробности в `docker/README.md`.
+Optional live research tests require a running Ollama server with **gemma3:4b** already installed and internet access. They use synthetic questions about weather, news, currencies and follow-ups; they neither download models nor send Telegram messages.
 
-## Данные
+```powershell
+$env:TIHO_LIVE_INTERNET='true'
+./gradlew.bat :backend:test --tests 'ru.boltunya.ai.Live*' --no-daemon
+```
 
-Каталог `%LOCALAPPDATA%/Tiho` сохранён для совместимости: `settings.json`, `telegram.credentials`, `telegram/`, `writing-style.json`, `automated-replies.json`, `flows.json`, `flow-data.json`. Telegram-ключи защищены Windows DPAPI. Не передавайте каталог другим людям: TDLib-сессия даёт доступ к аккаунту.
+See [Docker tooling](docker/README.md) for a static frontend preview and JVM checks. The Telegram desktop session and Windows DPAPI remain native.
 
-Модели находятся в `%USERPROFILE%/.ollama/models` или `OLLAMA_MODELS`, движок — в `%LOCALAPPDATA%/Tiho/engine`. Для отдельного тестового профиля задайте `BOLTUNYA_DATA_DIR`; `TIHO_DATA_DIR` поддерживается. `BOLTUNYA_OLLAMA_URL` позволяет указать отдельный Ollama.
+## Releases
 
-Локальный сервер доступен только через loopback на случайном порту. API защищён HttpOnly cookie и проверками Host/Origin. Привилегированные действия окна доступны только из изолированного preload; Node.js в веб-интерфейсе отключён.
+Every push to `main`, or a manual **Windows release** run, checks and builds the application on GitHub Actions. It then runs browser and native Electron tests before publishing **Болтунья.exe** and **SHA256.txt** to [Releases](https://github.com/kreeeeeel/boltunya/releases). Release versions use the source major/minor and the workflow run number; each version has a separate portable extraction directory.
 
+The repository and its releases are private. You must be signed in with repository access to download assets. To verify a download:
+
+```powershell
+Get-FileHash -Algorithm SHA256 -LiteralPath '.\Болтунья.exe'
+Get-Content -LiteralPath '.\SHA256.txt'
+```
+
+## Further documentation
+
+[Russian guide](docs/ru.md) · [Architecture](docs/architecture/en.md) · [Dependency injection](docs/dependency-injection/en.md) · [Memory bank](docs/memory/en.md) · [Web search](docs/internet/en.md) · [Storage and cache](docs/storage/en.md)
+
+See [NOTICE.md](NOTICE.md) for third-party licenses and data sources. Noto Sans is bundled under the [SIL Open Font License](web/src/shared/assets/fonts/OFL.txt). Model licenses remain specific to each model. Boltunya is an independent application and is not affiliated with Telegram.

@@ -14,6 +14,8 @@ The model receives retrieval time and known publication dates. Instructions dist
 
 ## Link policy
 
+Search facts are composed as a short personal reply using the owner's real writing samples and shared profile. Known AI messages are excluded from those samples. Currency data uses ordinary names and symbols instead of ISO-pair notation; significant digits, units and effective dates must survive the retelling. A separate concise research prompt keeps current facts central even when the owner's typical messages are very short.
+
 Conversation settings → **Configure conversation** → **Links in replies**:
 
 - **When the contact asks**: the default. Ordinary weather or news replies do not acquire an unsolicited URL.
