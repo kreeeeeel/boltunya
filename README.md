@@ -123,6 +123,19 @@ $env:TIHO_LIVE_INTERNET='true'
 ./gradlew.bat :backend:test --tests 'ru.boltunya.ai.Live*' --no-daemon
 ```
 
+To check conversation quality on **every installed model**, use the separate 14-scenario matrix. It exercises real local inference with synthetic conversations and deterministic weather/news/rate fixtures, including topic follow-ups, owner-style samples, reasoning separation and complete final answers. It does not install missing catalog models. Reports are written to `backend/build/reports/model-quality.json` after each case.
+
+```powershell
+$env:TIHO_LIVE_AI='true'
+./gradlew.bat :backend:test --tests 'ru.boltunya.ai.LiveModelQualityTest' --no-daemon
+```
+
+The current `qwen3:4b` tag requires thinking and is listed separately from its instruct variant. Reasoning stays in its own channel; incomplete replies and detected internal analysis are retried within fixed limits and rejected if they still fail. Real owner messages contribute an abstract voice profile; unrelated phrases are not inserted as response examples. The shared memory supplies vocabulary, habits and owner facts. The optional “Ignore assistant tasks” setting skips requests such as recipes before automatic generation; manual previews can still test them.
+
+Models that fail the application's automation checks are labelled **Drafts only**. In this release, `qwen3:0.6b` is restricted after a harmful-request test failure: it can be downloaded, selected while AI is paused and used for manual previews, while automatic sending is rejected. The application keeps the model you selected. Explicit requests to recall earlier facts allow those facts to be repeated. Previously leaked analysis from known automated messages is excluded from the model's conversation window without removing messages from the interface or archive.
+
+Recorded model results and the complete synthetic outputs are available in the [installed-model quality report](docs/ai/model-quality-2026-10-16.md). It includes failures and manual review findings; passing the automated checks does not certify a model for every conversation.
+
 See [Docker tooling](docker/README.md) for a static frontend preview and JVM checks. The Telegram desktop session and Windows DPAPI remain native.
 
 ## Releases
