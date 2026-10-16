@@ -109,7 +109,10 @@ test('chat selection, sending, filtering and saving a rule use the real API flow
     );
     await page.getByRole('button', {name: 'Отправить сообщение'}).click();
     expect((await sent).postDataJSON()).toEqual({text: 'Проверка отправки'});
-    await expect(page.getByText('Проверка отправки', {exact: true})).toBeVisible();
+    await expect(
+        page.locator('[data-qa="message-outgoing"]').getByText('Проверка отправки', {exact: true}),
+    ).toBeVisible();
+    await expect(page.getByRole('textbox', {name: 'Написать сообщение…'})).toHaveValue('');
     await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
     await expect(page.getByText('Глубина контекста', {exact: true})).toBeVisible();
     const internet = page.getByRole('switch', {name: 'Поиск в интернете', exact: true});
