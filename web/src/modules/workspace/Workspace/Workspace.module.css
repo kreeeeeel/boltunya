@@ -11,10 +11,9 @@
 }
 
 .rail {
-    width: 60px;
+    width: 64px;
     flex-shrink: 0;
     background: var(--tiho-rail);
-    border-right: 1px solid var(--tiho-line);
     padding: 12px 0;
     justify-content: space-between;
     gap: 20px;
@@ -60,6 +59,9 @@
 }
 
 .chatList {
+    margin: 10px 8px 10px 0;
+    border-radius: 18px;
+    overflow: hidden;
     width: 344px;
     min-width: 0;
     flex-shrink: 0;

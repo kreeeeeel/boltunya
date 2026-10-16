@@ -4,13 +4,11 @@ import {getRootClassName} from '@gravity-ui/uikit/server';
 
 import '@gravity-ui/uikit/styles/styles.css';
 import '@xyflow/react/dist/style.css';
-import '@fontsource/manrope/400.css';
-import '@fontsource/manrope/500.css';
-import '@fontsource/manrope/600.css';
-import '@fontsource/manrope/700.css';
 import '@/shared/styles/globals.css';
+import '@/shared/styles/typography.css';
 
 import {Preferences} from '@/shared/theme/Preferences';
+import {uiFont} from '@/shared/theme/fonts';
 
 export const metadata: Metadata = {
     title: 'Болтунья — Telegram',
@@ -20,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({children}: {children: ReactNode}) {
     return (
-        <html lang="ru">
+        <html lang="ru" className={uiFont.variable}>
             <body className={getRootClassName({theme: 'light'})}>
                 <Preferences>{children}</Preferences>
             </body>

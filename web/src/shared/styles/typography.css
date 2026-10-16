@@ -1,0 +1,21 @@
+.g-root {
+    --g-font-family-sans: var(--font-ui), 'Segoe UI', arial, sans-serif;
+    --g-text-body-1-font-size: 14px;
+    --g-text-body-2-font-size: 15px;
+    --g-text-body-1-line-height: 21px;
+    --g-text-body-2-line-height: 23px;
+    --g-text-caption-1-font-size: 13px;
+    --g-text-caption-2-font-size: 14px;
+    --g-text-caption-1-line-height: 19px;
+    --g-text-caption-2-line-height: 21px;
+    --g-text-code-1-font-size: 13px;
+    --g-text-subheader-1-font-size: 15px;
+    --g-text-subheader-2-font-size: 17px;
+    --g-text-header-font-weight: 650;
+    --g-text-subheader-font-weight: 600;
+
+    font-synthesis: none;
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizelegibility;
+}

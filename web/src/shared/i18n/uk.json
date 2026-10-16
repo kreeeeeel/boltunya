@@ -481,5 +481,11 @@
     "chatCopy": {
         "username": "Копіювати тег",
         "link": "Копіювати посилання Telegram"
+    },
+    "modelSearch": {
+        "label": "Пошук моделей",
+        "count": "{count} із {total} моделей",
+        "empty": "Моделі не знайдено",
+        "clear": "Очистити пошук"
     }
 }

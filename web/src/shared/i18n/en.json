@@ -481,5 +481,11 @@
     "chatCopy": {
         "username": "Copy username",
         "link": "Copy Telegram link"
+    },
+    "modelSearch": {
+        "label": "Search models",
+        "count": "{count} of {total} models",
+        "empty": "No matching models",
+        "clear": "Clear search"
     }
 }

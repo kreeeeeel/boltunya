@@ -1,4 +1,5 @@
 .root {
+    border-radius: 18px;
     height: 100%;
     min-height: 0;
     min-width: 0;
@@ -78,6 +79,7 @@
 }
 
 .list {
+    padding: 2px 8px 8px;
     flex: 1;
     min-height: 0;
 }
@@ -87,16 +89,17 @@
 }
 
 .row {
+    margin-block: 2px;
     animation: row-enter 180ms var(--tiho-ease);
     display: grid;
     grid-template-columns: 42px minmax(0, 1fr) 54px;
     align-items: center;
     column-gap: 11px;
     height: 76px;
-    padding: 8px 16px;
+    padding: 8px 12px;
     position: relative;
     isolation: isolate;
-    border-radius: 0;
+    border-radius: 12px;
     transition: background var(--tiho-duration);
 }
 

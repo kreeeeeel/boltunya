@@ -241,7 +241,7 @@ test('mobile supports switching between conversation and chat list', async ({pag
     await page.screenshot({animations: 'disabled', path: '../docs/resources/mobile.png'});
 });
 
-test('full-width chat rows, search icon, readable text and message edges stay aligned', async ({page}) => {
+test('inset chat rows, search icon, readable text and message edges stay aligned', async ({page}) => {
     await page.evaluate(() => document.fonts.ready);
     const geometry = await page.evaluate(() => {
         const bounds = (selector: string) =>
@@ -255,6 +255,12 @@ test('full-width chat rows, search icon, readable text and message edges stay al
         return {
             rows: bounds('[data-qa="chat-row"]'),
             list: bounds('[data-qa="chat-list-scroll"]')[0],
+            listOuter: (() => {
+                const rect = document
+                    .querySelector('[data-qa="chat-list-scroll"]')!
+                    .parentElement!.getBoundingClientRect();
+                return {x: rect.x, width: rect.width};
+            })(),
             avatars: bounds('[data-qa="chat-avatar"]'),
             names: bounds('[data-qa="chat-name"]'),
             checkboxes: bounds('[data-qa="chat-checkbox"]'),
@@ -289,8 +295,10 @@ test('full-width chat rows, search icon, readable text and message edges stay al
             (row) => Math.abs(row.width - geometry.list.width) < 1 && Math.abs(row.x - geometry.list.x) < 1,
         ),
     ).toBe(true);
+    expect(geometry.list.x - geometry.listOuter.x).toBeCloseTo(8, 2);
+    expect(geometry.listOuter.width - geometry.list.width).toBeCloseTo(16, 2);
     expect(geometry.rows.every((row) => row.height <= 76.1)).toBe(true);
-    expect(geometry.header.height).toBeCloseTo(56, 2);
+    expect(geometry.header.height).toBeCloseTo(60, 2);
     expect(geometry.incoming.x - geometry.canvas.x).toBeLessThanOrEqual(24);
     expect(
         geometry.canvas.x + geometry.canvas.width - geometry.outgoing.x - geometry.outgoing.width,

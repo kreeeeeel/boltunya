@@ -15,7 +15,7 @@
 | openapi-typescript / openapi-fetch | MIT — https://github.com/openapi-ts/openapi-typescript |
 | jsoup | MIT — https://jsoup.org/ |
 | MCP Java SDK | MIT — https://github.com/modelcontextprotocol/java-sdk |
-| Manrope | SIL Open Font License — https://github.com/sharanda/manrope |
+| Noto Sans | SIL Open Font License — https://github.com/notofonts/latin-greek-cyrillic; bundled license: web/src/shared/assets/fonts/OFL.txt |
 | Ollama | MIT — https://github.com/ollama/ollama |
 | Qwen 3, Qwen 2.5 7B | Apache-2.0 — https://huggingface.co/Qwen |
 | Gemma 3 | Gemma Terms of Use — https://ai.google.dev/gemma/terms |
