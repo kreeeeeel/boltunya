@@ -1,11 +1,20 @@
 package ru.boltunya.automation
 
+import ru.boltunya.automation.activity.ActivityLog
+import ru.boltunya.automation.activity.ActivityPhase
+import ru.boltunya.automation.activity.ActivityStatus
+import ru.boltunya.automation.activity.ReplyJob
+import ru.boltunya.automation.activity.ReplyTraceScope
+import ru.boltunya.domain.ActivityDetails
 import ru.boltunya.domain.ActivityEntry
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ChatRule
 import ru.boltunya.domain.GroupReplyMode
+import ru.boltunya.domain.ReplyQueueState
 import ru.boltunya.domain.ReplyResult
 import ru.boltunya.exception.AppException
+import ru.boltunya.exception.impl.ActivityDeliveryStartedException
+import ru.boltunya.exception.impl.ActivityNotFoundException
 import ru.boltunya.exception.impl.ReplyCancelledException
 import ru.boltunya.exception.impl.ReplyDeliveryFailedException
 import ru.boltunya.exception.impl.TelegramRateLimitException
@@ -16,135 +25,240 @@ import ru.boltunya.telegram.TelegramGateway
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
+
+private const val MESSAGE_DEBOUNCE_MS = 800L
+private const val QUEUE_TICK_MS = 100L
+private const val FAILURE_BACKOFF_SECONDS = 30L
+private const val STYLE_HISTORY_MESSAGES = 100
 
 class ReplyCoordinator(
     private val settings: SettingsStore,
     private val telegram: TelegramGateway,
     private val automated: AutomatedReplyStore? = null,
     private val flows: FlowEngine? = null,
+    private val tracing: ReplyTraceScope = ReplyTraceScope(),
     private val generate: (ChatRule, List<ChatMessage>) -> ReplyResult,
 ) : AutoCloseable {
-    private val executor = Executors.newSingleThreadScheduledExecutor()
-    private val pending = ConcurrentHashMap<String, ScheduledFuture<*>>()
+    private val scheduler = Executors.newSingleThreadScheduledExecutor()
+    private val worker = Executors.newSingleThreadExecutor()
+    private val gate = Any()
+    private val pending = linkedMapOf<String, ReplyJob>()
     private val latest = ConcurrentHashMap<String, String>()
-    private val entries = CopyOnWriteArrayList<ActivityEntry>()
+    private val log = ActivityLog()
     private val typing = TypingIndicator(telegram)
-    private var nextReplyAt = 0L
     private val epoch = AtomicLong()
     private val tasks = AssistantTaskFilter()
+    private var order = 0L
+    private var priorityOrder = 0L
+    private var active: ReplyJob? = null
+    private var queuePaused = false
+    private var nextReplyAt = 0L
 
     @Volatile private var closed = false
+    private val ticker = scheduler.scheduleWithFixedDelay(
+        ::dispatch,
+        QUEUE_TICK_MS,
+        QUEUE_TICK_MS,
+        TimeUnit.MILLISECONDS,
+    )
 
-    fun activities(): List<ActivityEntry> = entries.reversed().take(100)
-
-    fun onMessage(message: ChatMessage) {
-        if (closed) return
-        typing.cancel(message.chatId)
-        latest[message.chatId] = message.id
-        pending.remove(message.chatId)?.cancel(false)
-        val rule = settings.rule(message.chatId)
-        if (message.deleted || message.outgoing || message.text.isBlank() || settings.get().paused ||
-            (!rule.enabled && flows?.matches(message) != true) ||
-            !groupAllowed(message, rule)
-        ) {
-            return
-        }
-        if (settings.get().ignoreAssistantTasks && tasks.ignores(message.text) &&
-            flows?.matches(message) != true
-        ) {
-            return
-        }
-        val delay = (rule.delaySeconds + settings.get().replyDelaySeconds) * 1000L + 800L
-        pending[message.chatId] = executor.schedule({ respond(message) }, delay, TimeUnit.MILLISECONDS)
+    fun activities(): List<ActivityEntry> = synchronized(gate) {
+        val positions = linkedMapOf<String, Int>()
+        pending.values.stream().sorted(compareBy { it.order }).forEach { positions[it.id] = positions.size + 1 }
+        log.summaries().stream().map { entry ->
+            val job = pending[entry.id]
+            entry.copy(
+                queuePosition = positions[entry.id] ?: 0,
+                priority = job?.priority ?: false,
+                waitUntil = job?.waitUntil ?: 0,
+            )
+        }.toList()
     }
 
-    private fun respond(message: ChatMessage) {
-        val rule = settings.rule(message.chatId)
-        if (!allowed(message, rule)) {
-            return
+    fun queue(): ReplyQueueState = synchronized(gate) {
+        ReplyQueueState(queuePaused, pending.size, if (active != null) 1 else 0)
+    }
+
+    fun details(id: String): ActivityDetails = synchronized(gate) {
+        val details = log.details(id)
+        val job = pending[id]
+        val position = if (job ==
+            null
+        ) {
+            0
+        } else {
+            pending.values.stream().filter { it.order < job.order }.count().toInt() + 1
         }
-        val wait = nextReplyAt - System.nanoTime()
-        if (wait > 0) {
-            pending[message.chatId] = executor.schedule({ respond(message) }, wait, TimeUnit.NANOSECONDS)
-            return
+        details.copy(
+            entry = details.entry.copy(
+                queuePosition = position,
+                priority = job?.priority ?: false,
+                waitUntil = job?.waitUntil ?: 0,
+            ),
+        )
+    }
+    fun pauseQueue(paused: Boolean) = synchronized(gate) { queuePaused = paused }
+    fun clearCompleted() = log.clearCompleted()
+
+    fun prioritize(id: String) = synchronized(gate) {
+        val job = pending[id] ?: throw ActivityNotFoundException()
+        job.order = --priorityOrder
+        job.priority = true
+    }
+
+    fun cancel(id: String) = synchronized(gate) {
+        val job = pending.remove(id) ?: active?.takeIf { it.id == id }
+        if (job == null) {
+            log.details(id)
+            return@synchronized
+        }
+        if (job.delivering) throw ActivityDeliveryStartedException()
+        cancelJob(job)
+    }
+
+    fun onMessage(message: ChatMessage) = synchronized(gate) {
+        if (closed) return@synchronized
+        typing.cancel(message.chatId)
+        latest[message.chatId] = message.id
+        ArrayList(pending.values).stream().filter { it.message.chatId == message.chatId }.forEach {
+            pending.remove(it.id)
+            cancelJob(it)
+        }
+        active?.takeIf { it.message.chatId == message.chatId }?.let(::cancelJob)
+        val preferences = settings.get()
+        val rule = settings.rule(message.chatId)
+        if (message.deleted || message.outgoing || message.text.isBlank() || preferences.paused ||
+            (!rule.enabled && flows?.matches(message) != true) || !groupAllowed(message, rule)
+        ) {
+            return@synchronized
+        }
+        if (preferences.ignoreAssistantTasks && tasks.ignores(message.text) && flows?.matches(message) != true) {
+            return@synchronized
         }
         val chat = telegram.chats().stream().filter { it.id == message.chatId }.findFirst().orElse(null)
-        if (chat == null) {
-            return
-        }
-        val entry =
+            ?: return@synchronized
+        val delay = (rule.delaySeconds + preferences.replyDelaySeconds) * 1000L + MESSAGE_DEBOUNCE_MS
+        val id = UUID.randomUUID().toString()
+        val trace = log.add(
             ActivityEntry(
-                UUID.randomUUID().toString(),
+                id,
                 message.chatId,
                 chat.title,
-                "generating",
-                rule.model,
+                ActivityStatus.QUEUED.value,
+                settings.resolve(rule).model,
                 Instant.now().epochSecond,
-            )
-        entries.add(entry)
-        val preferences = settings.get()
+                avatarUrl = chat.avatarUrl,
+            ),
+            message.text,
+        )
+        pending[id] = ReplyJob(
+            id,
+            message,
+            trace,
+            System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(delay),
+            System.currentTimeMillis() + delay,
+            ++order,
+        )
+    }
+
+    private fun dispatch() = synchronized(gate) {
+        if (closed || queuePaused || settings.get().paused || active != null || System.nanoTime() < nextReplyAt) {
+            return@synchronized
+        }
+        val job =
+            pending.values.stream().filter { System.nanoTime() >= it.readyAt }.min(compareBy { it.order }).orElse(null)
+                ?: return@synchronized
+        pending.remove(job.id)
+        active = job
+        worker.execute { respond(job) }
+    }
+
+    private fun respond(job: ReplyJob) {
+        job.thread = Thread.currentThread()
+        val message = job.message
+        val rule = settings.rule(message.chatId)
         val generationEpoch = epoch.get()
-        val indicator = if (preferences.showTyping) {
-            typing.start(message.chatId) { allowed(message, rule) && settings.get().showTyping }
-        } else {
-            null
-        }
+        var indicator: java.util.concurrent.ScheduledFuture<*>? = null
         try {
-            val history = telegram.history(message.chatId, if (rule.matchMyStyle) 100 else rule.contextMessages)
-            val context = if (history.stream().anyMatch { it.id == message.id }) {
-                history
-            } else {
-                history + message
+            if (job.cancelled.get() || !allowed(message, rule)) throw ReplyCancelledException()
+            job.trace.start()
+            if (settings.get().showTyping) {
+                indicator =
+                    typing.start(message.chatId) {
+                        !job.cancelled.get() && allowed(message, rule) &&
+                            settings.get().showTyping
+                    }
             }
-            val globalPrompt = settings.get().globalPrompt
-            val execution = flows?.execute(message, rule, context)
-            val result = execution?.reply ?: generate(rule, context)
-            if (!allowed(message, rule) || settings.rule(message.chatId) != rule ||
-                settings.get().globalPrompt != globalPrompt ||
-                epoch.get() != generationEpoch
-            ) {
-                replace(entry, "cancelled", ReplyCancelledException().message)
-                return
+            tracing.capture(job.trace) {
+                val history = telegram.history(
+                    message.chatId,
+                    if (rule.matchMyStyle) STYLE_HISTORY_MESSAGES else rule.contextMessages,
+                )
+                val context = if (history.stream().anyMatch { it.id == message.id }) history else history + message
+                val globalPrompt = settings.get().globalPrompt
+                if (job.cancelled.get()) throw ReplyCancelledException()
+                val execution = flows?.execute(message, rule, context)
+                val result = execution?.reply ?: generate(rule, context)
+                tracing.phase(ActivityPhase.VALIDATING)
+                // Commit delivery under the queue lock; never hold it across a blocking TDLib call.
+                synchronized(gate) {
+                    if (job.cancelled.get() || !allowed(message, rule) || settings.rule(message.chatId) != rule ||
+                        settings.get().globalPrompt != globalPrompt || epoch.get() != generationEpoch
+                    ) {
+                        throw ReplyCancelledException()
+                    }
+                    tracing.phase(ActivityPhase.SENDING)
+                    job.delivering = true
+                }
+                if (result.text.isNotBlank() || execution == null) {
+                    val sentId = telegram.send(message.chatId, result.text, message.id, message.topicId)
+                    synchronized(gate) {
+                        nextReplyAt =
+                            System.nanoTime() + TimeUnit.SECONDS.toNanos(settings.get().replyIntervalSeconds.toLong())
+                    }
+                    automated?.record(message.chatId, sentId)
+                }
+                if (execution != null) flows?.commit(execution)
+                job.trace.finish(ActivityStatus.SENT, settings.resolve(rule).model, result.text)
             }
-            if (execution != null &&
-                result.text.isBlank()
-            ) {
-                flows?.commit(execution)
-                replace(entry, "sent", rule.model, result.durationMs)
-                return
-            }
-            val sentId = telegram.send(message.chatId, result.text, message.id, message.topicId)
-            nextReplyAt = System.nanoTime() + TimeUnit.SECONDS.toNanos(settings.get().replyIntervalSeconds.toLong())
-            automated?.record(message.chatId, sentId)
-            if (execution != null) flows?.commit(execution)
-            replace(entry, "sent", rule.model, result.durationMs)
         } catch (exception: Exception) {
-            replace(
-                entry,
-                "error",
-                if (exception is AppException) {
-                    exception.message
+            if (job.cancelled.get() || exception is ReplyCancelledException || Thread.currentThread().isInterrupted) {
+                job.trace.finish(ActivityStatus.CANCELLED, ReplyCancelledException().message)
+            } else {
+                job.trace.finish(
+                    ActivityStatus.ERROR,
+                    if (exception is AppException) exception.message else ReplyDeliveryFailedException().message,
+                )
+                System.err.println("Auto-reply failed: ${exception.javaClass.simpleName}")
+                val retryAfter = if (exception is TelegramRateLimitException) {
+                    exception.retryAfterSeconds
                 } else {
-                    ReplyDeliveryFailedException().message
-                },
-            )
-            System.err.println("Auto-reply failed: ${exception.javaClass.simpleName}")
-            val retryAfter = if (exception is TelegramRateLimitException) exception.retryAfterSeconds else 30L
-            nextReplyAt = System.nanoTime() + TimeUnit.SECONDS.toNanos(retryAfter)
+                    FAILURE_BACKOFF_SECONDS
+                }
+                synchronized(gate) { nextReplyAt = System.nanoTime() + TimeUnit.SECONDS.toNanos(retryAfter) }
+            }
         } finally {
+            Thread.interrupted()
             typing.stop(message.chatId, indicator)
+            job.thread = null
+            synchronized(gate) { if (active === job) active = null }
+            log.prune()
         }
+    }
+
+    private fun cancelJob(job: ReplyJob) {
+        if (job.delivering || !job.trace.active()) return
+        job.cancel()
+        job.trace.finish(ActivityStatus.CANCELLED, ReplyCancelledException().message)
+        typing.cancel(job.message.chatId)
     }
 
     private fun allowed(message: ChatMessage, rule: ChatRule): Boolean =
-        !settings.get().paused && (rule.enabled || flows?.matches(message) == true) &&
-            latest[message.chatId] == message.id &&
-            groupAllowed(message, rule)
+        !closed && !settings.get().paused && (rule.enabled || flows?.matches(message) == true) &&
+            latest[message.chatId] == message.id && groupAllowed(message, rule)
 
     private fun groupAllowed(message: ChatMessage, rule: ChatRule): Boolean {
         if (!message.group) return true
@@ -152,32 +266,33 @@ class ReplyCoordinator(
         return mode == GroupReplyMode.ALL || mode == GroupReplyMode.MENTIONS && message.mentionsMe
     }
 
-    fun cancelPending() {
+    fun cancelPending() = synchronized(gate) {
         epoch.incrementAndGet()
-        pending.values.stream().forEach { it.cancel(false) }
+        ArrayList(pending.values).stream().forEach(::cancelJob)
         pending.clear()
+        active?.let(::cancelJob)
         typing.cancelAll()
     }
 
-    fun onDeleted(chatId: String, ids: Set<String>) {
-        if (latest[chatId] !in ids) return
+    fun onDeleted(chatId: String, ids: Set<String>) = synchronized(gate) {
+        if (latest[chatId] !in ids) return@synchronized
         latest.remove(chatId)
-        pending.remove(chatId)?.cancel(false)
+        ArrayList(pending.values).stream().filter { it.message.chatId == chatId }.forEach {
+            pending.remove(it.id)
+            cancelJob(it)
+        }
+        active?.takeIf { it.message.chatId == chatId }?.let(::cancelJob)
         typing.cancel(chatId)
     }
 
-    private fun replace(entry: ActivityEntry, status: String, detail: String, duration: Long = 0) {
-        entries.removeIf { it.id == entry.id }
-        entries.add(entry.copy(status = status, detail = detail, durationMs = duration))
-        if (entries.size > 100) {
-            entries.removeAt(0)
-        }
-    }
-
     override fun close() {
-        closed = true
-        cancelPending()
-        executor.shutdownNow()
+        synchronized(gate) {
+            closed = true
+            cancelPending()
+        }
+        ticker.cancel(false)
+        scheduler.shutdownNow()
+        worker.shutdownNow()
         typing.close()
     }
 }

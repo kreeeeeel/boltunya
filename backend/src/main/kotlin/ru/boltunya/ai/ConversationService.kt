@@ -11,6 +11,8 @@ import ru.boltunya.ai.research.ResearchContext
 import ru.boltunya.ai.research.ResearchFactGuard
 import ru.boltunya.ai.research.ResearchLinkPolicy
 import ru.boltunya.ai.research.ResearchPlanner
+import ru.boltunya.automation.activity.ActivityPhase
+import ru.boltunya.automation.activity.ReplyTraceScope
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ChatRule
 import ru.boltunya.domain.ReplyResult
@@ -32,6 +34,7 @@ class ConversationService @Inject constructor(
     private val links: ResearchLinkPolicy,
     private val facts: ResearchFactGuard,
     private val resources: ResourceCatalog,
+    private val tracing: ReplyTraceScope = ReplyTraceScope(),
 ) {
     fun reply(
         rule: ChatRule,
@@ -62,6 +65,7 @@ class ConversationService @Inject constructor(
         fun generate(context: List<Message>, format: JsonObject? = null, maxTokens: Int = rule.maxTokens) =
             completion.generate(rule, context, format, maxTokens)
         val research = if (rule.internetAccess && planner.needed(history)) {
+            tracing.phase(ActivityPhase.RESEARCH)
             val plan = planner.plan(history, instructions) { context, format ->
                 generate(
                     context,
@@ -69,6 +73,7 @@ class ConversationService @Inject constructor(
                     192,
                 ).text
             }
+            tracing.phase(ActivityPhase.SEARCH)
             val found = researcher.lookup(plan)
             if (found.status in setOf("weather", "search", "currency")) planner.remember(history, plan)
             found
@@ -83,6 +88,7 @@ class ConversationService @Inject constructor(
             )
         }
         val messages = prompts.build(rule, history, globalPrompt, research, styleHistory, memory)
+        tracing.phase(ActivityPhase.REPLY)
         var response = generate(messages)
         var text = response.text
         if (quality.needsRetry(
@@ -94,6 +100,7 @@ class ConversationService @Inject constructor(
                 research.status == "none",
             ) || !facts.matches(text, research, history)
         ) {
+            tracing.phase(ActivityPhase.RETRY)
             val retryBase = prompts.build(
                 rule.copy(matchMyStyle = false),
                 history,

@@ -9,4 +9,5 @@ data class ApiState(
     val settings: AppSettings,
     val chats: List<ChatSummary>,
     val activity: List<ActivityEntry>,
+    val replyQueue: ReplyQueueState = ReplyQueueState(),
 )

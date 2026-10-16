@@ -20,6 +20,12 @@ class ModelReplyReader @Inject constructor(private val resources: ResourceCatalo
         val tokens = response.metadata.usage.completionTokens
         val speed = if (evaluation > 0) tokens * 1e9 / evaluation else 0.0
         val duration = response.metadata.get<Duration>(TOTAL_DURATION)?.toMillis() ?: elapsedMs
-        return ModelCompletion(text, duration, speed, generation?.metadata?.finishReason.orEmpty())
+        return ModelCompletion(
+            text, duration, speed, generation?.metadata?.finishReason.orEmpty(),
+            generation?.output?.text.orEmpty(), generation?.output?.metadata?.get("thinking") as? String ?: "",
+            response.metadata.usage.promptTokens, tokens,
+            response.metadata.get<Duration>("load-duration")?.toMillis() ?: 0,
+            response.metadata.get<Duration>("prompt-eval-duration")?.toMillis() ?: 0,
+        )
     }
 }

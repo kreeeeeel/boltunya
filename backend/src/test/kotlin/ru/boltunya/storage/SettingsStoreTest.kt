@@ -69,7 +69,7 @@ class SettingsStoreTest {
     }
 
     @Test
-    fun `persists desktop and automation options and resumes only for an opted in Windows launch`() {
+    fun `persists desktop options and resumes an opted in assistant on every launch`() {
         val store = SettingsStore(directory)
         store.update {
             it.copy(
@@ -82,14 +82,14 @@ class SettingsStoreTest {
             )
         }
         val regular = SettingsStore(directory)
-        assertTrue(regular.get().paused)
+        assertFalse(regular.get().paused)
         assertEquals(8, regular.get().replyDelaySeconds)
         assertEquals(12, regular.get().replyIntervalSeconds)
         assertFalse(regular.get().showTyping)
         assertFalse(regular.get().closeToTray)
         assertTrue(regular.get().launchAtLogin)
-        assertFalse(SettingsStore(directory, startup = true).get().paused)
+        assertFalse(SettingsStore(directory).get().paused)
         store.update { it.copy(resumeOnStartup = false) }
-        assertTrue(SettingsStore(directory, startup = true).get().paused)
+        assertTrue(SettingsStore(directory).get().paused)
     }
 }

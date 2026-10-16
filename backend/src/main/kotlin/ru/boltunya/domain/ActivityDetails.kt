@@ -1,0 +1,12 @@
+package ru.boltunya.domain
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class ActivityDetails(
+    val entry: ActivityEntry,
+    val trigger: String,
+    val response: String = "",
+    val attempts: List<ActivityAttempt> = emptyList(),
+    val steps: List<ActivityStep> = emptyList(),
+)

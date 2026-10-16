@@ -8,6 +8,7 @@ import ru.boltunya.ai.research.InternetResearcher
 import ru.boltunya.ai.research.ResearchFactGuard
 import ru.boltunya.ai.research.ResearchLinkPolicy
 import ru.boltunya.ai.research.ResearchPlanner
+import ru.boltunya.automation.activity.ReplyTraceScope
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ChatRule
 import ru.boltunya.memory.MemoryContext
@@ -20,6 +21,7 @@ class AiTestServices(
     prompts: PromptBuilder = PromptBuilder(),
     researcher: InternetResearcher = InternetResearcher(),
     planner: ResearchPlanner = ResearchPlanner(),
+    val tracing: ReplyTraceScope = ReplyTraceScope(),
 ) {
     val runtime = OllamaRuntime(baseUrl)
     private val resources = ResourceCatalog()
@@ -31,6 +33,7 @@ class AiTestServices(
         runtime,
         inference,
         ModelMeasurementStore(Files.createTempDirectory("boltunya-sdk-test-")),
+        tracing,
     )
     val conversation = ConversationService(
         completion,
@@ -42,6 +45,7 @@ class AiTestServices(
         ResearchLinkPolicy(),
         ResearchFactGuard(resources),
         resources,
+        tracing,
     )
 
     fun installed() = runtime.installed()

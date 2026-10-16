@@ -2,6 +2,8 @@ package ru.boltunya.http
 
 enum class ApiRoute(val path: String, val method: HttpMethod) {
     STATE("/api/state", HttpMethod.GET),
+    ACTIVITY_CLEAR("/api/activity", HttpMethod.DELETE),
+    ACTIVITY_QUEUE("/api/activity/queue", HttpMethod.PATCH),
     SEARCH_CONNECTION("/api/search/connection", HttpMethod.GET),
     SEARCH_KEY_SAVE("/api/search/connection", HttpMethod.POST),
     SEARCH_KEY_DELETE("/api/search/connection", HttpMethod.DELETE),

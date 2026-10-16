@@ -15,6 +15,7 @@ class FakeTelegramGateway : TelegramGateway {
     val typing = CopyOnWriteArrayList<Boolean>()
     val sendTimes = CopyOnWriteArrayList<Long>()
     var nextSendError: RuntimeException? = null
+    var beforeSend: () -> Unit = {}
     var messages = listOf(ChatMessage("1", "42", "Привет", false, 0))
 
     override fun status(): TelegramStatus = TelegramStatus(state = "ready")
@@ -25,6 +26,7 @@ class FakeTelegramGateway : TelegramGateway {
     override fun history(chatId: String, limit: Int, before: Long): List<ChatMessage> =
         messages.filter { it.chatId == chatId }.takeLast(limit)
     override fun send(chatId: String, text: String, replyToId: String, topicId: Int): String {
+        beforeSend()
         val failure = nextSendError
         nextSendError = null
         if (failure != null) throw failure

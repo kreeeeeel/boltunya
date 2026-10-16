@@ -42,6 +42,7 @@ import ru.boltunya.application.ApplicationRuntime
 import ru.boltunya.application.ProcessExit
 import ru.boltunya.automation.PersonalReplyGenerator
 import ru.boltunya.automation.ReplyCoordinator
+import ru.boltunya.automation.activity.ReplyTraceScope
 import ru.boltunya.flows.FlowEngine
 import ru.boltunya.flows.FlowStore
 import ru.boltunya.flows.FlowTemplate
@@ -55,6 +56,7 @@ import ru.boltunya.http.MediaResponder
 import ru.boltunya.http.RequestReader
 import ru.boltunya.http.ResourceResponder
 import ru.boltunya.http.ResponseWriter
+import ru.boltunya.http.endpoint.ActivityEndpoint
 import ru.boltunya.http.endpoint.AuthenticationEndpoint
 import ru.boltunya.http.endpoint.ChatEndpoint
 import ru.boltunya.http.endpoint.EngineEndpoint
@@ -190,11 +192,13 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
             ModelPolicies::class.java,
             ModelReplyReader::class.java,
             SpringAiModelFactory::class.java,
+            ReplyTraceScope::class.java,
+            ActivityEndpoint::class.java,
         ).forEach { bind(it).`in`(Singleton::class.java) }
     }
 
     @Provides @Singleton
-    fun settings(): SettingsStore = SettingsStore(configuration.directory, configuration.startup)
+    fun settings(): SettingsStore = SettingsStore(configuration.directory)
 
     @Provides @Singleton
     fun clock(): Clock = Clock.systemDefaultZone()
@@ -299,7 +303,8 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
         automated: AutomatedReplyStore,
         generator: PersonalReplyGenerator,
         flows: FlowEngine,
-    ): ReplyCoordinator = ReplyCoordinator(settings, telegram, automated, flows, generator::reply)
+        tracing: ReplyTraceScope,
+    ): ReplyCoordinator = ReplyCoordinator(settings, telegram, automated, flows, tracing, generator::reply)
 
     @Provides @Singleton
     fun json(): Json = Json { encodeDefaults = true }

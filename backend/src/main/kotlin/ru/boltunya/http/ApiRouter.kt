@@ -10,6 +10,7 @@ import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
 import ru.boltunya.exception.impl.MethodNotAllowedException
 import ru.boltunya.exception.impl.RouteNotFoundException
+import ru.boltunya.http.endpoint.ActivityEndpoint
 import ru.boltunya.http.endpoint.AuthenticationEndpoint
 import ru.boltunya.http.endpoint.ChatEndpoint
 import ru.boltunya.http.endpoint.EngineEndpoint
@@ -48,6 +49,7 @@ class ApiRouter @Inject constructor(
     private val validation: InputValidation,
     private val cache: TelegramCacheStorage,
     private val search: SearchEndpoint,
+    private val activity: ActivityEndpoint,
 ) : AutoCloseable {
     fun handle(exchange: HttpExchange) {
         val path = exchange.requestURI.path
@@ -63,6 +65,14 @@ class ApiRouter @Inject constructor(
         val route = ApiRoute.entries.firstOrNull { it.path == path && it.method == method }
         val result = when (route) {
             ApiRoute.STATE -> json.encodeToJsonElement(state.get())
+            ApiRoute.ACTIVITY_CLEAR -> {
+                activity.clear()
+                ok()
+            }
+            ApiRoute.ACTIVITY_QUEUE -> {
+                activity.pause(body)
+                ok()
+            }
             ApiRoute.SEARCH_CONNECTION -> json.encodeToJsonElement(search.connection())
             ApiRoute.SEARCH_KEY_SAVE -> json.encodeToJsonElement(search.save(body))
             ApiRoute.SEARCH_KEY_DELETE -> json.encodeToJsonElement(search.delete())
@@ -111,6 +121,23 @@ class ApiRouter @Inject constructor(
 
     private fun dynamic(exchange: HttpExchange, method: HttpMethod, body: JsonObject): JsonElement {
         val parts = exchange.requestURI.path.split('/')
+        if (parts.size >= ITEM_SEGMENTS && parts[RESOURCE_SEGMENT] == "activity") {
+            val id = parts[ID_SEGMENT]
+            return when {
+                parts.size == ITEM_SEGMENTS && method == HttpMethod.GET -> json.encodeToJsonElement(
+                    activity.details(id),
+                )
+                parts.size == ACTION_SEGMENTS && method == HttpMethod.POST && parts[ACTION_SEGMENT] == "cancel" -> {
+                    activity.cancel(id)
+                    ok()
+                }
+                parts.size == ACTION_SEGMENTS && method == HttpMethod.POST && parts[ACTION_SEGMENT] == "priority" -> {
+                    activity.prioritize(id)
+                    ok()
+                }
+                else -> throw RouteNotFoundException()
+            }
+        }
         if (parts.size == ACTION_SEGMENTS && parts[RESOURCE_SEGMENT] == "media" &&
             parts[ACTION_SEGMENT] == "download" && method == HttpMethod.POST
         ) {

@@ -7,7 +7,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
-class SettingsStore(private val directory: Path, startup: Boolean = false) {
+class SettingsStore(private val directory: Path) {
     private val json = Json {
         prettyPrint = true
         ignoreUnknownKeys = true
@@ -17,7 +17,7 @@ class SettingsStore(private val directory: Path, startup: Boolean = false) {
     @Volatile
     private var settings = if (Files.exists(file)) {
         val saved = json.decodeFromString<AppSettings>(Files.readString(file))
-        saved.copy(paused = !(startup && saved.resumeOnStartup))
+        saved.copy(paused = !saved.resumeOnStartup)
     } else {
         AppSettings()
     }

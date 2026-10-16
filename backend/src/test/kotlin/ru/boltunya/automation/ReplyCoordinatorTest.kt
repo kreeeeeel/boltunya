@@ -72,7 +72,7 @@ class ReplyCoordinatorTest {
         ReplyCoordinator(enabledSettings(), gateway) { _, _ -> ReplyResult("wrong", 0, 0.0) }.use { coordinator ->
             coordinator.onMessage(gateway.messages[0])
             coordinator.onMessage(ChatMessage("2", "42", "Manual", true, 0))
-            assertTrue(coordinator.activities().isEmpty())
+            assertEquals("cancelled", coordinator.activities().single().status)
             assertTrue(gateway.sent.isEmpty())
         }
     }

@@ -13,6 +13,12 @@ class StateEndpoint @Inject constructor(
     private val engine: EngineManager,
     private val replies: ReplyCoordinator,
 ) {
-    fun get(): ApiState =
-        ApiState(telegram.status(), engine.status(), settings.get(), telegram.chats(), replies.activities())
+    fun get(): ApiState = ApiState(
+        telegram.status(),
+        engine.status(),
+        settings.get(),
+        telegram.chats(),
+        replies.activities(),
+        replies.queue(),
+    )
 }

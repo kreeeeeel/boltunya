@@ -15,11 +15,23 @@ import ru.boltunya.telegram.TelegramGateway
 import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertSame
 
 class ApplicationModuleTest {
     @TempDir
     lateinit var directory: Path
+
+    @Test
+    fun `both regular and Windows launches honor automatic assistant startup`() {
+        SettingsStore(directory).update { it.copy(resumeOnStartup = true, paused = true) }
+        listOf(false, true).stream().forEach { windowsStartup ->
+            val injector = Guice.createInjector(ApplicationModule(ApplicationConfiguration(directory, windowsStartup)))
+            injector.getInstance(ApplicationRuntime::class.java).use {
+                assertFalse(injector.getInstance(SettingsStore::class.java).get().paused)
+            }
+        }
+    }
 
     @Test
     fun `automatic generation rejects a draft only model before accessing history or inference`() {

@@ -1,0 +1,27 @@
+package ru.boltunya.automation
+
+import org.junit.jupiter.api.Test
+import ru.boltunya.automation.activity.ActivityLog
+import ru.boltunya.automation.activity.ActivityStatus
+import ru.boltunya.domain.ActivityEntry
+import java.util.stream.IntStream
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+
+class ActivityLogTest {
+    @Test
+    fun `retention evicts oldest completed events while preserving active requests`() {
+        val log = ActivityLog()
+        log.add(ActivityEntry("active", "42", "Test", "queued", "model", 0), "Waiting")
+        IntStream.range(0, 110).forEach { index ->
+            log.add(ActivityEntry(index.toString(), "43", "Test", "queued", "model", 0), "Message")
+                .finish(ActivityStatus.SENT, "model", "Reply")
+        }
+        log.prune()
+        assertEquals(101, log.summaries().size)
+        assertTrue(log.summaries().any { it.id == "active" })
+        assertTrue(log.summaries().none { it.id == "0" })
+        log.clearCompleted()
+        assertEquals("active", log.summaries().single().id)
+    }
+}

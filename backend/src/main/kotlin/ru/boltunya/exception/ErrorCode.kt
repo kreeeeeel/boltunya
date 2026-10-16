@@ -1,6 +1,8 @@
 package ru.boltunya.exception
 
 enum class ErrorCode(val status: Int) {
+    ACTIVITY_NOT_FOUND(404),
+    ACTIVITY_DELIVERY_STARTED(409),
     CURRENCY_RATES_UNAVAILABLE(502),
     INVALID_SEARCH_KEY(400),
     SEARCH_RATE_LIMITED(429),
