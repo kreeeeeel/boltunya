@@ -59,12 +59,15 @@ export function ChatListRow({
                 <Text qa="chat-name" className={styles.name}>
                     {chat.title}
                 </Text>
-                <Text
-                    qa="chat-preview"
-                    className={[styles.preview, chat.unread > 0 ? styles.unreadPreview : ''].join(' ')}
-                >
-                    {author && chat.preview ? `${author}: ` : ''}
-                    {chat.preview}
+                <Text qa="chat-preview" className={styles.preview}>
+                    {author && chat.preview && (
+                        <Text qa="chat-preview-author" className={styles.previewAuthor}>
+                            {author}:{' '}
+                        </Text>
+                    )}
+                    <Text qa="chat-preview-text" className={styles.previewText}>
+                        {chat.preview}
+                    </Text>
                 </Text>
             </Flex>
             <Flex direction="column" alignItems="flex-end" className={styles.aside}>

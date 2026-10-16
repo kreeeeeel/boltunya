@@ -31,7 +31,7 @@ Boltunya is a Windows desktop application for reading Telegram conversations and
 - **A proper desktop shell.** A draggable title bar, maximize within the Windows work area, compact tray menu, optional startup in the tray, and separate startup/resume preferences. Resource charts show application and system activity.
 - **Four languages, two themes.** English, Russian, Kazakh and Ukrainian; light/dark themes and bundled Noto Sans typography.
 
-The chat list uses two-line previews and a small AI badge on enabled conversations' avatars. Press **Esc** to close the current chat; an open dialog is dismissed first. Telegram chat-specific and default light/dark wallpapers are supported when TDLib provides them. The default background is plain and follows the application theme; unavailable images also use this neutral background.
+The chat list uses two-line previews and a small AI badge on enabled conversations' avatars. Press **Esc** to close the current chat; an open dialog is dismissed first. Telegram chat-specific and default light/dark wallpapers are supported when TDLib provides them. Conversation backgrounds appear only while a chat is open on the Chats page. The default conversation background is plain and follows the application theme; unavailable images also use this neutral background.
 
 <table>
   <tr><td><img src="docs/resources/readme-chat-dark.png" alt="Dark conversation view"></td><td><img src="docs/resources/readme-models.png" alt="Searchable model comparison catalog"></td></tr>
@@ -39,6 +39,8 @@ The chat list uses two-line previews and a small AI badge on enabled conversatio
 </table>
 
 ## Get started
+
+Models are instructed to answer clearly harmful requests with brief, calm disagreement in the owner's voice. Ordinary conversation, figurative language and questions about protecting your own account remain part of normal conversation.
 
 **Windows x64** is supported. Download **Boltunya.exe** from [Releases](https://github.com/kreeeeeel/boltunya/releases/latest) and open it. The portable EXE includes Electron, the Kotlin application, a Java runtime and the static web interface. A separate Java or Node.js installation is not needed to run it. Ollama and model weights are additional downloads managed from the model page. TDLib may require the [Microsoft Visual C++ x64 runtime](https://aka.ms/vs/17/release/vc_redist.x64.exe).
 

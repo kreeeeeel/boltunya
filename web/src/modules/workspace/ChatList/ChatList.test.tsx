@@ -40,7 +40,7 @@ describe('Chat selection', () => {
     });
 
     it('distinguishes outgoing previews and group authors from private incoming messages', () => {
-        render(
+        const view = render(
             <NextIntlClientProvider locale="ru" messages={ru}>
                 <ThemeProvider>
                     <ChatList
@@ -65,9 +65,11 @@ describe('Chat selection', () => {
                 </ThemeProvider>
             </NextIntlClientProvider>,
         );
-        expect(screen.getByText('Вы: Мой ответ')).toBeInTheDocument();
+        const previews = view.container.querySelectorAll('[data-qa="chat-preview"]');
+        expect(previews[0]).toHaveTextContent('Вы: Мой ответ');
         expect(screen.getByText('Личное сообщение')).toBeInTheDocument();
-        expect(screen.getByText('Лиза: Сообщение группы')).toBeInTheDocument();
+        expect(previews[2]).toHaveTextContent('Лиза: Сообщение группы');
+        expect(view.container.querySelectorAll('[data-qa="chat-preview-author"]')).toHaveLength(2);
         expect(screen.queryByText('Марк: Личное сообщение')).not.toBeInTheDocument();
     });
 

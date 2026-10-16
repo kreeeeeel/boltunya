@@ -74,7 +74,7 @@ export function FlowEditor({chats}: {readonly chats: Chat[]}) {
     }
     return (
         <Flex direction="column" className={styles.root} qa="flow-editor">
-            <Flex className={styles.toolbar} alignItems="center" gap={3}>
+            <Flex className={styles.toolbar} alignItems="center" gap={3} qa="flow-toolbar">
                 <Flex alignItems="center" gap={1} className={styles.selector}>
                     {renaming && current ? (
                         <TextInput
@@ -167,7 +167,7 @@ export function FlowEditor({chats}: {readonly chats: Chat[]}) {
             )}
             {current ? (
                 <>
-                    <Flex className={styles.palette} alignItems="center" gap={2} wrap>
+                    <Flex className={styles.palette} alignItems="center" gap={2} wrap qa="flow-palette">
                         {(['command', 'agent', 'reply', 'store', 'condition'] as const).map((kind) => (
                             <Button
                                 key={kind}

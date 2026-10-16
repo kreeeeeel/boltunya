@@ -15,7 +15,7 @@ export function FlowInspector({
 }) {
     const t = useTranslations();
     return (
-        <ScrollArea className={styles.root}>
+        <ScrollArea className={styles.root} qa="flow-inspector">
             <Flex direction="column" gap={4} className={styles.content}>
                 <Text variant="subheader-2">
                     {node ? t('flows.kind.' + node.kind) : t('flows.selectBlock')}

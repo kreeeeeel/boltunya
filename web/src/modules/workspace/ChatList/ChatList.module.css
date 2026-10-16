@@ -190,8 +190,14 @@
     color: var(--tiho-muted);
 }
 
-.unreadPreview {
+.previewAuthor {
     color: var(--tiho-ink);
+}
+
+.previewAuthor,
+.previewText {
+    font-size: inherit;
+    line-height: inherit;
 }
 
 .aside {

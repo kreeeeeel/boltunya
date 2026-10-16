@@ -10,7 +10,10 @@ export function FlowBlock({data, selected}: NodeProps<FlowCanvasNode>) {
     const t = useTranslations();
     const node = data.config;
     return (
-        <Box className={[styles.block, styles[node.kind], selected ? styles.selected : ''].join(' ')}>
+        <Box
+            qa="flow-block"
+            className={[styles.block, styles[node.kind], selected ? styles.selected : ''].join(' ')}
+        >
             {node.kind !== 'command' && <Handle type="target" position={Position.Left} />}
             <Flex alignItems="center" gap={3}>
                 <Box className={styles.symbol}>{symbols[node.kind]}</Box>

@@ -2,7 +2,7 @@
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    background: var(--tiho-chat);
+    background: var(--tiho-bg);
     height: 100dvh;
     min-height: 560px;
 }

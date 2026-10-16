@@ -284,6 +284,30 @@ test('Escape dismisses a dialog first and then closes the conversation', async (
     await expect(page.locator('[data-qa="message-incoming"]').first()).toBeVisible();
 });
 
+test('conversation background appears only for an open chat on the chats page', async ({page}) => {
+    const wallpaper = page.locator('[data-qa="chat-wallpaper"]');
+    await expect(wallpaper).toBeAttached();
+    await page.keyboard.press('Escape');
+    await expect(wallpaper).toHaveCount(0);
+    await expect(page.locator('[data-qa="workspace-shell"]')).toHaveCSS(
+        'background-color',
+        'rgb(243, 245, 247)',
+    );
+    await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
+    await expect(wallpaper).toBeAttached();
+    for (const tab of ['models', 'activity', 'metrics', 'flows']) {
+        await page.locator(`[data-qa="nav-${tab}"]`).click();
+        await expect(wallpaper).toHaveCount(0);
+    }
+    await page.locator('[data-qa="nav-chats"]').click();
+    await expect(wallpaper).toBeAttached();
+    const disconnected = {...workspaceState, telegram: {...workspaceState.telegram, state: 'disconnected'}};
+    await page.route('**/api/state', (route) => route.fulfill({json: disconnected}));
+    await page.reload();
+    await expect(page.locator('[data-qa="welcome"]')).toBeVisible();
+    await expect(wallpaper).toHaveCount(0);
+});
+
 test('default and unavailable wallpapers use a plain theme background', async ({page}) => {
     const state = structuredClone(workspaceState);
     state.chats[0].wallpaper = {kind: 'wallpaper', url: '/api/media/missing-background'};
@@ -1250,6 +1274,12 @@ test('visual flow draft can be tested without saving or sending messages', async
     await page.locator('[data-qa="nav-flows"]').click();
     await page.getByRole('button', {name: 'Создать', exact: true}).click();
     await expect(page.locator('.react-flow__node')).toHaveCount(2);
+    for (const qa of ['flow-toolbar', 'flow-palette', 'flow-canvas']) {
+        await expect(page.locator(`[data-qa="${qa}"]`)).toHaveCSS('border-radius', '18px');
+    }
+    await expect(page.locator('[data-qa="flow-inspector"]').locator('..')).toHaveCSS('border-radius', '18px');
+    await expect(page.locator('[data-qa="flow-block"]').first()).toHaveCSS('border-radius', '16px');
+    await expect(page.locator('[data-qa="flow-block"]').first()).toHaveCSS('padding', '18px');
     await expect(page.getByRole('textbox', {name: 'Тестовое сообщение', exact: true})).toHaveCount(0);
     await expect(page.getByRole('textbox', {name: 'Текст', exact: true})).toBeVisible();
     await page.getByRole('button', {name: 'Проверить', exact: true}).click();
@@ -1711,6 +1741,25 @@ test('large dialog lists load on scroll, preserve filters and show message autho
     await expect(rows).toHaveCount(40);
     await expect(rows.first()).toContainText('Вы: Сообщение 0');
     await expect(rows.nth(1)).toContainText('Анна: Сообщение 1');
+    for (const dark of [false, true]) {
+        if (dark) await page.getByRole('button', {name: 'Сменить тему', exact: true}).click();
+        await expect(rows.first().locator('[data-qa="chat-preview-author"]')).toHaveCSS(
+            'color',
+            dark ? 'rgb(231, 237, 243)' : 'rgb(39, 52, 65)',
+        );
+        await expect(rows.nth(1).locator('[data-qa="chat-preview-author"]')).toHaveCSS(
+            'color',
+            dark ? 'rgb(231, 237, 243)' : 'rgb(39, 52, 65)',
+        );
+        await expect(rows.first().locator('[data-qa="chat-preview-text"]')).toHaveCSS(
+            'color',
+            dark ? 'rgb(156, 170, 184)' : 'rgb(100, 115, 131)',
+        );
+        await expect(rows.nth(1).locator('[data-qa="chat-preview-text"]')).toHaveCSS(
+            'color',
+            dark ? 'rgb(156, 170, 184)' : 'rgb(100, 115, 131)',
+        );
+    }
     const viewport = page.locator('[data-qa="chat-list-scroll"]');
     await viewport.evaluate((el) => {
         el.scrollTop = el.scrollHeight;

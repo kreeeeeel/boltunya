@@ -207,7 +207,6 @@ export function Workspace() {
     if (state?.telegram.state !== 'ready') {
         return (
             <Flex direction="column" className={styles.root} qa="workspace-shell">
-                <ChatWallpaper />
                 <WindowBar state={state} onPause={pause} onError={setActionError} />
                 <Welcome
                     state={state}
@@ -228,9 +227,11 @@ export function Workspace() {
 
     return (
         <Flex direction="column" className={styles.root} qa="workspace-shell">
-            <ChatWallpaper
-                wallpaper={theme === 'dark' ? (chat?.darkWallpaper ?? chat?.wallpaper) : chat?.wallpaper}
-            />
+            {tab === 'chats' && chat && (
+                <ChatWallpaper
+                    wallpaper={theme === 'dark' ? (chat.darkWallpaper ?? chat.wallpaper) : chat.wallpaper}
+                />
+            )}
             <WindowBar state={state} onPause={pause} onError={setActionError} />
             {(error || actionError || quit) && (
                 <Flex className={styles.error} gap={3} alignItems="center">
