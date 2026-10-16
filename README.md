@@ -29,6 +29,7 @@ Boltunya is a Windows desktop application for reading Telegram conversations and
 - **A memory bank you control.** Shared owner facts and habits, per-chat summaries, editable notes, incremental background collection and manual deep rebuilds with progress, queue state and cancellation.
 - **Visual workflows.** Connect command, agent, reply, condition and local JSON storage nodes. Test a draft before saving it, without sending a Telegram message.
 - **Deliberate automation.** Sequential replies, configurable delays and intervals, optional typing indicators, per-chat controls and group mention/all-message modes. Group automation starts disabled.
+- **A visible reply queue.** Pause dispatch, prioritize or stop tasks, and inspect prompts, streamed thinking, responses and token/timing metrics in event cards. [Queue and trace details](docs/activity/en.md).
 - **A proper desktop shell.** A draggable title bar, maximize within the Windows work area, compact tray menu, optional startup in the tray, and separate startup/resume preferences. Resource charts show application and system activity.
 - **Four languages, two themes.** English, Russian, Kazakh and Ukrainian; light/dark themes and bundled Noto Sans typography.
 
@@ -48,7 +49,7 @@ Models are instructed to answer clearly harmful requests with brief, calm disagr
 1. **Connect Telegram.** Obtain your own API ID and API Hash at [my.telegram.org/apps](https://my.telegram.org/apps), then follow the sign-in form. In-app guidance explains these fields, the login code and two-step verification.
 2. **Choose a model.** Open **AI models**, install Ollama if needed, and download a model that fits your computer. Speed and memory labels are estimates; the benchmark measures actual local performance.
 3. **Configure a conversation.** Open its conversation settings, enable replies and choose a model, tone, context and writing-style adaptation. Review the global instructions in the profile menu.
-4. **Start AI.** Use the title-bar control. Ordinary launches pause automation; Windows startup and automatic resume must be enabled separately in settings.
+4. **Start AI.** Use the title-bar control, or enable **Enable AI when the app starts** in settings. This applies to both ordinary launches and Windows startup. Starting with Windows keeps the window hidden in the tray until you open it.
 
 Use the profile menu for language, theme, settings, custom styles, shared memory and sign-out. Conversation settings contain memory collection and per-chat preferences. Photos, other media and deleted-message snapshots have cache and retention controls.
 

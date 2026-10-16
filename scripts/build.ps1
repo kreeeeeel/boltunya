@@ -33,7 +33,8 @@ try {
         & (Join-Path $jdkBin 'jlink.exe') --output $runtime --strip-debug --no-header-files --no-man-pages --add-modules java.base,java.desktop,java.net.http,jdk.httpserver,jdk.crypto.ec,java.logging,java.management,jdk.management,jdk.unsupported,java.naming,java.sql,jdk.charsets
         if ($LASTEXITCODE -ne 0) { throw 'Bundled Java runtime build failed' }
     }
-    npm.cmd run package --prefix desktop -- --config.extraMetadata.version=$Version --config.portable.unpackDirName=boltunya-$Version "--config.directories.output=$compileDirectory" --publish never
+    $unpackName="boltunya-$Version-" + [guid]::NewGuid().ToString('N').Substring(0,12)
+    npm.cmd run package --prefix desktop -- --config.extraMetadata.version=$Version "--config.portable.unpackDirName=$unpackName" "--config.directories.output=$compileDirectory" --publish never
     if ($LASTEXITCODE -ne 0) { throw 'Electron portable build failed' }
     $executable=Join-Path $compileDirectory 'Болтунья.exe'
     (Get-FileHash -Algorithm SHA256 -LiteralPath $executable).Hash.ToLowerInvariant() + '  Болтунья.exe' | Set-Content -Encoding utf8 (Join-Path $compileDirectory 'SHA256.txt')

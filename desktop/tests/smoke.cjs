@@ -40,6 +40,29 @@ const path = require('node:path');
   console.log(JSON.stringify({unauthenticatedWindows:initial,maximized:geometry.maximized,taskbarPreserved:true,traySize,closeToTray:hidden}));
  } finally {await application.close();}
  await fs.access(path.join(directory,'launch.url')).then(()=>{throw new Error('Backend session descriptor survived shutdown');},()=>{});
+ const startupDirectory=directory+'-startup';
+ await fs.mkdir(startupDirectory,{recursive:true});
+ await fs.writeFile(path.join(startupDirectory,'settings.json'),JSON.stringify({resumeOnStartup:true}));
+ const startupApp=await electron.launch({executablePath:process.env.BOLTUNYA_TEST_EXECUTABLE || path.join(root,'complie/win-unpacked/Болтунья.exe'),args:['--startup'],env:{...process.env,BOLTUNYA_DATA_DIR:startupDirectory,BOLTUNYA_OLLAMA_URL:'http://127.0.0.1:1'},timeout:60000});
+ try {
+  const startupPage=await startupApp.firstWindow();
+  await startupPage.getByRole('button',{name:'Подключить Telegram',exact:true}).waitFor({timeout:45000});
+  const startupTray=startupApp.windows().find(page=>page!==startupPage) ?? await startupApp.waitForEvent('window',{timeout:15000});
+  if(!startupTray)throw new Error('Windows startup has no tray menu');
+  await startupTray.waitForURL('**/tray/');
+  await startupTray.getByRole('menuitem',{name:'Открыть',exact:true}).waitFor();
+  await startupPage.waitForTimeout(1800);
+  const startupState=await startupApp.evaluate(({BrowserWindow})=>({hidden:BrowserWindow.getAllWindows().every(window=>!window.isVisible()),windows:BrowserWindow.getAllWindows().length}));
+  if(!startupState.hidden||startupState.windows!==2)throw new Error('Windows startup showed a window');
+  const assistantEnabled=await startupPage.evaluate(async()=>!(await(await fetch('/api/state')).json()).settings.paused);
+  if(!assistantEnabled)throw new Error('Automatic assistant startup was ignored');
+  await startupApp.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows().find(window=>window.webContents.getURL().includes('/tray/')).show());
+  await startupTray.getByRole('menuitem',{name:'Открыть',exact:true}).click();
+  const opened=await startupApp.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows().find(window=>!window.webContents.getURL().includes('/tray/')).isVisible());
+  if(!opened)throw new Error('Tray did not open the startup window');
+  console.log(JSON.stringify({windowsStartupTrayOnly:startupState.hidden,assistantEnabled,opensFromTray:opened}));
+ } finally {await startupApp.close();}
+ await fs.access(path.join(startupDirectory,'launch.url')).then(()=>{throw new Error('Startup backend survived shutdown');},()=>{});
 })().catch(error=>{console.error(error);process.exitCode=1;});
 
 

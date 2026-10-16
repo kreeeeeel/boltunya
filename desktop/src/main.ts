@@ -13,7 +13,7 @@ let backend: Backend | undefined;
 let tray: TrayController | undefined;
 let state: State | undefined;
 let quitting = false;
-let waitingForStartupLogin = false;
+let backgroundStartup = process.argv.includes('--startup');
 let decidingClose = false;
 let timer: ReturnType<typeof setTimeout> | undefined;
 const startupRegistration = new StartupRegistration();
@@ -27,7 +27,7 @@ if (isolatedDirectory) {
 }
 if (!app.requestSingleInstanceLock()) app.quit();
 else {
-    app.on('second-instance', () => show());
+    app.on('second-instance', (_event, commandLine) => { if (!commandLine.includes('--startup')) show(); });
     app.on('activate', () => show());
     void app.whenReady().then(start).catch(async error => {
         dialog.showErrorBox(APP_NAME, error instanceof Error ? error.message : 'Не удалось запустить приложение.');
@@ -35,7 +35,7 @@ else {
     });
 }
 
-function show(): void { if (!main || main.isDestroyed()) return; if (main.isMinimized()) main.restore(); main.show(); main.focus(); tray?.hide(); }
+function show(): void { if (!main || main.isDestroyed()) return; backgroundStartup = false; if (main.isMinimized()) main.restore(); main.show(); main.focus(); tray?.hide(); }
 function windowState() { return {available: true, maximized: main?.isMaximized() ?? false, visible: main?.isVisible() ?? false, minimized: main?.isMinimized() ?? false}; }
 
 async function start(): Promise<void> {
@@ -95,9 +95,8 @@ async function start(): Promise<void> {
     });
     await main.loadURL(url);
     await main.webContents.executeJavaScript("history.replaceState(null, '', location.pathname)");
-    waitingForStartupLogin = startup && state.telegram.state === 'connecting';
     await refresh(url);
-    if (!startup || !waitingForStartupLogin && state.telegram.state !== 'ready') main.show();
+    if (!startup) show();
 }
 
 function openExternal(url: string): void { try { if (['https:', 'http:', 'tg:', 'mailto:', 'tel:'].includes(new URL(url).protocol)) void shell.openExternal(url); } catch { console.error('Rejected malformed external link'); } }
@@ -108,9 +107,8 @@ async function refresh(url: string): Promise<void> {
         const previous = state?.telegram.state;
         state = await backend?.request<State>('/api/state');
         if (quitting) return;
-        if (waitingForStartupLogin && state?.telegram.state !== 'connecting') { waitingForStartupLogin = false; if (state?.telegram.state !== 'ready') show(); }
-        if (previous === 'ready' && state?.telegram.state !== 'ready') show();
-        if (state?.telegram.state === 'ready') await tray?.connect(url); else tray?.close();
+        if (previous === 'ready' && state?.telegram.state !== 'ready' && !backgroundStartup) show();
+        if (state?.telegram.state === 'ready' || backgroundStartup) await tray?.connect(url); else tray?.close();
         if (state) startupRegistration.update(state.settings.launchAtLogin);
     } catch (error) { console.error('Desktop state refresh failed:', error instanceof Error ? error.message : 'unknown error'); }
     clearTimeout(timer);
