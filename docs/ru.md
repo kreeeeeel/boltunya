@@ -10,7 +10,7 @@
 
 ## Установка и первый запуск
 
-Нужна Windows x64. В [Releases](https://github.com/kreeeeeel/boltunya/releases/latest) скачайте **Болтунья.exe** и запустите его. Репозиторий приватный: для загрузки необходимо войти в GitHub с доступом к нему.
+Нужна Windows x64. В [Releases](https://github.com/kreeeeeel/boltunya/releases/latest) скачайте **Boltunya.exe** и запустите его. Репозиторий приватный: для загрузки необходимо войти в GitHub с доступом к нему.
 
 В одном portable EXE находятся Electron, Kotlin-приложение, Java runtime и веб-интерфейс. При запуске оболочка распаковывается в локальный кэш. Устанавливать Java и Node.js пользователю не требуется. Ollama и веса выбранных моделей скачиваются отдельно из приложения. Для нативной TDLib может потребоваться [Visual C++ Runtime x64](https://aka.ms/vs/17/release/vc_redist.x64.exe).
 
@@ -172,12 +172,12 @@ $env:TIHO_LIVE_INTERNET='true'
 
 ### CI и релизы
 
-Push в `main` или ручной запуск **Windows release** выполняет проверки, собирает portable EXE, запускает браузерные и нативные тесты, затем публикует `Болтунья.exe` и `SHA256.txt` в [Releases](https://github.com/kreeeeeel/boltunya/releases). Версия состоит из major/minor исходников и номера запуска workflow. У каждой версии собственный каталог распаковки.
+Push в `main` или ручной запуск **Windows release** выполняет проверки, собирает portable EXE, запускает браузерные и нативные тесты, затем публикует `Boltunya.exe` и `SHA256.txt` в [Releases](https://github.com/kreeeeeel/boltunya/releases). Версия состоит из major/minor исходников и номера запуска workflow. У каждой версии собственный каталог распаковки.
 
 Проверить целостность загрузки:
 
 ```powershell
-Get-FileHash -Algorithm SHA256 -LiteralPath '.\Болтунья.exe'
+Get-FileHash -Algorithm SHA256 -LiteralPath '.\Boltunya.exe'
 Get-Content -LiteralPath '.\SHA256.txt'
 ```
 

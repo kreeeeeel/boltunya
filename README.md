@@ -40,7 +40,7 @@ The chat list uses two-line previews and a small AI badge on enabled conversatio
 
 ## Get started
 
-**Windows x64** is supported. Download **Болтунья.exe** from [Releases](https://github.com/kreeeeeel/boltunya/releases/latest) and open it. The portable EXE includes Electron, the Kotlin application, a Java runtime and the static web interface. A separate Java or Node.js installation is not needed to run it. Ollama and model weights are additional downloads managed from the model page. TDLib may require the [Microsoft Visual C++ x64 runtime](https://aka.ms/vs/17/release/vc_redist.x64.exe).
+**Windows x64** is supported. Download **Boltunya.exe** from [Releases](https://github.com/kreeeeeel/boltunya/releases/latest) and open it. The portable EXE includes Electron, the Kotlin application, a Java runtime and the static web interface. A separate Java or Node.js installation is not needed to run it. Ollama and model weights are additional downloads managed from the model page. TDLib may require the [Microsoft Visual C++ x64 runtime](https://aka.ms/vs/17/release/vc_redist.x64.exe).
 
 1. **Connect Telegram.** Obtain your own API ID and API Hash at [my.telegram.org/apps](https://my.telegram.org/apps), then follow the sign-in form. In-app guidance explains these fields, the login code and two-step verification.
 2. **Choose a model.** Open **AI models**, install Ollama if needed, and download a model that fits your computer. Speed and memory labels are estimates; the benchmark measures actual local performance.
@@ -120,12 +120,12 @@ See [Docker tooling](docker/README.md) for a static frontend preview and JVM che
 
 ## Releases
 
-Every push to `main`, or a manual **Windows release** run, checks and builds the application on GitHub Actions. It then runs browser and native Electron tests before publishing **Болтунья.exe** and **SHA256.txt** to [Releases](https://github.com/kreeeeeel/boltunya/releases). Release versions use the source major/minor and the workflow run number; each version has a separate portable extraction directory.
+Every push to `main`, or a manual **Windows release** run, checks and builds the application on GitHub Actions. It then runs browser and native Electron tests before publishing **Boltunya.exe** and **SHA256.txt** to [Releases](https://github.com/kreeeeeel/boltunya/releases). Release versions use the source major/minor and the workflow run number; each version has a separate portable extraction directory.
 
 The repository and its releases are private. You must be signed in with repository access to download assets. To verify a download:
 
 ```powershell
-Get-FileHash -Algorithm SHA256 -LiteralPath '.\Болтунья.exe'
+Get-FileHash -Algorithm SHA256 -LiteralPath '.\Boltunya.exe'
 Get-Content -LiteralPath '.\SHA256.txt'
 ```
 

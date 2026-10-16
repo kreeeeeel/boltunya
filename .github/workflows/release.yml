@@ -72,10 +72,15 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           $version='${{ steps.version.outputs.value }}'
-          gh release create "v$version" "complie/Болтунья.exe" "complie/SHA256.txt" --target "$env:GITHUB_SHA" --title "Boltunya $version" --generate-notes
+          $releaseDirectory='build/release'
+          New-Item -ItemType Directory -Force -Path $releaseDirectory | Out-Null
+          Copy-Item -LiteralPath 'complie/Болтунья.exe' -Destination "$releaseDirectory/Boltunya.exe"
+          $hash=(Get-FileHash -Algorithm SHA256 -LiteralPath "$releaseDirectory/Boltunya.exe").Hash.ToLowerInvariant()
+          "$hash  Boltunya.exe" | Set-Content -Encoding utf8 "$releaseDirectory/SHA256.txt"
+          gh release create "v$version" "$releaseDirectory/Boltunya.exe" "$releaseDirectory/SHA256.txt" --target "$env:GITHUB_SHA" --title "Boltunya $version" --generate-notes
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $release=gh api "repos/$env:GITHUB_REPOSITORY/releases/tags/v$version" | ConvertFrom-Json
-          $exe=$release.assets | Where-Object name -eq 'Болтунья.exe'
+          $exe=$release.assets | Where-Object name -eq 'Boltunya.exe'
           $checksum=$release.assets | Where-Object name -eq 'SHA256.txt'
           if($release.draft -or -not $exe -or $exe.size -lt 50000000 -or -not $checksum) { throw 'Published release assets are incomplete.' }
           "### [Boltunya $version]($($release.html_url))" >> $env:GITHUB_STEP_SUMMARY
