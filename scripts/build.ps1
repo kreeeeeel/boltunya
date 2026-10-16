@@ -1,4 +1,4 @@
-param([switch]$SkipChecks, [string]$Version='2.5.1')
+param([switch]$SkipChecks, [string]$Version='2.6.0')
 $ErrorActionPreference='Stop'
 $projectRoot=Split-Path -Parent $PSScriptRoot
 Push-Location $projectRoot
@@ -20,7 +20,7 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Kotlin checks failed' }
     }
     & ./scripts/create-icon.ps1 -OutputPath (Join-Path $projectRoot 'desktop/assets/boltunya.ico') -PngPath (Join-Path $projectRoot 'desktop/assets/boltunya.png')
-    & ./gradlew.bat :backend:prepareDesktop --no-daemon
+    & ./gradlew.bat :backend:prepareDesktop "-PappVersion=$Version" --no-daemon
     if ($LASTEXITCODE -ne 0) { throw 'Backend and web build failed' }
     $runtime=Join-Path $projectRoot 'build/runtime'
     if (-not (Test-Path -LiteralPath (Join-Path $runtime 'bin/java.exe'))) {
@@ -28,7 +28,7 @@ try {
         & (Join-Path $jdkBin 'jlink.exe') --output $runtime --strip-debug --no-header-files --no-man-pages --add-modules java.base,java.desktop,java.net.http,jdk.httpserver,jdk.crypto.ec,java.logging,java.management,jdk.management,jdk.unsupported,java.naming,java.sql,jdk.charsets
         if ($LASTEXITCODE -ne 0) { throw 'Bundled Java runtime build failed' }
     }
-    npm.cmd run package --prefix desktop -- --config.extraMetadata.version=$Version
+    npm.cmd run package --prefix desktop -- --config.extraMetadata.version=$Version --config.portable.unpackDirName=boltunya-$Version
     if ($LASTEXITCODE -ne 0) { throw 'Electron portable build failed' }
     $compileDirectory=Join-Path $projectRoot 'complie'
     $executable=Join-Path $compileDirectory 'Болтунья.exe'

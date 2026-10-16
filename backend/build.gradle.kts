@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "ru.boltunya"
-version = "2.5.1"
+version = providers.gradleProperty("appVersion").getOrElse("2.6.0")
 
 repositories {
     mavenCentral()
