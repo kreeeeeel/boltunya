@@ -1,0 +1,44 @@
+.root {
+    min-height: 0;
+    height: 100%;
+    background: var(--tiho-chat);
+}
+
+.header {
+    height: 56px;
+    padding: 0 20px;
+    background: var(--tiho-panel);
+    border-bottom: 1px solid var(--tiho-line);
+    flex-shrink: 0;
+}
+
+.messages {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding: 24px;
+    gap: 12px;
+}
+
+.bubble {
+    align-self: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 12px;
+    background: var(--tiho-bubble);
+    max-width: 80%;
+    overflow: hidden;
+}
+
+.outgoing {
+    align-self: flex-end;
+    background: var(--tiho-outgoing);
+}
+
+.composer {
+    background: var(--tiho-panel);
+    padding: 12px 20px;
+    border-top: 1px solid var(--tiho-line);
+}

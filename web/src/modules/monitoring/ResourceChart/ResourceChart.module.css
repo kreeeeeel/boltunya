@@ -1,0 +1,23 @@
+.card {
+    padding: 20px;
+    background: var(--tiho-panel);
+    border-radius: 16px;
+    min-width: 0;
+}
+
+.value {
+    font-size: 22px;
+    font-weight: 700;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.chart {
+    height: 200px;
+    margin-top: 12px;
+}
+
+.legend {
+    margin-top: 8px;
+    font-size: 13px;
+}

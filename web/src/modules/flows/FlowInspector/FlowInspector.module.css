@@ -1,0 +1,21 @@
+.root {
+    flex: 0 0 280px;
+    background: var(--tiho-panel);
+}
+
+.content {
+    padding: 16px;
+}
+
+.label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.note {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--tiho-muted);
+    white-space: pre-line;
+}

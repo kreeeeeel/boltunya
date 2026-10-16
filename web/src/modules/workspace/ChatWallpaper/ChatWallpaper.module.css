@@ -1,0 +1,6 @@
+.wallpaper {
+    position: absolute;
+    inset: 56px 0 0;
+    pointer-events: none;
+    background-position: center;
+}

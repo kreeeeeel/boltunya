@@ -1,0 +1,14 @@
+**/node_modules
+**/build
+**/.next
+**/out
+**/dist
+.gradle
+.kotlin
+.tools
+complie
+docs/resources
+.env*
+**/*.log
+**/test-results
+**/playwright-report

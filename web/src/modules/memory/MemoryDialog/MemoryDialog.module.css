@@ -1,0 +1,29 @@
+.label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.hint {
+    display: block;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-top: 8px;
+}
+
+.summary {
+    border-radius: 12px;
+    background: var(--tiho-chat);
+    padding: 14px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-size: 14px;
+    line-height: 1.65;
+    user-select: text;
+}
+
+.path {
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}

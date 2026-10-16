@@ -1,0 +1,43 @@
+.root {
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    height: 100%;
+    overflow: auto;
+}
+
+.summary {
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
+    border: 1px solid var(--tiho-line);
+    border-radius: 12px;
+    background: var(--tiho-panel);
+}
+
+.cards {
+    gap: 16px;
+}
+
+.card {
+    flex: 1;
+    min-width: 0;
+    padding: 24px;
+    gap: 20px;
+    border: 1px solid var(--tiho-line);
+    border-radius: 12px;
+    background: var(--tiho-panel);
+}
+
+@media (width <= 850px) {
+    .cards {
+        flex-direction: column;
+    }
+
+    .root {
+        padding: 20px;
+    }
+}

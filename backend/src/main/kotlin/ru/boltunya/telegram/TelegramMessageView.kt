@@ -1,0 +1,40 @@
+package ru.boltunya.telegram
+
+import it.tdlight.jni.TdApi
+import jakarta.inject.Inject
+import ru.boltunya.domain.ChatMessage
+
+class TelegramMessageView @Inject constructor(
+    private val cache: TelegramCache,
+    private val mapper: TelegramMessageMapper,
+) {
+    fun map(message: TdApi.Message): ChatMessage {
+        val chat = cache.chats[message.chatId]
+        val sender = (message.senderId as? TdApi.MessageSenderUser)?.userId
+        val user = sender?.let(cache.users::get)
+        val ownNames = cache.users[cache.ownId]?.usernames?.activeUsernames.orEmpty().map {
+            "@" + it.lowercase()
+        }.toSet()
+        val mapped = mapper.map(message)
+        val mention = message.containsUnreadMention || mapped.entities.stream().anyMatch { entity ->
+            entity.type == "mention" &&
+                mapped.text.substring(entity.offset, entity.offset + entity.length).lowercase() in ownNames ||
+                entity.type == "mentionname" && entity.url == "tg://user?id=${cache.ownId}"
+        }
+        val reply = message.replyTo as? TdApi.MessageReplyToMessage
+        return mapped.copy(
+            group = chat?.type is TdApi.ChatTypeBasicGroup || chat?.type is TdApi.ChatTypeSupergroup,
+            mentionsMe = mention,
+            topicId = (message.topicId as? TdApi.MessageTopicForum)?.forumTopicId ?: 0,
+            senderName = user?.let { (it.firstName + " " + it.lastName).trim() }.orEmpty(),
+            senderId = when (val origin = message.senderId) {
+                is TdApi.MessageSenderUser -> "user:${origin.userId}"
+                is TdApi.MessageSenderChat -> "chat:${origin.chatId}"
+                else -> ""
+            },
+            replyToId = reply?.messageId?.toString().orEmpty(),
+            replyText = (reply?.content as? TdApi.MessageText)?.text?.text.orEmpty(),
+            read = message.isOutgoing && message.id <= (chat?.lastReadOutboxMessageId ?: 0),
+        )
+    }
+}

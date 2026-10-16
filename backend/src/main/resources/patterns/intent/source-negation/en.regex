@@ -1,0 +1,1 @@
+\b(?:without links|no links|no sources|do not (?:add|include|send)[^.!?\n]{0,24}(?:links|sources)|don't (?:add|include|send)[^.!?\n]{0,24}(?:links|sources))\b

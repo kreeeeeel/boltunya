@@ -1,0 +1,6 @@
+package ru.boltunya.exception.impl
+
+import ru.boltunya.exception.AppException
+import ru.boltunya.exception.ErrorCode
+
+class EngineWarmupFailedException : AppException(ErrorCode.ENGINE_WARMUP_FAILED)

@@ -1,0 +1,75 @@
+# Conversation memory
+
+Boltunya learns an owner profile from real outgoing messages: writing style, habits, interests and confirmed personal facts. This profile is shared across conversations. Separate chat summaries retain relationships and private arrangements. Incremental batches gradually cover available history.
+
+## Files
+
+Under the application's existing `%LOCALAPPDATA%/Tiho` data directory:
+
+```text
+memory/
+  MEMORY.md
+  <telegramAccountId>/
+    PROFILE.md                   learned account profile
+    state.json
+    <chatId>/MEMORY.md
+```
+
+The global file is created at startup and combines manual notes with the active account’s learned profile. Profiles are also stored in `memory/<telegramAccountId>/PROFILE.md` and restored when switching accounts. Contact facts stay in individual chat summaries. Chat files are created for chats in use, profile sources and explicit update requests.
+
+Generated content is enclosed by `<!-- boltunya:auto:start -->` and `<!-- boltunya:auto:end -->`. Text outside this section is maintained by the owner. Both the app and an ordinary editor can edit it. Background updates preserve manual notes, including Markdown indentation; concurrent edits invalidate a pending summary instead of being overwritten.
+
+## Scheduling and processing
+
+The worker starts 30 seconds after startup and waits for authentication. Initial profile sources are up to eight most recent private chats active within 90 days with memory permitted, alongside AI-enabled chats and manual requests. A new real outgoing message can add another private chat. All histories are not scanned indiscriminately; completed, unchanged chats are skipped. Only chats actually present in Telegram’s main or archive list are eligible, not arbitrary cached TDLib chat objects.
+
+An initial pass reads the newest messages so useful memory becomes available quickly. A separate backfill cursor then moves toward the beginning of the chat. Each pass fetches up to 100 messages and selects a bounded input chunk. Messages outside that chunk remain behind the cursor and are included later. One chunk from one chat is processed every 15 seconds, plus generation time. Chats rotate, and checkpoints resume after restarting.
+
+Incoming and outgoing messages mark a chat dirty. Once backfill is complete, updates process only new messages. A large incoming backlog also uses pagination: the new head is captured separately and committed only after the whole batch is processed. Messages arriving during that operation remain pending.
+
+New-message updates default to **6 hours**. Settings provide a separate memory toggle and interval selection; the API supports 1–168 hours. Incomplete backfill continues between these updates. Fresh-message scheduling has its own timestamp, so repeated historical chunks cannot postpone it forever.
+
+Replies, drafts and model warmup take priority. They interrupt background inference without advancing its checkpoint. Messages newer than 10 seconds are deferred so automated outgoing IDs can settle. Memory runs independently of the autoreply pause and has its own switch.
+
+The installed global default model is used; no model downloads are initiated. When Ollama or that model is unavailable, memory waits. Failed updates use a retry delay and expose their status in the memory dialog.
+
+Only `speaker=owner` sources reach the profile model: contact messages and known AI replies are removed beforehand. Generated message IDs are no longer truncated after 5000 entries and survive logout. Older replies whose IDs were already lost cannot be reliably identified. Quotes and jokes must not become facts; the profile remains a probabilistic model summary. Manual notes take precedence. Both generated memories are saved before advancing the chat checkpoint; failures or edit conflicts leave the batch for retry. Previously completed histories are reread once after upgrading to build the profile.
+
+## UI and context
+
+- Profile → **Memory** edits global notes and shows the tracked-chat count.
+- The book button in a conversation header opens its notes, generated summary, progress count, status and file path.
+- **Update memory** refreshes that chat's recent history. The global action checks changed chats already in use.
+- **Rebuild summary** clears only generated content and checkpoints for that chat, preserves notes and restarts deep processing.
+- **Use chat memory** disables that chat’s prompt context and further collection. The existing owner profile remains available across conversations.
+
+Global notes, the owner profile, chat notes and the current summary supplement recent history for autoreplies and drafts. They are encoded as reference JSON data rather than executable instructions. Fresh messages and explicit owner settings take precedence. Known automated messages are distinguished from actual owner statements; group sources include sender IDs so equal display names do not merge people.
+
+This is compressed context, not a verbatim archive or guaranteed recall of every detail. Summaries are limited to 6000 characters, source chunks to 7000 JSON characters and individual long messages to 1000 characters. A bounded excerpt enters the prompt to preserve room for recent messages. Attachments contribute captions; image and speech recognition are not included. Old edits/deletions can be reconciled with a rebuild. Memory files contain conversation-derived information and remain in the local data directory.
+
+## API and validation
+
+`backend/contract/api.yaml` describes the local-session-protected API. Existing Host/Origin checks apply:
+
+- `GET/PATCH /api/memory`: global notes.
+- `POST /api/memory/refresh`: changed chats already in use.
+- `GET/PATCH/POST /api/memory/{chatId}`: read, edit notes and refresh/rebuild.
+
+PATCH requires notes and their `revision`; stale edits return 409. A rebuild uses `{"rebuild":true}`. Settings are `memoryEnabled` and `memoryIntervalHours`; chat rules use `useMemory`.
+
+Tests cover a 700-message history, resumed checkpoints, large deltas, scheduling during backfill, skipping unused/unchanged chats, account isolation, Markdown preservation, conflicts, inference priority, HTTP protection and note editing. Optional `LiveMemoryTest` uses an already installed model and synthetic messages only; it never sends Telegram messages.
+
+## Manual context collection
+
+The “Collect context” button in communication settings opens a separate dialog. “New messages” preserves the summary and adds history after its checkpoint. “Entire available history” resets the chat’s generated summary and cursors while preserving manual notes. Status and processed-message count show batch progress; an unknown total is not represented as a fabricated percentage.
+
+A manual run sends `POST /api/memory/{chatId}` with `immediate: true` and the chosen `rebuild` value. It wakes the existing sequential worker and prioritizes the selected chat without waiting for the hourly interval. Full rebuild retains priority until backfill finishes. Replies and drafts still interrupt background inference. Disabled memory must be enabled explicitly; the dialog explains where. Closing the dialog does not cancel collection.
+
+Profile menu → **Collect global context** runs the same process for selected owner-profile sources and chats already in use. It does not walk every account chat. “New messages” preserves existing memory. “Entire available history” clears the generated owner profile and selected chat summaries while preserving manual notes, then restarts sequential backfill. A full run uses `POST /api/memory/refresh` with `{"rebuild":true,"immediate":true}`. One batch runs at a time; replies retain priority.
+
+Private headers show the first active Telegram username and omit the line when absent. Group headers use cached participant counts from Telegram updates without per-chat network requests. Unknown counts display “Group”. The `Chat` API exposes `username` and nullable `memberCount`.
+
+
+After a manual start, communication settings replace the collection button with server-owned progress: status, queued chats, position and messages processed during the current pass. Closing the dialog preserves the job. Cancel removes pending work and invalidates unfinished inference; notes and committed summaries remain. Automatic processing resumes after the configured interval or a new manual request. Global cancellation removes all remaining manual jobs. Endpoints: POST /api/memory/{chatId}/cancel and POST /api/memory/cancel.
+
+Dialog rows render in pages of 40 with a Gravity Loader on downward scrolling. Search and filters cover the complete fetched list; a skeleton appears during filter transitions. Outgoing previews show You; group previews use the short sender name. Username controls copy the tag and Telegram link separately.

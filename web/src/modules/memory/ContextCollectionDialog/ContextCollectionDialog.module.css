@@ -1,0 +1,10 @@
+.option {
+    padding-block: 2px;
+    line-height: 1.5;
+}
+
+.status {
+    background: var(--g-color-base-generic);
+    padding: 14px 16px;
+    border-radius: 12px;
+}

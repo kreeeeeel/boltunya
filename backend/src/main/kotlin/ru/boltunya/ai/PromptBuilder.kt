@@ -1,0 +1,159 @@
+package ru.boltunya.ai
+
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import ru.boltunya.ai.research.ResearchContext
+import ru.boltunya.ai.research.ResearchLinkPolicy
+import ru.boltunya.domain.ChatMessage
+import ru.boltunya.domain.ChatRule
+import ru.boltunya.domain.CommunicationStyle
+import ru.boltunya.memory.MemoryContext
+import ru.boltunya.resources.ResourceCatalog
+import java.time.Clock
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.stream.Collectors
+
+private const val MAX_MESSAGE_CHARACTERS = 1200
+private const val MAX_CONTEXT_CHARACTERS = 12000
+private const val MAX_PROMPT_CHARACTERS = 18000
+
+private const val MAX_MEMORY_CONTEXT_CHARACTERS = 8000
+private const val MEMORY_CONTEXT_OVERHEAD = 500
+private const val MIN_RECENT_CONTEXT_CHARACTERS = 2400
+private const val MAX_EXTERNAL_CONTEXT_CHARACTERS = 5500
+private const val MIN_RESEARCH_CONTEXT_CHARACTERS = 400
+
+private val resources = ResourceCatalog()
+
+class PromptBuilder(
+    private val clock: Clock = Clock.systemDefaultZone(),
+    private val personalStyle: PersonalStyleBuilder = PersonalStyleBuilder(),
+    private val links: ResearchLinkPolicy = ResearchLinkPolicy(),
+) {
+    fun build(
+        rule: ChatRule,
+        history: List<ChatMessage>,
+        globalPrompt: String = "",
+        research: ResearchContext = ResearchContext(),
+        styleHistory: List<ChatMessage> = history,
+        memory: MemoryContext = MemoryContext(),
+    ): JsonArray {
+        val style = CommunicationStyle.entries.firstOrNull { it.key == rule.style } ?: CommunicationStyle.FRIENDLY
+        val tone = resources.prompt("ru/style/" + style.key)
+        val emoji = if (rule.emoji) {
+            resources.prompt("ru/conversation/emoji-on")
+        } else {
+            resources.prompt("ru/conversation/emoji-off")
+        }
+        val now = ZonedDateTime.now(clock)
+        val time = now.format(DateTimeFormatter.ofPattern("HH:mm z"))
+        val date = now.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+        val examples = if (rule.matchMyStyle) {
+            personalStyle.build(styleHistory)
+        } else if (style == CommunicationStyle.FRIENDLY) {
+            resources.prompt("ru/conversation/friendly-examples")
+        } else {
+            ""
+        }
+        val baseSystem = resources.prompt(
+            "ru/conversation/system",
+            mapOf(
+                "tone" to (tone),
+                "emoji" to (emoji),
+                "examples" to (examples),
+                "globalPrompt" to (globalPrompt),
+                "instructions" to rule.instructions,
+                "time" to time,
+                "date" to date,
+            ),
+        )
+        fun researchContent(data: String): String = resources.prompt(
+            "ru/research/context",
+            mapOf(
+                "value0" to research.status,
+                "value1" to data,
+                "value2" to
+                    resources.prompt(
+                        if (links.visible(rule, history)) "ru/research/links-visible" else "ru/research/links-hidden",
+                    ),
+            ),
+        )
+        val externalOverhead = if (research.status ==
+            "none"
+        ) {
+            resources.prompt("ru/research/no-data")
+        } else {
+            researchContent("")
+        }
+        val memoryBudget = minOf(
+            MAX_MEMORY_CONTEXT_CHARACTERS,
+            (
+                MAX_PROMPT_CHARACTERS - baseSystem.length - externalOverhead.length -
+                    MIN_RECENT_CONTEXT_CHARACTERS -
+                    MIN_RESEARCH_CONTEXT_CHARACTERS
+                ).coerceAtLeast(0),
+        )
+        val longTerm = if (memory.isEmpty() || memoryBudget == 0) {
+            ""
+        } else {
+            resources.prompt(
+                "ru/memory/context",
+                mapOf(
+                    "memory" to
+                        Json.encodeToString(memory.limited((memoryBudget - MEMORY_CONTEXT_OVERHEAD).coerceAtLeast(0))),
+                ),
+            )
+        }
+        val externalBudget =
+            minOf(
+                MAX_EXTERNAL_CONTEXT_CHARACTERS,
+                (
+                    MAX_PROMPT_CHARACTERS - baseSystem.length - longTerm.length - externalOverhead.length -
+                        MIN_RECENT_CONTEXT_CHARACTERS
+                    ).coerceAtLeast(0),
+            )
+        val external = if (research.status == "none") {
+            externalOverhead
+        } else {
+            researchContent(Json.encodeToString(links.forPrompt(rule, history, research)).take(externalBudget))
+        }
+        val system = baseSystem + "\n" + longTerm + "\n" + external
+        val candidates = history.asReversed().stream()
+            .filter { it.text.isNotBlank() }
+            .limit(rule.contextMessages.toLong())
+            .map { message ->
+                buildJsonObject {
+                    put(
+                        "role",
+                        if (message.outgoing) {
+                            "assistant"
+                        } else {
+                            "user"
+                        },
+                    )
+                    put("content", message.text.take(MAX_MESSAGE_CHARACTERS))
+                }
+            }.collect(Collectors.toList()).asReversed()
+
+        var characters = 0
+        val contextBudget = minOf(MAX_CONTEXT_CHARACTERS, MAX_PROMPT_CHARACTERS - system.length)
+        val selected = candidates.asReversed().stream().takeWhile {
+            characters += it.toString().length
+            characters <= contextBudget
+        }.collect(Collectors.toList()).asReversed()
+
+        val messages = ArrayList<JsonObject>()
+        messages.add(
+            buildJsonObject {
+                put("role", "system")
+                put("content", system)
+            },
+        )
+        messages.addAll(selected)
+        return JsonArray(messages)
+    }
+}

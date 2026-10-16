@@ -1,0 +1,170 @@
+.root {
+    padding: 0;
+    height: 100%;
+    background: var(--tiho-bg);
+}
+
+.eyebrow {
+    color: var(--g-color-text-brand);
+    font-size: 13px;
+    margin-bottom: 14px;
+}
+
+.title {
+    display: block;
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.25;
+}
+
+.description {
+    display: block;
+    color: var(--tiho-muted);
+    max-width: 620px;
+    line-height: 1.6;
+    margin: 12px 0 24px;
+    font-size: 13px;
+}
+
+.engineCard {
+    padding: 20px;
+    background: var(--tiho-panel);
+    border: 1px solid var(--tiho-line);
+    border-radius: 12px;
+}
+
+.engineIcon {
+    color: var(--tiho-green);
+}
+
+.hint {
+    color: var(--tiho-muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.engineText {
+    gap: 4px;
+}
+
+.embedded {
+    height: auto;
+    overflow: visible;
+    padding: 8px 0 0;
+    background: transparent;
+}
+
+.embedded .eyebrow,
+.embedded .title {
+    display: none;
+}
+
+.embedded .description {
+    margin-top: 0;
+}
+
+.cards {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.card {
+    background: var(--tiho-panel);
+    border: 1px solid var(--tiho-line);
+    border-radius: 12px;
+    padding: 20px;
+    flex: 1;
+    min-width: 0;
+}
+
+.recommended {
+    border-color: #88bdf1;
+}
+
+.modelIcon {
+    color: var(--g-color-text-brand);
+    background: var(--tiho-selected);
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.modelDescription {
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 45px;
+}
+
+.comparison {
+    margin: 0 -2px;
+    flex: 1;
+}
+
+.feature {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--tiho-line);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.feature:last-child {
+    border-bottom: 0;
+}
+
+.featureValue {
+    text-align: right;
+    font-weight: 500;
+    max-width: 54%;
+}
+
+.footer {
+    display: block;
+    padding: 25px 5px;
+    color: var(--tiho-muted);
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+.download {
+    padding: 20px;
+    margin-top: 20px;
+    background: var(--tiho-selected);
+    border-radius: 14px;
+}
+
+@media (width <= 1100px) {
+    .cards {
+        flex-direction: column;
+    }
+
+    .root {
+        padding: 0;
+    }
+
+    .engine {
+        flex-wrap: wrap;
+    }
+
+    .modelDescription {
+        min-height: auto;
+    }
+}
+
+.card .download {
+    margin-top: 0;
+    padding: 14px;
+}
+
+.content {
+    padding: 28px;
+}
+
+.engine {
+    flex-wrap: wrap;
+}
+
+.embedded .content {
+    padding: 0;
+}

@@ -1,0 +1,74 @@
+name: Windows release
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: windows-release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      JAVA_TOOL_OPTIONS: -Djdk.net.unixdomain.tmpdir=C:/boltun-no-unix-sockets
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            desktop/package-lock.json
+      - name: Install frontend dependencies and Chromium
+        shell: pwsh
+        run: |
+          npm ci --prefix web
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm ci --prefix desktop
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npx --prefix web playwright install chromium
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify and build single executable
+        shell: pwsh
+        run: ./scripts/build.ps1 -Version "2.5.$env:GITHUB_RUN_NUMBER"
+      - name: Test interface
+        shell: pwsh
+        env:
+          TIHO_TEST_URL: http://127.0.0.1:3099
+        run: |
+          $server = Start-Process -WindowStyle Hidden -FilePath node.exe -ArgumentList 'web/node_modules/serve/build/main.js','web/out','-l','3099','--no-clipboard' -PassThru
+          try {
+            npm run test:e2e --prefix web
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          } finally { Stop-Process -Id $server.Id -ErrorAction SilentlyContinue }
+      - name: Test native Electron window and tray
+        shell: pwsh
+        run: |
+          npm run test:smoke --prefix desktop
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v6
+        with:
+          name: Boltunya-Windows
+          path: |
+            complie/Болтунья.exe
+            complie/SHA256.txt
+          if-no-files-found: error
+      - name: Publish release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create "v2.5.$env:GITHUB_RUN_NUMBER" "complie/Болтунья.exe" "complie/SHA256.txt" --target "$env:GITHUB_SHA" --title "Болтунья 2.5.$env:GITHUB_RUN_NUMBER" --generate-notes
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

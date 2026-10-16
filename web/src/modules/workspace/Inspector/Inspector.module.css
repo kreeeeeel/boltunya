@@ -1,0 +1,67 @@
+.root {
+    height: 100%;
+    min-width: 0;
+    border-left: 1px solid var(--tiho-line);
+    background: var(--tiho-panel);
+}
+
+.header {
+    height: 56px;
+    flex-shrink: 0;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--tiho-line);
+}
+
+.content {
+    padding: 20px;
+    min-height: 0;
+    flex: 1;
+}
+
+.caption {
+    display: block;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--tiho-muted);
+    margin-top: 5px;
+}
+
+.strong {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.line {
+    height: 1px;
+    background: var(--tiho-line);
+}
+
+.sectionLabel {
+    display: block;
+    color: var(--tiho-muted);
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.context {
+    padding: 14px;
+    background: var(--tiho-bg);
+    color: var(--g-color-text-brand);
+    border-radius: 10px;
+}
+
+.segments {
+    margin-top: 9px;
+}
+
+.segment,
+.segmentActive {
+    height: 18px;
+    flex: 1;
+    border-radius: 3px;
+    background: var(--tiho-line);
+}
+
+.segmentActive {
+    background: #92bce9;
+}

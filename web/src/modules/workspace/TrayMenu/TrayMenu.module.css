@@ -1,0 +1,22 @@
+.root {
+    padding: 4px 5px;
+    background: var(--tiho-panel);
+    border: 0;
+}
+
+.root :global(.g-menu__item) {
+    height: 32px;
+    line-height: 32px;
+    border-radius: 7px;
+    font-size: 14px;
+}
+
+.root :global(.g-menu) {
+    padding-block: 0;
+}
+
+.root :global(.g-menu__list-group-item),
+.root :global(.g-menu__list-group-item + .g-menu__list-item) {
+    margin-block-start: 4px;
+    padding-block-start: 4px;
+}

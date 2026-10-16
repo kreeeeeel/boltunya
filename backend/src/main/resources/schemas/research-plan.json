@@ -1,0 +1,41 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": [
+        "none",
+        "weather",
+        "search"
+      ]
+    },
+    "query": {
+      "type": "string",
+      "maxLength": 180
+    },
+    "location": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "dayOffset": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 6
+    },
+    "weatherPeriod": {
+      "type": "string",
+      "enum": [
+        "current",
+        "daily"
+      ]
+    }
+  },
+  "required": [
+    "kind",
+    "query",
+    "location",
+    "dayOffset",
+    "weatherPeriod"
+  ]
+}

@@ -1,0 +1,1 @@
+\b(?:weather|temperature|forecast|news|exchange rate|price|latest|current|today|president|prime minister|search|look up|find online|google|links?|sources?|schedule|events|released?|when[^.!?\n]{0,30}(?:open|start|launch))\b

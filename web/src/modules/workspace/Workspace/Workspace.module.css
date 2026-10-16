@@ -1,0 +1,212 @@
+.root {
+    height: 100dvh;
+    min-height: 560px;
+}
+
+.main {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.rail {
+    width: 60px;
+    flex-shrink: 0;
+    background: var(--tiho-rail);
+    border-right: 1px solid var(--tiho-line);
+    padding: 12px 0;
+    justify-content: space-between;
+    gap: 20px;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.nav,
+.navBottom {
+    width: 100%;
+    align-items: center;
+    gap: 8px;
+}
+
+.navButton {
+    --g-button-height: 40px;
+    --g-button-padding: 0;
+
+    width: 40px;
+    min-height: 40px;
+    border-radius: 10px;
+    transition:
+        color var(--tiho-duration),
+        background var(--tiho-duration),
+        transform var(--tiho-duration);
+}
+
+.navButton:hover {
+    transform: translateY(-1px);
+}
+
+.navButton[aria-current='page'] {
+    background: var(--tiho-selected);
+    color: var(--g-color-text-brand);
+}
+
+.view {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    animation: view-enter 180ms var(--tiho-ease);
+}
+
+.chatList {
+    width: 344px;
+    min-width: 0;
+    flex-shrink: 0;
+}
+
+.conversation {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+}
+
+.inspector {
+    width: 288px;
+    flex-shrink: 0;
+    animation: inspector-enter 180ms var(--tiho-ease);
+}
+
+.error {
+    background: var(--g-color-base-danger-light);
+    color: var(--g-color-text-danger);
+    padding: 8px 18px;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.panel {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+}
+
+.infoPanel {
+    padding: 0;
+    flex: 1;
+    background: var(--tiho-bg);
+}
+
+.infoDescription {
+    display: block;
+    color: var(--tiho-muted);
+    margin: 12px 0 24px;
+    line-height: 1.6;
+    max-width: 640px;
+}
+
+.emptyActivity {
+    margin: 0 auto;
+    min-height: calc(100dvh - 100px);
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: var(--tiho-muted);
+}
+
+.activityRow {
+    padding: 16px;
+    margin-bottom: 8px;
+    background: var(--tiho-panel);
+    border-radius: 10px;
+    border: 1px solid var(--tiho-line);
+}
+
+@keyframes view-enter {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes inspector-enter {
+    from {
+        opacity: 0;
+        transform: translateX(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (width <= 1150px) {
+    .inspector {
+        display: none;
+    }
+}
+
+@media (width <= 850px) {
+    .chatList {
+        width: 286px;
+    }
+}
+
+@media (width <= 680px) {
+    .rail {
+        width: 50px;
+    }
+
+    .navButton {
+        --g-button-height: 36px;
+
+        width: 36px;
+        min-height: 36px;
+    }
+
+    .chatList {
+        flex: 1;
+        width: auto;
+    }
+
+    .hideOnMobile {
+        display: none;
+    }
+
+    .activityContent {
+        padding: 32px 20px;
+    }
+}
+
+.profileButton {
+    --g-button-height: 40px;
+    --g-button-padding: 0;
+
+    width: 40px;
+    border-radius: 50%;
+}
+
+.profileButton :global(.g-button__text) {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    margin: 0;
+}
+
+.emptyIllustration {
+    width: 250px;
+    height: 250px;
+    object-fit: contain;
+    max-width: 70%;
+}
+
+.activityContent {
+    padding: 32px;
+}

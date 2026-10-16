@@ -1,0 +1,59 @@
+.body {
+    padding-bottom: 15px;
+}
+
+.field {
+    flex: 1;
+    min-width: 0;
+}
+
+.label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+@media (width <= 480px) {
+    .credentials {
+        flex-direction: column;
+    }
+}
+
+.logo {
+    width: 56px;
+    height: 56px;
+    background: var(--tiho-selected);
+    color: var(--g-color-text-brand);
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.guide {
+    padding: 22px;
+    background: var(--tiho-bg);
+    border-radius: 16px;
+}
+
+.step {
+    display: block;
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 6px;
+}
+
+.hint {
+    display: block;
+    color: var(--tiho-muted);
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+.security {
+    padding: 15px 0 0;
+    color: var(--tiho-muted);
+    font-size: 13px;
+    line-height: 1.7;
+}

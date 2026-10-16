@@ -1,0 +1,45 @@
+.bar {
+    -webkit-app-region: drag;
+    height: 36px;
+    min-height: 36px;
+    flex-shrink: 0;
+    background: var(--tiho-rail);
+    border-bottom: 1px solid var(--tiho-line);
+    user-select: none;
+}
+
+.brand {
+    pointer-events: none;
+    padding-left: 12px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.brand :global(.g-text) {
+    font-weight: 700;
+}
+
+.controls {
+    -webkit-app-region: no-drag;
+    height: 100%;
+}
+
+.ai {
+    --g-button-height: 28px;
+    --g-button-font-size: 14px;
+
+    margin-right: 8px;
+}
+
+.control {
+    --g-button-height: 35px;
+    --g-button-padding: 0;
+
+    width: 44px;
+    border-radius: 0;
+}
+
+.close:hover {
+    background: #d83c45;
+    color: #fff;
+}

@@ -1,0 +1,61 @@
+{
+    "name": "boltunya-desktop",
+    "version": "2.5.1",
+    "private": true,
+    "description": "Болтунья — Telegram с локальным ИИ",
+    "author": "Boltunya",
+    "main": "dist/main.js",
+    "scripts": {
+        "build": "tsc",
+        "check": "tsc --noEmit",
+        "start": "npm run build && electron .",
+        "package": "npm run build && electron-builder --win portable --x64",
+        "test:smoke": "node tests/smoke.cjs"
+    },
+    "devDependencies": {
+        "electron": "44.7.2",
+        "electron-builder": "26.15.3",
+        "typescript": "5.9.3",
+        "@types/node": "24.10.0"
+    },
+    "build": {
+        "appId": "ru.boltunya.desktop",
+        "productName": "Болтунья",
+        "asar": true,
+        "directories": {
+            "output": "../complie",
+            "buildResources": "assets"
+        },
+        "files": [
+            "dist/**/*",
+            "package.json"
+        ],
+        "extraResources": [
+            {
+                "from": "../backend/build/install/backend/lib",
+                "to": "backend/lib"
+            },
+            {
+                "from": "../build/runtime",
+                "to": "runtime"
+            },
+            {
+                "from": "assets/boltunya.png",
+                "to": "boltunya.png"
+            },
+            {
+                "from": "../NOTICE.md",
+                "to": "legal/NOTICE.md"
+            }
+        ],
+        "win": {
+            "icon": "assets/boltunya.ico",
+            "artifactName": "Болтунья.exe",
+            "signAndEditExecutable": true
+        },
+        "portable": {
+            "requestExecutionLevel": "user",
+            "unpackDirName": "boltunya-2.5.1"
+        }
+    }
+}

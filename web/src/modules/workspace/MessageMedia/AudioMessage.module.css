@@ -1,0 +1,52 @@
+.root {
+    width: 280px;
+    max-width: 100%;
+    padding: 8px 8px 6px;
+}
+
+.audio {
+    display: none;
+}
+
+.play {
+    --g-button-height: 42px;
+    --g-button-padding: 0;
+
+    width: 42px;
+    flex-shrink: 0;
+    border-radius: 50%;
+}
+
+.content {
+    min-width: 0;
+    flex: 1;
+}
+
+.waveform {
+    display: flex;
+    height: 30px;
+    align-items: center;
+    gap: 2px;
+    cursor: pointer;
+    color: var(--g-color-text-brand);
+}
+
+.bar {
+    width: 3px;
+    flex: 1;
+    max-width: 4px;
+    border-radius: 2px;
+    background: currentcolor;
+}
+
+.time {
+    font-size: 13px;
+    color: var(--tiho-muted);
+}
+
+.name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+}

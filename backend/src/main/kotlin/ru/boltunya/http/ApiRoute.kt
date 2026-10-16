@@ -1,0 +1,27 @@
+package ru.boltunya.http
+
+enum class ApiRoute(val path: String, val method: HttpMethod) {
+    STATE("/api/state", HttpMethod.GET),
+    SEARCH_CONNECTION("/api/search/connection", HttpMethod.GET),
+    SEARCH_KEY_SAVE("/api/search/connection", HttpMethod.POST),
+    SEARCH_KEY_DELETE("/api/search/connection", HttpMethod.DELETE),
+    SEARCH_CHECK("/api/search/check", HttpMethod.POST),
+    SETTINGS("/api/settings", HttpMethod.PATCH),
+    CONNECT("/api/telegram/connect", HttpMethod.POST),
+    SUBMIT("/api/telegram/submit", HttpMethod.POST),
+    RESTORE("/api/telegram/restore", HttpMethod.POST),
+    LOGOUT("/api/telegram/logout", HttpMethod.POST),
+    PREVIEW("/api/preview", HttpMethod.POST),
+    ENGINE_INSTALL("/api/engine/install", HttpMethod.POST),
+    ENGINE_START("/api/engine/start", HttpMethod.POST),
+    MODEL_PULL("/api/models/pull", HttpMethod.POST),
+    METRICS("/api/metrics", HttpMethod.GET),
+    CACHE("/api/cache", HttpMethod.GET),
+    CACHE_CLEAR("/api/cache/clear", HttpMethod.POST),
+    MEMORY("/api/memory", HttpMethod.GET),
+    MEMORY_EDIT("/api/memory", HttpMethod.PATCH),
+    MEMORY_REFRESH("/api/memory/refresh", HttpMethod.POST),
+    MEMORY_CANCEL("/api/memory/cancel", HttpMethod.POST),
+    FLOWS("/api/flows", HttpMethod.GET),
+    QUIT("/api/quit", HttpMethod.POST),
+}

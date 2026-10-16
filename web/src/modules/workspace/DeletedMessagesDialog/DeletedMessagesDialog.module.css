@@ -1,0 +1,6 @@
+.messages {
+    background: var(--tiho-chat);
+    padding: 12px;
+    border-radius: 12px;
+    min-width: 0;
+}

@@ -1,0 +1,6 @@
+package ru.boltunya.domain
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class ReplyResult(val text: String, val durationMs: Long, val tokensPerSecond: Double)

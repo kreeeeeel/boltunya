@@ -1,0 +1,78 @@
+package ru.boltunya.application
+
+import jakarta.inject.Inject
+import ru.boltunya.ai.EngineManager
+import ru.boltunya.automation.ReplyCoordinator
+import ru.boltunya.configuration.ApplicationConfiguration
+import ru.boltunya.http.LocalWebServer
+import ru.boltunya.memory.MemoryCoordinator
+import ru.boltunya.monitoring.MonitoringService
+import ru.boltunya.storage.CredentialStore
+import ru.boltunya.storage.SettingsStore
+import ru.boltunya.telegram.MediaPrefetcher
+import ru.boltunya.telegram.TelegramGateway
+import java.nio.channels.FileChannel
+import java.nio.channels.FileLock
+import java.nio.file.Files
+import java.nio.file.StandardOpenOption
+import java.util.concurrent.atomic.AtomicBoolean
+
+class ApplicationRuntime @Inject constructor(
+    private val configuration: ApplicationConfiguration,
+    private val server: LocalWebServer,
+    private val telegram: TelegramGateway,
+    private val engine: EngineManager,
+    private val replies: ReplyCoordinator,
+    private val settings: SettingsStore,
+    private val credentials: CredentialStore,
+    private val monitor: MonitoringService,
+    private val memory: MemoryCoordinator,
+    private val prefetch: MediaPrefetcher,
+) : AutoCloseable {
+    private val directory = configuration.directory
+    private val closed = AtomicBoolean()
+    private var lockChannel: FileChannel? = null
+    private var lock: FileLock? = null
+
+    fun start(): Boolean {
+        Files.createDirectories(directory)
+        val channel = FileChannel.open(
+            directory.resolve("app.lock"),
+            StandardOpenOption.CREATE,
+            StandardOpenOption.WRITE,
+        )
+        lockChannel = channel
+        lock = channel.tryLock()
+        if (lock == null) return false
+        Files.writeString(directory.resolve("launch.url"), server.start())
+        monitor.start()
+        engine.start()
+        engine.warm(settings.get().defaultModel)
+        memory.start()
+        prefetch.start()
+        Thread.ofVirtual().start {
+            try {
+                if (credentials.exists()) telegram.restore()
+            } catch (exception: Exception) {
+                System.err.println("Session restore failed: ${exception.javaClass.simpleName}")
+            }
+        }
+        return true
+    }
+
+    override fun close() {
+        if (!closed.compareAndSet(false, true)) return
+        listOf(memory, prefetch, replies, server, engine, monitor, telegram).stream().forEach { service ->
+            try {
+                service.close()
+            } catch (exception: Exception) {
+                System.err.println(
+                    "Shutdown failed for ${service.javaClass.simpleName}: ${exception.javaClass.simpleName}",
+                )
+            }
+        }
+        if (lock != null) Files.deleteIfExists(directory.resolve("launch.url"))
+        lock?.release()
+        lockChannel?.close()
+    }
+}

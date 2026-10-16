@@ -1,0 +1,59 @@
+{
+    "name": "boltunya-web",
+    "version": "2.5.1",
+    "private": true,
+    "engines": {
+        "node": ">=22.0.0"
+    },
+    "scripts": {
+        "dev": "cross-env APP_ENV=dev next dev",
+        "generate": "openapi-typescript ../backend/contract/api.yaml -o src/shared/api/schema.d.ts",
+        "build": "npm run generate && next build --webpack",
+        "build:prod": "cross-env APP_ENV=prod npm run build",
+        "build:testing": "cross-env APP_ENV=testing npm run build",
+        "start": "serve out -l 3000",
+        "start:prod": "npm run start",
+        "start:testing": "npm run start",
+        "typecheck": "tsc --noEmit",
+        "lint": "eslint .",
+        "lint:styles": "stylelint \"src/**/*.css\"",
+        "format": "prettier --write src *.ts *.json",
+        "format:check": "prettier --check src *.ts *.json",
+        "test": "vitest run",
+        "test:e2e": "playwright test",
+        "check": "npm run lint && npm run lint:styles && npm run typecheck && npm run test && npm run format:check"
+    },
+    "dependencies": {
+        "@fontsource/manrope": "5.3.0",
+        "@gravity-ui/icons": "2.23.0",
+        "@gravity-ui/uikit": "7.51.1",
+        "@xyflow/react": "12.12.0",
+        "lottie-web": "5.13.0",
+        "next": "16.4.1",
+        "next-intl": "4.14.9",
+        "openapi-fetch": "0.17.0",
+        "react": "19.3.1",
+        "react-dom": "19.3.1",
+        "recharts": "3.10.1"
+    },
+    "devDependencies": {
+        "@playwright/test": "1.64.1",
+        "@testing-library/jest-dom": "6.9.1",
+        "@testing-library/react": "16.3.0",
+        "@testing-library/user-event": "14.6.1",
+        "@types/node": "24.10.0",
+        "@types/react": "19.2.2",
+        "@types/react-dom": "19.2.2",
+        "cross-env": "10.1.0",
+        "eslint": "9.39.1",
+        "eslint-config-next": "16.4.1",
+        "jsdom": "27.2.0",
+        "openapi-typescript": "7.13.0",
+        "prettier": "3.6.2",
+        "serve": "14.2.5",
+        "stylelint": "16.25.0",
+        "stylelint-config-standard": "39.0.1",
+        "typescript": "5.9.3",
+        "vitest": "5.0.5"
+    }
+}

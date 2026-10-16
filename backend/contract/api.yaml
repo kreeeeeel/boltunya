@@ -1,0 +1,3005 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Boltunya local API",
+    "version": "2.4.0"
+  },
+  "paths": {
+    "/api/state": {
+      "get": {
+        "operationId": "state",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/State"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/telegram/connect": {
+      "post": {
+        "operationId": "connect",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Credentials"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/telegram/submit": {
+      "post": {
+        "operationId": "submit",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Value"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/telegram/logout": {
+      "post": {
+        "operationId": "logout",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chats/{chatId}/messages": {
+      "get": {
+        "operationId": "history",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Message"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chatId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "before",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "send",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Text"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chatId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/chats/{chatId}/rule": {
+      "put": {
+        "operationId": "rule",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRule"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chatId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/settings": {
+      "patch": {
+        "operationId": "settings",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Settings"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsUpdate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/preview": {
+      "post": {
+        "operationId": "preview",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Preview"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/engine/install": {
+      "post": {
+        "operationId": "install",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/engine/start": {
+      "post": {
+        "operationId": "start",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/models/pull": {
+      "post": {
+        "operationId": "pull",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quit": {
+      "post": {
+        "operationId": "quit",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/media/{fileId}": {
+      "get": {
+        "operationId": "media",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Telegram media",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unavailable file",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          }
+        }
+      }
+    },
+    "/api/telegram/restore": {
+      "post": {
+        "operationId": "restoreTelegramSession",
+        "responses": {
+          "200": {
+            "description": "Restoring saved Telegram session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Session restore failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/metrics": {
+      "get": {
+        "operationId": "getMetrics",
+        "tags": [
+          "Monitoring"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MetricSample"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/flows": {
+      "get": {
+        "operationId": "getFlows",
+        "tags": [
+          "Flows"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AutomationFlow"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/flows/{flowId}": {
+      "parameters": [
+        {
+          "name": "flowId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "put": {
+        "operationId": "saveFlow",
+        "tags": [
+          "Flows"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutomationFlow"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteFlow",
+        "tags": [
+          "Flows"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/flows/{flowId}/test": {
+      "parameters": [
+        {
+          "name": "flowId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "previewFlow",
+        "tags": [
+          "Flows"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "text"
+                ],
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "maxLength": 4096
+                  },
+                  "flow": {
+                    "$ref": "#/components/schemas/AutomationFlow"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/memory": {
+      "get": {
+        "tags": [
+          "memory"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "operationId": "getGlobalMemory",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Memory was edited concurrently"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "memory"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "operationId": "updateGlobalMemory",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemoryNotesUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Memory was edited concurrently"
+          }
+        }
+      }
+    },
+    "/api/memory/refresh": {
+      "post": {
+        "tags": [
+          "memory"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "operationId": "refreshChangedMemory",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Memory was edited concurrently"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemoryRefreshRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/memory/{chatId}": {
+      "get": {
+        "tags": [
+          "memory"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "operationId": "getChatMemory",
+        "parameters": [
+          {
+            "name": "chatId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Memory was edited concurrently"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "memory"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "operationId": "updateChatMemory",
+        "parameters": [
+          {
+            "name": "chatId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemoryNotesUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Memory was edited concurrently"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "memory"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "operationId": "refreshChatMemory",
+        "parameters": [
+          {
+            "name": "chatId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemoryRefreshRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Memory was edited concurrently"
+          }
+        }
+      }
+    },
+    "/api/cache": {
+      "get": {
+        "operationId": "getCacheStatistics",
+        "tags": [
+          "Cache"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CacheStatistics"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cache/clear": {
+      "post": {
+        "operationId": "clearMediaCache",
+        "tags": [
+          "Cache"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CacheStatistics"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chats/{chatId}/deleted": {
+      "get": {
+        "operationId": "getDeletedMessages",
+        "tags": [
+          "Chats"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chatId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "before",
+            "schema": {
+              "type": "string",
+              "description": "Exclusive message ID cursor."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Message"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/media/{fileId}/download": {
+      "post": {
+        "operationId": "downloadMedia",
+        "tags": [
+          "Media"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fileId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Downloaded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/search/connection": {
+      "get": {
+        "operationId": "searchConnection",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchConnection"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "saveSearchKey",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchConnection"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "apiKey"
+                ],
+                "properties": {
+                  "apiKey": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 256,
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteSearchKey",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchConnection"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/search/check": {
+      "post": {
+        "operationId": "checkSearchConnection",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchConnection"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/memory/cancel": {
+      "post": {
+        "operationId": "cancelGlobalMemoryCollection",
+        "responses": {
+          "200": {
+            "description": "Collection cancelled; saved memory is preserved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryDocument"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/memory/{chatId}/cancel": {
+      "post": {
+        "operationId": "cancelChatMemoryCollection",
+        "parameters": [
+          {
+            "name": "chatId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Collection cancelled; saved memory is preserved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryDocument"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ChatRule": {
+        "type": "object",
+        "required": [
+          "enabled",
+          "style",
+          "model",
+          "instructions",
+          "contextMessages",
+          "maxTokens",
+          "delaySeconds",
+          "creativity",
+          "emoji"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "style": {
+            "type": "string",
+            "enum": [
+              "friendly",
+              "business",
+              "concise",
+              "warm",
+              "aggressive",
+              "rough",
+              "custom"
+            ]
+          },
+          "model": {
+            "type": "string"
+          },
+          "instructions": {
+            "type": "string"
+          },
+          "contextMessages": {
+            "type": "integer"
+          },
+          "maxTokens": {
+            "type": "integer"
+          },
+          "delaySeconds": {
+            "type": "integer"
+          },
+          "creativity": {
+            "type": "integer"
+          },
+          "emoji": {
+            "type": "boolean"
+          },
+          "internetAccess": {
+            "type": "boolean",
+            "default": true
+          },
+          "matchMyStyle": {
+            "type": "boolean",
+            "default": true
+          },
+          "styleId": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "groupReplies": {
+            "type": "string",
+            "enum": [
+              "inherit",
+              "disabled",
+              "mentions",
+              "all"
+            ]
+          },
+          "useMemory": {
+            "type": "boolean",
+            "default": true
+          },
+          "sourceLinks": {
+            "type": "string",
+            "enum": [
+              "requested",
+              "always",
+              "never"
+            ],
+            "default": "requested"
+          }
+        }
+      },
+      "Settings": {
+        "type": "object",
+        "required": [
+          "paused",
+          "defaultModel",
+          "rules"
+        ],
+        "properties": {
+          "paused": {
+            "type": "boolean"
+          },
+          "defaultModel": {
+            "type": "string"
+          },
+          "rules": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ChatRule"
+            }
+          },
+          "globalPrompt": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "replyDelaySeconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 120,
+            "default": 3
+          },
+          "replyIntervalSeconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 120,
+            "default": 3
+          },
+          "showTyping": {
+            "type": "boolean",
+            "default": true
+          },
+          "closeToTray": {
+            "type": "boolean",
+            "default": true
+          },
+          "launchAtLogin": {
+            "type": "boolean",
+            "default": false
+          },
+          "resumeOnStartup": {
+            "type": "boolean",
+            "default": false
+          },
+          "ignoreAssistantTasks": {
+            "type": "boolean"
+          },
+          "customStyles": {
+            "type": "array",
+            "maxItems": 30,
+            "items": {
+              "$ref": "#/components/schemas/WritingStyle"
+            }
+          },
+          "groupReplies": {
+            "type": "string",
+            "enum": [
+              "disabled",
+              "mentions",
+              "all"
+            ]
+          },
+          "memoryEnabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "memoryIntervalHours": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 168,
+            "default": 6
+          },
+          "autoDownloadPhotos": {
+            "type": "boolean"
+          },
+          "autoDownloadVideos": {
+            "type": "boolean"
+          },
+          "autoDownloadAudio": {
+            "type": "boolean"
+          },
+          "autoDownloadFiles": {
+            "type": "boolean"
+          },
+          "autoDownloadMaxMb": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        }
+      },
+      "Chat": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "preview",
+          "date",
+          "unread",
+          "rule"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "preview": {
+            "type": "string"
+          },
+          "date": {
+            "type": "integer"
+          },
+          "unread": {
+            "type": "integer"
+          },
+          "rule": {
+            "$ref": "#/components/schemas/ChatRule"
+          },
+          "avatarUrl": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "private",
+              "group",
+              "supergroup",
+              "channel"
+            ]
+          },
+          "wallpaper": {
+            "$ref": "#/components/schemas/ChatWallpaper",
+            "nullable": true
+          },
+          "lastMessageId": {
+            "type": "string"
+          },
+          "joined": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Current Telegram group membership, or null while the group status is unknown."
+          },
+          "username": {
+            "type": "string",
+            "description": "First active Telegram username without the @ prefix."
+          },
+          "memberCount": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 0,
+            "description": "Cached group participant count, or null when unavailable."
+          },
+          "lastMessageOutgoing": {
+            "type": "boolean"
+          },
+          "lastMessageSender": {
+            "type": "string"
+          }
+        }
+      },
+      "Message": {
+        "type": "object",
+        "required": [
+          "id",
+          "chatId",
+          "text",
+          "outgoing",
+          "date",
+          "kind"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "chatId": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "outgoing": {
+            "type": "boolean"
+          },
+          "date": {
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "media": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MediaAttachment"
+              }
+            ]
+          },
+          "entities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MessageEntity"
+            }
+          },
+          "read": {
+            "type": "boolean"
+          },
+          "automated": {
+            "type": "boolean",
+            "description": "Sent by this application’s AI; metadata is visible only in the local interface."
+          },
+          "group": {
+            "type": "boolean"
+          },
+          "mentionsMe": {
+            "type": "boolean"
+          },
+          "topicId": {
+            "type": "integer"
+          },
+          "senderName": {
+            "type": "string"
+          },
+          "replyToId": {
+            "type": "string"
+          },
+          "replyText": {
+            "type": "string"
+          },
+          "senderId": {
+            "type": "string"
+          },
+          "deleted": {
+            "type": "boolean"
+          },
+          "deletedAt": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "Telegram": {
+        "type": "object",
+        "required": [
+          "state",
+          "name",
+          "prompt",
+          "error"
+        ],
+        "properties": {
+          "state": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "avatarUrl": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          }
+        }
+      },
+      "Credentials": {
+        "type": "object",
+        "required": [
+          "apiId",
+          "apiHash",
+          "phone"
+        ],
+        "properties": {
+          "apiId": {
+            "type": "integer"
+          },
+          "apiHash": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          }
+        }
+      },
+      "Model": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "size",
+          "installed",
+          "recommended"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "size": {
+            "type": "string"
+          },
+          "installed": {
+            "type": "boolean"
+          },
+          "recommended": {
+            "type": "boolean"
+          },
+          "family": {
+            "type": "string"
+          },
+          "speed": {
+            "type": "string"
+          },
+          "quality": {
+            "type": "string"
+          },
+          "thinking": {
+            "type": "boolean"
+          },
+          "memoryGb": {
+            "type": "integer"
+          },
+          "contextTokens": {
+            "type": "integer"
+          },
+          "license": {
+            "type": "string"
+          }
+        }
+      },
+      "Engine": {
+        "type": "object",
+        "required": [
+          "online",
+          "downloading",
+          "progress",
+          "error",
+          "models",
+          "warming"
+        ],
+        "properties": {
+          "online": {
+            "type": "boolean"
+          },
+          "downloading": {
+            "type": "string"
+          },
+          "progress": {
+            "type": "integer"
+          },
+          "error": {
+            "type": "string"
+          },
+          "models": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Model"
+            }
+          },
+          "warming": {
+            "type": "string"
+          },
+          "downloadedBytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalBytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "downloadStage": {
+            "type": "string"
+          }
+        }
+      },
+      "Activity": {
+        "type": "object",
+        "required": [
+          "id",
+          "chatId",
+          "title",
+          "status",
+          "detail",
+          "date",
+          "durationMs"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "chatId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "date": {
+            "type": "integer"
+          },
+          "durationMs": {
+            "type": "integer"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "Ok": {
+        "type": "object",
+        "required": [
+          "ok"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Text": {
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "Value": {
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "properties": {
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "ModelRequest": {
+        "type": "object",
+        "required": [
+          "model"
+        ],
+        "properties": {
+          "model": {
+            "type": "string"
+          }
+        }
+      },
+      "Preview": {
+        "type": "object",
+        "required": [
+          "text",
+          "rule"
+        ],
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "rule": {
+            "$ref": "#/components/schemas/ChatRule"
+          },
+          "chatId": {
+            "type": "string"
+          }
+        }
+      },
+      "Reply": {
+        "type": "object",
+        "required": [
+          "text",
+          "durationMs",
+          "tokensPerSecond"
+        ],
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "durationMs": {
+            "type": "integer"
+          },
+          "tokensPerSecond": {
+            "type": "number"
+          }
+        }
+      },
+      "SettingsUpdate": {
+        "type": "object",
+        "properties": {
+          "paused": {
+            "type": "boolean"
+          },
+          "defaultModel": {
+            "type": "string"
+          },
+          "globalPrompt": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "replyDelaySeconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 120
+          },
+          "replyIntervalSeconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 120
+          },
+          "showTyping": {
+            "type": "boolean"
+          },
+          "closeToTray": {
+            "type": "boolean"
+          },
+          "launchAtLogin": {
+            "type": "boolean"
+          },
+          "resumeOnStartup": {
+            "type": "boolean"
+          },
+          "ignoreAssistantTasks": {
+            "type": "boolean"
+          },
+          "customStyles": {
+            "type": "array",
+            "maxItems": 30,
+            "items": {
+              "$ref": "#/components/schemas/WritingStyle"
+            }
+          },
+          "groupReplies": {
+            "type": "string",
+            "enum": [
+              "disabled",
+              "mentions",
+              "all"
+            ]
+          },
+          "memoryEnabled": {
+            "type": "boolean"
+          },
+          "memoryIntervalHours": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 168
+          },
+          "autoDownloadPhotos": {
+            "type": "boolean"
+          },
+          "autoDownloadVideos": {
+            "type": "boolean"
+          },
+          "autoDownloadAudio": {
+            "type": "boolean"
+          },
+          "autoDownloadFiles": {
+            "type": "boolean"
+          },
+          "autoDownloadMaxMb": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        }
+      },
+      "State": {
+        "type": "object",
+        "required": [
+          "telegram",
+          "engine",
+          "settings",
+          "chats",
+          "activity"
+        ],
+        "properties": {
+          "telegram": {
+            "$ref": "#/components/schemas/Telegram"
+          },
+          "engine": {
+            "$ref": "#/components/schemas/Engine"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/Settings"
+          },
+          "chats": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Chat"
+            }
+          },
+          "activity": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Activity"
+            }
+          }
+        }
+      },
+      "MediaAttachment": {
+        "type": "object",
+        "required": [
+          "fileId",
+          "mimeType",
+          "fileName",
+          "width",
+          "height",
+          "thumbnailFileId",
+          "size"
+        ],
+        "properties": {
+          "fileId": {
+            "type": "integer"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "thumbnailFileId": {
+            "type": "integer"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "duration": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "waveform": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "autoDownload": {
+            "type": "boolean"
+          },
+          "downloaded": {
+            "type": "boolean"
+          },
+          "cacheVersion": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "uniqueId": {
+            "type": "string",
+            "description": "Stable file fingerprint used to prevent matching archived media to a reused TDLib file ID."
+          }
+        }
+      },
+      "MessageEntity": {
+        "type": "object",
+        "required": [
+          "offset",
+          "length",
+          "type"
+        ],
+        "properties": {
+          "offset": {
+            "type": "integer"
+          },
+          "length": {
+            "type": "integer"
+          },
+          "type": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          }
+        }
+      },
+      "WritingStyle": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "emoji",
+          "instructions"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9-]{1,64}$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "emoji": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16
+          },
+          "instructions": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          }
+        }
+      },
+      "ChatWallpaper": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "fill",
+              "wallpaper",
+              "pattern"
+            ]
+          },
+          "url": {
+            "type": "string"
+          },
+          "colors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rotation": {
+            "type": "integer"
+          },
+          "blurred": {
+            "type": "boolean"
+          },
+          "dimming": {
+            "type": "integer"
+          },
+          "intensity": {
+            "type": "integer"
+          }
+        }
+      },
+      "MetricSample": {
+        "type": "object",
+        "required": [
+          "timestamp",
+          "cpuPercent",
+          "appCpuPercent",
+          "memoryUsedBytes",
+          "memoryTotalBytes",
+          "appMemoryBytes",
+          "backendMemoryBytes",
+          "ollamaMemoryBytes",
+          "networkReceiveBytesPerSecond",
+          "networkSendBytesPerSecond"
+        ],
+        "properties": {
+          "timestamp": {
+            "type": "integer"
+          },
+          "cpuPercent": {
+            "type": "number"
+          },
+          "appCpuPercent": {
+            "type": "number"
+          },
+          "memoryUsedBytes": {
+            "type": "integer"
+          },
+          "memoryTotalBytes": {
+            "type": "integer"
+          },
+          "appMemoryBytes": {
+            "type": "integer"
+          },
+          "backendMemoryBytes": {
+            "type": "integer"
+          },
+          "ollamaMemoryBytes": {
+            "type": "integer"
+          },
+          "networkReceiveBytesPerSecond": {
+            "type": "integer"
+          },
+          "networkSendBytesPerSecond": {
+            "type": "integer"
+          },
+          "gpuPercent": {
+            "type": "number",
+            "nullable": true
+          },
+          "gpuMemoryUsedBytes": {
+            "type": "integer",
+            "nullable": true
+          },
+          "gpuMemoryTotalBytes": {
+            "type": "integer",
+            "nullable": true
+          }
+        }
+      },
+      "FlowNode": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "text",
+          "key",
+          "operation",
+          "match",
+          "x",
+          "y"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "command",
+              "agent",
+              "reply",
+              "store",
+              "condition"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string",
+            "enum": [
+              "get",
+              "set",
+              "delete"
+            ]
+          },
+          "match": {
+            "type": "string",
+            "enum": [
+              "prefix",
+              "equals",
+              "contains"
+            ]
+          },
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          }
+        }
+      },
+      "FlowEdge": {
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "target",
+          "output"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "output": {
+            "type": "string"
+          }
+        }
+      },
+      "AutomationFlow": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "enabled",
+          "chatIds",
+          "nodes",
+          "edges"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "chatIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FlowNode"
+            }
+          },
+          "edges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FlowEdge"
+            }
+          }
+        }
+      },
+      "MemoryDocument": {
+        "type": "object",
+        "required": [
+          "chatId",
+          "notes",
+          "summary",
+          "revision",
+          "updatedAt",
+          "processedMessages",
+          "backfillComplete",
+          "status",
+          "error",
+          "trackedChats",
+          "relativePath"
+        ],
+        "properties": {
+          "chatId": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "processedMessages": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "backfillComplete": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "disabled",
+              "idle",
+              "queued",
+              "processing",
+              "ready",
+              "waiting_model",
+              "error"
+            ]
+          },
+          "error": {
+            "type": "string"
+          },
+          "trackedChats": {
+            "type": "integer"
+          },
+          "relativePath": {
+            "type": "string"
+          },
+          "collection": {
+            "$ref": "#/components/schemas/MemoryCollectionProgress"
+          }
+        }
+      },
+      "MemoryNotesUpdate": {
+        "type": "object",
+        "required": [
+          "notes",
+          "revision"
+        ],
+        "properties": {
+          "notes": {
+            "type": "string",
+            "maxLength": 16000
+          },
+          "revision": {
+            "type": "string",
+            "maxLength": 64
+          }
+        }
+      },
+      "MemoryRefreshRequest": {
+        "type": "object",
+        "properties": {
+          "rebuild": {
+            "type": "boolean",
+            "default": false
+          },
+          "immediate": {
+            "type": "boolean",
+            "default": false,
+            "description": "Prioritize this chat and wake the local collection worker immediately."
+          }
+        }
+      },
+      "CacheStatistics": {
+        "type": "object",
+        "required": [
+          "totalBytes",
+          "fileCount",
+          "photoBytes",
+          "videoBytes",
+          "audioBytes",
+          "documentBytes"
+        ],
+        "properties": {
+          "totalBytes": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "fileCount": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "photoBytes": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "videoBytes": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "audioBytes": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "documentBytes": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        }
+      },
+      "SearchConnection": {
+        "type": "object",
+        "required": [
+          "configured",
+          "state"
+        ],
+        "properties": {
+          "configured": {
+            "type": "boolean"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "unchecked",
+              "ready",
+              "limited",
+              "unavailable"
+            ]
+          }
+        }
+      },
+      "MemoryCollectionProgress": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean",
+            "default": false
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "disabled",
+              "idle",
+              "queued",
+              "processing",
+              "ready",
+              "waiting_model",
+              "error"
+            ]
+          },
+          "queuedChats": {
+            "type": "integer",
+            "default": 0
+          },
+          "queuePosition": {
+            "type": "integer",
+            "default": 0
+          },
+          "processedMessages": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0
+          }
+        },
+        "required": [
+          "active",
+          "status",
+          "queuedChats",
+          "queuePosition",
+          "processedMessages"
+        ]
+      }
+    },
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "tiho"
+      }
+    }
+  },
+  "security": [
+    {
+      "sessionCookie": []
+    }
+  ]
+}

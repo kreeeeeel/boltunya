@@ -1,0 +1,59 @@
+.body {
+    padding: 4px 0 12px;
+}
+
+.enable {
+    padding: 18px;
+    border-radius: 14px;
+    color: var(--g-color-text-brand);
+    background: var(--tiho-selected);
+}
+
+.label {
+    display: block;
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+
+.label:has(> *) {
+    display: flex;
+}
+
+.hint {
+    display: block;
+    font-size: 13px;
+    color: var(--tiho-muted);
+    line-height: 1.7;
+    margin-top: 8px;
+}
+
+.half {
+    width: 50%;
+    min-width: 0;
+}
+
+.test {
+    padding: 20px;
+    background: var(--tiho-bg);
+    border: 1px solid var(--tiho-line);
+    border-radius: 16px;
+}
+
+.result {
+    padding: 14px;
+    background: var(--tiho-panel);
+    border-radius: 12px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+}
+
+@media (width <= 480px) {
+    .sliders {
+        flex-direction: column;
+    }
+
+    .half {
+        width: 100%;
+    }
+}

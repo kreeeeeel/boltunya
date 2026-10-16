@@ -1,0 +1,24 @@
+.option {
+    width: 100%;
+    min-height: 28px;
+    gap: 10px;
+}
+
+.emoji {
+    display: grid;
+    place-items: center;
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
+    font-size: 20px;
+    line-height: 24px;
+}
+
+.name {
+    font-size: 14px;
+    line-height: 24px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

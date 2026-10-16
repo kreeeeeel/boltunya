@@ -1,0 +1,23 @@
+{
+    "extends": "stylelint-config-standard",
+    "rules": {
+        "selector-class-pattern": null,
+        "custom-property-pattern": null,
+        "color-function-notation": null,
+        "alpha-value-notation": null,
+        "media-feature-range-notation": null
+    },
+    "overrides": [
+        {
+            "files": ["**/*.module.css"],
+            "rules": {
+                "selector-pseudo-class-no-unknown": [
+                    true,
+                    {
+                        "ignorePseudoClasses": ["global", "local"]
+                    }
+                ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,12 @@
+services:
+  web-preview:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+    ports: ["127.0.0.1:3000:3000"]
+    profiles: ["preview"]
+  backend-checks:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    profiles: ["checks"]

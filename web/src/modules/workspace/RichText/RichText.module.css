@@ -1,0 +1,90 @@
+.root {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-size: 15px;
+    line-height: 1.55;
+}
+
+.format,
+.link {
+    font-size: inherit;
+    line-height: inherit;
+}
+
+.bold {
+    font-weight: 700;
+}
+
+.italic {
+    font-style: italic;
+}
+
+.underline {
+    text-decoration: underline;
+}
+
+.strike {
+    text-decoration: line-through;
+}
+
+.code {
+    font-size: 14px;
+    font-family: var(--g-font-family-monospace);
+    padding: 1px 4px;
+    border-radius: 4px;
+    background: var(--tiho-selected);
+}
+
+.codeBlock {
+    margin: 8px 0;
+    background: var(--tiho-bg);
+    border: 1px solid var(--tiho-line);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.codeHeader {
+    padding: 4px 10px;
+    font-size: 13px;
+    color: var(--tiho-muted);
+    border-bottom: 1px solid var(--tiho-line);
+}
+
+.pre {
+    font-family: var(--g-font-family-monospace);
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-x: auto;
+    white-space: pre;
+    margin: 0;
+    padding: 12px;
+}
+
+.quote {
+    margin: 8px 0;
+    padding: 8px 12px;
+    border-left: 3px solid var(--g-color-base-brand);
+    border-radius: 4px;
+    background: var(--tiho-selected);
+}
+
+.collapsed {
+    max-height: 96px;
+    overflow: hidden;
+}
+
+.spoiler {
+    --g-button-height: auto;
+    --g-button-padding: 0;
+    --g-button-text-color: transparent;
+    --g-button-text-color-hover: transparent;
+    --g-button-background-color: var(--tiho-muted);
+    --g-button-background-color-hover: var(--tiho-muted);
+
+    height: auto;
+    vertical-align: baseline;
+    border-radius: 4px;
+    font-size: inherit;
+    line-height: inherit;
+    white-space: pre-wrap;
+}
