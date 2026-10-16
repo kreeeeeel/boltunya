@@ -47,6 +47,14 @@
     min-height: 0;
 }
 
+.body {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+
 .messageInner {
     min-height: 100%;
     width: 100%;
@@ -97,7 +105,7 @@
 .messageText {
     font-size: 15px;
     line-height: 1.4;
-    font-family: 'Segoe UI Emoji', 'Apple Color Emoji', var(--g-font-family-sans);
+    font-family: inherit;
     display: inline;
     white-space: pre-wrap;
     overflow-wrap: anywhere;

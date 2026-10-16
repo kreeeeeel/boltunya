@@ -73,6 +73,12 @@ test('documents the workspace using synthetic conversations and verifies the ref
     const row = page.locator('[data-qa="chat-row"]').first();
     await expect(row).toHaveCSS('border-radius', '12px');
     await expect(page.locator('[data-qa="conversation-header"]')).toHaveCSS('border-radius', '16px');
+    const wallpaperOffset = await page.evaluate(() => {
+        const header = document.querySelector('[data-qa="conversation-header"]')!.getBoundingClientRect();
+        const wallpaper = document.querySelector('[data-qa="chat-wallpaper"]')!.getBoundingClientRect();
+        return wallpaper.top - header.bottom;
+    });
+    expect(wallpaperOffset).toBeGreaterThanOrEqual(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({path: '../docs/resources/readme-chat-light.png', animations: 'disabled'});
 

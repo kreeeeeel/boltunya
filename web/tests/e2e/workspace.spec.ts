@@ -312,6 +312,46 @@ test('inset chat rows, search icon, readable text and message edges stay aligned
     await expect(page.getByText('Общается так, как удобно вам', {exact: true})).toHaveCount(0);
 });
 
+test('pattern and blurred photo wallpapers stay below the profile header at every window size', async ({
+    page,
+}) => {
+    await page.route('**/api/media/wallpaper-test', (route) =>
+        route.fulfill({
+            contentType: 'image/svg+xml',
+            body: '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="#f00"/></svg>',
+        }),
+    );
+    for (const wallpaper of [
+        undefined,
+        {kind: 'wallpaper' as const, url: '/api/media/wallpaper-test', blurred: true},
+    ]) {
+        const state = structuredClone(workspaceState);
+        state.chats[0].wallpaper = wallpaper;
+        await page.route('**/api/state', (route) => route.fulfill({json: state}));
+        await page.reload();
+        await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
+        for (const width of [1440, 1000, 480]) {
+            await page.setViewportSize({width, height: 900});
+            await expect(page.locator('[data-qa="chat-wallpaper"]')).toBeAttached();
+            const offset = await page.evaluate(() => {
+                const header = document
+                    .querySelector('[data-qa="conversation-header"]')!
+                    .getBoundingClientRect();
+                const wallpaper = document
+                    .querySelector('[data-qa="chat-wallpaper"]')!
+                    .getBoundingClientRect();
+                return wallpaper.top - header.bottom;
+            });
+            expect(offset).toBeGreaterThanOrEqual(0);
+            await expect(page.locator('[data-qa="conversation-body"]')).toHaveCSS('overflow', 'hidden');
+        }
+        if (wallpaper) {
+            await expect(page.locator('[data-qa="chat-wallpaper"]')).toHaveCSS('filter', 'blur(8px)');
+        }
+        await page.setViewportSize({width: 1440, height: 900});
+    }
+});
+
 test('overlay scrollbar preserves content width and supports wheel and keyboard', async ({page}) => {
     const before = await page.locator('[data-qa="chat-row"]').first().boundingBox();
     const chats = Array.from({length: 80}, (_, index) => ({

@@ -15,6 +15,7 @@ export function ChatWallpaper({wallpaper}: {readonly wallpaper?: Chat['wallpaper
     const plainFill = wallpaper?.kind === 'fill';
     return (
         <Box
+            qa="chat-wallpaper"
             className={styles.wallpaper}
             aria-hidden="true"
             style={{

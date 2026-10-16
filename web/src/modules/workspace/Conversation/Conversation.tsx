@@ -213,112 +213,114 @@ export function Conversation({
                     </Button>
                 </Flex>
             </Flex>
-            <ChatWallpaper wallpaper={chat.wallpaper} />
-            <ScrollArea
-                viewportRef={scroll}
-                qa="conversation-messages"
-                className={styles.messages}
-                onScroll={() => {
-                    const el = scroll.current;
-                    if (el) {
-                        stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
-                        if (el.scrollTop < 100) {
-                            void earlier();
+            <Flex direction="column" className={styles.body} qa="conversation-body">
+                <ChatWallpaper wallpaper={chat.wallpaper} />
+                <ScrollArea
+                    viewportRef={scroll}
+                    qa="conversation-messages"
+                    className={styles.messages}
+                    onScroll={() => {
+                        const el = scroll.current;
+                        if (el) {
+                            stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+                            if (el.scrollTop < 100) {
+                                void earlier();
+                            }
                         }
-                    }
-                }}
-            >
-                <Flex direction="column" className={styles.messageInner}>
-                    {loadingEarlier && (
-                        <Flex
-                            role="status"
-                            aria-label={t('loadingConversation')}
-                            className={styles.historyLoader}
-                        >
-                            <Loader size="s" />
-                        </Flex>
-                    )}
-                    {messages.map((message, index) => (
-                        <Fragment key={message.id}>
-                            {(index === 0 ||
-                                messageDay(message.date) !== messageDay(messages[index - 1].date)) && (
-                                <Text className={styles.date} qa="message-date">
-                                    {messageDay(message.date) === today
-                                        ? t('today')
-                                        : new Date(message.date * 1000).toLocaleDateString(locale, {
-                                              day: 'numeric',
-                                              month: 'long',
-                                          })}
-                                </Text>
-                            )}
-                            <MessageBubble
-                                message={message}
-                                nextMessage={messages[index + 1]}
-                                replyText={messages.find((item) => item.id === message.replyToId)?.text}
+                    }}
+                >
+                    <Flex direction="column" className={styles.messageInner}>
+                        {loadingEarlier && (
+                            <Flex
+                                role="status"
+                                aria-label={t('loadingConversation')}
+                                className={styles.historyLoader}
+                            >
+                                <Loader size="s" />
+                            </Flex>
+                        )}
+                        {messages.map((message, index) => (
+                            <Fragment key={message.id}>
+                                {(index === 0 ||
+                                    messageDay(message.date) !== messageDay(messages[index - 1].date)) && (
+                                    <Text className={styles.date} qa="message-date">
+                                        {messageDay(message.date) === today
+                                            ? t('today')
+                                            : new Date(message.date * 1000).toLocaleDateString(locale, {
+                                                  day: 'numeric',
+                                                  month: 'long',
+                                              })}
+                                    </Text>
+                                )}
+                                <MessageBubble
+                                    message={message}
+                                    nextMessage={messages[index + 1]}
+                                    replyText={messages.find((item) => item.id === message.replyToId)?.text}
+                                />
+                            </Fragment>
+                        ))}
+                        {messages.length === 0 && !error && (
+                            <Text className={styles.noHistory}>{t('noHistory')}</Text>
+                        )}
+                        {generating && (
+                            <Box className={[styles.bubble, styles.outgoing].join(' ')}>
+                                <ReplySkeleton />
+                            </Box>
+                        )}
+                    </Flex>
+                </ScrollArea>
+                <Box className={styles.composerArea}>
+                    {(error || localError) && <Text color="danger">{localError || error}</Text>}
+                    <Flex alignItems="flex-end" gap={2} className={styles.composer}>
+                        <Tooltip content={t('draft')}>
+                            <Button
+                                size="m"
+                                className={styles.composerButton}
+                                view="flat-secondary"
+                                loading={busy === 'draft'}
+                                disabled={!!busy}
+                                onClick={() => void draft()}
+                                aria-label={t('draft')}
+                            >
+                                <Icon data={Sparkles} size={19} />
+                            </Button>
+                        </Tooltip>
+                        {busy === 'draft' ? (
+                            <Skeleton className={styles.draftSkeleton} height={18} width="65%" />
+                        ) : (
+                            <TextArea
+                                view="clear"
+                                size="l"
+                                className={styles.input}
+                                value={text}
+                                disabled={busy === 'send'}
+                                onUpdate={setText}
+                                minRows={1}
+                                maxRows={5}
+                                placeholder={t('messagePlaceholder')}
+                                controlProps={{'aria-label': t('messagePlaceholder'), maxLength: 4096}}
+                                onKeyDown={(event) => {
+                                    if (event.key === 'Enter' && !event.shiftKey) {
+                                        event.preventDefault();
+                                        void send();
+                                    }
+                                }}
                             />
-                        </Fragment>
-                    ))}
-                    {messages.length === 0 && !error && (
-                        <Text className={styles.noHistory}>{t('noHistory')}</Text>
-                    )}
-                    {generating && (
-                        <Box className={[styles.bubble, styles.outgoing].join(' ')}>
-                            <ReplySkeleton />
-                        </Box>
-                    )}
-                </Flex>
-            </ScrollArea>
-            <Box className={styles.composerArea}>
-                {(error || localError) && <Text color="danger">{localError || error}</Text>}
-                <Flex alignItems="flex-end" gap={2} className={styles.composer}>
-                    <Tooltip content={t('draft')}>
+                        )}
                         <Button
+                            view="action"
                             size="m"
+                            loading={busy === 'send'}
+                            disabled={!text.trim() || !!busy}
+                            onClick={() => void send()}
+                            aria-label={t('send')}
                             className={styles.composerButton}
-                            view="flat-secondary"
-                            loading={busy === 'draft'}
-                            disabled={!!busy}
-                            onClick={() => void draft()}
-                            aria-label={t('draft')}
                         >
-                            <Icon data={Sparkles} size={19} />
+                            <Icon data={PaperPlane} size={18} />
                         </Button>
-                    </Tooltip>
-                    {busy === 'draft' ? (
-                        <Skeleton className={styles.draftSkeleton} height={18} width="65%" />
-                    ) : (
-                        <TextArea
-                            view="clear"
-                            size="l"
-                            className={styles.input}
-                            value={text}
-                            disabled={busy === 'send'}
-                            onUpdate={setText}
-                            minRows={1}
-                            maxRows={5}
-                            placeholder={t('messagePlaceholder')}
-                            controlProps={{'aria-label': t('messagePlaceholder'), maxLength: 4096}}
-                            onKeyDown={(event) => {
-                                if (event.key === 'Enter' && !event.shiftKey) {
-                                    event.preventDefault();
-                                    void send();
-                                }
-                            }}
-                        />
-                    )}
-                    <Button
-                        view="action"
-                        size="m"
-                        loading={busy === 'send'}
-                        disabled={!text.trim() || !!busy}
-                        onClick={() => void send()}
-                        aria-label={t('send')}
-                        className={styles.composerButton}
-                    >
-                        <Icon data={PaperPlane} size={18} />
-                    </Button>
-                </Flex>
-            </Box>
+                    </Flex>
+                </Box>
+            </Flex>
         </Flex>
     );
 }
