@@ -10,6 +10,7 @@ data class ModelInfo(
     val size: String,
     val installed: Boolean,
     val recommended: Boolean = false,
+    val supportsAutomation: Boolean = true,
     val family: String = "qwen",
     val speed: String = "balanced",
     val quality: String = "good",

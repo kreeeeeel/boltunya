@@ -37,6 +37,7 @@ class CurrencyRatesClientTest {
             val usd = client.lookup("официальный курс доллара к рублю сегодня") ?: error("Missing rate")
             assertEquals("currency", usd.status)
             assertTrue(usd.facts.contains("доллар — 83.76 ₽"))
+            assertEquals(listOf("83.76"), usd.requiredNumbers)
             assertEquals("2026-10-16", usd.sources.single().publishedAt)
             assertTrue(query.contains("16%2F10%2F2026"))
             assertTrue(client.lookup("курс евро к доллару")?.facts.orEmpty().contains("евро — 1.1195 $"))

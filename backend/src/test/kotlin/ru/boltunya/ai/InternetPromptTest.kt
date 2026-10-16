@@ -11,7 +11,7 @@ import kotlin.test.assertTrue
 
 class InternetPromptTest {
     @Test
-    fun `research keeps exact facts alongside owner samples without copying automated messages`() {
+    fun `research keeps exact facts alongside abstract owner voice without copying sample topics`() {
         val samples = listOf("да норм", "ну давай завтра", "ага, договорились))")
             .mapIndexed { index, text -> ChatMessage(index.toString(), "42", text, true, 0) } +
             ChatMessage("ai", "42", "Generated assistant phrasing", true, 0, automated = true)
@@ -24,7 +24,8 @@ class InternetPromptTest {
         val system = prompt.first().text.orEmpty()
         assertTrue(system.contains("93.7693"))
         assertTrue(system.contains("16.10.2026"))
-        assertTrue(system.contains("ага, договорились))"))
+        assertTrue(system.contains("Обобщённая манера владельца: 100%"))
+        assertFalse(system.contains("ага, договорились))"))
         assertFalse(system.contains("Generated assistant phrasing"))
         assertTrue(system.contains("Точность и смысл важнее предельной краткости"))
         assertEquals("А евро?", prompt.last().text)

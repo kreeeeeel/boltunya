@@ -15,19 +15,27 @@ class ReplyQualityGuard @Inject constructor() {
         styleHistory: List<ChatMessage> = history,
         compareSimilarReplies: Boolean = true,
     ): Boolean {
+        if (containsInternalAnalysis(reply)) return true
         val answer = normalize(reply)
-        val latestIncoming = normalize(history.lastOrNull { !it.outgoing }?.text.orEmpty())
+        val incomingText = history.lastOrNull { !it.outgoing }?.text.orEmpty()
+        val latestIncoming = normalize(incomingText)
+        if (answer == latestIncoming && answer.contains(' ') && incomingText.contains('?') && reply.contains('?')) {
+            return true
+        }
         val han = resources.regex("common/ReplyQualityGuard-1")
-        val languageRequested = resources.regex("intent/translation-request")
-            .containsMatchIn(latestIncoming + " " + normalize(instructions)) || han.containsMatchIn(instructions)
+        val languageContext = latestIncoming + " " + normalize(instructions)
+        val hanRequested = resources.regex("intent/translation-request").containsMatchIn(languageContext) ||
+            han.containsMatchIn(instructions)
+        val cyrillicRequested = resources.regex("intent/cyrillic-language-request").containsMatchIn(languageContext)
         val unexpectedLanguage = resources.regex("common/ReplyQualityGuard-3").containsMatchIn(latestIncoming) &&
-            han.containsMatchIn(reply) && !languageRequested &&
+            han.containsMatchIn(reply) && !hanRequested &&
             history.none { !it.outgoing && han.containsMatchIn(it.text) }
-        if (unexpectedLanguage) {
+        if (unexpectedLanguage || !cyrillicRequested && mismatchedWritingSystem(reply, incomingText)) {
             return true
         }
         val identityQuestion = resources.regex("intent/identity-question")
             .containsMatchIn(latestIncoming)
+        if (identityQuestion && resources.regex("intent/identity-human-claim").containsMatchIn(answer)) return true
         val helpRequested = resources.regex("intent/help-request").containsMatchIn(latestIncoming)
         val serviceTail = resources.regex("intent/service-tail")
             .containsMatchIn(answer)
@@ -36,17 +44,18 @@ class ReplyQualityGuard @Inject constructor() {
         if (boilerplate) {
             return true
         }
+        val recalling = resources.regex("intent/recall-request").containsMatchIn(latestIncoming)
+        val previous = history.asReversed().firstOrNull { it.outgoing && it.kind == "text" }?.text.orEmpty()
         val incoming = history.filter { !it.outgoing }.takeLast(2)
-        if (incoming.size == 2 && normalize(incoming[0].text) == latestIncoming) {
-            return false
-        }
-        if (answer.length >= 8 && answer.contains(' ') && styleHistory.stream().anyMatch {
+        val repeatedIncoming = incoming.size == 2 && normalize(incoming[0].text) == latestIncoming
+        if (!((recalling || repeatedIncoming) && normalize(previous) == answer) &&
+            answer.length >= 8 && answer.contains(' ') && styleHistory.stream().anyMatch {
                 it.outgoing && normalize(it.text) == answer
             }
         ) {
             return true
         }
-        val previous = history.asReversed().firstOrNull { it.outgoing && it.kind == "text" }?.text ?: return false
+        if (recalling || repeatedIncoming || previous.isBlank()) return false
         val lastAnswer = normalize(previous)
         if (answer.length < 20 || lastAnswer.length < 20) {
             return false
@@ -57,6 +66,21 @@ class ReplyQualityGuard @Inject constructor() {
         return answer == lastAnswer ||
             compareSimilarReplies && shared >= 3 &&
             shared.toDouble() / minOf(currentShingles.size, previousShingles.size) > 0.65
+    }
+
+    fun containsInternalAnalysis(reply: String): Boolean = resources.regex("intent/internal-analysis")
+        .containsMatchIn(reply)
+
+    private fun mismatchedWritingSystem(reply: String, incoming: String): Boolean {
+        if (dominantWritingSystem(incoming.replace(resources.regex("common/research-url"), "")) !=
+            Character.UnicodeScript.LATIN ||
+            dominantWritingSystem(reply.replace(resources.regex("common/research-url"), "")) !=
+            Character.UnicodeScript.CYRILLIC
+        ) {
+            return false
+        }
+        val words = reply.split(' ', '\n', '\t').filter { word -> word.any(Char::isLetter) }
+        return words.size >= 2 && words.any { word -> word.firstOrNull(Char::isLetter)?.isLowerCase() == true }
     }
 
     private fun normalize(text: String): String = text.lowercase(Locale.ROOT)

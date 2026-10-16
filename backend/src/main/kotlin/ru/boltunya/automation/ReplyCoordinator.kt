@@ -5,6 +5,7 @@ import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ChatRule
 import ru.boltunya.domain.GroupReplyMode
 import ru.boltunya.domain.ReplyResult
+import ru.boltunya.exception.AppException
 import ru.boltunya.exception.impl.ReplyCancelledException
 import ru.boltunya.exception.impl.ReplyDeliveryFailedException
 import ru.boltunya.exception.impl.TelegramRateLimitException
@@ -126,7 +127,7 @@ class ReplyCoordinator(
             replace(
                 entry,
                 "error",
-                if (exception is TelegramRateLimitException) {
+                if (exception is AppException) {
                     exception.message
                 } else {
                     ReplyDeliveryFailedException().message

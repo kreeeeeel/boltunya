@@ -16,6 +16,22 @@ class PromptBuilderTest {
     private val builder = PromptBuilder()
 
     @Test
+    fun `excludes previously leaked automated analysis while preserving real conversation context`() {
+        val analysis = "Хорошо, мне нужно составить ответ от лица владельца Telegram " +
+            "в соответствии с заданными правилами."
+        val prompt = builder.build(
+            ChatRule(),
+            listOf(
+                ChatMessage("1", "42", analysis, true, 0, automated = true),
+                ChatMessage("2", "42", "Встретимся в 19:30", true, 0, automated = true),
+                ChatMessage("3", "42", analysis, true, 0),
+                ChatMessage("4", "42", "Напомни время", false, 0),
+            ),
+        )
+        assertEquals(listOf("Встретимся в 19:30", analysis, "Напомни время"), prompt.drop(1).map { it.text })
+    }
+
+    @Test
     fun `includes contextual calm boundaries in conversation and research prompts`() {
         listOf(ResearchContext(), ResearchContext("search", "Verified facts")).stream().forEach { research ->
             val prompt = builder.build(

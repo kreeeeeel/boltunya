@@ -5,6 +5,7 @@ import ru.boltunya.ai.model.ModelPolicies
 import ru.boltunya.ai.model.ModelReplyReader
 import ru.boltunya.ai.model.SpringAiModelFactory
 import ru.boltunya.ai.research.InternetResearcher
+import ru.boltunya.ai.research.ResearchFactGuard
 import ru.boltunya.ai.research.ResearchLinkPolicy
 import ru.boltunya.ai.research.ResearchPlanner
 import ru.boltunya.domain.ChatMessage
@@ -39,6 +40,7 @@ class AiTestServices(
         planner,
         inference,
         ResearchLinkPolicy(),
+        ResearchFactGuard(resources),
         resources,
     )
 

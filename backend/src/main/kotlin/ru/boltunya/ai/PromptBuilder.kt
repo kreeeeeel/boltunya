@@ -53,10 +53,8 @@ class PromptBuilder(
         val now = ZonedDateTime.now(clock)
         val time = now.format(DateTimeFormatter.ofPattern("HH:mm z"))
         val date = now.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
-        val examples = if (rule.matchMyStyle) {
+        val voice = if (rule.matchMyStyle) {
             personalStyle.build(styleHistory)
-        } else if (style == CommunicationStyle.FRIENDLY) {
-            resources.prompt("ru/conversation/friendly-examples")
         } else {
             ""
         }
@@ -65,7 +63,7 @@ class PromptBuilder(
             mapOf(
                 "tone" to (tone),
                 "emoji" to (emoji),
-                "examples" to (examples),
+                "voice" to voice,
                 "globalPrompt" to (globalPrompt),
                 "instructions" to rule.instructions,
                 "time" to time,
@@ -126,6 +124,10 @@ class PromptBuilder(
         val system = baseSystem + "\n" + longTerm + "\n" + external
         val candidates = history.asReversed().stream()
             .filter { it.text.isNotBlank() }
+            .filter {
+                !it.outgoing || !it.automated ||
+                    !resources.regex("intent/internal-analysis").containsMatchIn(it.text)
+            }
             .map { message ->
                 val text = message.text.take(MAX_MESSAGE_CHARACTERS)
                 if (message.outgoing) AssistantMessage.builder().content(text).build() else UserMessage(text)

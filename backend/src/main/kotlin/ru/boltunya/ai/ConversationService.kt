@@ -8,12 +8,14 @@ import org.springframework.ai.chat.messages.SystemMessage
 import ru.boltunya.ai.model.ChatCompletionService
 import ru.boltunya.ai.research.InternetResearcher
 import ru.boltunya.ai.research.ResearchContext
+import ru.boltunya.ai.research.ResearchFactGuard
 import ru.boltunya.ai.research.ResearchLinkPolicy
 import ru.boltunya.ai.research.ResearchPlanner
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ChatRule
 import ru.boltunya.domain.ReplyResult
 import ru.boltunya.exception.impl.EmptyModelReplyException
+import ru.boltunya.exception.impl.InvalidModelReplyException
 import ru.boltunya.exception.impl.RepetitiveModelReplyException
 import ru.boltunya.memory.MemoryContext
 import ru.boltunya.resources.ResourceCatalog
@@ -28,6 +30,7 @@ class ConversationService @Inject constructor(
     private val planner: ResearchPlanner,
     private val inference: ModelInference,
     private val links: ResearchLinkPolicy,
+    private val facts: ResearchFactGuard,
     private val resources: ResourceCatalog,
 ) {
     fun reply(
@@ -54,7 +57,8 @@ class ConversationService @Inject constructor(
                 mapOf("memory" to Json.encodeToString(memory.limited(MEMORY_PLANNER_CHARACTERS))),
             )
         }
-        val instructions = globalPrompt + "\n" + rule.instructions + "\n" + memoryFacts
+        val ownerInstructions = globalPrompt + "\n" + rule.instructions
+        val instructions = ownerInstructions + "\n" + memoryFacts
         fun generate(context: List<Message>, format: JsonObject? = null, maxTokens: Int = rule.maxTokens) =
             completion.generate(rule, context, format, maxTokens)
         val research = if (rule.internetAccess && planner.needed(history)) {
@@ -84,11 +88,11 @@ class ConversationService @Inject constructor(
         if (quality.needsRetry(
                 text,
                 history,
-                instructions,
+                ownerInstructions,
                 styleHistory,
                 compareSimilarReplies =
                 research.status == "none",
-            )
+            ) || !facts.matches(text, research, history)
         ) {
             val retryBase = prompts.build(
                 rule.copy(matchMyStyle = false),
@@ -98,9 +102,20 @@ class ConversationService @Inject constructor(
                 emptyList(),
                 memory,
             )
+            val precision = if (facts.matches(text, research, history)) {
+                ""
+            } else {
+                resources.prompt(
+                    "ru/research/retry-precision",
+                    mapOf("numbers" to research.requiredNumbers.joinToString(", ")),
+                )
+            }
             val retry =
                 listOf(
-                    SystemMessage(retryBase.first().text.orEmpty() + "\n" + resources.prompt("ru/conversation/retry")),
+                    SystemMessage(
+                        retryBase.first().text.orEmpty() + "\n" + resources.prompt("ru/conversation/retry") + "\n" +
+                            precision,
+                    ),
                 ) +
                     retryBase.drop(1)
             response = generate(retry)
@@ -109,10 +124,12 @@ class ConversationService @Inject constructor(
         if (text.isBlank()) {
             throw EmptyModelReplyException()
         }
+        if (quality.containsInternalAnalysis(text)) throw InvalidModelReplyException()
+        if (!facts.matches(text, research, history)) throw InvalidModelReplyException()
         if (quality.needsRetry(
                 text,
                 history,
-                instructions,
+                ownerInstructions,
                 styleHistory,
                 compareSimilarReplies =
                 research.status == "none",

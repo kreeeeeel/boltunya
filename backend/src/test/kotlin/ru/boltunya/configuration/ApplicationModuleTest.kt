@@ -7,16 +7,30 @@ import ru.boltunya.ai.EngineManager
 import ru.boltunya.application.ApplicationRuntime
 import ru.boltunya.automation.PersonalReplyGenerator
 import ru.boltunya.automation.ReplyCoordinator
+import ru.boltunya.domain.ChatRule
+import ru.boltunya.exception.impl.ModelNotReadyForAutomationException
 import ru.boltunya.http.LocalWebServer
 import ru.boltunya.storage.SettingsStore
 import ru.boltunya.telegram.TelegramGateway
 import java.nio.file.Path
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertSame
 
 class ApplicationModuleTest {
     @TempDir
     lateinit var directory: Path
+
+    @Test
+    fun `automatic generation rejects a draft only model before accessing history or inference`() {
+        val injector = Guice.createInjector(ApplicationModule(ApplicationConfiguration(directory, false)))
+        injector.getInstance(ApplicationRuntime::class.java).use {
+            val generator = injector.getInstance(PersonalReplyGenerator::class.java)
+            assertFailsWith<ModelNotReadyForAutomationException> {
+                generator.reply(ChatRule(model = "qwen3:0.6b", useDefaultModel = false), emptyList())
+            }
+        }
+    }
 
     @Test
     fun `resolves complete dependency graph and shares application services`() {

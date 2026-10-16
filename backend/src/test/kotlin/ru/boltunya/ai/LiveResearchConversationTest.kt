@@ -19,6 +19,7 @@ import ru.boltunya.resources.ResourceCatalog
 import java.math.RoundingMode
 import java.nio.file.Files
 import java.nio.file.Path
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -29,7 +30,9 @@ class LiveResearchConversationTest {
     @Test
     fun `answers ordinary weather news currency and contextual source requests with live data`() {
         val search = RecordedSearchProvider()
-        val client = AiTestServices(researcher = InternetResearcher(search = search))
+        val client = AiTestServices(
+            researcher = InternetResearcher(search = search, clock = Clock.systemDefaultZone()),
+        )
         val rule = ChatRule(model = "gemma3:4b", maxTokens = 256, creativity = 10)
         val resources = ResourceCatalog()
         val urls = ResearchUrl()

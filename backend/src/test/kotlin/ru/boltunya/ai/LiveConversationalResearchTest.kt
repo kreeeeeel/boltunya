@@ -16,6 +16,7 @@ import ru.boltunya.memory.MemoryContext
 import ru.boltunya.resources.ResourceCatalog
 import java.nio.file.Files
 import java.nio.file.Path
+import java.time.Clock
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.test.assertTrue
@@ -27,7 +28,7 @@ class LiveConversationalResearchTest {
         val search = RecordedSearchProvider()
         val client = AiTestServices(
             baseUrl = System.getenv("TIHO_TEST_OLLAMA_URL") ?: "http://127.0.0.1:11434",
-            researcher = InternetResearcher(search = search),
+            researcher = InternetResearcher(search = search, clock = Clock.systemDefaultZone()),
         )
         val rule = ChatRule(model = "gemma3:4b", maxTokens = 192, creativity = 10)
         val style = listOf("да норм", "ага, договорились))", "ну давай завтра", "ща гляну", "ок, тогда вечером")

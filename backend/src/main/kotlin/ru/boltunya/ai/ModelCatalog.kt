@@ -10,6 +10,8 @@ class ModelCatalog @Inject constructor() {
 
     fun contains(id: String): Boolean = models.stream().anyMatch { it.id == id }
 
+    fun supportsAutomation(id: String): Boolean = models.stream().anyMatch { it.id == id && it.supportsAutomation }
+
     fun installed(names: Set<String>): List<ModelInfo> = models.stream().map {
         it.copy(installed = it.id in names)
     }.toList()

@@ -498,5 +498,6 @@
     "benchmarkPending": "Test required",
     "benchmarkAfterInstall": "After installation",
     "modelDefaultOption": "Default · {name}",
-    "modelDefaultHint": "This conversation follows the model selected in Models. You can choose a separate model."
+    "modelDefaultHint": "This conversation follows the model selected in Models. You can choose a separate model.",
+    "modelDraftOnly": "Drafts only"
 }

@@ -77,22 +77,27 @@ class CurrencyRatesClient(
                 row.selectFirst("CharCode")?.text().orEmpty() to value.divide(nominal, 10, RoundingMode.HALF_UP)
             } + ("RUB" to BigDecimal.ONE)
             if (pairs.any { it.first !in rates || it.second !in rates }) return null
-            val quotes = pairs.joinToString("; ") { (base, target) ->
+            val quotes = pairs.map { (base, target) ->
                 val rate = rates.getValue(base).divide(rates.getValue(target), RATE_SCALE, RoundingMode.HALF_UP)
-                resources.prompt(
+                val amount = rate.stripTrailingZeros().toPlainString()
+                amount to resources.prompt(
                     "ru/research/currency-quote",
                     mapOf(
                         "base" to names.getValue(base),
-                        "rate" to rate.stripTrailingZeros().toPlainString(),
+                        "rate" to amount,
                         "target" to symbols.getValue(target),
                     ),
                 )
             }
-            val facts = resources.prompt("ru/research/currency", mapOf("date" to date, "quotes" to quotes))
+            val facts = resources.prompt(
+                "ru/research/currency",
+                mapOf("date" to date, "quotes" to quotes.joinToString("; ") { (_, text) -> text }),
+            )
             return ResearchContext(
                 "currency",
                 facts,
                 listOf(ResearchSource("Банк России", CBR_SOURCE, facts, date.toString())),
+                requiredNumbers = quotes.map { (amount, _) -> amount },
             )
         } catch (exception: CurrencyRatesUnavailableException) {
             throw exception

@@ -498,5 +498,6 @@
     "benchmarkPending": "Потрібен вимір",
     "benchmarkAfterInstall": "Після встановлення",
     "modelDefaultOption": "Типова · {name}",
-    "modelDefaultHint": "Діалог використовує модель, обрану в каталозі. Можна обрати окрему модель."
+    "modelDefaultHint": "Діалог використовує модель, обрану в каталозі. Можна обрати окрему модель.",
+    "modelDraftOnly": "Лише чернетки"
 }

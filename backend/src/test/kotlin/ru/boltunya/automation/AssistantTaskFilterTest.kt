@@ -5,6 +5,10 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class AssistantTaskFilterTest {
+    @Test
+    fun `recipe request from the reported conversation is ignored when the option is enabled`() {
+        assertTrue(filter.ignores("напиши рецепт сырников"))
+    }
     private val filter = AssistantTaskFilter()
 
     @Test

@@ -39,6 +39,12 @@ class SettingsEndpoint @Inject constructor(
         }
         if (update.defaultModel != null) {
             validation.model(update.defaultModel)
+        }
+        val current = settings.get()
+        if (update.paused == false || update.defaultModel != null && !(update.paused ?: current.paused)) {
+            validation.model(update.defaultModel ?: current.defaultModel, forAutomation = true)
+        }
+        if (update.defaultModel != null) {
             engine.warm(update.defaultModel)
         }
         replies.cancelPending()

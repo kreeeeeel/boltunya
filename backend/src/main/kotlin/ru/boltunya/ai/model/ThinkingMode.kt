@@ -11,6 +11,9 @@ enum class ThinkingMode {
     @SerialName("disabled")
     DISABLED,
 
+    @SerialName("enabled")
+    ENABLED,
+
     @SerialName("low")
     LOW,
 }

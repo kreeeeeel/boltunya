@@ -7,4 +7,5 @@ data class ResearchContext(
     val status: String = "none",
     val facts: String = "",
     val sources: List<ResearchSource> = emptyList(),
+    val requiredNumbers: List<String> = emptyList(),
 )

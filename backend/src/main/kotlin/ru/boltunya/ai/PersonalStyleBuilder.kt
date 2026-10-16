@@ -1,7 +1,6 @@
 package ru.boltunya.ai
 
 import jakarta.inject.Inject
-import kotlinx.serialization.json.Json
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.resources.ResourceCatalog
 
@@ -20,15 +19,9 @@ class PersonalStyleBuilder @Inject constructor() {
         val lowercase = samples.stream().filter { text ->
             text.firstOrNull { it.isLetter() }?.isLowerCase() == true
         }.count() * 100 / samples.size
-        val length = samples.map { it.length }.sorted()[samples.size / 2]
-        val examples = Json.encodeToString(samples.take(12).map { it.take(180) })
         return resources.prompt(
-            "ru/conversation/style-examples",
-            mapOf(
-                "length" to (length),
-                "lowercase" to (lowercase),
-                "examples" to (examples),
-            ),
+            "ru/conversation/style-profile",
+            mapOf("lowercase" to lowercase),
         )
     }
 

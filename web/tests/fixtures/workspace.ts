@@ -13,6 +13,7 @@ export const workspaceState: AppState = {
             {
                 id: 'qwen3:0.6b',
                 name: 'Qwen 3 · 0.6B',
+                supportsAutomation: false,
                 description: '',
                 size: '522 МБ',
                 family: 'qwen',

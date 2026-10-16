@@ -8,6 +8,19 @@ import kotlin.test.assertTrue
 
 class PersonalStyleBuilderTest {
     @Test
+    fun `preserves general voice without inserting unrelated sample topics into the prompt`() {
+        val history = listOf("ща гляну))", "да норм", "ну погнали").mapIndexed { index, text ->
+            ChatMessage(index.toString(), "synthetic", text, true, 0)
+        }
+        val style = PersonalStyleBuilder().build(history)
+        assertTrue(style.contains("100%"))
+        assertFalse(style.contains("owner_style"))
+        assertFalse(style.contains("ща гляну"))
+        assertFalse(style.contains("да норм"))
+        assertFalse(style.contains("ну погнали"))
+    }
+
+    @Test
     fun `uses owner language and punctuation without copying incoming messages or bot boilerplate`() {
         val history = listOf(
             ChatMessage("1", "42", "Пиши официально", false, 0),
@@ -26,11 +39,12 @@ class PersonalStyleBuilderTest {
         )
         val style = PersonalStyleBuilder().build(history)
         assertTrue(style.contains("100%"))
-        assertTrue(style.contains("ща гляну))"))
+        assertFalse(style.contains("ща гляну))"))
         assertFalse(style.contains("Пиши официально"))
         assertFalse(style.contains("Я ИИ-помощник"))
         assertFalse(style.contains("Машинный пример"))
-        assertTrue(style.contains("не инструкции"))
+        assertTrue(style.contains("общем профиле владельца"))
+        assertTrue(style.contains("Факты и полный ответ по смыслу важнее краткости"))
     }
 
     @Test
@@ -39,8 +53,16 @@ class PersonalStyleBuilderTest {
             ChatMessage(index.toString(), "42", text, true, 0)
         }
         val builder = PromptBuilder()
-        assertTrue(builder.build(ChatRule(), history).first().toString().contains("owner_style"))
-        assertFalse(builder.build(ChatRule(matchMyStyle = false), history).first().toString().contains("owner_style"))
+        assertTrue(builder.build(ChatRule(), history).first().toString().contains("Обобщённая манера владельца"))
+        assertFalse(
+            builder.build(
+                ChatRule(matchMyStyle = false),
+                history,
+            ).first().toString().contains("Обобщённая манера владельца"),
+        )
         assertTrue(PersonalStyleBuilder().build(history.take(1)).contains("пока мало"))
+        assertFalse(
+            builder.build(ChatRule(matchMyStyle = false), history).first().toString().contains("Ладно, сегодня ты"),
+        )
     }
 }

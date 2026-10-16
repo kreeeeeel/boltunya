@@ -498,5 +498,6 @@
     "benchmarkPending": "Өлшеу қажет",
     "benchmarkAfterInstall": "Орнатқаннан кейін",
     "modelDefaultOption": "Әдепкі · {name}",
-    "modelDefaultHint": "Диалог каталогта таңдалған модельді қолданады. Жеке модельді таңдауға болады."
+    "modelDefaultHint": "Диалог каталогта таңдалған модельді қолданады. Жеке модельді таңдауға болады.",
+    "modelDraftOnly": "Тек нобайлар"
 }

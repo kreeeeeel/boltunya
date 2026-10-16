@@ -30,6 +30,7 @@ import ru.boltunya.ai.research.InternetResearcher
 import ru.boltunya.ai.research.NewsSearchClient
 import ru.boltunya.ai.research.OptionalExaSearchProvider
 import ru.boltunya.ai.research.PublicPageReader
+import ru.boltunya.ai.research.ResearchFactGuard
 import ru.boltunya.ai.research.ResearchLinkPolicy
 import ru.boltunya.ai.research.ResearchPlanner
 import ru.boltunya.ai.research.ResearchUrl
@@ -168,6 +169,7 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
             StateEndpoint::class.java,
             PersonalStyleBuilder::class.java,
             ReplyQualityGuard::class.java,
+            ResearchFactGuard::class.java,
             EngineManager::class.java,
             EngineProcessLocator::class.java,
             DownloadWriter::class.java,

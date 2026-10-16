@@ -5,6 +5,7 @@ import org.junit.jupiter.api.io.TempDir
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ChatRule
 import ru.boltunya.domain.ReplyResult
+import ru.boltunya.exception.impl.InvalidModelReplyException
 import ru.boltunya.exception.impl.TelegramRateLimitException
 import ru.boltunya.storage.AutomatedReplyStore
 import ru.boltunya.storage.SettingsStore
@@ -19,6 +20,18 @@ import kotlin.test.assertTrue
 class ReplyCoordinatorTest {
     @TempDir
     lateinit var directory: Path
+
+    @Test
+    fun `invalid model output never reaches Telegram delivery`() {
+        val gateway = FakeTelegramGateway()
+        ReplyCoordinator(enabledSettings(), gateway) { _, _ -> throw InvalidModelReplyException() }
+            .use { coordinator ->
+                coordinator.onMessage(gateway.messages[0])
+                await { coordinator.activities().any { it.status == "error" } }
+                assertTrue(gateway.sent.isEmpty())
+                assertEquals(InvalidModelReplyException().message, coordinator.activities().single().detail)
+            }
+    }
 
     @Test
     fun `does not send an in-flight generated reply after its triggering message was deleted`() {

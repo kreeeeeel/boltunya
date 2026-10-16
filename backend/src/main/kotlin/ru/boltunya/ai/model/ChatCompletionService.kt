@@ -20,12 +20,14 @@ import ru.boltunya.domain.ModelMeasurement
 import ru.boltunya.exception.impl.EmptyMemorySummaryException
 import ru.boltunya.exception.impl.EngineHttpFailedException
 import ru.boltunya.exception.impl.EngineUnavailableException
+import ru.boltunya.exception.impl.InvalidModelReplyException
 import ru.boltunya.storage.ModelMeasurementStore
 import tools.jackson.databind.json.JsonMapper
 
 private const val CONTEXT_TOKENS = 8192
 private const val MEMORY_RESPONSE_TOKENS = 1536
 private const val MAX_REASONING_TOKENS = 4096
+private const val RETRY_RESPONSE_TOKENS = 512
 private const val KEEP_ALIVE = "20m"
 private const val REPETITION_PENALTY = 1.05
 private const val TOP_P = 0.8
@@ -50,11 +52,19 @@ class ChatCompletionService @Inject constructor(
     ): ModelCompletion {
         val policy = policies.get(rule.model)
         val first = call(rule, messages, schema, maxTokens, policy, policy.reasoningTokens)
-        val result = if (first.text.isBlank() && first.finishReason == "length") {
-            call(rule, messages, schema, maxTokens, policy, MAX_REASONING_TOKENS)
+        val result = if (first.finishReason == "length") {
+            call(
+                rule,
+                messages,
+                schema,
+                maxOf(maxTokens, RETRY_RESPONSE_TOKENS),
+                policy,
+                if (policy.reasoningTokens > 0) MAX_REASONING_TOKENS else 0,
+            )
         } else {
             first
         }
+        if (result.finishReason == "length" && result.text.isNotBlank()) throw InvalidModelReplyException()
         if (result.text.isNotBlank() && result.tokensPerSecond > 0) {
             measurements.record(rule.model, ModelMeasurement(result.durationMs, result.tokensPerSecond))
         }
@@ -76,6 +86,7 @@ class ChatCompletionService @Inject constructor(
             .repeatPenalty(REPETITION_PENALTY).topP(TOP_P).topK(TOP_K)
         when (policy.thinking) {
             ThinkingMode.DISABLED -> options.thinkOption(ThinkOption.ThinkBoolean.DISABLED)
+            ThinkingMode.ENABLED -> options.thinkOption(ThinkOption.ThinkBoolean.ENABLED)
             ThinkingMode.LOW -> options.thinkOption(ThinkOption.ThinkLevel.LOW)
             ThinkingMode.DEFAULT -> Unit
         }

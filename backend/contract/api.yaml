@@ -2209,6 +2209,10 @@
           "recommended": {
             "type": "boolean"
           },
+          "supportsAutomation": {
+            "type": "boolean",
+            "description": "Whether the model may send automatic replies; false allows manual drafts only."
+          },
           "family": {
             "type": "string"
           },

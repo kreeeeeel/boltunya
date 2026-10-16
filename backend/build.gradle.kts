@@ -43,6 +43,13 @@ application {
 
 tasks.test {
     useJUnitPlatform()
+    val liveFlags = listOf("TIHO_LIVE_AI", "TIHO_LIVE_INTERNET", "TIHO_LIVE_MEMORY")
+    (liveFlags + listOf("TIHO_TEST_MODELS", "TIHO_TEST_CASES", "TIHO_TEST_OLLAMA_URL")).forEach { key ->
+        inputs.property(key, providers.environmentVariable(key).orElse(""))
+    }
+    val liveEnabled = { liveFlags.any { providers.environmentVariable(it).getOrElse("") == "true" } }
+    outputs.upToDateWhen { !liveEnabled() }
+    outputs.doNotCacheIf("Live inference and network state change outside the build") { liveEnabled() }
 }
 
 tasks.processResources {

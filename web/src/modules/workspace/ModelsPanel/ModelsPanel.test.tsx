@@ -7,6 +7,19 @@ import {ModelsPanel} from '@/modules/workspace/ModelsPanel/ModelsPanel';
 import {workspaceState} from '@tests/fixtures/workspace';
 import ru from '@/shared/i18n/ru.json';
 
+it('labels models that are restricted to manual drafts', () => {
+    const engine = structuredClone(workspaceState.engine);
+    engine.models[0].supportsAutomation = false;
+    render(
+        <NextIntlClientProvider locale="ru" messages={ru}>
+            <ThemeProvider>
+                <ModelsPanel engine={engine} defaultModel="gemma3:4b" onRefresh={vi.fn()} />
+            </ThemeProvider>
+        </NextIntlClientProvider>,
+    );
+    expect(screen.getByText(ru.modelDraftOnly)).toBeInTheDocument();
+});
+
 it('searches model names and identifiers and restores the catalog after an empty result', () => {
     const view = render(
         <NextIntlClientProvider locale="ru" messages={ru}>

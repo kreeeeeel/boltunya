@@ -622,6 +622,8 @@ export interface components {
             size: string;
             installed: boolean;
             recommended: boolean;
+            /** @description Whether the model may send automatic replies; false allows manual drafts only. */
+            supportsAutomation?: boolean;
             family?: string;
             speed?: string;
             quality?: string;

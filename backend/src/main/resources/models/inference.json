@@ -12,8 +12,8 @@
     "reasoningTokens": 0
   },
   "qwen3:4b": {
-    "thinking": "disabled",
-    "reasoningTokens": 0
+    "thinking": "enabled",
+    "reasoningTokens": 4096
   },
   "qwen3:8b": {
     "thinking": "disabled",
@@ -56,19 +56,19 @@
     "reasoningTokens": 0
   },
   "deepseek-r1:1.5b": {
-    "thinking": "disabled",
+    "thinking": "enabled",
     "reasoningTokens": 2048
   },
   "deepseek-r1:8b": {
-    "thinking": "disabled",
+    "thinking": "enabled",
     "reasoningTokens": 2048
   },
   "deepseek-r1:14b": {
-    "thinking": "disabled",
+    "thinking": "enabled",
     "reasoningTokens": 2048
   },
   "deepseek-r1:32b": {
-    "thinking": "disabled",
+    "thinking": "enabled",
     "reasoningTokens": 2048
   },
   "gpt-oss:20b": {

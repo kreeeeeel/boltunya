@@ -61,7 +61,7 @@ class ChatEndpoint @Inject constructor(
         val rule = json.decodeFromJsonElement<ChatRule>(body)
         validation.validate(rule)
         val resolved = settings.resolveModel(rule)
-        validation.model(resolved.model)
+        validation.model(resolved.model, forAutomation = rule.enabled)
         settings.saveRule(id, rule)
         replies.cancelPending()
         engine.warm(resolved.model)

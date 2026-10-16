@@ -45,10 +45,10 @@ class PreviewEndpoint @Inject constructor(
             telegram.history(
                 id,
                 if (rule.matchMyStyle) STYLE_HISTORY_SIZE else rule.contextMessages,
-            )
+            ).map { it.copy(automated = it.automated || automated.contains(it.chatId, it.id)) }
         }
         val message = ChatMessage("preview", id, input.text(body, "text", MAX_MESSAGE_CHARACTERS), false, 0)
-        val examples = history.filter { !automated.contains(it.chatId, it.id) }
+        val samples = history.filter { !it.automated }
         return conversation.reply(
             settings.resolve(rule),
             history + message,
@@ -56,7 +56,7 @@ class PreviewEndpoint @Inject constructor(
             if (rule.matchMyStyle &&
                 id.isNotBlank()
             ) {
-                writing.update(id, examples)
+                writing.update(id, samples)
             } else {
                 emptyList()
             },

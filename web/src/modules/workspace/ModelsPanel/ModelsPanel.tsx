@@ -198,10 +198,16 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
                                     <Box className={styles.modelIcon}>
                                         <Icon data={index === 0 ? Thunderbolt : Sparkles} size={28} />
                                     </Box>
-                                    {model.recommended && (
-                                        <Label theme="info" size="m">
-                                            {t('recommended')}
+                                    {model.supportsAutomation === false ? (
+                                        <Label theme="warning" size="m">
+                                            {t('modelDraftOnly')}
                                         </Label>
+                                    ) : (
+                                        model.recommended && (
+                                            <Label theme="info" size="m">
+                                                {t('recommended')}
+                                            </Label>
+                                        )
                                     )}
                                 </Flex>
                                 <Flex direction="column" gap={2}>
