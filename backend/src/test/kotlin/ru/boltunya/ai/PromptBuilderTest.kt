@@ -1,7 +1,5 @@
 package ru.boltunya.ai
 
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
 import ru.boltunya.ai.research.ResearchContext
 import ru.boltunya.domain.ChatMessage
@@ -25,12 +23,12 @@ class PromptBuilderTest {
                 listOf(ChatMessage("1", "42", "Как убить время в дороге?", false, 1)),
                 research = research,
             )
-            val system = prompt.first().jsonObject["content"]?.jsonPrimitive?.content.orEmpty()
+            val system = prompt.first().text.orEmpty()
             assertTrue(system.contains("Границы разговора"))
             assertTrue(system.contains("против такого поступка"))
             assertTrue(system.contains("На обычные вопросы отвечай нормально"))
             assertFalse(system.contains("{{boundaries}}"))
-            assertEquals("Как убить время в дороге?", prompt.last().jsonObject["content"]?.jsonPrimitive?.content)
+            assertEquals("Как убить время в дороге?", prompt.last().text)
         }
     }
 
@@ -47,11 +45,11 @@ class PromptBuilderTest {
             listOf(ChatMessage("1", "42", "Во сколько встречаемся?", false, 1)),
             memory = memory,
         )
-        val system = prompt.first().jsonObject["content"]?.jsonPrimitive?.content.orEmpty()
+        val system = prompt.first().text.orEmpty()
         assertTrue(system.contains("друг со школы"))
         assertTrue(system.contains("вспомогательные данные"))
         assertTrue(system.contains("Казани"))
-        assertEquals("Во сколько встречаемся?", prompt.last().jsonObject["content"]?.jsonPrimitive?.content)
+        assertEquals("Во сколько встречаемся?", prompt.last().text)
         assertTrue(prompt.toString().length < 18100)
     }
 
@@ -62,9 +60,9 @@ class PromptBuilderTest {
         }.toList()
         val prompt = builder.build(ChatRule(contextMessages = 4, instructions = "Без встреч", emoji = false), messages)
         assertEquals(5, prompt.size)
-        assertEquals("message-5", prompt[1].jsonObject["content"]?.jsonPrimitive?.content)
-        assertEquals("user", prompt[1].jsonObject["role"]?.jsonPrimitive?.content)
-        assertEquals("assistant", prompt[2].jsonObject["role"]?.jsonPrimitive?.content)
+        assertEquals("message-5", prompt[1].text)
+        assertEquals("user", prompt[1].messageType.value)
+        assertEquals("assistant", prompt[2].messageType.value)
         assertTrue(prompt[0].toString().contains("Без встреч"))
         assertTrue(prompt[0].toString().contains("Не используй эмодзи"))
     }
@@ -76,10 +74,10 @@ class PromptBuilderTest {
             listOf(ChatMessage("1", "1", "Привет", false, 0)),
             "Не назначай встречи",
         )
-        val system = prompt[0].jsonObject["content"]?.jsonPrimitive?.content.orEmpty()
+        val system = prompt[0].text.orEmpty()
         assertTrue(system.contains("Не назначай встречи"))
         assertTrue(system.contains("Без эмодзи"))
-        assertEquals("user", prompt[1].jsonObject["role"]?.jsonPrimitive?.content)
+        assertEquals("user", prompt[1].messageType.value)
     }
 
     @Test
@@ -93,8 +91,8 @@ class PromptBuilderTest {
             ),
         )
         assertEquals(3, prompt.size)
-        assertEquals("Подпись к фотографии", prompt[1].jsonObject["content"]?.jsonPrimitive?.content)
-        assertEquals(1200, prompt[2].jsonObject["content"]?.jsonPrimitive?.content?.length)
+        assertEquals("Подпись к фотографии", prompt[1].text)
+        assertEquals(1200, prompt[2].text?.length)
         assertFalse(prompt.toString().contains("voice"))
     }
 
@@ -117,6 +115,6 @@ class PromptBuilderTest {
             "b".repeat(4000),
         )
         assertTrue(prompt.toString().length < 18100)
-        assertEquals("Последний вопрос", prompt.last().jsonObject["content"]?.jsonPrimitive?.content)
+        assertEquals("Последний вопрос", prompt.last().text)
     }
 }

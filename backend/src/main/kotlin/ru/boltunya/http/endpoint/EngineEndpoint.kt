@@ -14,6 +14,7 @@ class EngineEndpoint @Inject constructor(private val engine: EngineManager, priv
             ApiRoute.ENGINE_INSTALL -> engine.installEngine()
             ApiRoute.ENGINE_START -> engine.start()
             ApiRoute.MODEL_PULL -> engine.pull(input.text(body, "model", MAX_MODEL_NAME_CHARACTERS))
+            ApiRoute.MODEL_CANCEL -> engine.cancelDownload()
             else -> Unit
         }
     }

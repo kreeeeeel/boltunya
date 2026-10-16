@@ -5,17 +5,23 @@ import com.google.inject.Provides
 import jakarta.inject.Provider
 import jakarta.inject.Singleton
 import kotlinx.serialization.json.Json
+import org.springframework.ai.chat.model.ChatModel
+import ru.boltunya.ai.ConversationService
 import ru.boltunya.ai.DownloadWriter
 import ru.boltunya.ai.EngineManager
 import ru.boltunya.ai.EngineProcessLocator
 import ru.boltunya.ai.ModelCatalog
 import ru.boltunya.ai.ModelInference
-import ru.boltunya.ai.OllamaClient
+import ru.boltunya.ai.OllamaRuntime
 import ru.boltunya.ai.PersonalStyleBuilder
 import ru.boltunya.ai.PromptBuilder
 import ru.boltunya.ai.RegistryBlobDownloader
 import ru.boltunya.ai.RegistryModelInstaller
 import ru.boltunya.ai.ReplyQualityGuard
+import ru.boltunya.ai.model.ChatCompletionService
+import ru.boltunya.ai.model.ModelPolicies
+import ru.boltunya.ai.model.ModelReplyReader
+import ru.boltunya.ai.model.SpringAiModelFactory
 import ru.boltunya.ai.research.CurrencyRatesClient
 import ru.boltunya.ai.research.ExaMcpSearchClient
 import ru.boltunya.ai.research.ExaResultParser
@@ -71,6 +77,7 @@ import ru.boltunya.resources.ResourceCatalog
 import ru.boltunya.storage.AutomatedReplyStore
 import ru.boltunya.storage.CredentialStore
 import ru.boltunya.storage.MessageArchiveStore
+import ru.boltunya.storage.ModelMeasurementStore
 import ru.boltunya.storage.SearchCredentialStore
 import ru.boltunya.storage.SettingsStore
 import ru.boltunya.storage.WritingStyleStore
@@ -175,6 +182,12 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
             CredentialStore::class.java,
             AutomatedReplyStore::class.java,
             WritingStyleStore::class.java,
+            ModelMeasurementStore::class.java,
+            ConversationService::class.java,
+            ChatCompletionService::class.java,
+            ModelPolicies::class.java,
+            ModelReplyReader::class.java,
+            SpringAiModelFactory::class.java,
         ).forEach { bind(it).`in`(Singleton::class.java) }
     }
 
@@ -258,22 +271,10 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
     fun planner(clock: Clock): ResearchPlanner = ResearchPlanner(clock)
 
     @Provides @Singleton
-    fun ollama(
-        prompts: PromptBuilder,
-        quality: ReplyQualityGuard,
-        researcher: InternetResearcher,
-        planner: ResearchPlanner,
-        inference: ModelInference,
-        links: ResearchLinkPolicy,
-    ): OllamaClient = OllamaClient(
-        baseUrl = configuration.ollamaUrl,
-        prompts = prompts,
-        quality = quality,
-        researcher = researcher,
-        planner = planner,
-        inference = inference,
-        links = links,
-    )
+    fun ollamaRuntime(): OllamaRuntime = OllamaRuntime(configuration.ollamaUrl)
+
+    @Provides @Singleton
+    fun chatModel(factory: SpringAiModelFactory): ChatModel = factory.create(configuration.ollamaUrl)
 
     @Provides @Singleton
     fun media(gateway: Provider<TdLightGateway>): TelegramMediaStore = TelegramMediaStore(

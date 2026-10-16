@@ -2,7 +2,7 @@ package ru.boltunya.memory
 
 import jakarta.inject.Inject
 import ru.boltunya.ai.ModelInference
-import ru.boltunya.ai.OllamaClient
+import ru.boltunya.ai.OllamaRuntime
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ChatRule
 import ru.boltunya.domain.GroupReplyMode
@@ -29,7 +29,7 @@ class MemoryCoordinator @Inject constructor(
     private val store: MemoryStore,
     private val settings: SettingsStore,
     private val telegram: TelegramGateway,
-    private val ollama: OllamaClient,
+    private val ollama: OllamaRuntime,
     private val processor: MemoryProcessor,
     private val inference: ModelInference,
     private val clock: Clock,

@@ -96,7 +96,7 @@ class ApiRouter @Inject constructor(
             }
             ApiRoute.PREVIEW -> json.encodeToJsonElement(preview.reply(body))
             ApiRoute.FLOWS -> json.encodeToJsonElement(flows.list())
-            ApiRoute.ENGINE_INSTALL, ApiRoute.ENGINE_START, ApiRoute.MODEL_PULL -> {
+            ApiRoute.ENGINE_INSTALL, ApiRoute.ENGINE_START, ApiRoute.MODEL_PULL, ApiRoute.MODEL_CANCEL -> {
                 engine.act(route, body)
                 ok()
             }

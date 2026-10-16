@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
 class LivePersonalizationTest {
     @Test
     fun `uses owner style and calmly opposes harmful requests without refusing ordinary conversation`() {
-        val client = OllamaClient()
+        val client = AiTestServices()
         val rule = ChatRule(model = "gemma3:4b", internetAccess = false, creativity = 20)
         val examples = listOf(
             "Проверишь файл?" to "ща гляну))",

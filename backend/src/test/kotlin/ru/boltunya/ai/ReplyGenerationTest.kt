@@ -25,12 +25,13 @@ class ReplyGenerationTest {
             assertEquals("Привет! Как дела?", messages.last().jsonObject["content"]?.jsonPrimitive?.content)
             calls.incrementAndGet()
             val bytes = """{"message":{"content":"Привет! Всё хорошо, а у тебя?"}}""".toByteArray()
+            exchange.responseHeaders.set("Content-Type", "application/json")
             exchange.sendResponseHeaders(200, bytes.size.toLong())
             exchange.responseBody.use { it.write(bytes) }
         }
         server.start()
         try {
-            val client = OllamaClient("http://127.0.0.1:${server.address.port}")
+            val client = AiTestServices("http://127.0.0.1:${server.address.port}")
             val reply = client.reply(
                 ChatRule(internetAccess = false),
                 listOf(ChatMessage("1", "42", "Привет! Как дела?", false, 0)),

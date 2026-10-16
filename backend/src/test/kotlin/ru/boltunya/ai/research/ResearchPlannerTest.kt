@@ -1,6 +1,5 @@
 package ru.boltunya.ai.research
 
-import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
 import ru.boltunya.domain.ChatMessage
@@ -84,7 +83,7 @@ class ResearchPlannerTest {
         )
         val plan = planner.plan(history, "Без эмодзи") { messages, schema ->
             assertEquals("object", schema["type"]?.jsonPrimitive?.content)
-            assertTrue(messages.last().jsonObject["content"].toString().contains("Казани"))
+            assertTrue(messages.last().text.orEmpty().contains("Казани"))
             assertTrue(messages.first().toString().contains("Не угадывай город"))
             """{"kind":"weather","query":"","location":"Казань","dayOffset":0}"""
         }

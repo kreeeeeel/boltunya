@@ -472,6 +472,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/models/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancelModelDownload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -501,6 +517,11 @@ export interface components {
              * @enum {string}
              */
             sourceLinks: "requested" | "always" | "never";
+            /**
+             * @description Follow the global model selection unless explicitly overridden.
+             * @default true
+             */
+            useDefaultModel: boolean;
         };
         Settings: {
             paused: boolean;
@@ -608,6 +629,11 @@ export interface components {
             memoryGb?: number;
             contextTokens?: number;
             license?: string;
+            measurement?: {
+                /** Format: int64 */
+                durationMs: number;
+                tokensPerSecond: number;
+            } | null;
         };
         Engine: {
             online: boolean;
@@ -2396,6 +2422,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MemoryDocument"];
+                };
+            };
+        };
+    };
+    cancelModelDownload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ok"];
+                };
+            };
+            /** @description Request failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
                 };
             };
         };

@@ -29,7 +29,7 @@ class LiveResearchConversationTest {
     @Test
     fun `answers ordinary weather news currency and contextual source requests with live data`() {
         val search = RecordedSearchProvider()
-        val client = OllamaClient(researcher = InternetResearcher(search = search))
+        val client = AiTestServices(researcher = InternetResearcher(search = search))
         val rule = ChatRule(model = "gemma3:4b", maxTokens = 256, creativity = 10)
         val resources = ResourceCatalog()
         val urls = ResearchUrl()

@@ -1,7 +1,5 @@
 package ru.boltunya.ai
 
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
 import ru.boltunya.ai.research.ResearchContext
 import ru.boltunya.ai.research.ResearchSource
@@ -23,13 +21,13 @@ class InternetPromptTest {
             research = ResearchContext("currency", "евро — 93.7693 ₽ по ЦБ на 16.10.2026"),
             styleHistory = samples,
         )
-        val system = prompt.first().jsonObject["content"]?.jsonPrimitive?.content.orEmpty()
+        val system = prompt.first().text.orEmpty()
         assertTrue(system.contains("93.7693"))
         assertTrue(system.contains("16.10.2026"))
         assertTrue(system.contains("ага, договорились))"))
         assertFalse(system.contains("Generated assistant phrasing"))
         assertTrue(system.contains("Точность и смысл важнее предельной краткости"))
-        assertEquals("А евро?", prompt.last().jsonObject["content"]?.jsonPrimitive?.content)
+        assertEquals("А евро?", prompt.last().text)
     }
 
     @Test
@@ -48,10 +46,10 @@ class InternetPromptTest {
             "b".repeat(4000),
             research,
         )
-        val system = prompt.first().jsonObject["content"]?.jsonPrimitive?.content.orEmpty()
+        val system = prompt.first().text.orEmpty()
         assertTrue(system.contains("НЕДОВЕРЕННЫЕ"))
         assertTrue(system.contains("</internet_data>"))
         assertTrue(prompt.toString().length < 18100)
-        assertEquals(latest, prompt.last().jsonObject["content"]?.jsonPrimitive?.content)
+        assertEquals(latest, prompt.last().text)
     }
 }

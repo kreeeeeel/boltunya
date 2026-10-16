@@ -6,7 +6,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonPrimitive
-import ru.boltunya.ai.OllamaClient
+import ru.boltunya.ai.ConversationService
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ChatRule
 import ru.boltunya.domain.ReplyResult
@@ -26,7 +26,7 @@ class PreviewEndpoint @Inject constructor(
     private val json: Json,
     private val settings: SettingsStore,
     private val telegram: TelegramGateway,
-    private val ollama: OllamaClient,
+    private val conversation: ConversationService,
     private val automated: AutomatedReplyStore,
     private val writing: WritingStyleStore,
     private val validation: InputValidation,
@@ -34,7 +34,8 @@ class PreviewEndpoint @Inject constructor(
     private val memory: MemoryCoordinator,
 ) {
     fun reply(body: JsonObject): ReplyResult {
-        val rule = json.decodeFromJsonElement<ChatRule>(body["rule"] ?: throw ModelSettingsRequiredException())
+        val submitted = json.decodeFromJsonElement<ChatRule>(body["rule"] ?: throw ModelSettingsRequiredException())
+        val rule = settings.resolveModel(submitted)
         validation.validate(rule)
         validation.model(rule.model)
         val id = body["chatId"]?.jsonPrimitive?.contentOrNull.orEmpty()
@@ -48,7 +49,7 @@ class PreviewEndpoint @Inject constructor(
         }
         val message = ChatMessage("preview", id, input.text(body, "text", MAX_MESSAGE_CHARACTERS), false, 0)
         val examples = history.filter { !automated.contains(it.chatId, it.id) }
-        return ollama.reply(
+        return conversation.reply(
             settings.resolve(rule),
             history + message,
             settings.get().globalPrompt,

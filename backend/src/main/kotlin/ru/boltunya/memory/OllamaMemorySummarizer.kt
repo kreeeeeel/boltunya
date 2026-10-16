@@ -5,16 +5,16 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
-import ru.boltunya.ai.OllamaClient
+import ru.boltunya.ai.model.ChatCompletionService
 import ru.boltunya.resources.ResourceCatalog
 
 class OllamaMemorySummarizer @Inject constructor(
-    private val ollama: OllamaClient,
+    private val completion: ChatCompletionService,
     private val resources: ResourceCatalog,
 ) : MemorySummarizer,
     OwnerMemorySummarizer {
     override fun summarizeOwner(model: String, existing: String, sources: List<MemorySource>): String =
-        ollama.summarize(
+        completion.summarize(
             model,
             resources.prompt("ru/memory/owner-summarize"),
             buildJsonObject {
@@ -23,7 +23,7 @@ class OllamaMemorySummarizer @Inject constructor(
             }.toString(),
         )
 
-    override fun summarize(model: String, existing: String, sources: List<MemorySource>): String = ollama.summarize(
+    override fun summarize(model: String, existing: String, sources: List<MemorySource>): String = completion.summarize(
         model,
         resources.prompt("ru/memory/summarize"),
         buildJsonObject {

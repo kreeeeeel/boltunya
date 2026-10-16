@@ -4,8 +4,8 @@ import it.tdlight.jni.TdApi
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import ru.boltunya.ai.AiTestServices
 import ru.boltunya.ai.EngineManager
-import ru.boltunya.ai.OllamaClient
 import ru.boltunya.automation.ReplyCoordinator
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ReplyResult
@@ -34,7 +34,7 @@ class StorageEndpointTest {
         source.messages =
             listOf(ChatMessage("10", "42", "Сохранить этот текст", false, 10))
         val gateway = MediaArchiveGateway(source, Files.write(directory.resolve("photo.jpg"), byteArrayOf(1)))
-        val ollama = OllamaClient("http://127.0.0.1:1")
+        val ollama = AiTestServices("http://127.0.0.1:1")
         val stats = TdApi.StorageStatistics(
             1000,
             1,
@@ -55,7 +55,7 @@ class StorageEndpointTest {
                     stats
                 }
             }
-        EngineManager(directory, ollama).use { engine ->
+        EngineManager(directory, ollama.runtime).use { engine ->
             ReplyCoordinator(settings, gateway) { _, _ -> ReplyResult("unused", 0, 0.0) }.use { replies ->
                 TestWebServerFactory().create(
                     directory,

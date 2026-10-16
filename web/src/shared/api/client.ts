@@ -29,6 +29,7 @@ export const defaultRule: ChatRule = {
     enabled: false,
     style: 'friendly',
     model: 'qwen3:1.7b',
+    useDefaultModel: true,
     instructions: '',
     contextMessages: 20,
     maxTokens: 128,

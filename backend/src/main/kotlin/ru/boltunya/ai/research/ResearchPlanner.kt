@@ -2,12 +2,14 @@ package ru.boltunya.ai.research
 
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
+import org.springframework.ai.chat.messages.Message
+import org.springframework.ai.chat.messages.SystemMessage
+import org.springframework.ai.chat.messages.UserMessage
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.exception.IntegrationException
 import ru.boltunya.exception.impl.ResearchPlanningFailedException
@@ -71,7 +73,7 @@ class ResearchPlanner(private val clock: Clock = Clock.systemDefaultZone()) {
     fun plan(
         history: List<ChatMessage>,
         instructions: String,
-        generate: (JsonArray, JsonObject) -> String,
+        generate: (List<Message>, JsonObject) -> String,
     ): ResearchPlan {
         val latest = history.lastOrNull { !it.outgoing }?.text.orEmpty().lowercase()
         val previous = previous(history)
@@ -95,52 +97,36 @@ class ResearchPlanner(private val clock: Clock = Clock.systemDefaultZone()) {
                 )
             }
         }
-        val messages = buildJsonArray {
-            add(
-                buildJsonObject {
-                    put("role", "system")
-                    put(
-                        "content",
-                        resources.prompt(
-                            "ru/research/planner",
-                            mapOf(
-                                "value0" to (
-                                    LocalDate.now(
-                                        clock,
-                                    )
-                                    ),
-                                "value1" to (instructions.take(8000)),
-                            ),
-                        ),
-                    )
-                },
-            )
-            val dialogue = buildJsonArray {
-                history.takeLast(8).stream().filter { it.kind == "text" }.forEach { message ->
-                    add(
-                        buildJsonObject {
-                            put("sender", if (message.outgoing) "owner" else "contact")
-                            put("text", message.text.take(800))
-                        },
-                    )
-                }
+        val dialogue = buildJsonArray {
+            history.takeLast(8).stream().filter { it.kind == "text" }.forEach { message ->
+                add(
+                    buildJsonObject {
+                        put("sender", if (message.outgoing) "owner" else "contact")
+                        put("text", message.text.take(800))
+                    },
+                )
             }
-            add(
-                buildJsonObject {
-                    put("role", "user")
-                    put(
-                        "content",
-                        resources.prompt(
-                            "ru/research/planner-request",
-                            mapOf(
-                                "history" to dialogue.toString(),
-                                "latest" to history.lastOrNull { !it.outgoing }?.text.orEmpty().take(800),
-                            ),
-                        ),
-                    )
-                },
-            )
         }
+        val messages = listOf(
+            SystemMessage(
+                resources.prompt(
+                    "ru/research/planner",
+                    mapOf(
+                        "value0" to LocalDate.now(clock),
+                        "value1" to instructions.take(8000),
+                    ),
+                ),
+            ),
+            UserMessage(
+                resources.prompt(
+                    "ru/research/planner-request",
+                    mapOf(
+                        "history" to dialogue.toString(),
+                        "latest" to history.lastOrNull { !it.outgoing }?.text.orEmpty().take(800),
+                    ),
+                ),
+            ),
+        )
         val response = generate(messages, schema)
         val plan = try {
             Json.decodeFromString<ResearchPlan>(response)

@@ -18,7 +18,8 @@ class SettingsStoreTest {
         val store = SettingsStore(directory)
         val preset = ru.boltunya.domain.WritingStyle("friends", "Друзья", "🙂", "Коротко и без официоза")
         store.update { it.copy(customStyles = listOf(preset), ignoreAssistantTasks = false) }
-        val rule = ChatRule(style = "custom", styleId = preset.id, instructions = "Не обещай встреч")
+        val rule =
+            ChatRule(style = "custom", styleId = preset.id, instructions = "Не обещай встреч", useDefaultModel = false)
         store.saveRule("42", rule)
         val restored = SettingsStore(directory)
         assertEquals(rule, restored.rule("42"))
@@ -50,6 +51,21 @@ class SettingsStoreTest {
         assertTrue(store.rule("42").internetAccess)
         store.saveRule("42", store.rule("42").copy(internetAccess = false))
         assertFalse(SettingsStore(directory).rule("42").internetAccess)
+    }
+
+    @Test
+    fun `global model changes follow inherited rules and preserve explicit overrides after restart`() {
+        val store = SettingsStore(directory)
+        store.saveRule("inherited", ChatRule(model = "qwen3:1.7b", style = "warm"))
+        store.saveRule("explicit", ChatRule(model = "qwen3:4b", useDefaultModel = false))
+        store.update { it.copy(defaultModel = "deepseek-r1:8b") }
+        assertEquals("deepseek-r1:8b", store.rule("inherited").model)
+        assertEquals("deepseek-r1:8b", store.rule("new").model)
+        assertEquals("warm", store.rule("inherited").style)
+        assertEquals("qwen3:4b", store.rule("explicit").model)
+        assertEquals("deepseek-r1:8b", SettingsStore(directory).rule("inherited").model)
+        assertEquals("qwen3:4b", SettingsStore(directory).rule("explicit").model)
+        assertEquals("deepseek-r1:8b", store.resolve(ChatRule(model = "qwen3:1.7b")).model)
     }
 
     @Test

@@ -1,10 +1,11 @@
 package ru.boltunya.ai
 
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.springframework.ai.chat.memory.MessageWindowChatMemory
+import org.springframework.ai.chat.messages.AssistantMessage
+import org.springframework.ai.chat.messages.Message
+import org.springframework.ai.chat.messages.SystemMessage
+import org.springframework.ai.chat.messages.UserMessage
 import ru.boltunya.ai.research.ResearchContext
 import ru.boltunya.ai.research.ResearchLinkPolicy
 import ru.boltunya.domain.ChatMessage
@@ -41,7 +42,7 @@ class PromptBuilder(
         research: ResearchContext = ResearchContext(),
         styleHistory: List<ChatMessage> = history,
         memory: MemoryContext = MemoryContext(),
-    ): JsonArray {
+    ): List<Message> {
         val style = CommunicationStyle.entries.firstOrNull { it.key == rule.style } ?: CommunicationStyle.FRIENDLY
         val tone = resources.prompt("ru/style/" + style.key)
         val emoji = if (rule.emoji) {
@@ -125,19 +126,9 @@ class PromptBuilder(
         val system = baseSystem + "\n" + longTerm + "\n" + external
         val candidates = history.asReversed().stream()
             .filter { it.text.isNotBlank() }
-            .limit(rule.contextMessages.toLong())
             .map { message ->
-                buildJsonObject {
-                    put(
-                        "role",
-                        if (message.outgoing) {
-                            "assistant"
-                        } else {
-                            "user"
-                        },
-                    )
-                    put("content", message.text.take(MAX_MESSAGE_CHARACTERS))
-                }
+                val text = message.text.take(MAX_MESSAGE_CHARACTERS)
+                if (message.outgoing) AssistantMessage.builder().content(text).build() else UserMessage(text)
             }.collect(Collectors.toList()).asReversed()
 
         var characters = 0
@@ -147,14 +138,9 @@ class PromptBuilder(
             characters <= contextBudget
         }.collect(Collectors.toList()).asReversed()
 
-        val messages = ArrayList<JsonObject>()
-        messages.add(
-            buildJsonObject {
-                put("role", "system")
-                put("content", system)
-            },
-        )
-        messages.addAll(selected)
-        return JsonArray(messages)
+        val context = MessageWindowChatMemory.builder().maxMessages(rule.contextMessages + 1).build()
+        val conversationId = history.lastOrNull()?.chatId?.ifBlank { "preview" } ?: "preview"
+        context.add(conversationId, listOf(SystemMessage(system)) + selected)
+        return context.get(conversationId)
     }
 }

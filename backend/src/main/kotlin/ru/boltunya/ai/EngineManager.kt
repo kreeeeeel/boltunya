@@ -13,6 +13,7 @@ import ru.boltunya.exception.impl.InvalidEngineArchiveException
 import ru.boltunya.exception.impl.ModelPullInterruptedException
 import ru.boltunya.exception.impl.RegistryRedirectException
 import ru.boltunya.exception.impl.UnsupportedModelException
+import ru.boltunya.storage.ModelMeasurementStore
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -26,11 +27,13 @@ private const val OLLAMA_VERSION = "0.40.4"
 
 class EngineManager @Inject constructor(
     private val directory: Path,
-    private val ollama: OllamaClient,
+    private val ollama: OllamaRuntime,
     private val models: ModelCatalog = ModelCatalog(),
     private val installer: RegistryModelInstaller = RegistryModelInstaller(),
     private val downloadWriter: DownloadWriter = DownloadWriter(),
     private val processes: EngineProcessLocator = EngineProcessLocator(),
+    private val measurements: ModelMeasurementStore = ModelMeasurementStore(directory),
+    private val inference: ModelInference = ModelInference(),
 ) : AutoCloseable {
     private val executor = Executors.newSingleThreadExecutor()
 
@@ -45,6 +48,8 @@ class EngineManager @Inject constructor(
     @Volatile private var totalBytes = 0L
 
     @Volatile private var downloadStage = "download"
+
+    @Volatile private var cancellation: DownloadCancellation? = null
 
     @Volatile
     private var failure = ""
@@ -88,7 +93,7 @@ class EngineManager @Inject constructor(
                     return@submit
                 }
                 warming = model
-                ollama.warm(model)
+                inference.foreground { ollama.warm(model) }
             } catch (exception: IntegrationException) {
                 if (warming.isNotBlank()) {
                     failure = EngineWarmupFailedException().message
@@ -111,8 +116,11 @@ class EngineManager @Inject constructor(
         downloadStage = "download"
         failure = ""
         progress = 0
+        val task = DownloadCancellation()
+        cancellation = task
         executor.submit {
             try {
+                task.begin()
                 val root = directory.resolve("engine").toAbsolutePath().normalize()
                 Files.createDirectories(root)
                 val url = "https://github.com/ollama/ollama/releases/download/v$OLLAMA_VERSION/ollama-windows-amd64.zip"
@@ -120,6 +128,7 @@ class EngineManager @Inject constructor(
                 val http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build()
                 val response = http.send(request, HttpResponse.BodyHandlers.ofInputStream())
                 response.body().use { input ->
+                    task.attach(input)
                     if (response.statusCode() != 200) {
                         throw EngineDownloadFailedException(response.statusCode())
                     }
@@ -132,6 +141,7 @@ class EngineManager @Inject constructor(
                             received,
                             total,
                         ->
+                        task.check()
                         downloadedBytes = received
                         totalBytes = total
                         progress = if (total > 0) (received * 85 / total).toInt().coerceIn(0, 85) else 0
@@ -140,6 +150,7 @@ class EngineManager @Inject constructor(
                     progress = 90
                     ZipInputStream(Files.newInputStream(archive)).use { zip ->
                         generateSequence { zip.nextEntry }.forEach { entry ->
+                            task.check()
                             val target = root.resolve(entry.name).normalize()
                             if (!target.startsWith(root)) {
                                 throw InvalidEngineArchiveException()
@@ -157,10 +168,13 @@ class EngineManager @Inject constructor(
                 progress = 100
                 start()
             } catch (exception: Exception) {
-                failure = EngineInstallFailedException().message
-                System.err.println("Engine installation failed: ${exception.javaClass.simpleName}")
+                if (!task.isCancelled()) {
+                    failure = EngineInstallFailedException().message
+                    System.err.println("Engine installation failed: ${exception.javaClass.simpleName}")
+                }
             } finally {
-                downloading = ""
+                finishDownload(task)
+                Thread.interrupted()
             }
         }
     }
@@ -179,27 +193,52 @@ class EngineManager @Inject constructor(
         downloadStage = "download"
         progress = 0
         failure = ""
+        val task = DownloadCancellation()
+        cancellation = task
         executor.submit {
             try {
+                task.begin()
                 try {
-                    ollama.pull(model) { progress = maxOf(progress, it).coerceAtMost(99) }
+                    ollama.pull(model, task) { progress = maxOf(progress, it).coerceAtMost(99) }
                 } catch (exception: RegistryRedirectException) {
-                    installer.install(model) { progress = maxOf(progress, it).coerceAtMost(99) }
+                    installer.install(model) {
+                        task.check()
+                        progress = maxOf(progress, it).coerceAtMost(99)
+                    }
                 }
+                task.check()
                 progress = 100
                 warm(model)
             } catch (exception: Exception) {
-                failure = ModelPullInterruptedException().message
-                System.err.println("Model download failed: ${exception.javaClass.simpleName}")
+                if (!task.isCancelled()) {
+                    failure = ModelPullInterruptedException().message
+                    System.err.println("Model download failed: ${exception.javaClass.simpleName}")
+                }
             } finally {
-                downloading = ""
+                finishDownload(task)
+                Thread.interrupted()
             }
         }
     }
 
-    private fun catalog(installed: Set<String>): List<ModelInfo> = models.installed(installed)
+    private fun catalog(installed: Set<String>): List<ModelInfo> = models.installed(installed).map {
+        it.copy(measurement = measurements.get(it.id))
+    }
+
+    @Synchronized
+    fun cancelDownload() {
+        cancellation?.cancel()
+    }
+
+    @Synchronized
+    private fun finishDownload(task: DownloadCancellation) {
+        if (cancellation !== task) return
+        cancellation = null
+        downloading = ""
+    }
 
     override fun close() {
+        cancelDownload()
         executor.shutdownNow()
         ollama.releaseModels()
         val active = managedServer ?: return

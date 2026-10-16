@@ -17,6 +17,7 @@
 | MCP Java SDK | MIT — https://github.com/modelcontextprotocol/java-sdk |
 | Noto Sans | SIL Open Font License — https://github.com/notofonts/latin-greek-cyrillic; bundled license: web/src/shared/assets/fonts/OFL.txt |
 | Ollama | MIT — https://github.com/ollama/ollama |
+| Spring AI / Spring Framework | Apache-2.0 — https://github.com/spring-projects/spring-ai , https://github.com/spring-projects/spring-framework |
 | Qwen 3, Qwen 2.5 7B | Apache-2.0 — https://huggingface.co/Qwen |
 | Gemma 3 | Gemma Terms of Use — https://ai.google.dev/gemma/terms |
 | Eclipse Temurin runtime | GPL-2.0 with Classpath Exception — https://adoptium.net |

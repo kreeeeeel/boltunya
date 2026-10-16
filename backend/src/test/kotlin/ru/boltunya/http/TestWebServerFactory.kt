@@ -4,8 +4,11 @@ import com.google.inject.AbstractModule
 import com.google.inject.Guice
 import com.google.inject.util.Modules
 import it.tdlight.jni.TdApi
+import ru.boltunya.ai.AiTestServices
+import ru.boltunya.ai.ConversationService
 import ru.boltunya.ai.EngineManager
-import ru.boltunya.ai.OllamaClient
+import ru.boltunya.ai.OllamaRuntime
+import ru.boltunya.ai.model.ChatCompletionService
 import ru.boltunya.ai.research.ExaMcpSearchClient
 import ru.boltunya.automation.ReplyCoordinator
 import ru.boltunya.configuration.ApplicationConfiguration
@@ -22,7 +25,7 @@ class TestWebServerFactory {
         settings: SettingsStore,
         telegram: TelegramGateway,
         engine: EngineManager,
-        ollama: OllamaClient,
+        ollama: AiTestServices,
         replies: ReplyCoordinator,
         token: String,
         automated: AutomatedReplyStore = AutomatedReplyStore(directory),
@@ -35,7 +38,9 @@ class TestWebServerFactory {
                 bind(SettingsStore::class.java).toInstance(settings)
                 bind(TelegramGateway::class.java).toInstance(telegram)
                 bind(EngineManager::class.java).toInstance(engine)
-                bind(OllamaClient::class.java).toInstance(ollama)
+                bind(ConversationService::class.java).toInstance(ollama.conversation)
+                bind(OllamaRuntime::class.java).toInstance(ollama.runtime)
+                bind(ChatCompletionService::class.java).toInstance(ollama.completion)
                 bind(ReplyCoordinator::class.java).toInstance(replies)
                 bind(AutomatedReplyStore::class.java).toInstance(automated)
                 bind(StorageClient::class.java).toInstance(storageClient)

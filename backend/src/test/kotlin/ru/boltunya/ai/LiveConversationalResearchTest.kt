@@ -25,7 +25,7 @@ class LiveConversationalResearchTest {
     @Test
     fun `retells fresh facts in the owners casual voice without changing currency values or dates`() {
         val search = RecordedSearchProvider()
-        val client = OllamaClient(
+        val client = AiTestServices(
             baseUrl = System.getenv("TIHO_TEST_OLLAMA_URL") ?: "http://127.0.0.1:11434",
             researcher = InternetResearcher(search = search),
         )
@@ -62,7 +62,7 @@ class LiveConversationalResearchTest {
                     ).text
                     history.add(ChatMessage(history.size.toString(), "live-style", reply, true, 0, automated = true))
                     if (reply.length > 360) failures.add("Too long: $incoming -> $reply")
-                    if (incoming.contains("погода") && !reply.contains("°")) {
+                    if (incoming.contains("погода") && !reply.contains("°") && !reply.contains("градус")) {
                         failures.add("Missing weather facts: $reply")
                     }
                     if (incoming.contains("новости") && (search.query.isBlank() || search.sources.isEmpty())) {

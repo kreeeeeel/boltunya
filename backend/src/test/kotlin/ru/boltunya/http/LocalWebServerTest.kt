@@ -2,8 +2,8 @@ package ru.boltunya.http
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import ru.boltunya.ai.AiTestServices
 import ru.boltunya.ai.EngineManager
-import ru.boltunya.ai.OllamaClient
 import ru.boltunya.automation.FakeTelegramGateway
 import ru.boltunya.automation.ReplyCoordinator
 import ru.boltunya.domain.ReplyResult
@@ -24,8 +24,8 @@ class LocalWebServerTest {
     fun `rejects unauthenticated and cross origin requests and validates credentials`() {
         val settings = SettingsStore(directory)
         val gateway = FakeTelegramGateway()
-        val ollama = OllamaClient("http://127.0.0.1:1")
-        val engine = EngineManager(directory, ollama)
+        val ollama = AiTestServices("http://127.0.0.1:1")
+        val engine = EngineManager(directory, ollama.runtime)
         val coordinator = ReplyCoordinator(settings, gateway) { _, _ -> ReplyResult("test", 0, 0.0) }
         TestWebServerFactory().create(directory, settings, gateway, engine, ollama, coordinator, "test-session") {
         }.use { server ->
@@ -56,8 +56,8 @@ class LocalWebServerTest {
     fun `protects media requests and validates shared prompt updates`() {
         val settings = SettingsStore(directory)
         val gateway = FakeTelegramGateway()
-        val ollama = OllamaClient("http://127.0.0.1:1")
-        val engine = EngineManager(directory, ollama)
+        val ollama = AiTestServices("http://127.0.0.1:1")
+        val engine = EngineManager(directory, ollama.runtime)
         val coordinator = ReplyCoordinator(settings, gateway) { _, _ -> ReplyResult("test", 0, 0.0) }
         TestWebServerFactory().create(directory, settings, gateway, engine, ollama, coordinator, "test-session") {
         }.use { server ->
@@ -93,8 +93,8 @@ class LocalWebServerTest {
     fun `validates automation preferences and rejects removed window route`() {
         val settings = SettingsStore(directory)
         val gateway = FakeTelegramGateway()
-        val ollama = OllamaClient("http://127.0.0.1:1")
-        val engine = EngineManager(directory, ollama)
+        val ollama = AiTestServices("http://127.0.0.1:1")
+        val engine = EngineManager(directory, ollama.runtime)
         val coordinator = ReplyCoordinator(settings, gateway) { _, _ -> ReplyResult("test", 0, 0.0) }
         TestWebServerFactory().create(
             directory,
@@ -132,6 +132,8 @@ class LocalWebServerTest {
             assertEquals(true, settings.get().launchAtLogin)
             assertEquals(401, request("/api/window", "POST", """{"action":"close"}""", false))
             assertEquals(404, request("/api/window", "POST", """{"action":"minimize"}"""))
+            assertEquals(401, request("/api/models/cancel", "POST", "{}", false))
+            assertEquals(200, request("/api/models/cancel", "POST", "{}"))
         }
         coordinator.close()
         engine.close()

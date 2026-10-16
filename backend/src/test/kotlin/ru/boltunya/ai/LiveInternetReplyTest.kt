@@ -20,7 +20,7 @@ import kotlin.test.assertTrue
 class LiveInternetReplyTest {
     @Test
     fun `answers current weather forecast contextual city and web questions using live providers`() {
-        val client = OllamaClient()
+        val client = AiTestServices()
         val rule = ChatRule(model = "gemma3:4b", maxTokens = 192, creativity = 30)
         val report = buildJsonArray {
             listOf(

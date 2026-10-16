@@ -24,12 +24,16 @@ class SettingsStore(private val directory: Path, startup: Boolean = false) {
 
     fun get(): AppSettings = settings
 
-    fun rule(chatId: String): ChatRule = settings.rules[chatId] ?: ChatRule(model = settings.defaultModel)
+    fun rule(chatId: String): ChatRule = resolveModel(settings.rules[chatId] ?: ChatRule())
+
+    fun resolveModel(rule: ChatRule): ChatRule =
+        if (rule.useDefaultModel) rule.copy(model = settings.defaultModel) else rule
 
     fun resolve(rule: ChatRule): ChatRule {
+        val resolved = resolveModel(rule)
         val style = settings.customStyles.stream().filter { it.id == rule.styleId }.findFirst().orElse(null)
-            ?: return rule
-        return rule.copy(instructions = style.instructions + "\n" + rule.instructions)
+            ?: return resolved
+        return resolved.copy(instructions = style.instructions + "\n" + rule.instructions)
     }
 
     @Synchronized

@@ -1,0 +1,110 @@
+{
+  "qwen3:0.6b": {
+    "thinking": "disabled",
+    "reasoningTokens": 0
+  },
+  "qwen3:1.7b": {
+    "thinking": "disabled",
+    "reasoningTokens": 0
+  },
+  "gemma3:4b": {
+    "thinking": "default",
+    "reasoningTokens": 0
+  },
+  "qwen3:4b": {
+    "thinking": "disabled",
+    "reasoningTokens": 0
+  },
+  "qwen3:8b": {
+    "thinking": "disabled",
+    "reasoningTokens": 0
+  },
+  "qwen3:14b": {
+    "thinking": "disabled",
+    "reasoningTokens": 0
+  },
+  "qwen3:32b": {
+    "thinking": "disabled",
+    "reasoningTokens": 0
+  },
+  "qwen3.5:0.8b": {
+    "thinking": "disabled",
+    "reasoningTokens": 0
+  },
+  "qwen3.5:2b": {
+    "thinking": "disabled",
+    "reasoningTokens": 0
+  },
+  "qwen3.5:4b": {
+    "thinking": "disabled",
+    "reasoningTokens": 0
+  },
+  "qwen3.5:9b": {
+    "thinking": "disabled",
+    "reasoningTokens": 0
+  },
+  "gemma3:1b": {
+    "thinking": "default",
+    "reasoningTokens": 0
+  },
+  "gemma3:12b": {
+    "thinking": "default",
+    "reasoningTokens": 0
+  },
+  "gemma3:27b": {
+    "thinking": "default",
+    "reasoningTokens": 0
+  },
+  "deepseek-r1:1.5b": {
+    "thinking": "disabled",
+    "reasoningTokens": 2048
+  },
+  "deepseek-r1:8b": {
+    "thinking": "disabled",
+    "reasoningTokens": 2048
+  },
+  "deepseek-r1:14b": {
+    "thinking": "disabled",
+    "reasoningTokens": 2048
+  },
+  "deepseek-r1:32b": {
+    "thinking": "disabled",
+    "reasoningTokens": 2048
+  },
+  "gpt-oss:20b": {
+    "thinking": "low",
+    "reasoningTokens": 2048
+  },
+  "gpt-oss:120b": {
+    "thinking": "low",
+    "reasoningTokens": 2048
+  },
+  "llama3.2:1b": {
+    "thinking": "default",
+    "reasoningTokens": 0
+  },
+  "llama3.2:3b": {
+    "thinking": "default",
+    "reasoningTokens": 0
+  },
+  "llama3.1:8b": {
+    "thinking": "default",
+    "reasoningTokens": 0
+  },
+  "mistral:7b": {
+    "thinking": "default",
+    "reasoningTokens": 0
+  },
+  "phi4-mini:3.8b": {
+    "thinking": "default",
+    "reasoningTokens": 0
+  },
+  "qwen3:4b-instruct": {
+    "thinking": "default",
+    "reasoningTokens": 0
+  },
+  "qwen2.5:7b": {
+    "thinking": "default",
+    "reasoningTokens": 0
+  }
+}

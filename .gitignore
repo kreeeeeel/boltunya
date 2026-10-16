@@ -9,6 +9,7 @@ launch.url
 /telegram/
 /engine/
 /settings.json
+/model-measurements.json
 .gradle/
 build/
 dist/

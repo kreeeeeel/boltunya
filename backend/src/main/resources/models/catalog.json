@@ -11,7 +11,7 @@
     "speed": "fastest",
     "quality": "basic",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 40960,
     "license": "Apache-2.0"
   },
   {
@@ -26,7 +26,7 @@
     "speed": "fast",
     "quality": "good",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 40960,
     "license": "Apache-2.0"
   },
   {
@@ -41,7 +41,7 @@
     "speed": "balanced",
     "quality": "best",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 131072,
     "license": "Gemma"
   },
   {
@@ -56,7 +56,7 @@
     "speed": "balanced",
     "quality": "best",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 262144,
     "license": "Apache-2.0"
   },
   {
@@ -71,7 +71,7 @@
     "speed": "balanced",
     "quality": "best",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 40960,
     "license": "Apache-2.0"
   },
   {
@@ -86,7 +86,7 @@
     "speed": "slow",
     "quality": "best",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 40960,
     "license": "Apache-2.0"
   },
   {
@@ -101,7 +101,7 @@
     "speed": "slow",
     "quality": "best",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 40960,
     "license": "Apache-2.0"
   },
   {
@@ -116,7 +116,7 @@
     "speed": "fastest",
     "quality": "basic",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 262144,
     "license": "Apache-2.0"
   },
   {
@@ -131,7 +131,7 @@
     "speed": "fast",
     "quality": "good",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 262144,
     "license": "Apache-2.0"
   },
   {
@@ -146,7 +146,7 @@
     "speed": "balanced",
     "quality": "best",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 262144,
     "license": "Apache-2.0"
   },
   {
@@ -161,7 +161,7 @@
     "speed": "balanced",
     "quality": "best",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 262144,
     "license": "Apache-2.0"
   },
   {
@@ -176,7 +176,7 @@
     "speed": "fast",
     "quality": "basic",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 32768,
     "license": "Gemma"
   },
   {
@@ -191,7 +191,7 @@
     "speed": "slow",
     "quality": "best",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 131072,
     "license": "Gemma"
   },
   {
@@ -206,7 +206,7 @@
     "speed": "slow",
     "quality": "best",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 131072,
     "license": "Gemma"
   },
   {
@@ -221,7 +221,7 @@
     "speed": "fast",
     "quality": "basic",
     "thinking": true,
-    "contextTokens": 8192,
+    "contextTokens": 131072,
     "license": "MIT"
   },
   {
@@ -236,7 +236,7 @@
     "speed": "balanced",
     "quality": "best",
     "thinking": true,
-    "contextTokens": 8192,
+    "contextTokens": 131072,
     "license": "MIT"
   },
   {
@@ -251,7 +251,7 @@
     "speed": "slow",
     "quality": "best",
     "thinking": true,
-    "contextTokens": 8192,
+    "contextTokens": 131072,
     "license": "MIT"
   },
   {
@@ -266,7 +266,7 @@
     "speed": "slow",
     "quality": "best",
     "thinking": true,
-    "contextTokens": 8192,
+    "contextTokens": 131072,
     "license": "MIT"
   },
   {
@@ -281,7 +281,7 @@
     "speed": "balanced",
     "quality": "best",
     "thinking": true,
-    "contextTokens": 8192,
+    "contextTokens": 131072,
     "license": "Apache-2.0"
   },
   {
@@ -296,7 +296,7 @@
     "speed": "slow",
     "quality": "best",
     "thinking": true,
-    "contextTokens": 8192,
+    "contextTokens": 131072,
     "license": "Apache-2.0"
   },
   {
@@ -311,7 +311,7 @@
     "speed": "fast",
     "quality": "basic",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 131072,
     "license": "Llama Community"
   },
   {
@@ -326,7 +326,7 @@
     "speed": "fast",
     "quality": "good",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 131072,
     "license": "Llama Community"
   },
   {
@@ -341,7 +341,7 @@
     "speed": "balanced",
     "quality": "best",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 131072,
     "license": "Llama Community"
   },
   {
@@ -356,7 +356,7 @@
     "speed": "balanced",
     "quality": "good",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 32768,
     "license": "Apache-2.0"
   },
   {
@@ -371,7 +371,7 @@
     "speed": "balanced",
     "quality": "good",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 131072,
     "license": "Apache-2.0"
   },
   {
@@ -386,7 +386,7 @@
     "speed": "balanced",
     "quality": "best",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 262144,
     "license": "Apache-2.0"
   },
   {
@@ -401,7 +401,7 @@
     "speed": "balanced",
     "quality": "good",
     "thinking": false,
-    "contextTokens": 8192,
+    "contextTokens": 32768,
     "license": "Apache-2.0"
   }
 ]

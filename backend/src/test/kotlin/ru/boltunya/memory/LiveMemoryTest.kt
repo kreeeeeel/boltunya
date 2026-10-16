@@ -2,7 +2,7 @@ package ru.boltunya.memory
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
-import ru.boltunya.ai.OllamaClient
+import ru.boltunya.ai.AiTestServices
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ChatRule
 import ru.boltunya.resources.ResourceCatalog
@@ -12,10 +12,10 @@ import kotlin.test.assertTrue
 class LiveMemoryTest {
     @Test
     fun `learns owner facts and style for another dialog without including assistant text`() {
-        val client = OllamaClient()
+        val client = AiTestServices()
         val model = System.getenv("TIHO_QUALITY_MODEL") ?: "gemma3:4b"
         assertTrue(model in client.installed())
-        val summary = OllamaMemorySummarizer(client, ResourceCatalog()).summarizeOwner(
+        val summary = OllamaMemorySummarizer(client.completion, ResourceCatalog()).summarizeOwner(
             model,
             "Раньше жил в Москве.",
             listOf(
@@ -49,13 +49,13 @@ class LiveMemoryTest {
 
     @Test
     fun `summarizes a corrected historical fact and uses it in a later reply`() {
-        val client = OllamaClient()
+        val client = AiTestServices()
         val model = System.getenv("TIHO_QUALITY_MODEL") ?: "gemma3:4b"
         assertTrue(
             model in client.installed(),
             "The quality model must already be installed; this test never downloads models.",
         )
-        val summary = OllamaMemorySummarizer(client, ResourceCatalog()).summarize(
+        val summary = OllamaMemorySummarizer(client.completion, ResourceCatalog()).summarize(
             model,
             "## Владелец\nВ 2024 году жил в Москве [id 1]. Предпочитает короткие ответы.",
             listOf(

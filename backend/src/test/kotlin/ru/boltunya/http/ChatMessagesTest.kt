@@ -3,8 +3,8 @@ package ru.boltunya.http
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import ru.boltunya.ai.AiTestServices
 import ru.boltunya.ai.EngineManager
-import ru.boltunya.ai.OllamaClient
 import ru.boltunya.automation.FakeTelegramGateway
 import ru.boltunya.automation.ReplyCoordinator
 import ru.boltunya.domain.ChatMessage
@@ -34,8 +34,8 @@ class ChatMessagesTest {
         )
         val automated = AutomatedReplyStore(directory)
         automated.record("42", "11")
-        val ollama = OllamaClient("http://127.0.0.1:1")
-        EngineManager(directory, ollama).use { engine ->
+        val ollama = AiTestServices("http://127.0.0.1:1")
+        EngineManager(directory, ollama.runtime).use { engine ->
             ReplyCoordinator(settings, gateway) { _, _ -> ReplyResult("test", 0, 0.0) }.use { coordinator ->
                 TestWebServerFactory().create(
                     directory,

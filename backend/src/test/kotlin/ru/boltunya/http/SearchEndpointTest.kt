@@ -3,8 +3,8 @@ package ru.boltunya.http
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import ru.boltunya.ai.AiTestServices
 import ru.boltunya.ai.EngineManager
-import ru.boltunya.ai.OllamaClient
 import ru.boltunya.ai.research.ExaMcpSearchClient
 import ru.boltunya.ai.research.ExaResultParser
 import ru.boltunya.ai.research.PublicPageReader
@@ -33,7 +33,7 @@ class SearchEndpointTest {
     fun `protects search key endpoints never echoes the key and persists per-chat citation modes`() {
         val settings = SettingsStore(directory)
         val gateway = MemoryTelegramGateway()
-        val ollama = OllamaClient("http://127.0.0.1:1")
+        val ollama = AiTestServices("http://127.0.0.1:1")
         TestSearchMcpServer().start().use { mcp ->
             val provider = ExaMcpSearchClient(
                 SearchCredentialStore(directory, ResourceCatalog()),
@@ -41,7 +41,7 @@ class SearchEndpointTest {
                 mcp.origin,
                 "/mcp",
             )
-            EngineManager(directory, ollama).use { engine ->
+            EngineManager(directory, ollama.runtime).use { engine ->
                 ReplyCoordinator(settings, gateway) { _, _ -> ReplyResult("unused", 0, 0.0) }.use { replies ->
                     TestWebServerFactory().create(
                         directory,

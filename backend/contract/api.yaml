@@ -1733,6 +1733,53 @@
           }
         }
       }
+    },
+    "/api/models/cancel": {
+      "post": {
+        "operationId": "cancelModelDownload",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1820,6 +1867,11 @@
               "never"
             ],
             "default": "requested"
+          },
+          "useDefaultModel": {
+            "type": "boolean",
+            "default": true,
+            "description": "Follow the global model selection unless explicitly overridden."
           }
         }
       },
@@ -2177,6 +2229,23 @@
           },
           "license": {
             "type": "string"
+          },
+          "measurement": {
+            "type": "object",
+            "nullable": true,
+            "required": [
+              "durationMs",
+              "tokensPerSecond"
+            ],
+            "properties": {
+              "durationMs": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "tokensPerSecond": {
+                "type": "number"
+              }
+            }
           }
         }
       },

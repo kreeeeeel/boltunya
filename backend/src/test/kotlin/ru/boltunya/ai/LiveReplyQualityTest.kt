@@ -21,7 +21,7 @@ class LiveReplyQualityTest {
     @Test
     fun `answers casual dialogue without assistant boilerplate or loops`() {
         val clock = Clock.fixed(Instant.parse("2026-10-15T18:30:00Z"), ZoneId.of("Europe/Moscow"))
-        val client = OllamaClient(prompts = PromptBuilder(clock))
+        val client = AiTestServices(prompts = PromptBuilder(clock))
         val model = System.getenv("TIHO_QUALITY_MODEL") ?: "gemma3:4b"
         if (model !in client.installed()) {
             RegistryModelInstaller().install(model) {}

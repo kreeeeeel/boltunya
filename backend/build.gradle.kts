@@ -14,6 +14,7 @@ repositories {
 }
 
 dependencies {
+    implementation("org.springframework.ai:spring-ai-ollama:2.0.1")
     implementation("com.google.inject:guice:7.0.0")
     implementation("com.github.oshi:oshi-core:7.7.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")

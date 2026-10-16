@@ -1,0 +1,9 @@
+# Local model metadata
+
+`catalog.json` contains the maximum context capacities advertised for the exact Ollama tags, checked on 2026-10-16. These capacities differ from the application's working window of 8,192 tokens. Sizes and memory requirements are estimates; benchmark measurements come from actual local inference and are stored separately in the user profile.
+
+Primary sources: [Qwen 3](https://ollama.com/library/qwen3), [Qwen 3.5](https://ollama.com/library/qwen3.5), [Gemma 3](https://ollama.com/library/gemma3), [DeepSeek R1](https://ollama.com/library/deepseek-r1), [GPT-OSS](https://ollama.com/library/gpt-oss), [Llama 3.2](https://ollama.com/library/llama3.2), [Llama 3.1](https://ollama.com/library/llama3.1), [Mistral](https://ollama.com/library/mistral), [Phi 4 mini](https://ollama.com/library/phi4-mini), [Qwen 2.5](https://ollama.com/library/qwen2.5).
+
+`inference.json` configures each tag's optional thinking control and extra reasoning budget. Spring AI handles the request protocol, typed messages, structured output and final response. A reasoning budget is required because some reasoning models spend the entire short reply limit before producing final text, even when thinking is disabled. The application performs at most one larger-budget retry for an empty truncated response; it never substitutes the reasoning trace for an answer.
+
+See [Spring AI Ollama](https://docs.spring.io/spring-ai/reference/api/chat/ollama-chat.html) and [Ollama thinking controls](https://docs.ollama.com/capabilities/thinking).

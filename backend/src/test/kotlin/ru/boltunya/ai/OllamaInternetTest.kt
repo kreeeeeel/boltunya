@@ -27,13 +27,14 @@ class OllamaInternetTest {
             val response = buildJsonObject {
                 put("message", buildJsonObject { put("content", """{"kind":"search","query":"Kotlin release"}""") })
             }.toString().toByteArray()
+            exchange.responseHeaders.set("Content-Type", "application/json")
             exchange.sendResponseHeaders(200, response.size.toLong())
             exchange.responseBody.use { it.write(response) }
         }
         server.start()
         try {
             val client =
-                OllamaClient(
+                AiTestServices(
                     "http://127.0.0.1:${server.address.port}",
                     researcher = InternetResearcher(
                         search = SearchProvider {
@@ -72,12 +73,13 @@ class OllamaInternetTest {
             val bytes = buildJsonObject {
                 put("message", buildJsonObject { put("content", content) })
             }.toString().toByteArray()
+            exchange.responseHeaders.set("Content-Type", "application/json")
             exchange.sendResponseHeaders(200, bytes.size.toLong())
             exchange.responseBody.use { it.write(bytes) }
         }
         server.start()
         try {
-            val client = OllamaClient("http://127.0.0.1:${server.address.port}")
+            val client = AiTestServices("http://127.0.0.1:${server.address.port}")
             val history = listOf(ChatMessage("1", "1", "Как погода?", false, 0))
             assertEquals("В каком городе?", client.reply(ChatRule(), history).text)
             assertTrue(generatedSystem.contains("Не угадывай местоположение"))

@@ -16,6 +16,7 @@ data class ChatRule(
     val styleId: String = "",
     @field:Size(max = 120)
     val model: String = "qwen3:1.7b",
+    val useDefaultModel: Boolean = true,
     @field:Size(max = 4000)
     val instructions: String = "",
     @field:Min(4)

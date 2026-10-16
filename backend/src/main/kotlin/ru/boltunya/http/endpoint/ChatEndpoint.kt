@@ -60,9 +60,10 @@ class ChatEndpoint @Inject constructor(
         if (telegram.chats().stream().noneMatch { it.id == id }) throw ChatNotFoundException()
         val rule = json.decodeFromJsonElement<ChatRule>(body)
         validation.validate(rule)
-        validation.model(rule.model)
+        val resolved = settings.resolveModel(rule)
+        validation.model(resolved.model)
         settings.saveRule(id, rule)
         replies.cancelPending()
-        engine.warm(rule.model)
+        engine.warm(resolved.model)
     }
 }
