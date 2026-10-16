@@ -1,4 +1,4 @@
-param([switch]$SkipChecks, [string]$Version='2.6.0')
+param([switch]$SkipChecks, [switch]$SkipShortcut, [string]$Version='2.6.0')
 $ErrorActionPreference='Stop'
 $projectRoot=Split-Path -Parent $PSScriptRoot
 Push-Location $projectRoot
@@ -28,17 +28,19 @@ try {
         & (Join-Path $jdkBin 'jlink.exe') --output $runtime --strip-debug --no-header-files --no-man-pages --add-modules java.base,java.desktop,java.net.http,jdk.httpserver,jdk.crypto.ec,java.logging,java.management,jdk.management,jdk.unsupported,java.naming,java.sql,jdk.charsets
         if ($LASTEXITCODE -ne 0) { throw 'Bundled Java runtime build failed' }
     }
-    npm.cmd run package --prefix desktop -- --config.extraMetadata.version=$Version --config.portable.unpackDirName=boltunya-$Version
+    npm.cmd run package --prefix desktop -- --config.extraMetadata.version=$Version --config.portable.unpackDirName=boltunya-$Version --publish never
     if ($LASTEXITCODE -ne 0) { throw 'Electron portable build failed' }
     $compileDirectory=Join-Path $projectRoot 'complie'
     $executable=Join-Path $compileDirectory 'Болтунья.exe'
     (Get-FileHash -Algorithm SHA256 -LiteralPath $executable).Hash.ToLowerInvariant() + '  Болтунья.exe' | Set-Content -Encoding utf8 (Join-Path $compileDirectory 'SHA256.txt')
-    $shortcutShell=New-Object -ComObject WScript.Shell
-    $shortcut=$shortcutShell.CreateShortcut((Join-Path $projectRoot 'Болтунья.lnk'))
-    $shortcut.TargetPath=$executable
-    $shortcut.WorkingDirectory=$compileDirectory
-    $shortcut.IconLocation=$executable + ',0'
-    $shortcut.Description='Болтунья — Telegram'
-    $shortcut.Save()
+    if(-not $SkipShortcut) {
+        $shortcutShell=New-Object -ComObject WScript.Shell
+        $shortcut=$shortcutShell.CreateShortcut((Join-Path $projectRoot 'Болтунья.lnk'))
+        $shortcut.TargetPath=$executable
+        $shortcut.WorkingDirectory=$compileDirectory
+        $shortcut.IconLocation=$executable + ',0'
+        $shortcut.Description='Болтунья — Telegram'
+        $shortcut.Save()
+    }
     Write-Output "Application: $executable"
 } finally { Pop-Location }

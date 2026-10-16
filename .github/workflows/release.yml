@@ -49,7 +49,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify and build portable executable
         shell: pwsh
-        run: ./scripts/build.ps1 -Version '${{ steps.version.outputs.value }}'
+        run: ./scripts/build.ps1 -Version '${{ steps.version.outputs.value }}' -SkipShortcut
       - name: Test browser interface
         shell: pwsh
         run: ./scripts/test-web.ps1
