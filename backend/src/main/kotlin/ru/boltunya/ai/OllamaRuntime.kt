@@ -23,8 +23,13 @@ import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 
 private const val WARM_CONTEXT_TOKENS = 8192
+private const val LOCAL_OLLAMA_PORT = 11434
+private val LOOPBACK_HOSTS = setOf("127.0.0.1", "localhost", "[::1]", "::1")
 
 class OllamaRuntime(private val baseUrl: String) {
+    private val endpoint = URI.create(baseUrl)
+    val isLocalServer: Boolean = endpoint.host in LOOPBACK_HOSTS
+    val isDefaultLocalServer: Boolean = isLocalServer && endpoint.scheme == "http" && endpoint.port == LOCAL_OLLAMA_PORT
     private val activeModels = ConcurrentHashMap.newKeySet<String>()
     private val http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build()
 
@@ -49,7 +54,8 @@ class OllamaRuntime(private val baseUrl: String) {
     fun installed(): Set<String> {
         val response = request("/api/tags", null, Duration.ofSeconds(4))
         return response["models"]?.jsonArray?.stream()?.map {
-            it.jsonObject["name"]?.jsonPrimitive?.contentOrNull.orEmpty()
+            (it.jsonObject["name"] ?: it.jsonObject["model"])?.jsonPrimitive?.contentOrNull.orEmpty()
+                .removePrefix("registry.ollama.ai/").removePrefix("library/")
         }?.toList()?.toSet() ?: emptySet()
     }
 

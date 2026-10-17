@@ -13,4 +13,5 @@ data class EngineStatus(
     val downloadedBytes: Long = 0,
     val totalBytes: Long = 0,
     val downloadStage: String = "download",
+    val installed: Boolean = false,
 )

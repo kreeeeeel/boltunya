@@ -2607,6 +2607,11 @@
           "warming"
         ],
         "properties": {
+          "installed": {
+            "type": "boolean",
+            "default": false,
+            "description": "An Ollama executable is available locally, or the configured server is online."
+          },
           "online": {
             "type": "boolean"
           },

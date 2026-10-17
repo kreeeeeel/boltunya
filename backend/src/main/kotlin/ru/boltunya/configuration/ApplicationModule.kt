@@ -12,6 +12,8 @@ import ru.boltunya.ai.EngineManager
 import ru.boltunya.ai.EngineProcessLocator
 import ru.boltunya.ai.ModelCatalog
 import ru.boltunya.ai.ModelInference
+import ru.boltunya.ai.OllamaInstallation
+import ru.boltunya.ai.OllamaModelInventory
 import ru.boltunya.ai.OllamaRuntime
 import ru.boltunya.ai.PersonalStyleBuilder
 import ru.boltunya.ai.PromptBuilder
@@ -278,6 +280,14 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
 
     @Provides @Singleton
     fun ollamaRuntime(): OllamaRuntime = OllamaRuntime(configuration.ollamaUrl)
+
+    @Provides
+    @Singleton
+    fun ollamaInstallation(): OllamaInstallation = OllamaInstallation(configuration.directory)
+
+    @Provides
+    @Singleton
+    fun ollamaModelInventory(): OllamaModelInventory = OllamaModelInventory()
 
     @Provides @Singleton
     fun chatModel(factory: SpringAiModelFactory): ChatModel = factory.create(configuration.ollamaUrl)

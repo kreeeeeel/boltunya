@@ -34,6 +34,8 @@ class EngineManager @Inject constructor(
     private val processes: EngineProcessLocator = EngineProcessLocator(),
     private val measurements: ModelMeasurementStore = ModelMeasurementStore(directory),
     private val inference: ModelInference = ModelInference(),
+    private val installation: OllamaInstallation = OllamaInstallation(directory),
+    private val localModels: OllamaModelInventory = OllamaModelInventory(),
 ) : AutoCloseable {
     private val executor = Executors.newSingleThreadExecutor()
 
@@ -64,21 +66,25 @@ class EngineManager @Inject constructor(
             ollama.installed()
         } catch (exception: IntegrationException) {
             online = false
-            emptySet()
+            if (ollama.isLocalServer) localModels.installed() else emptySet()
         }
         return EngineStatus(
             online, catalog(installed), downloading, progress, failure, warming,
             downloadedBytes, totalBytes, downloadStage,
+            installed = online || (ollama.isLocalServer && installation.executable() != null),
         )
     }
 
+    @Synchronized
     fun start() {
-        val executable = directory.resolve("engine/ollama.exe").toAbsolutePath().normalize()
         if (status().online) {
-            managedServer = processes.find(executable)
+            if (ollama.isDefaultLocalServer && managedServer?.isAlive != true) {
+                managedServer = processes.find(directory.resolve("engine/ollama.exe").toAbsolutePath().normalize())
+            }
             return
         }
-        if (managedServer?.isAlive == true || !Files.exists(executable)) return
+        if (managedServer?.isAlive == true || !ollama.isDefaultLocalServer) return
+        val executable = installation.executable() ?: return
         val logs = directory.resolve("engine.log").toFile()
         managedServer = ProcessBuilder(executable.toString(), "serve")
             .redirectOutput(ProcessBuilder.Redirect.appendTo(logs))
