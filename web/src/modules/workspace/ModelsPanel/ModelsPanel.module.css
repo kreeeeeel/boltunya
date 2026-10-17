@@ -46,6 +46,17 @@
 
 .engineText {
     gap: 4px;
+    min-width: 0;
+}
+
+.engineActions {
+    flex: 0 0 176px;
+    width: 176px;
+    max-width: 100%;
+}
+
+.engineAction {
+    width: 100%;
 }
 
 .embedded {

@@ -1344,6 +1344,51 @@ test('download progress stays inside its model card and the models page scrolls 
     await expect(card.getByRole('button', {name: 'Скачать модель', exact: true})).toBeVisible();
 });
 
+test('Ollama actions distinguish missing installed and downloading runtimes without resizing the button', async ({
+    page,
+}) => {
+    const state = structuredClone(workspaceState);
+    state.engine.online = false;
+    state.engine.installed = false;
+    await page.route('**/api/state', (route) => route.fulfill({json: state}));
+    await page.reload();
+    await page.locator('[data-qa="nav-models"]').click();
+    const engine = page.locator('[data-qa="engine-card"]');
+    await expect(engine.getByText('Ollama не установлена', {exact: true})).toBeVisible();
+    await expect(engine.getByRole('button', {name: 'Запустить Ollama', exact: true})).toHaveCount(0);
+    const install = engine.getByRole('button', {name: 'Установить Ollama', exact: true});
+    const initial = await install.boundingBox();
+    state.engine.downloading = 'Ollama';
+    state.engine.progress = 37;
+    const progress = engine.getByRole('button', {name: 'Отменить загрузку', exact: true});
+    await expect(progress).toBeVisible();
+    await expect(engine.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '37');
+    const downloading = await progress.boundingBox();
+    expect(Math.abs(initial!.width - downloading!.width)).toBeLessThanOrEqual(1);
+    expect(initial!.height).toBe(downloading!.height);
+    await page.screenshot({path: '../docs/resources/ollama-download.png', animations: 'disabled'});
+    await page.setViewportSize({width: 900, height: 580});
+    expect((await progress.boundingBox())!.width).toBeLessThanOrEqual(176);
+    await progress.hover();
+    await expect(progress.getByText('Отменить', {exact: true})).toHaveCSS('opacity', '1');
+    await page.route('**/api/models/cancel', async (route) => {
+        state.engine.downloading = '';
+        await route.fulfill({json: {ok: true}});
+    });
+    await progress.click();
+    await expect(install).toBeVisible();
+    state.engine.installed = true;
+    await expect(engine.getByRole('button', {name: 'Запустить Ollama', exact: true})).toBeVisible();
+    await expect(install).toHaveCount(0);
+    await page.route('**/api/engine/start', async (route) => {
+        state.engine.online = true;
+        await route.fulfill({json: {ok: true}});
+    });
+    await engine.getByRole('button', {name: 'Запустить Ollama', exact: true}).click();
+    await expect(engine.getByText('Ollama работает', {exact: true})).toBeVisible();
+    await expect(engine.getByRole('button', {name: 'Запустить Ollama', exact: true})).toHaveCount(0);
+});
+
 test('empty activity is centered and uses the generated illustration', async ({page}) => {
     await page.emulateMedia({reducedMotion: 'reduce'});
     await page.locator('[data-qa="nav-activity"]').click();

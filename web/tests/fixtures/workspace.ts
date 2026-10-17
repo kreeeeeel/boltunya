@@ -4,6 +4,7 @@ import type {AppState} from '@/shared/api/client';
 export const workspaceState: AppState = {
     telegram: {state: 'ready', name: '', prompt: '', error: ''},
     engine: {
+        installed: true,
         online: true,
         downloading: '',
         progress: 0,

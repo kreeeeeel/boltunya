@@ -131,6 +131,8 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
     }
 
     const query = search.trim().toLocaleLowerCase(locale);
+    const engineInstalled = engine.installed ?? engine.online;
+    const installingEngine = engine.downloading === 'Ollama';
     const models = engine.models.filter((model) =>
         [model.id, model.name, model.description].some((value) =>
             value.toLocaleLowerCase(locale).includes(query),
@@ -156,22 +158,48 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
                             </Box>
                             <Flex direction="column" className={styles.engineText}>
                                 <Text variant="subheader-2">
-                                    {t(engine?.online ? 'engineOnline' : 'engineOffline')}
+                                    {t(
+                                        engine.online
+                                            ? 'engineOnline'
+                                            : engineInstalled
+                                              ? 'engineOffline'
+                                              : 'engineMissing',
+                                    )}
                                 </Text>
                                 <Flex gap={2} alignItems="center">
                                     {engine.warming && <Loader size="s" />}
                                     <Text className={styles.hint}>
                                         {engine.warming
                                             ? t('warming', {name: engine.warming})
-                                            : t(engine.online ? 'engineReadyHint' : 'engineHint')}
+                                            : t(
+                                                  engine.online
+                                                      ? 'engineReadyHint'
+                                                      : engineInstalled
+                                                        ? 'engineStoppedHint'
+                                                        : 'engineHint',
+                                              )}
                                     </Text>
                                 </Flex>
                             </Flex>
                         </Flex>
-                        {!engine?.online && (
-                            <Flex gap={2}>
+                        <Flex className={styles.engineActions} justifyContent="flex-end" alignItems="center">
+                            {installingEngine ? (
+                                <DownloadButton
+                                    engine={engine}
+                                    busy={busy === 'cancel-download'}
+                                    onCancel={() => void cancelDownload()}
+                                />
+                            ) : engine.online ? (
+                                <Label theme="success" size="m" icon={<Icon data={Check} size={16} />}>
+                                    {t('installed')}
+                                </Label>
+                            ) : engineInstalled ? (
                                 <Button
+                                    className={styles.engineAction}
+                                    size="l"
+                                    view="action"
                                     loading={busy === 'start'}
+                                    disabled={!!engine.downloading}
                                     onClick={() =>
                                         void action('start', async () =>
                                             dataOrThrow(await api.POST('/api/engine/start')),
@@ -180,33 +208,23 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
                                 >
                                     {t('startEngine')}
                                 </Button>
-                                {engine.downloading === 'Ollama' ? (
-                                    <DownloadButton
-                                        engine={engine}
-                                        busy={busy === 'cancel-download'}
-                                        onCancel={() => void cancelDownload()}
-                                    />
-                                ) : (
-                                    <Button
-                                        view="action"
-                                        loading={busy === 'install'}
-                                        disabled={!!engine?.downloading}
-                                        onClick={() =>
-                                            void action('install', async () =>
-                                                dataOrThrow(await api.POST('/api/engine/install')),
-                                            )
-                                        }
-                                    >
-                                        {t('installEngine')}
-                                    </Button>
-                                )}
-                            </Flex>
-                        )}
-                        {engine?.online && (
-                            <Label theme="success" size="m" icon={<Icon data={Check} size={16} />}>
-                                {t('installed')}
-                            </Label>
-                        )}
+                            ) : (
+                                <Button
+                                    className={styles.engineAction}
+                                    size="l"
+                                    view="action"
+                                    loading={busy === 'install'}
+                                    disabled={!!engine.downloading}
+                                    onClick={() =>
+                                        void action('install', async () =>
+                                            dataOrThrow(await api.POST('/api/engine/install')),
+                                        )
+                                    }
+                                >
+                                    {t('installEngine')}
+                                </Button>
+                            )}
+                        </Flex>
                     </Flex>
                 </Box>
                 {(error || engine?.error) && <Text color="danger">{error || engine?.error}</Text>}

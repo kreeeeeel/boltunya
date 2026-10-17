@@ -104,6 +104,8 @@
     },
     "engineOnline": "Ollama жұмыс істеп тұр",
     "engineOffline": "Қозғалтқыш іске қосылмаған",
+    "engineMissing": "Ollama орнатылмаған",
+    "engineStoppedHint": "Орнатылған Ollama табылды. Модельдерді пайдалану үшін оны іске қосыңыз.",
     "installEngine": "Ollama орнату",
     "startEngine": "Ollama іске қосу",
     "engineHint": "Ollama модельдерді іске қосу үшін қажет. Орнатуға шамамен 5 ГБ керек.",

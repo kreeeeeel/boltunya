@@ -104,6 +104,8 @@
     },
     "engineOnline": "Ollama працює",
     "engineOffline": "Рушій не запущено",
+    "engineMissing": "Ollama не встановлено",
+    "engineStoppedHint": "Установку знайдено. Запустіть Ollama, щоб використовувати моделі.",
     "installEngine": "Встановити Ollama",
     "startEngine": "Запустити Ollama",
     "engineHint": "Ollama потрібна для запуску моделей. Встановлення займає близько 5 ГБ.",

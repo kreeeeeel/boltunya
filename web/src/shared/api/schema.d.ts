@@ -718,6 +718,11 @@ export interface components {
             } | null;
         };
         Engine: {
+            /**
+             * @description An Ollama executable is available locally, or the configured server is online.
+             * @default false
+             */
+            installed: boolean;
             online: boolean;
             downloading: string;
             progress: number;

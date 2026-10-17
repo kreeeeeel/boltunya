@@ -104,6 +104,8 @@
     },
     "engineOnline": "Ollama is running",
     "engineOffline": "Engine offline",
+    "engineMissing": "Ollama is not installed",
+    "engineStoppedHint": "Installation found. Start Ollama to use your models.",
     "installEngine": "Install Ollama",
     "startEngine": "Start Ollama",
     "engineHint": "Ollama runs local models. Allow around 5 GB for the engine.",
