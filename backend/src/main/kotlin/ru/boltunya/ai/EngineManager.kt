@@ -1,6 +1,8 @@
 package ru.boltunya.ai
 
 import jakarta.inject.Inject
+import ru.boltunya.diagnostics.DiagnosticLog
+import ru.boltunya.diagnostics.DiagnosticSource
 import ru.boltunya.domain.EngineStatus
 import ru.boltunya.domain.ModelInfo
 import ru.boltunya.exception.IntegrationException
@@ -36,6 +38,7 @@ class EngineManager @Inject constructor(
     private val inference: ModelInference = ModelInference(),
     private val installation: OllamaInstallation = OllamaInstallation(directory),
     private val localModels: OllamaModelInventory = OllamaModelInventory(),
+    private val diagnostics: DiagnosticLog? = null,
 ) : AutoCloseable {
     private val executor = Executors.newSingleThreadExecutor()
 
@@ -101,6 +104,7 @@ class EngineManager @Inject constructor(
                 warming = model
                 inference.foreground { ollama.warm(model) }
             } catch (exception: IntegrationException) {
+                diagnostics?.record(DiagnosticSource.ENGINE, exception)
                 if (warming.isNotBlank()) {
                     failure = EngineWarmupFailedException().message
                 }
@@ -175,6 +179,7 @@ class EngineManager @Inject constructor(
                 start()
             } catch (exception: Exception) {
                 if (!task.isCancelled()) {
+                    diagnostics?.record(DiagnosticSource.ENGINE, exception)
                     failure = EngineInstallFailedException().message
                     System.err.println("Engine installation failed: ${exception.javaClass.simpleName}")
                 }
@@ -217,6 +222,7 @@ class EngineManager @Inject constructor(
                 warm(model)
             } catch (exception: Exception) {
                 if (!task.isCancelled()) {
+                    diagnostics?.record(DiagnosticSource.ENGINE, exception)
                     failure = ModelPullInterruptedException().message
                     System.err.println("Model download failed: ${exception.javaClass.simpleName}")
                 }

@@ -3,6 +3,8 @@ package ru.boltunya.memory
 import jakarta.inject.Inject
 import ru.boltunya.ai.ModelInference
 import ru.boltunya.ai.OllamaRuntime
+import ru.boltunya.diagnostics.DiagnosticLog
+import ru.boltunya.diagnostics.DiagnosticSource
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ChatRule
 import ru.boltunya.domain.GroupReplyMode
@@ -35,6 +37,7 @@ class MemoryCoordinator @Inject constructor(
     private val inference: ModelInference,
     private val clock: Clock,
     private val automated: AutomatedReplyStore,
+    private val diagnostics: DiagnosticLog? = null,
 ) : AutoCloseable {
     private val executor = Executors.newSingleThreadScheduledExecutor { task ->
         Thread(task, "conversation-memory").also {
@@ -98,6 +101,7 @@ class MemoryCoordinator @Inject constructor(
                 general.summary,
             )
         } catch (exception: Exception) {
+            diagnostics?.record(DiagnosticSource.MEMORY, exception)
             errors[chatId] = MemoryUpdateFailedException().message
             System.err.println("Memory context unavailable: ${exception.javaClass.simpleName}")
             MemoryContext()
@@ -298,6 +302,7 @@ class MemoryCoordinator @Inject constructor(
             // A foreground response takes priority; the checkpoint remains unchanged.
         } catch (exception: Exception) {
             if (!closed) {
+                diagnostics?.record(DiagnosticSource.MEMORY, exception)
                 if (processing.isNotEmpty()) {
                     failures[processing] = now + ERROR_RETRY_SECONDS
                     errors[processing] = MemoryUpdateFailedException().message

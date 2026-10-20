@@ -2,14 +2,17 @@ package ru.boltunya.automation
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import ru.boltunya.diagnostics.DiagnosticLog
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ChatRule
 import ru.boltunya.domain.ReplyResult
 import ru.boltunya.exception.impl.InvalidModelReplyException
 import ru.boltunya.exception.impl.TelegramRateLimitException
+import ru.boltunya.resources.ResourceCatalog
 import ru.boltunya.storage.AutomatedReplyStore
 import ru.boltunya.storage.SettingsStore
 import java.nio.file.Path
+import java.time.Clock
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -24,12 +27,17 @@ class ReplyCoordinatorTest {
     @Test
     fun `invalid model output never reaches Telegram delivery`() {
         val gateway = FakeTelegramGateway()
-        ReplyCoordinator(enabledSettings(), gateway) { _, _ -> throw InvalidModelReplyException() }
+        val diagnostics = DiagnosticLog(directory, Clock.systemUTC(), ResourceCatalog())
+        ReplyCoordinator(enabledSettings(), gateway, diagnostics = diagnostics) { _, _ ->
+            throw InvalidModelReplyException()
+        }
             .use { coordinator ->
                 coordinator.onMessage(gateway.messages[0])
                 await { coordinator.activities().any { it.status == "error" } }
                 assertTrue(gateway.sent.isEmpty())
                 assertEquals(InvalidModelReplyException().message, coordinator.activities().single().detail)
+                assertEquals("INVALID_MODEL_REPLY", diagnostics.report().errors.single().code)
+                assertEquals("reply", diagnostics.report().errors.single().source)
             }
     }
 

@@ -6,6 +6,8 @@ import jakarta.inject.Inject
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import ru.boltunya.diagnostics.DiagnosticLog
+import ru.boltunya.diagnostics.DiagnosticSource
 import ru.boltunya.exception.AppException
 import ru.boltunya.exception.impl.MalformedPayloadException
 import ru.boltunya.exception.impl.RequestFailedException
@@ -20,6 +22,7 @@ class LocalWebServer @Inject constructor(
     private val router: ApiRouter,
     private val response: ResponseWriter,
     private val resources: ResourceResponder,
+    private val diagnostics: DiagnosticLog,
 ) : AutoCloseable {
     private val executor = Executors.newVirtualThreadPerTaskExecutor()
     private val server = HttpServer.create(InetSocketAddress(LOOPBACK_ADDRESS, 0), LISTEN_BACKLOG)
@@ -48,10 +51,12 @@ class LocalWebServer @Inject constructor(
                     resources.respond(exchange)
                 }
             } catch (exception: AppException) {
+                if (exception.status >= 500) diagnostics.record(DiagnosticSource.HTTP, exception)
                 error(exchange, exception)
             } catch (_: SerializationException) {
                 error(exchange, MalformedPayloadException())
             } catch (exception: Exception) {
+                diagnostics.record(DiagnosticSource.HTTP, exception)
                 System.err.println("Local request failed: " + exception.javaClass.simpleName)
                 error(exchange, RequestFailedException())
             }

@@ -5,6 +5,8 @@ import ru.boltunya.automation.activity.ActivityPhase
 import ru.boltunya.automation.activity.ActivityStatus
 import ru.boltunya.automation.activity.ReplyJob
 import ru.boltunya.automation.activity.ReplyTraceScope
+import ru.boltunya.diagnostics.DiagnosticLog
+import ru.boltunya.diagnostics.DiagnosticSource
 import ru.boltunya.domain.ActivityDetails
 import ru.boltunya.domain.ActivityEntry
 import ru.boltunya.domain.ChatMessage
@@ -40,6 +42,7 @@ class ReplyCoordinator(
     private val automated: AutomatedReplyStore? = null,
     private val flows: FlowEngine? = null,
     private val tracing: ReplyTraceScope = ReplyTraceScope(),
+    private val diagnostics: DiagnosticLog? = null,
     private val generate: (ChatRule, List<ChatMessage>) -> ReplyResult,
 ) : AutoCloseable {
     private val scheduler = Executors.newSingleThreadScheduledExecutor()
@@ -228,6 +231,7 @@ class ReplyCoordinator(
             if (job.cancelled.get() || exception is ReplyCancelledException || Thread.currentThread().isInterrupted) {
                 job.trace.finish(ActivityStatus.CANCELLED, ReplyCancelledException().message)
             } else {
+                diagnostics?.record(DiagnosticSource.REPLY, exception)
                 job.trace.finish(
                     ActivityStatus.ERROR,
                     if (exception is AppException) exception.message else ReplyDeliveryFailedException().message,

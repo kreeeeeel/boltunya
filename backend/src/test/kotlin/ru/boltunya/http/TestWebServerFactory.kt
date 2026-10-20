@@ -13,6 +13,7 @@ import ru.boltunya.ai.research.ExaMcpSearchClient
 import ru.boltunya.automation.ReplyCoordinator
 import ru.boltunya.configuration.ApplicationConfiguration
 import ru.boltunya.configuration.ApplicationModule
+import ru.boltunya.diagnostics.DiagnosticLog
 import ru.boltunya.storage.AutomatedReplyStore
 import ru.boltunya.storage.SettingsStore
 import ru.boltunya.telegram.StorageClient
@@ -31,6 +32,7 @@ class TestWebServerFactory {
         automated: AutomatedReplyStore = AutomatedReplyStore(directory),
         storageClient: StorageClient = StorageClient { TdApi.StorageStatistics(0, 0, emptyArray()) },
         search: ExaMcpSearchClient? = null,
+        diagnostics: DiagnosticLog? = null,
         onQuit: () -> Unit,
     ): LocalWebServer {
         val overrides = object : AbstractModule() {
@@ -45,6 +47,7 @@ class TestWebServerFactory {
                 bind(AutomatedReplyStore::class.java).toInstance(automated)
                 bind(StorageClient::class.java).toInstance(storageClient)
                 if (search != null) bind(ExaMcpSearchClient::class.java).toInstance(search)
+                if (diagnostics != null) bind(DiagnosticLog::class.java).toInstance(diagnostics)
                 bind(LocalSession::class.java).toInstance(LocalSession(token))
                 bind(ExitAction::class.java).toInstance(ExitAction(onQuit))
             }

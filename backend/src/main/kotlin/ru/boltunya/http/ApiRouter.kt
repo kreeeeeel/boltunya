@@ -13,6 +13,7 @@ import ru.boltunya.exception.impl.RouteNotFoundException
 import ru.boltunya.http.endpoint.ActivityEndpoint
 import ru.boltunya.http.endpoint.AuthenticationEndpoint
 import ru.boltunya.http.endpoint.ChatEndpoint
+import ru.boltunya.http.endpoint.DiagnosticsEndpoint
 import ru.boltunya.http.endpoint.EngineEndpoint
 import ru.boltunya.http.endpoint.FlowEndpoint
 import ru.boltunya.http.endpoint.MediaEndpoint
@@ -50,6 +51,7 @@ class ApiRouter @Inject constructor(
     private val cache: TelegramCacheStorage,
     private val search: SearchEndpoint,
     private val activity: ActivityEndpoint,
+    private val diagnostics: DiagnosticsEndpoint,
 ) : AutoCloseable {
     fun handle(exchange: HttpExchange) {
         val path = exchange.requestURI.path
@@ -80,6 +82,12 @@ class ApiRouter @Inject constructor(
             ApiRoute.METRICS -> json.encodeToJsonElement(monitor.history())
             ApiRoute.CACHE -> json.encodeToJsonElement(cache.statistics())
             ApiRoute.CACHE_CLEAR -> json.encodeToJsonElement(cache.clear())
+            ApiRoute.DIAGNOSTIC_ERRORS -> json.encodeToJsonElement(diagnostics.errors())
+            ApiRoute.DIAGNOSTIC_ERRORS_CLEAR -> {
+                diagnostics.clear()
+                ok()
+            }
+            ApiRoute.STORAGE_LOCATIONS -> json.encodeToJsonElement(diagnostics.locations())
             ApiRoute.MEMORY -> json.encodeToJsonElement(memory.get(""))
             ApiRoute.MEMORY_EDIT -> json.encodeToJsonElement(memory.edit("", body))
             ApiRoute.MEMORY_CANCEL -> json.encodeToJsonElement(memory.cancel(""))

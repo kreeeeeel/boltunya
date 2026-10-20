@@ -568,6 +568,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/diagnostics/errors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description A bounded support log containing only error codes, static explanations and allowlisted technical metadata. No exception messages, chat content, account IDs, credentials or prompts are persisted. */
+        get: operations["diagnosticErrors"];
+        put?: never;
+        post?: never;
+        delete: operations["clearDiagnosticErrors"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/storage/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Known profile and local Ollama directories. Unknown Docker, service-user and remote model paths are reported as external. Electron accepts a location ID and rechecks this allowlist before opening a folder. */
+        get: operations["storageLocations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1012,6 +1046,39 @@ export interface components {
             response: string;
             attempts: components["schemas"]["ActivityAttempt"][];
             steps: components["schemas"]["ActivityStep"][];
+        };
+        DiagnosticEntry: {
+            id: string;
+            /** Format: int64 */
+            date: number;
+            /** Format: int64 */
+            firstOccurredAt: number;
+            /** @enum {string} */
+            source: "reply" | "engine" | "memory" | "http" | "update";
+            code: string;
+            message: string;
+            remediation: string;
+            exceptionType: string;
+            occurrences: number;
+            metadata: {
+                [key: string]: string;
+            };
+        };
+        DiagnosticReport: {
+            errors: components["schemas"]["DiagnosticEntry"][];
+        };
+        StorageLocation: {
+            id: string;
+            label: string;
+            path: string;
+            available: boolean;
+            openable: boolean;
+            /** @enum {string} */
+            kind: "directory" | "external";
+            note: string;
+        };
+        StorageLocationReport: {
+            locations: components["schemas"]["StorageLocation"][];
         };
     };
     responses: never;
@@ -2920,6 +2987,93 @@ export interface operations {
             };
             /** @description Request failed */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    diagnosticErrors: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiagnosticReport"];
+                };
+            };
+            /** @description Local session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    clearDiagnosticErrors: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ok"];
+                };
+            };
+            /** @description Local session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    storageLocations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageLocationReport"];
+                };
+            };
+            /** @description Local session required */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

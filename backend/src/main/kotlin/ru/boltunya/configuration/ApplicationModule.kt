@@ -46,6 +46,7 @@ import ru.boltunya.application.ProcessExit
 import ru.boltunya.automation.PersonalReplyGenerator
 import ru.boltunya.automation.ReplyCoordinator
 import ru.boltunya.automation.activity.ReplyTraceScope
+import ru.boltunya.diagnostics.DiagnosticLog
 import ru.boltunya.flows.FlowEngine
 import ru.boltunya.flows.FlowStore
 import ru.boltunya.flows.FlowTemplate
@@ -62,6 +63,7 @@ import ru.boltunya.http.ResponseWriter
 import ru.boltunya.http.endpoint.ActivityEndpoint
 import ru.boltunya.http.endpoint.AuthenticationEndpoint
 import ru.boltunya.http.endpoint.ChatEndpoint
+import ru.boltunya.http.endpoint.DiagnosticsEndpoint
 import ru.boltunya.http.endpoint.EngineEndpoint
 import ru.boltunya.http.endpoint.FlowEndpoint
 import ru.boltunya.http.endpoint.MediaEndpoint
@@ -86,6 +88,7 @@ import ru.boltunya.storage.MessageArchiveStore
 import ru.boltunya.storage.ModelMeasurementStore
 import ru.boltunya.storage.SearchCredentialStore
 import ru.boltunya.storage.SettingsStore
+import ru.boltunya.storage.StorageLocations
 import ru.boltunya.storage.WritingStyleStore
 import ru.boltunya.telegram.MediaDownloadPolicy
 import ru.boltunya.telegram.MediaPrefetcher
@@ -198,6 +201,8 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
             SpringAiModelFactory::class.java,
             ReplyTraceScope::class.java,
             ActivityEndpoint::class.java,
+            DiagnosticsEndpoint::class.java,
+            DiagnosticLog::class.java,
         ).forEach { bind(it).`in`(Singleton::class.java) }
     }
 
@@ -291,6 +296,10 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
     @Singleton
     fun ollamaInstallation(): OllamaInstallation = OllamaInstallation(configuration.directory)
 
+    @Provides @Singleton
+    fun storageLocations(installation: OllamaInstallation, resources: ResourceCatalog): StorageLocations =
+        StorageLocations(configuration, installation, resources)
+
     @Provides
     @Singleton
     fun ollamaModelInventory(): OllamaModelInventory = OllamaModelInventory()
@@ -320,7 +329,8 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
         generator: PersonalReplyGenerator,
         flows: FlowEngine,
         tracing: ReplyTraceScope,
-    ): ReplyCoordinator = ReplyCoordinator(settings, telegram, automated, flows, tracing, generator::reply)
+        diagnostics: DiagnosticLog,
+    ): ReplyCoordinator = ReplyCoordinator(settings, telegram, automated, flows, tracing, diagnostics, generator::reply)
 
     @Provides @Singleton
     fun json(): Json = Json { encodeDefaults = true }

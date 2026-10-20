@@ -2123,6 +2123,96 @@
           }
         ]
       }
+    },
+    "/api/diagnostics/errors": {
+      "get": {
+        "operationId": "diagnosticErrors",
+        "tags": [
+          "Diagnostics"
+        ],
+        "description": "A bounded support log containing only error codes, static explanations and allowlisted technical metadata. No exception messages, chat content, account IDs, credentials or prompts are persisted.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiagnosticReport"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Local session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "clearDiagnosticErrors",
+        "tags": [
+          "Diagnostics"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Local session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/storage/locations": {
+      "get": {
+        "operationId": "storageLocations",
+        "tags": [
+          "Diagnostics"
+        ],
+        "description": "Known profile and local Ollama directories. Unknown Docker, service-user and remote model paths are reported as external. Electron accepts a location ID and rechecks this allowlist before opening a folder.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageLocationReport"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Local session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3624,6 +3714,133 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ActivityStep"
+            }
+          }
+        }
+      },
+      "DiagnosticEntry": {
+        "type": "object",
+        "required": [
+          "id",
+          "date",
+          "firstOccurredAt",
+          "source",
+          "code",
+          "message",
+          "remediation",
+          "exceptionType",
+          "occurrences",
+          "metadata"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "date": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "firstOccurredAt": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "reply",
+              "engine",
+              "memory",
+              "http",
+              "update"
+            ]
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "remediation": {
+            "type": "string"
+          },
+          "exceptionType": {
+            "type": "string"
+          },
+          "occurrences": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "DiagnosticReport": {
+        "type": "object",
+        "required": [
+          "errors"
+        ],
+        "properties": {
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DiagnosticEntry"
+            }
+          }
+        }
+      },
+      "StorageLocation": {
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "path",
+          "available",
+          "openable",
+          "kind",
+          "note"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "openable": {
+            "type": "boolean"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "directory",
+              "external"
+            ]
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "StorageLocationReport": {
+        "type": "object",
+        "required": [
+          "locations"
+        ],
+        "properties": {
+          "locations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StorageLocation"
             }
           }
         }
