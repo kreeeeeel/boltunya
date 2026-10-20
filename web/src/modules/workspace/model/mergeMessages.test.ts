@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 
-import {mergeMessages} from '@/modules/workspace/model/mergeMessages';
+import {mergeMessages, mergeRecentMessages} from '@/modules/workspace/model/mergeMessages';
 import type {Message} from '@/shared/api/client';
 
 describe('History pagination', () => {
@@ -18,5 +18,57 @@ describe('History pagination', () => {
             [message('90071992547409921', 'edited'), message('90071992547409922', 'new')],
         );
         expect(result.map((item) => item.text)).toEqual(['old', 'edited', 'new']);
+    });
+
+    it('replaces a temporary sent message with its server identifier without losing older pages', () => {
+        const message = (id: string, text: string, outgoing = false): Message => ({
+            id,
+            text,
+            chatId: '1',
+            date: 1,
+            outgoing,
+            kind: 'text',
+        });
+        const earlier = message('100', 'Earlier page');
+        const incoming = message('200', 'Hi');
+        const pending = message('90071992547409920', 'Reply', true);
+        const confirmed = message('300', 'Reply', true);
+        expect(mergeRecentMessages([earlier, incoming, pending], [incoming, confirmed])).toEqual([
+            earlier,
+            incoming,
+            confirmed,
+        ]);
+    });
+
+    it('keeps intentionally repeated text and replaces edits by identifier', () => {
+        const message = (id: string, text: string): Message => ({
+            id,
+            text,
+            chatId: '1',
+            date: 1,
+            outgoing: true,
+            kind: 'text',
+        });
+        const first = message('100', 'Same text');
+        const second = message('200', 'Same text');
+        expect(mergeRecentMessages([first, second], [first, second])).toHaveLength(2);
+        expect(mergeRecentMessages([first, second], [first, {...second, text: 'Edited'}])[1].text).toBe(
+            'Edited',
+        );
+        expect(mergeRecentMessages([first, second], [])).toEqual([first, second]);
+    });
+
+    it('never carries history from a different chat into a fresh snapshot', () => {
+        const message: Message = {
+            id: '1',
+            chatId: '1',
+            text: 'Hello',
+            date: 1,
+            outgoing: false,
+            kind: 'text',
+        };
+        expect(mergeRecentMessages([message], [{...message, chatId: '2'}])).toEqual([
+            {...message, chatId: '2'},
+        ]);
     });
 });

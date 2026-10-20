@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useState} from 'react';
 
-import {mergeMessages} from '@/modules/workspace/model/mergeMessages';
+import {mergeRecentMessages} from '@/modules/workspace/model/mergeMessages';
 
 import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
 import type {AppState, Message} from '@/shared/api/client';
@@ -65,7 +65,7 @@ export function useWorkspace(chatId: string | null) {
                     await api.GET('/api/chats/{chatId}/messages', {params: {path: {chatId: chatId ?? ''}}}),
                 );
                 if (active) {
-                    setMessages((previous) => mergeMessages(previous, result));
+                    setMessages((previous) => mergeRecentMessages(previous, result));
                     setHistoryStatus({chatId, resolved: true, error: ''});
                 }
             } catch (cause) {
