@@ -3,12 +3,13 @@ const assert = require('node:assert/strict');
 const {mkdtemp, rm} = require('node:fs/promises');
 const {tmpdir} = require('node:os');
 const {join, resolve} = require('node:path');
+const executablePath = require('../node_modules/electron');
 
 (async () => {
     const root = resolve(__dirname, '../..');
     const directory = await mkdtemp(join(tmpdir(), 'boltunya-startup-updater-'));
     const application = await electron.launch({
-        executablePath: join(root, 'desktop/node_modules/electron/dist/electron.exe'),
+        executablePath,
         args: [join(__dirname, 'fixtures/startup-updater.cjs'), '--startup'],
         env: {...process.env, BOLTUNYA_UPDATER_ROOT: root, BOLTUNYA_DATA_DIR: directory, BOLTUNYA_SKIP_UPDATE_CHECK: 'false'}, timeout: 30_000,
     });

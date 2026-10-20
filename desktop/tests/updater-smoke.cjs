@@ -1,11 +1,12 @@
 const {_electron: electron} = require('../../web/node_modules/playwright');
 const assert = require('node:assert/strict');
 const {join, resolve} = require('node:path');
+const executablePath = require('../node_modules/electron');
 
 (async () => {
     const root = resolve(__dirname, '../..');
     const application = await electron.launch({
-        executablePath: join(root, 'desktop/node_modules/electron/dist/electron.exe'),
+        executablePath,
         args: [join(__dirname, 'fixtures/updater.cjs')],
         env: {...process.env, BOLTUNYA_UPDATER_ROOT: root}, timeout: 30_000,
     });
