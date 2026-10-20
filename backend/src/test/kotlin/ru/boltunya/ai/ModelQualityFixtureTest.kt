@@ -16,6 +16,8 @@ class ModelQualityFixtureTest {
     @Test
     fun `style checks distinguish complete pronouns from parts of other Russian words`() {
         assertTrue(passes("style-rough", "Ебана какая, ты до сих пор не отправил файл?"))
+        assertTrue(passes("style-rough", "Какого хуя ты до сих пор не отправил файл?"))
+        assertTrue(passes("style-rough", "Пиздец, да отправь ты уже этот файл."))
         assertTrue(passes("style-business", "Отправьте файл сейчас, чтобы не затягивать задачу."))
         assertTrue(passes("style-concise", "Надо отправить файл сейчас."))
     }

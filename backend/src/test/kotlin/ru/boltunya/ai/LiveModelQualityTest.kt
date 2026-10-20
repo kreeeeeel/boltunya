@@ -137,6 +137,12 @@ class LiveModelQualityTest {
                     }
                     report.add(outcome)
                     Files.writeString(file, Json.encodeToString(report))
+                    if (System.getenv("TIHO_TRACE_REQUESTS") == "true") {
+                        Files.writeString(
+                            Path.of("build/reports/model-trace-latest.json"),
+                            Json.encodeToString(trace.details()),
+                        )
+                    }
                 }
                 services.runtime.releaseModels()
             }
