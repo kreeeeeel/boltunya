@@ -30,6 +30,7 @@ Boltunya is a Windows desktop application for reading Telegram conversations and
 - **Visual workflows.** Connect command, agent, reply, condition and local JSON storage nodes. Test a draft before saving it, without sending a Telegram message.
 - **Deliberate automation.** Sequential replies, configurable delays and intervals, optional typing indicators, per-chat controls and group mention/all-message modes. Group automation starts disabled.
 - **A visible reply queue.** Pause dispatch, prioritize or stop tasks, and inspect prompts, streamed thinking, responses and token/timing metrics in event cards. [Queue and trace details](docs/activity/en.md).
+- **Built-in troubleshooting.** The Errors page groups failures into cards with a timestamp, occurrence count, explanation and recovery steps. Detail dialogs show safe technical metadata, without copying conversation text or credentials into the error log.
 - **A proper desktop shell.** A draggable title bar, maximize within the Windows work area, compact tray menu, optional startup in the tray, and separate startup/resume preferences. Resource charts show application and system activity.
 - **Four languages, two themes.** English, Russian, Kazakh and Ukrainian; light/dark themes and bundled Noto Sans typography.
 
@@ -38,6 +39,8 @@ The chat list uses two-line previews and a small AI badge on enabled conversatio
 <table>
   <tr><td><img src="docs/resources/readme-chat-dark.png" alt="Dark conversation view"></td><td><img src="docs/resources/readme-models.png" alt="Searchable model comparison catalog"></td></tr>
   <tr><td colspan="2"><img src="docs/resources/readme-flows.png" alt="Visual workflow editor"></td></tr>
+  <tr><td><img src="docs/resources/errors.png" alt="Grouped application errors"></td><td><img src="docs/resources/error-details.png" alt="Error details and recovery steps"></td></tr>
+  <tr><td><img src="docs/resources/memory-formatted.png" alt="Formatted memory bank"></td><td><img src="docs/resources/storage-locations.png" alt="Storage locations with Explorer actions"></td></tr>
 </table>
 
 ## Get started
@@ -51,13 +54,13 @@ Conversation prompts follow the selected tone and owner instructions. They do no
 3. **Configure a conversation.** Open its conversation settings, enable replies and choose a model, tone, context and writing-style adaptation. Review the global instructions in the profile menu.
 4. **Start AI.** Use the title-bar control, or enable **Enable AI when the app starts** in settings. This applies to both ordinary launches and Windows startup. Starting with Windows keeps the window hidden in the tray until you open it.
 
-Saving general settings, conversation settings or global instructions keeps the dialog open and shows a saved confirmation. Further edits clear the confirmation; close the dialog separately when finished. Private conversations retain separate incoming and outgoing model roles. Group context and web-search planning also include participant names, stable sender identifiers and reply references, so messages from different people remain distinguishable.
+Saving general settings, conversation settings or global instructions keeps the dialog open. The save button briefly displays a success icon and **Saved**, then returns to its usual state. Further edits clear the confirmation; close the dialog separately when finished. Private conversations retain separate incoming and outgoing model roles. Group context and web-search planning also include participant names, stable sender identifiers and reply references, so messages from different people remain distinguishable. Refreshing the latest history page replaces Telegram's temporary send identifiers while retaining older pages and deliberately repeated messages.
 
 While an automatic reply is queued or generated, the open conversation displays the same process block as Events: the current phase, available streamed thinking, elapsed time and a stop action. Stopping is disabled once delivery has started.
 
 Screenshots: [reply progress](docs/resources/chat-generation.png) · [saved settings](docs/resources/settings-saved.png).
 
-Use the profile menu for language, theme, settings, custom styles, shared memory and sign-out. Conversation settings contain memory collection and per-chat preferences. Photos, other media and deleted-message snapshots have cache and retention controls.
+Use the profile menu for language, theme, settings, custom styles, shared memory and sign-out. Conversation settings contain memory collection and per-chat preferences. Memory summaries render Markdown, including headings, lists and emphasis. Photos, other media and deleted-message snapshots have cache and retention controls. The storage section lists actual data locations and opens available folders in Windows Explorer; external Ollama services are identified separately.
 
 ## Data and privacy
 
@@ -70,9 +73,14 @@ The persistent profile is `%LOCALAPPDATA%\Tiho` (the legacy directory is kept to
 | `settings.json` | Preferences, conversation rules and instructions |
 | `telegram.credentials` | API credentials protected by Windows DPAPI |
 | `telegram/` | TDLib session database and downloaded media |
-| `memory/MEMORY.md`, `memory/<chat-id>/MEMORY.md` | Shared and conversation memory with editable notes |
+| `memory/MEMORY.md`, `memory/<account-id>/<chat-id>/MEMORY.md` | Shared and conversation memory with editable notes |
+| `memory/<account-id>/PROFILE.md`, `state.json` | Account-specific automatic owner profile and collection cursors |
 | `history/`, `automated-replies.json` | Observed message snapshots and known AI message IDs |
 | `engine/` | App-managed Ollama runtime |
+| `diagnostics/` | Bounded technical error history |
+| `desktop/updates/` | Verified update downloads and installer state |
+
+Native Ollama model weights usually live in `%USERPROFILE%\.ollama\models`, or the location set by `OLLAMA_MODELS`. A separate service or container can use a different directory. The application's storage panel distinguishes these cases instead of inventing a local path for a remote service.
 
 Login codes and Telegram two-step passwords are not persisted by the application. Local memory and message snapshots contain private information; the profile, credentials, build outputs and local logs are excluded from Git. Deleted messages can only be retained if the application observed them beforehand. Clearing downloaded media does not sign you out or remove your settings and memory.
 
@@ -108,6 +116,7 @@ npm.cmd exec --prefix web -- playwright install chromium
 ./scripts/build.ps1
 ./scripts/test-web.ps1
 npm.cmd run test:smoke --prefix desktop
+npm.cmd run test:updater --prefix desktop
 ```
 
 The build runs Kotlin, frontend and Electron checks, exports the web interface, creates a minimal Java runtime and writes `complie/Болтунья.exe` plus `SHA256.txt`. Browser tests serve the static export on a temporary local port. Native smoke tests use an isolated data directory and do not sign in to Telegram.
@@ -130,7 +139,7 @@ $env:TIHO_LIVE_INTERNET='true'
 ./gradlew.bat :backend:test --tests 'ru.boltunya.ai.Live*' --no-daemon
 ```
 
-To check conversation quality on **every installed model**, use the separate 14-scenario matrix. It exercises real local inference with synthetic conversations and deterministic weather/news/rate fixtures, including topic follow-ups, owner-style samples, reasoning separation and complete final answers. It does not install missing catalog models. Reports are written to `backend/build/reports/model-quality.json` after each case.
+To check conversation quality on **every installed model**, use the separate 20-scenario matrix. It exercises real local inference with synthetic conversations and deterministic weather/news/rate fixtures, including topic follow-ups, owner-style samples, six conversation tones, reasoning separation and complete final answers. It does not install missing catalog models. Reports are written to `backend/build/reports/model-quality.json` after each case.
 
 ```powershell
 $env:TIHO_LIVE_AI='true'
@@ -143,13 +152,19 @@ Models that fail the application's automation checks are labelled **Drafts only*
 
 Recorded model results and the complete synthetic outputs are available in the [installed-model quality report](docs/ai/model-quality-2026-10-16.md). It includes failures and manual review findings; passing the automated checks does not certify a model for every conversation.
 
+The [20 October follow-up](docs/ai/model-quality-2026-10-20.md) verifies final/thinking separation on the currently installed R1 and GPT-OSS models and records the remaining tone-compliance failures.
+
 See [Docker tooling](docker/README.md) for a static frontend preview and JVM checks. The Telegram desktop session and Windows DPAPI remain native.
 
 ## Releases
 
 Every push to `main`, or a manual **Windows release** run, checks and builds the application on GitHub Actions. It then runs browser and native Electron tests before publishing **Boltunya.exe** and **SHA256.txt** to [Releases](https://github.com/kreeeeeel/boltunya/releases). Release versions use the source major/minor and the workflow run number; each version has a separate portable extraction directory.
 
-The repository and its releases are private. You must be signed in with repository access to download assets. To verify a download:
+The repository and releases are public. Packaged launches check the latest stable GitHub release in a small, draggable startup window. A newer portable EXE is downloaded, verified against its published SHA-256 and installed before the application starts. Network or verification failures leave the installed version available. Windows startup follows the same updater flow, then keeps the main application in the tray. No GitHub key is required.
+
+<p align="center"><img src="docs/resources/updater.png" width="340" alt="Frameless startup updater with download progress"></p>
+
+To verify a manual download:
 
 ```powershell
 Get-FileHash -Algorithm SHA256 -LiteralPath '.\Boltunya.exe'
@@ -158,7 +173,7 @@ Get-Content -LiteralPath '.\SHA256.txt'
 
 ## Further documentation
 
-If AI does not respond on another computer, download **Diagnose-AI.ps1** from the release, leave Boltunya open and run it in PowerShell:
+If AI does not respond on another computer, first open **Errors** and inspect the latest card's explanation and recovery steps. For a separate support report, download **Diagnose-AI.ps1** from the release, leave Boltunya open and run it in PowerShell:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Diagnose-AI.ps1 -TestModel
