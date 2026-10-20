@@ -1,11 +1,12 @@
-import {ArrowUpToLine, CircleStop, Clock, Sparkles} from '@gravity-ui/icons';
-import {Box, Button, Flex, Icon, Label, Loader, Text} from '@gravity-ui/uikit';
+import {ArrowUpToLine, CircleStop, Sparkles} from '@gravity-ui/icons';
+import {Box, Button, Flex, Icon, Label, Text} from '@gravity-ui/uikit';
 import {useLocale, useTranslations} from 'next-intl';
 
 import {isActive, seconds, statusTheme} from '@/modules/activity/model/activity';
 import type {Activity} from '@/shared/api/client';
 import {TelegramAvatar} from '@/shared/ui/TelegramAvatar/TelegramAvatar';
 import styles from '@/modules/activity/ActivityCard/ActivityCard.module.css';
+import {ActivityProgress} from '@/modules/activity/ActivityProgress/ActivityProgress';
 
 export function ActivityCard({
     entry,
@@ -59,26 +60,7 @@ export function ActivityCard({
                 </Flex>
             </Flex>
             {active ? (
-                <Box className={styles.process}>
-                    <Flex alignItems="center" gap={3}>
-                        {running ? <Loader size="s" /> : <Icon data={Clock} size={18} />}
-                        <Text variant="subheader-1">
-                            {entry.status === 'queued'
-                                ? t('position', {count: entry.queuePosition ?? 0})
-                                : t(`phase.${entry.phase ?? 'context'}`)}
-                        </Text>
-                    </Flex>
-                    {entry.thinking ? (
-                        <Text className={styles.thinking}>{entry.thinking}</Text>
-                    ) : (
-                        <Text color="secondary" className={styles.preview}>
-                            {entry.preview}
-                        </Text>
-                    )}
-                    {running && (
-                        <Box className={styles.progress} role="progressbar" aria-label={t('processing')} />
-                    )}
-                </Box>
+                <ActivityProgress entry={entry} />
             ) : (
                 <Text className={styles.preview} color={entry.status === 'error' ? 'danger' : 'secondary'}>
                     {entry.status === 'error' ? entry.detail : entry.preview}

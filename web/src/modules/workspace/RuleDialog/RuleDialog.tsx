@@ -41,13 +41,15 @@ export function RuleDialog({
     const [result, setResult] = useState<Reply | null>(null);
     const [busy, setBusy] = useState('');
     const [error, setError] = useState('');
+    const [savedRule, setSavedRule] = useState<ChatRule | null>(null);
 
     async function save() {
         setBusy('save');
         setError('');
+        setSavedRule(null);
         try {
             await onSave(rule);
-            onClose();
+            setSavedRule(rule);
         } catch (cause) {
             setError(errorMessage(cause));
         } finally {
@@ -359,7 +361,13 @@ export function RuleDialog({
                 onClickButtonApply={() => void save()}
                 loading={busy === 'save'}
                 propsButtonApply={{disabled: !!busy}}
-            />
+            >
+                {savedRule === rule && (
+                    <Text role="status" color="secondary">
+                        {t('saved')}
+                    </Text>
+                )}
+            </Dialog.Footer>
         </Dialog>
     );
 }

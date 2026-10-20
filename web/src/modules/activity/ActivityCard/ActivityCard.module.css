@@ -31,7 +31,6 @@
 
 .heading,
 .footer,
-.process,
 .preview {
     position: relative;
     pointer-events: none;
@@ -46,14 +45,6 @@
     flex: 1;
 }
 
-.process {
-    margin: 18px 0;
-    padding: 16px;
-    border-radius: 14px;
-    background: var(--tiho-bg);
-}
-
-.thinking,
 .preview {
     display: -webkit-box;
     overflow: hidden;
@@ -64,31 +55,8 @@
     overflow-wrap: anywhere;
 }
 
-.thinking,
-.process .preview {
-    margin-top: 10px;
-}
-
 .card > .preview {
     margin: 18px 0;
-}
-
-.progress {
-    height: 3px;
-    margin-top: 14px;
-    border-radius: 8px;
-    overflow: hidden;
-    background: var(--tiho-line);
-}
-
-.progress::after {
-    content: '';
-    display: block;
-    width: 35%;
-    height: 100%;
-    border-radius: inherit;
-    background: var(--g-color-text-brand);
-    animation: processing 1.8s ease-in-out infinite;
 }
 
 .metrics {
@@ -101,21 +69,4 @@
 
 .actions {
     pointer-events: auto;
-}
-
-@keyframes processing {
-    from {
-        transform: translateX(-100%);
-    }
-
-    to {
-        transform: translateX(380%);
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .progress::after {
-        animation: none;
-        width: 100%;
-    }
 }

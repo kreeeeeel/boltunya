@@ -51,6 +51,12 @@ Conversation prompts follow the selected tone and owner instructions. They do no
 3. **Configure a conversation.** Open its conversation settings, enable replies and choose a model, tone, context and writing-style adaptation. Review the global instructions in the profile menu.
 4. **Start AI.** Use the title-bar control, or enable **Enable AI when the app starts** in settings. This applies to both ordinary launches and Windows startup. Starting with Windows keeps the window hidden in the tray until you open it.
 
+Saving general settings, conversation settings or global instructions keeps the dialog open and shows a saved confirmation. Further edits clear the confirmation; close the dialog separately when finished. Private conversations retain separate incoming and outgoing model roles. Group context and web-search planning also include participant names, stable sender identifiers and reply references, so messages from different people remain distinguishable.
+
+While an automatic reply is queued or generated, the open conversation displays the same process block as Events: the current phase, available streamed thinking, elapsed time and a stop action. Stopping is disabled once delivery has started.
+
+Screenshots: [reply progress](docs/resources/chat-generation.png) · [saved settings](docs/resources/settings-saved.png).
+
 Use the profile menu for language, theme, settings, custom styles, shared memory and sign-out. Conversation settings contain memory collection and per-chat preferences. Photos, other media and deleted-message snapshots have cache and retention controls.
 
 ## Data and privacy

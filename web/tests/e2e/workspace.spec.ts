@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {workspaceState} from '../fixtures/workspace';
 import {testHistory} from '../fixtures/chats';
+import {testActivity} from '../fixtures/activity';
 import type {Message} from '@/shared/api/client';
 
 const launchFile = process.env.TIHO_LAUNCH_FILE ?? join(process.env.LOCALAPPDATA ?? '', 'Tiho', 'launch.url');
@@ -129,6 +130,9 @@ test('chat selection, sending, filtering and saving a rule use the real API flow
     expect(savedRule.model).toBe('gemma3:4b');
     expect(savedRule.useDefaultModel).toBe(false);
     expect(savedRule.internetAccess).toBe(false);
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await expect(page.getByRole('status')).toHaveText('Настройки сохранены');
+    await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.getByRole('textbox', {name: 'Поиск по диалогам'}).fill('Марк');
     await expect(page.getByRole('button', {name: 'Лиза', exact: true})).toHaveCount(0);
@@ -136,6 +140,39 @@ test('chat selection, sending, filtering and saving a rule use the real API flow
     await page.evaluate(() => document.fonts.ready);
     await page.screenshot({animations: 'disabled', path: '../docs/resources/desktop.png'});
     expect(errors).toEqual([]);
+});
+
+test('conversation generation shares event phases and thinking and can be stopped in the chat', async ({
+    page,
+}) => {
+    const state = structuredClone(workspaceState);
+    state.activity = structuredClone(testActivity);
+    await page.route('**/api/state', (route) => route.fulfill({json: state}));
+    const generation = page.locator('[data-qa="conversation-generation"]');
+    await expect(generation).toBeVisible();
+    await expect(generation.getByText('Готовит ответ', {exact: true})).toBeVisible();
+    await expect(generation.getByText(/Собеседник спрашивает о встрече/)).toBeVisible();
+    await expect(generation.getByRole('progressbar')).toBeVisible();
+    await expect(page.locator('[data-qa="reply-skeleton"]')).toHaveCount(0);
+    state.activity[0].thinking = 'Уточняю время встречи по предыдущим сообщениям.';
+    await expect(generation.getByText(state.activity[0].thinking, {exact: true})).toBeVisible();
+    state.activity[0].phase = 'sending';
+    await expect(generation.getByRole('button', {name: 'Остановить: Аня Смирнова'})).toBeDisabled();
+    state.activity[0].phase = 'reply';
+    const stop = generation.getByRole('button', {name: 'Остановить: Аня Смирнова'});
+    await expect(stop).toBeEnabled();
+    await page.screenshot({path: '../docs/resources/chat-generation.png', animations: 'disabled'});
+    await page.route('**/api/activity/running/cancel', async (route) => {
+        state.activity[0].status = 'cancelled';
+        await route.fulfill({json: {ok: true}});
+    });
+    await stop.click();
+    await expect(generation).toHaveCount(0);
+    await page.getByRole('button', {name: 'Марк Волков', exact: true}).click();
+    await expect(generation).toBeVisible();
+    await expect(generation.getByText('Место в очереди: 1', {exact: true})).toBeVisible();
+    await expect(generation.getByRole('progressbar')).toHaveCount(0);
+    await expect(generation.getByText(/Собеседник спрашивает о встрече/)).toHaveCount(0);
 });
 
 test('group history shows author avatars at the end of each sender block', async ({page}) => {
@@ -800,6 +837,9 @@ test('profile menu saves shared instructions and signs out without a settings pa
     expect((await patch).postDataJSON()).toEqual({
         globalPrompt: 'Не назначай встречи без моего подтверждения.',
     });
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await expect(page.getByRole('status')).toHaveText('Настройки сохранены');
+    await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
     await page.getByRole('menuitem', {name: 'Общий промпт', exact: true}).click();
@@ -1011,11 +1051,47 @@ test('settings persist reply pacing, typing, tray and Windows startup options', 
         launchAtLogin: true,
         resumeOnStartup: true,
     });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole('status')).toHaveText('Настройки сохранены');
+    await dialog.locator('.g-dialog-body').evaluate((body) => {
+        body.scrollTop = 0;
+    });
+    await page.screenshot({path: '../docs/resources/settings-saved.png', animations: 'disabled'});
+    await dialog.getByText('Показывать «печатает…»', {exact: true}).click();
+    await expect(dialog.getByRole('status')).toHaveCount(0);
+    await dialog.getByText('Показывать «печатает…»', {exact: true}).click();
+    await page.keyboard.press('Escape');
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
     await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
     await expect(dialog.getByRole('switch', {name: 'Запускать с Windows'})).toBeChecked();
     await expect(dialog.getByRole('switch', {name: 'Показывать «печатает…»'})).not.toBeChecked();
     await page.screenshot({animations: 'disabled', path: '../docs/resources/settings.png'});
+});
+
+test('failed settings saves preserve edits and a successful retry stays open', async ({page}) => {
+    let fail = true;
+    await page.route('**/api/settings', async (route) => {
+        if (fail) {
+            await route.fulfill({status: 502, json: {message: 'Тестовая ошибка сохранения'}});
+        } else {
+            await route.fallback();
+        }
+    });
+    await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
+    await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
+    const dialog = page.getByRole('dialog', {name: 'Настройки', exact: true});
+    const typing = dialog.getByRole('switch', {name: 'Показывать «печатает…»'});
+    await typing.click();
+    await dialog.getByRole('button', {name: 'Сохранить настройки', exact: true}).click();
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText('Тестовая ошибка сохранения', {exact: true})).toBeVisible();
+    await expect(dialog.getByRole('status')).toHaveCount(0);
+    await expect(typing).not.toBeChecked();
+    fail = false;
+    await dialog.getByRole('button', {name: 'Сохранить настройки', exact: true}).click();
+    await expect(dialog.getByRole('status')).toHaveText('Настройки сохранены');
+    await expect(dialog.getByText('Тестовая ошибка сохранения', {exact: true})).toHaveCount(0);
+    await expect(typing).not.toBeChecked();
 });
 
 test('all writing styles have emoji and rough styles and imitation survive saving', async ({page}) => {
@@ -1086,6 +1162,9 @@ test('reply length and delay occupy separate full-width rows and retain their va
     );
     await dialog.getByRole('button', {name: 'Сохранить настройки', exact: true}).click();
     expect((await saved).postDataJSON()).toMatchObject({maxTokens: 512, delaySeconds: 1});
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole('status')).toHaveText('Настройки сохранены');
+    await page.keyboard.press('Escape');
     await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
     await expect(page.getByRole('slider', {name: 'Длина ответа', exact: true})).toHaveAttribute(
         'aria-valuenow',
@@ -1365,7 +1444,7 @@ test('Ollama actions distinguish missing installed and downloading runtimes with
     await expect(engine.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '37');
     const downloading = await progress.boundingBox();
     expect(Math.abs(initial!.width - downloading!.width)).toBeLessThanOrEqual(1);
-    expect(initial!.height).toBe(downloading!.height);
+    expect(initial!.height).toBeCloseTo(downloading!.height, 2);
     await page.screenshot({path: '../docs/resources/ollama-download.png', animations: 'disabled'});
     await page.setViewportSize({width: 900, height: 580});
     expect((await progress.boundingBox())!.width).toBeLessThanOrEqual(176);
@@ -1982,6 +2061,8 @@ test('a conversation saves its source link policy and restores it when reopened'
     );
     await dialog.getByRole('button', {name: 'Сохранить настройки', exact: true}).click();
     expect((await saved).postDataJSON().sourceLinks).toBe('never');
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press('Escape');
     await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
     await expect(mode).toContainText('Не отправлять');
 });

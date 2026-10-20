@@ -1,0 +1,55 @@
+.process {
+    position: relative;
+    margin: 18px 0;
+    padding: 16px;
+    border-radius: 14px;
+    background: var(--tiho-bg);
+    pointer-events: none;
+}
+
+.thinking,
+.preview {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    margin-top: 10px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.progress {
+    height: 3px;
+    margin-top: 14px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--tiho-line);
+}
+
+.progress::after {
+    content: '';
+    display: block;
+    width: 35%;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--g-color-text-brand);
+    animation: processing 1.8s ease-in-out infinite;
+}
+
+@keyframes processing {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(380%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .progress::after {
+        animation: none;
+        width: 100%;
+    }
+}

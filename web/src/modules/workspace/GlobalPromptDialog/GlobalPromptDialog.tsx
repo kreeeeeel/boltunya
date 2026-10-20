@@ -17,12 +17,15 @@ export function GlobalPromptDialog({
     const [prompt, setPrompt] = useState(value);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
+    const [savedPrompt, setSavedPrompt] = useState<string | null>(null);
     async function save() {
         setBusy(true);
+        setError('');
+        setSavedPrompt(null);
         try {
             dataOrThrow(await api.PATCH('/api/settings', {body: {globalPrompt: prompt}}));
             await onRefresh();
-            onClose();
+            setSavedPrompt(prompt);
         } catch (cause) {
             setError(errorMessage(cause));
         } finally {
@@ -60,7 +63,13 @@ export function GlobalPromptDialog({
                 onClickButtonApply={() => void save()}
                 onClickButtonCancel={onClose}
                 loading={busy}
-            />
+            >
+                {savedPrompt === prompt && (
+                    <Text role="status" color="secondary">
+                        {t('saved')}
+                    </Text>
+                )}
+            </Dialog.Footer>
         </Dialog>
     );
 }

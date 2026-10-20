@@ -38,13 +38,16 @@ export function SettingsDialog({
     });
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
+    const [savedValue, setSavedValue] = useState<typeof value | null>(null);
     async function save() {
         setBusy(true);
+        setError('');
+        setSavedValue(null);
         try {
             dataOrThrow(await api.PATCH('/api/settings', {body: value}));
             await desktopBridge()?.sync();
             await onRefresh();
-            onClose();
+            setSavedValue(value);
         } catch (cause) {
             setError(errorMessage(cause));
         } finally {
@@ -217,7 +220,13 @@ export function SettingsDialog({
                 onClickButtonApply={() => void save()}
                 onClickButtonCancel={onClose}
                 loading={busy}
-            />
+            >
+                {savedValue === value && (
+                    <Text role="status" color="secondary">
+                        {t('saved')}
+                    </Text>
+                )}
+            </Dialog.Footer>
         </Dialog>
     );
 }

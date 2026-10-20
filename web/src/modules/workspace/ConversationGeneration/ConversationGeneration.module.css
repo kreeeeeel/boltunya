@@ -1,0 +1,16 @@
+.root {
+    align-self: flex-end;
+    width: min(100%, 520px);
+    margin: 8px 0;
+}
+
+.root .process {
+    margin: 0;
+    background: var(--tiho-panel);
+    box-shadow: var(--tiho-shadow);
+}
+
+.controls {
+    margin-top: 12px;
+    pointer-events: auto;
+}

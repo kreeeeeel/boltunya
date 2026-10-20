@@ -1,9 +1,10 @@
-import type {Chat, Message} from '@/shared/api/client';
+import type {Activity, Chat, Message} from '@/shared/api/client';
 
 export interface ConversationProps {
     readonly chat: Chat | undefined;
     readonly messages: Message[];
-    readonly generating: boolean;
+    readonly activeReply?: Activity;
+    readonly onRefresh: () => Promise<void>;
     readonly error: string;
     readonly loading?: boolean;
     readonly onConfigure: () => void;

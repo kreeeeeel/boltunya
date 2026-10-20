@@ -10,13 +10,14 @@ import {errorMessage} from '@/shared/api/client';
 import {ConversationSkeleton} from '@/modules/workspace/ConversationSkeleton/ConversationSkeleton';
 import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
 import {ChatHeading} from '@/modules/workspace/ChatHeading/ChatHeading';
-import {ReplySkeleton} from '@/shared/ui/ReplySkeleton/ReplySkeleton';
+import {ConversationGeneration} from '@/modules/workspace/ConversationGeneration/ConversationGeneration';
 import {MessageBubble} from '@/modules/workspace/Conversation/MessageBubble';
 
 export function Conversation({
     chat,
     messages,
-    generating,
+    activeReply,
+    onRefresh,
     error,
     loading = false,
     onConfigure,
@@ -103,7 +104,7 @@ export function Conversation({
                 area.scrollTop = area.scrollHeight;
             }
         }
-    }, [chat?.id, messages]);
+    }, [chat?.id, messages, activeReply?.id, activeReply?.thinking, activeReply?.phase]);
 
     async function send() {
         if (!text.trim() || busy) {
@@ -264,10 +265,12 @@ export function Conversation({
                         {messages.length === 0 && !error && (
                             <Text className={styles.noHistory}>{t('noHistory')}</Text>
                         )}
-                        {generating && (
-                            <Box className={[styles.bubble, styles.outgoing].join(' ')}>
-                                <ReplySkeleton />
-                            </Box>
+                        {activeReply && (
+                            <ConversationGeneration
+                                key={activeReply.id}
+                                entry={activeReply}
+                                onRefresh={onRefresh}
+                            />
                         )}
                     </Flex>
                 </ScrollArea>

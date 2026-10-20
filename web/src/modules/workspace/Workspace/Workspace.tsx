@@ -384,12 +384,12 @@ export function Workspace() {
                                     key={chat?.id ?? 'empty'}
                                     chat={chat}
                                     messages={messages}
-                                    generating={
-                                        state?.activity.some(
-                                            (item) =>
-                                                item.chatId === selected && item.status === 'generating',
-                                        ) ?? false
-                                    }
+                                    activeReply={state?.activity.find(
+                                        (item) =>
+                                            item.chatId === selected &&
+                                            ['generating', 'queued'].includes(item.status),
+                                    )}
+                                    onRefresh={refresh}
                                     error={historyError}
                                     loading={stateLoading || historyLoading}
                                     onConfigure={() => {
