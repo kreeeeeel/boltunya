@@ -14,6 +14,8 @@ class PersonalStyleBuilderTest {
         }
         val style = PersonalStyleBuilder().build(history)
         assertTrue(style.contains("100%"))
+        assertTrue(style.contains("совместимы с выбранным стилем диалога"))
+        assertFalse(style.contains("Сохрани разговорность"))
         assertFalse(style.contains("owner_style"))
         assertFalse(style.contains("ща гляну"))
         assertFalse(style.contains("да норм"))

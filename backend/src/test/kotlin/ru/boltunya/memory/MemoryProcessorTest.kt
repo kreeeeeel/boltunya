@@ -153,6 +153,27 @@ class MemoryProcessorTest {
     }
 
     @Test
+    fun `memory sources preserve the identity of each group participant`() {
+        val batch = MemoryBatchBuilder(AutomatedReplyStore(directory)).select(
+            listOf(
+                ChatMessage("1", "42", "Я из Казани", false, 1, group = true, senderName = "Аня", senderId = "user:10"),
+                ChatMessage(
+                    "2",
+                    "42",
+                    "Я из Москвы",
+                    false,
+                    2,
+                    group = true,
+                    senderName = "Марк",
+                    senderId = "user:20",
+                ),
+            ),
+        )
+        assertEquals(listOf("Аня", "Марк"), batch.sources.map { it.sender })
+        assertEquals(listOf("user:10", "user:20"), batch.sources.map { it.senderId })
+    }
+
+    @Test
     fun `distinguishes real owner messages from known automated replies in summary sources`() {
         val automated = AutomatedReplyStore(directory)
         automated.record("42", "2")

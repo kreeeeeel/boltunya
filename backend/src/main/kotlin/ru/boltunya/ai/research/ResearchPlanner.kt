@@ -4,12 +4,11 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.put
 import org.springframework.ai.chat.messages.Message
 import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
+import ru.boltunya.ai.MessageContextFormatter
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.exception.IntegrationException
 import ru.boltunya.exception.impl.ResearchPlanningFailedException
@@ -24,8 +23,12 @@ private const val LOCATION_STEM_LENGTH = 4
 private const val RESEARCH_TOPIC_SECONDS = 600L
 private const val MAX_RESEARCH_TOPICS = 100
 private const val MAX_QUERY_CHARACTERS = 180
+private const val MAX_RESEARCH_MESSAGE_CHARACTERS = 800
 
-class ResearchPlanner(private val clock: Clock = Clock.systemDefaultZone()) {
+class ResearchPlanner(
+    private val clock: Clock = Clock.systemDefaultZone(),
+    private val authors: MessageContextFormatter = MessageContextFormatter(resources),
+) {
     private val recent = ConcurrentHashMap<String, RecentResearchPlan>()
 
     fun remember(history: List<ChatMessage>, plan: ResearchPlan) {
@@ -99,12 +102,7 @@ class ResearchPlanner(private val clock: Clock = Clock.systemDefaultZone()) {
         }
         val dialogue = buildJsonArray {
             history.takeLast(8).stream().filter { it.kind == "text" }.forEach { message ->
-                add(
-                    buildJsonObject {
-                        put("sender", if (message.outgoing) "owner" else "contact")
-                        put("text", message.text.take(800))
-                    },
-                )
+                add(authors.data(message, MAX_RESEARCH_MESSAGE_CHARACTERS))
             }
         }
         val messages = listOf(

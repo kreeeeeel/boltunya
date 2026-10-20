@@ -11,6 +11,26 @@ import kotlin.test.assertTrue
 
 class ResearchPlannerTest {
     @Test
+    fun `search planning receives separate group authors and reply references`() {
+        val history = listOf(
+            ChatMessage("1", "42", "Я в Казани", false, 1, group = true, senderName = "Аня", senderId = "user:10"),
+            ChatMessage(
+                "2", "42", "Какая у тебя погода?", false, 2, group = true,
+                senderName = "Марк", senderId = "user:20", replyToId = "1", replyText = "Я в Казани",
+            ),
+        )
+        ResearchPlanner().plan(history, "") { messages, _ ->
+            val context = messages.last().text.orEmpty()
+            assertTrue(context.contains("\"senderId\":\"user:10\""))
+            assertTrue(context.contains("\"senderId\":\"user:20\""))
+            assertTrue(context.contains("\"senderName\":\"Аня\""))
+            assertTrue(context.contains("\"senderName\":\"Марк\""))
+            assertTrue(context.contains("\"replyToId\":\"1\""))
+            """{"kind":"none"}"""
+        }
+    }
+
+    @Test
     fun `world news followup changes region while retaining the supplied topic`() {
         val planner = ResearchPlanner()
         val initial = ChatMessage("1", "42", "Новости технологий в России сегодня", false, 0)

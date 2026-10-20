@@ -10,6 +10,7 @@ import ru.boltunya.ai.ConversationService
 import ru.boltunya.ai.DownloadWriter
 import ru.boltunya.ai.EngineManager
 import ru.boltunya.ai.EngineProcessLocator
+import ru.boltunya.ai.MessageContextFormatter
 import ru.boltunya.ai.ModelCatalog
 import ru.boltunya.ai.ModelInference
 import ru.boltunya.ai.OllamaInstallation
@@ -172,6 +173,7 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
             SettingsEndpoint::class.java,
             StateEndpoint::class.java,
             PersonalStyleBuilder::class.java,
+            MessageContextFormatter::class.java,
             ReplyQualityGuard::class.java,
             ResearchFactGuard::class.java,
             EngineManager::class.java,
@@ -262,8 +264,12 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
     )
 
     @Provides @Singleton
-    fun prompts(clock: Clock, personalStyle: PersonalStyleBuilder, links: ResearchLinkPolicy): PromptBuilder =
-        PromptBuilder(clock, personalStyle, links)
+    fun prompts(
+        clock: Clock,
+        personalStyle: PersonalStyleBuilder,
+        links: ResearchLinkPolicy,
+        authors: MessageContextFormatter,
+    ): PromptBuilder = PromptBuilder(clock, personalStyle, links, authors)
 
     @Provides @Singleton
     fun researcher(
@@ -276,7 +282,7 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
     ): InternetResearcher = InternetResearcher(weather, search, clock, selector, pages::read, currencies)
 
     @Provides @Singleton
-    fun planner(clock: Clock): ResearchPlanner = ResearchPlanner(clock)
+    fun planner(clock: Clock, authors: MessageContextFormatter): ResearchPlanner = ResearchPlanner(clock, authors)
 
     @Provides @Singleton
     fun ollamaRuntime(): OllamaRuntime = OllamaRuntime(configuration.ollamaUrl)

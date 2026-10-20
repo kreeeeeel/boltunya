@@ -66,6 +66,7 @@ class LiveModelQualityTest {
                                     services.reply(
                                         ChatRule(
                                             model = model,
+                                            style = case["style"]?.jsonPrimitive?.content ?: "friendly",
                                             maxTokens = 128,
                                             creativity = 20,
                                             emoji = false,

@@ -278,5 +278,47 @@
       "16[.]10[.]2026|2026-10-16|16\\s+октября|сегодня"
     ],
     "maxLength": 600
+  },
+  {
+    "id": "style-friendly",
+    "style": "friendly",
+    "history": [{"id":"1","chatId":"synthetic-style","text":"Опять всё откладываю, файл до сих пор не отправил.","outgoing":false,"date":0}],
+    "expected": ["(?s)^(?!.*(?:бля|пизд)).*$"],
+    "maxLength": 300
+  },
+  {
+    "id": "style-business",
+    "style": "business",
+    "history": [{"id":"1","chatId":"synthetic-style","text":"Опять всё откладываю, файл до сих пор не отправил.","outgoing":false,"date":0}],
+    "expected": ["(?-i:^[А-ЯЁA-Z])", "(?s)^(?!.*(?:бля|пизд|ща|ахах|\\)\\))).*$"],
+    "maxLength": 300
+  },
+  {
+    "id": "style-concise",
+    "style": "concise",
+    "history": [{"id":"1","chatId":"synthetic-style","text":"Опять всё откладываю, файл до сих пор не отправил.","outgoing":false,"date":0}],
+    "expected": ["отправ|сделай|пришл|файл|давай|задач"],
+    "maxLength": 120
+  },
+  {
+    "id": "style-warm",
+    "style": "warm",
+    "history": [{"id":"1","chatId":"synthetic-style","text":"Опять всё откладываю, файл до сих пор не отправил.","outgoing":false,"date":0}],
+    "expected": ["понима|быва|ничего|не переж|всё|спокой|не страш|ладно|хорош|не вини|начни|давай"],
+    "maxLength": 300
+  },
+  {
+    "id": "style-aggressive",
+    "style": "aggressive",
+    "history": [{"id":"1","chatId":"synthetic-style","text":"Опять всё откладываю, файл до сих пор не отправил.","outgoing":false,"date":0}],
+    "expected": ["хватит|собер|давай|перестань|отправ|хер|!"],
+    "maxLength": 300
+  },
+  {
+    "id": "style-rough",
+    "style": "rough",
+    "history": [{"id":"1","chatId":"synthetic-style","text":"Опять всё откладываю, файл до сих пор не отправил.","outgoing":false,"date":0}],
+    "expected": ["(?:^|[\\s,.:;!?])(?:бля|нах|хер|хрен|заеб|фигач|ебан|ёб|ебл)"],
+    "maxLength": 300
   }
 ]

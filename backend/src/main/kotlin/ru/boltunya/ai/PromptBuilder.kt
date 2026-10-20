@@ -34,6 +34,7 @@ class PromptBuilder(
     private val clock: Clock = Clock.systemDefaultZone(),
     private val personalStyle: PersonalStyleBuilder = PersonalStyleBuilder(),
     private val links: ResearchLinkPolicy = ResearchLinkPolicy(),
+    private val authors: MessageContextFormatter = MessageContextFormatter(resources),
 ) {
     fun build(
         rule: ChatRule,
@@ -58,6 +59,7 @@ class PromptBuilder(
         } else {
             ""
         }
+        val structured = history.any { it.group || it.replyToId.isNotBlank() || it.replyText.isNotBlank() }
         val baseSystem = resources.prompt(
             if (research.status == "none") "ru/conversation/system" else "ru/research/system",
             mapOf(
@@ -69,7 +71,7 @@ class PromptBuilder(
                 "time" to time,
                 "date" to date,
             ),
-        )
+        ) + if (structured) "\n" + resources.prompt("ru/conversation/authors") else ""
         fun researchContent(data: String): String = resources.prompt(
             "ru/research/context",
             mapOf(
@@ -128,7 +130,11 @@ class PromptBuilder(
                     !resources.regex("intent/internal-analysis").containsMatchIn(it.text)
             }
             .map { message ->
-                val text = message.text.take(MAX_MESSAGE_CHARACTERS)
+                val text = if (structured && !message.outgoing) {
+                    authors.content(message, MAX_MESSAGE_CHARACTERS)
+                } else {
+                    message.text.take(MAX_MESSAGE_CHARACTERS)
+                }
                 if (message.outgoing) AssistantMessage.builder().content(text).build() else UserMessage(text)
             }.collect(Collectors.toList()).asReversed()
 
