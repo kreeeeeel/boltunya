@@ -1,6 +1,10 @@
 # Conversation memory
 
-Boltunya learns an owner profile from real outgoing messages: writing style, habits, interests and confirmed personal facts. This profile is shared across conversations. Separate chat summaries retain relationships and private arrangements. Incremental batches gradually cover available history.
+Boltunya learns a factual owner profile from real outgoing messages: confirmed personal facts, interests, everyday habits and substantive preferences. This profile is shared across conversations. Separate chat summaries retain relationships, important events and private arrangements. Automatic summaries exclude writing style, tone, emoji habits and instructions about how the model should respond. Incremental batches gradually cover available history.
+
+The selected conversation style is a separate system instruction after the factual context. Optional punctuation and vocabulary observations come from manual outgoing messages, outside the memory bank, and remain subordinate to that style. Named styles keep their own instructions separate from additional chat instructions.
+
+This follows the distinction between factual and procedural memory described in [LangMem's concepts](https://langchain-ai.github.io/langmem/concepts/conceptual_guide/). The existing [Spring AI chat memory](https://docs.spring.io/spring-ai/reference/api/chat-memory.html) remains responsible for the recent message window. A second memory framework or external database is not required for this local profile.
 
 ## Files
 
@@ -18,6 +22,8 @@ memory/
 The global file is created at startup and combines manual notes with the active account’s learned profile. Profiles are also stored in `memory/<telegramAccountId>/PROFILE.md` and restored when switching accounts. Contact facts stay in individual chat summaries. Chat files are created for chats in use, profile sources and explicit update requests.
 
 Generated content is enclosed by `<!-- boltunya:auto:start -->` and `<!-- boltunya:auto:end -->`. Text outside this section is maintained by the owner. Both the app and an ordinary editor can edit it. Background updates preserve manual notes, including Markdown indentation; concurrent edits invalidate a pending summary instead of being overwritten.
+
+Factual generated sections carry a version marker. Legacy automatic summaries may contain writing instructions, so they are excluded from generation and subsequent summarization until rebuilt. Their text remains visible and manual notes are preserved. Only eligible chats already selected by the worker are scheduled for factual backfill; upgrading does not scan every account chat. Successful batches replace the old generated section and advance its factual version.
 
 ## Scheduling and processing
 

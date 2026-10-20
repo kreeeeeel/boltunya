@@ -23,13 +23,14 @@ Boltunya is a Windows desktop application for reading Telegram conversations and
 ## What it does
 
 - **A familiar conversation view.** Avatars, formatted text, clickable links, replies, photos, video, audio, documents, spoilers and static/animated stickers. Group messages show author photos and names, with consecutive messages grouped by sender. The selected conversation's wallpaper spans the workspace behind opaque panels and floating navigation. History loads as you scroll without losing your position.
-- **Replies in your voice.** Real outgoing messages and a shared owner profile inform vocabulary, punctuation and tone. Known AI replies are excluded from owner-style samples. Built-in tones and custom emoji styles are available per conversation.
+- **An explicit tone per conversation.** The selected built-in or named custom style is a separate system instruction. Optional adaptation uses only real outgoing messages and cannot replace that style. Known AI replies are excluded.
 - **Local models with a useful catalog.** Search 27 downloadable models across Qwen, Gemma, DeepSeek, GPT-OSS, Llama, Mistral and Phi. Compare memory estimates, context, reasoning, license and download size; measure speed on your own machine. Install Ollama and models from the application with progress feedback.
+- **Explicit compute selection.** Choose automatic placement, CPU or a detected NVIDIA GPU for app-managed Ollama. External services remain under their own configuration; AMD and Intel use Ollama's automatic selection. [Device settings](docs/ai/gpu-en.md).
 - **Current information, naturally phrased.** Keyless search, Open-Meteo weather, dated news and official exchange rates. Short follow-ups retain the previous topic. Replies are instructed to preserve significant digits and dates while matching your style; links are limited to retrieved sources and follow your preferences.
 - **A memory bank you control.** Shared owner facts and habits, per-chat summaries, editable notes, incremental background collection and manual deep rebuilds with progress, queue state and cancellation.
 - **Visual workflows.** Connect command, agent, reply, condition and local JSON storage nodes. Test a draft before saving it, without sending a Telegram message.
 - **Deliberate automation.** Sequential replies, configurable delays and intervals, optional typing indicators, per-chat controls and group mention/all-message modes. Group automation starts disabled.
-- **A visible reply queue.** Pause dispatch, prioritize or stop tasks, and inspect prompts, streamed thinking, responses and token/timing metrics in event cards. [Queue and trace details](docs/activity/en.md).
+- **A visible reply queue.** Pause dispatch, prioritize or stop tasks, inspect prompts, streamed thinking, responses and token/timing metrics, and rate completed replies with an optional comment. [Queue and trace details](docs/activity/en.md).
 - **Built-in troubleshooting.** The Errors page groups failures into cards with a timestamp, occurrence count, explanation and recovery steps. Detail dialogs show safe technical metadata, without copying conversation text or credentials into the error log.
 - **A proper desktop shell.** A draggable title bar, maximize within the Windows work area, compact tray menu, optional startup in the tray, and separate startup/resume preferences. Resource charts show application and system activity.
 - **Four languages, two themes.** English, Russian, Kazakh and Ukrainian; light/dark themes and bundled Noto Sans typography.
@@ -78,6 +79,7 @@ The persistent profile is `%LOCALAPPDATA%\Tiho` (the legacy directory is kept to
 | `history/`, `automated-replies.json` | Observed message snapshots and known AI message IDs |
 | `engine/` | App-managed Ollama runtime |
 | `diagnostics/` | Bounded technical error history |
+| `feedback/activity.json` | Local response ratings and optional comments |
 | `desktop/updates/` | Verified update downloads and installer state |
 
 Native Ollama model weights usually live in `%USERPROFILE%\.ollama\models`, or the location set by `OLLAMA_MODELS`. A separate service or container can use a different directory. The application's storage panel distinguishes these cases instead of inventing a local path for a remote service.
@@ -146,13 +148,17 @@ $env:TIHO_LIVE_AI='true'
 ./gradlew.bat :backend:test --tests 'ru.boltunya.ai.LiveModelQualityTest' --no-daemon
 ```
 
-The current `qwen3:4b` tag requires thinking and is listed separately from its instruct variant. Reasoning stays in its own channel; incomplete replies and detected internal analysis are retried within fixed limits and rejected if they still fail. Real owner messages contribute an abstract voice profile; unrelated phrases are not inserted as response examples. The shared memory supplies vocabulary, habits and owner facts. The optional “Ignore assistant tasks” setting skips requests such as recipes before automatic generation; manual previews can still test them.
+The current `qwen3:4b` tag requires thinking and is listed separately from its instruct variant. Reasoning stays in its own channel; incomplete replies and detected internal analysis are retried within fixed limits and rejected if they still fail. Memory supplies confirmed owner facts, relationships and arrangements, rather than writing instructions. Optional observations of manual outgoing messages remain separate from memory and subordinate to the selected tone. The optional “Ignore assistant tasks” setting skips requests such as recipes before automatic generation; manual previews can still test them.
+
+Active streaming generation has no three-minute total deadline. An inference stream fails after ten minutes without a new chunk; thinking chunks count as progress. Tasks can still be stopped from the queue. Response ratings are local feedback, not automatic model training.
 
 Models that fail the application's automation checks are labelled **Drafts only**. In this release, `qwen3:0.6b` is restricted after a harmful-request test failure: it can be downloaded, selected while AI is paused and used for manual previews, while automatic sending is rejected. The application keeps the model you selected. Explicit requests to recall earlier facts allow those facts to be repeated. Previously leaked analysis from known automated messages is excluded from the model's conversation window without removing messages from the interface or archive.
 
 Recorded model results and the complete synthetic outputs are available in the [installed-model quality report](docs/ai/model-quality-2026-10-16.md). It includes failures and manual review findings; passing the automated checks does not certify a model for every conversation.
 
 The [20 October follow-up](docs/ai/model-quality-2026-10-20.md) verifies final/thinking separation on the currently installed R1 and GPT-OSS models and records the remaining tone-compliance failures.
+
+The [21 October focused check](docs/ai/model-quality-2026-10-21.md) verifies factual recall and business wording with the new memory/style separation. It also records R1's failure to start streaming and GPT-OSS's remaining rough-style failure.
 
 See [Docker tooling](docker/README.md) for a static frontend preview and JVM checks. The Telegram desktop session and Windows DPAPI remain native.
 

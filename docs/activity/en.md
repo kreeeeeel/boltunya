@@ -21,6 +21,16 @@ Token usage comes from Ollama; completion tokens include reasoning when reported
 
 ![Request details](../resources/activity-details.png)
 
+## Reply feedback
+
+A completed event with a ready response can be marked **good** or **bad**. Rate it from the card or its details; the details dialog also accepts an optional comment of up to 1,000 characters, changes and removal. Queued tasks, active generation and failed events without a ready response cannot be rated.
+
+Feedback is saved locally in the profile's `feedback/activity.json`, separately from memory. It does not train the model or enter message context. The store contains the event UUID, rating, comment and edit time; prompts, incoming messages and generated responses are not automatically copied. A comment is stored as entered by the owner.
+
+Event cards currently belong to the running session. Feedback records survive restarts, but old event cards are not restored. Clearing the current event history does not remove the feedback file.
+
+`PUT /api/activity/{id}/feedback` accepts `rating: good | bad` and an optional `comment`. Omitting the comment retains it; an empty string clears it. `DELETE` on the same route removes feedback. Both actions require the local session: unknown events return 404, unfinished events or missing ready responses return 409, and invalid fields return 400.
+
 ## Retention and privacy
 
 Prompts may contain conversation history, instructions and memory. Full traces are accessible to the owner through the authenticated loopback API, loaded only for an opened modal and updated while its task is active. Closing the modal aborts its request. Thinking never substitutes for the final Telegram answer.
