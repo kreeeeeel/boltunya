@@ -23,4 +23,6 @@ data class ActivityEntry(
     val finishedAt: Long = 0,
     val waitUntil: Long = 0,
     val preview: String = "",
+    val feedbackAvailable: Boolean = false,
+    val feedbackRating: ActivityFeedbackRating? = null,
 )

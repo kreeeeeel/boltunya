@@ -9,6 +9,8 @@ import ru.boltunya.http.RequestReader
 private const val MAX_MODEL_NAME_CHARACTERS = 120
 
 class EngineEndpoint @Inject constructor(private val engine: EngineManager, private val input: RequestReader) {
+    fun devices() = engine.devices()
+
     fun act(route: ApiRoute, body: JsonObject) {
         when (route) {
             ApiRoute.ENGINE_INSTALL -> engine.installEngine()

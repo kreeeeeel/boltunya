@@ -6,6 +6,7 @@ import ru.boltunya.diagnostics.DiagnosticLog
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ChatRule
 import ru.boltunya.domain.ReplyResult
+import ru.boltunya.domain.WritingStyle
 import ru.boltunya.exception.impl.InvalidModelReplyException
 import ru.boltunya.exception.impl.TelegramRateLimitException
 import ru.boltunya.resources.ResourceCatalog
@@ -13,6 +14,7 @@ import ru.boltunya.storage.AutomatedReplyStore
 import ru.boltunya.storage.SettingsStore
 import java.nio.file.Path
 import java.time.Clock
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -122,6 +124,48 @@ class ReplyCoordinatorTest {
             finish.countDown()
             await { coordinator.activities().any { it.status == "cancelled" } }
             assertTrue(gateway.sent.isEmpty())
+        }
+    }
+
+    @Test
+    fun `cancels an outdated named style response and uses edited instructions for the next message`() {
+        val settings = enabledSettings()
+        val preset = WritingStyle("personal", "Мой стиль", "💬", "Прежняя манера")
+        settings.update { it.copy(customStyles = listOf(preset)) }
+        settings.saveRule("42", ChatRule(enabled = true, style = "custom", styleId = preset.id))
+        val originalRule = settings.rule("42")
+        val gateway = FakeTelegramGateway()
+        val started = CountDownLatch(1)
+        val finish = CountDownLatch(1)
+        val generated = CopyOnWriteArrayList<String>()
+        ReplyCoordinator(settings, gateway) { rule, _ ->
+            val instructions = settings.resolve(rule).resolvedStyleInstructions
+            generated.add(instructions)
+            if (generated.size == 1) {
+                started.countDown()
+                finish.await(5, TimeUnit.SECONDS)
+            }
+            ReplyResult(instructions, 0, 0.0)
+        }.use { coordinator ->
+            try {
+                coordinator.onMessage(gateway.messages[0])
+                assertTrue(started.await(5, TimeUnit.SECONDS))
+                settings.update { it.copy(customStyles = listOf(preset.copy(instructions = "Новая манера"))) }
+                assertEquals(originalRule, settings.rule("42"))
+                finish.countDown()
+                await {
+                    coordinator.activities().any { it.status == "cancelled" } && coordinator.queue().running == 0
+                }
+                assertTrue(gateway.sent.isEmpty())
+                val next = ChatMessage("2", "42", "Следующее сообщение", false, 0)
+                gateway.messages = gateway.messages + next
+                coordinator.onMessage(next)
+                await { gateway.sent.size == 1 }
+                assertEquals(listOf("Прежняя манера", "Новая манера"), generated.toList())
+                assertEquals(listOf("Новая манера"), gateway.sent.toList())
+            } finally {
+                finish.countDown()
+            }
         }
     }
 

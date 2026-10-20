@@ -6,6 +6,7 @@ import ru.boltunya.automation.activity.ActivityStatus
 import ru.boltunya.domain.ActivityEntry
 import java.util.stream.IntStream
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ActivityLogTest {
@@ -23,5 +24,20 @@ class ActivityLogTest {
         assertTrue(log.summaries().none { it.id == "0" })
         log.clearCompleted()
         assertEquals("active", log.summaries().single().id)
+    }
+
+    @Test
+    fun `feedback availability follows a final ready response and excludes in-flight or empty results`() {
+        val log = ActivityLog()
+        val trace = log.add(ActivityEntry("ready", "42", "Test", "queued", "model", 0), "Trigger")
+        assertFalse(log.details("ready").entry.feedbackAvailable)
+        trace.start()
+        trace.generated("Ready answer")
+        assertFalse(log.details("ready").entry.feedbackAvailable)
+        trace.finish(ActivityStatus.SENT, "model", "Ready answer")
+        assertTrue(log.details("ready").entry.feedbackAvailable)
+        val failed = log.add(ActivityEntry("failed", "42", "Test", "queued", "model", 0), "Trigger")
+        failed.finish(ActivityStatus.ERROR, "Error")
+        assertFalse(log.details("failed").entry.feedbackAvailable)
     }
 }

@@ -10,6 +10,8 @@ import kotlinx.serialization.Serializable
 data class AppSettings(
     val paused: Boolean = true,
     val defaultModel: String = "gemma3:4b",
+    @field:Size(max = 80)
+    val ollamaDevice: String = "auto",
     val globalPrompt: String = "",
     @field:Min(0)
     @field:Max(120)

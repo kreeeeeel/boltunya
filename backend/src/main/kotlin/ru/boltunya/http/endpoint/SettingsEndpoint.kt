@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
 import ru.boltunya.ai.EngineManager
 import ru.boltunya.ai.ModelInference
+import ru.boltunya.ai.OllamaDeviceSelector
 import ru.boltunya.automation.ReplyCoordinator
 import ru.boltunya.domain.AppSettings
 import ru.boltunya.domain.GroupReplyMode
@@ -23,6 +24,7 @@ class SettingsEndpoint @Inject constructor(
     private val replies: ReplyCoordinator,
     private val validation: InputValidation,
     private val inference: ModelInference,
+    private val devices: OllamaDeviceSelector,
 ) {
     fun update(body: JsonObject): AppSettings {
         body.entries.stream().forEach { (name, value) ->
@@ -31,6 +33,7 @@ class SettingsEndpoint @Inject constructor(
         }
         val update = json.decodeFromJsonElement<SettingsUpdate>(body)
         validation.validate(update)
+        if (update.ollamaDevice != null) devices.validate(update.ollamaDevice)
         if (update.groupReplies == GroupReplyMode.INHERIT) throw InvalidSettingTypeException()
         if (update.customStyles != null &&
             update.customStyles.stream().map { it.id }.distinct().count() != update.customStyles.size.toLong()
@@ -52,6 +55,7 @@ class SettingsEndpoint @Inject constructor(
             it.copy(
                 paused = update.paused ?: it.paused, globalPrompt = update.globalPrompt ?: it.globalPrompt,
                 defaultModel = update.defaultModel ?: it.defaultModel,
+                ollamaDevice = update.ollamaDevice ?: it.ollamaDevice,
                 replyDelaySeconds = update.replyDelaySeconds ?: it.replyDelaySeconds,
                 replyIntervalSeconds =
                 update.replyIntervalSeconds ?: it.replyIntervalSeconds,

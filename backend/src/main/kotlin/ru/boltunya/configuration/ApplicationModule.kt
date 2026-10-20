@@ -6,6 +6,7 @@ import jakarta.inject.Provider
 import jakarta.inject.Singleton
 import kotlinx.serialization.json.Json
 import org.springframework.ai.chat.model.ChatModel
+import ru.boltunya.ai.ComputeDeviceDiscovery
 import ru.boltunya.ai.ConversationService
 import ru.boltunya.ai.DownloadWriter
 import ru.boltunya.ai.EngineManager
@@ -13,6 +14,8 @@ import ru.boltunya.ai.EngineProcessLocator
 import ru.boltunya.ai.MessageContextFormatter
 import ru.boltunya.ai.ModelCatalog
 import ru.boltunya.ai.ModelInference
+import ru.boltunya.ai.NvidiaDeviceDiscovery
+import ru.boltunya.ai.OllamaDeviceSelector
 import ru.boltunya.ai.OllamaInstallation
 import ru.boltunya.ai.OllamaModelInventory
 import ru.boltunya.ai.OllamaRuntime
@@ -83,6 +86,7 @@ import ru.boltunya.memory.OwnerMemorySummarizer
 import ru.boltunya.monitoring.MonitoringService
 import ru.boltunya.monitoring.NvidiaMonitor
 import ru.boltunya.resources.ResourceCatalog
+import ru.boltunya.storage.ActivityFeedbackStore
 import ru.boltunya.storage.AutomatedReplyStore
 import ru.boltunya.storage.CredentialStore
 import ru.boltunya.storage.MessageArchiveStore
@@ -127,6 +131,7 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
         bind(TelegramGateway::class.java).to(TdLightGateway::class.java)
         bind(MemorySummarizer::class.java).to(OllamaMemorySummarizer::class.java)
         bind(StorageClient::class.java).to(TdLightStorageClient::class.java)
+        bind(ComputeDeviceDiscovery::class.java).to(NvidiaDeviceDiscovery::class.java)
         bind(OwnerMemorySummarizer::class.java).to(OllamaMemorySummarizer::class.java)
         bind(ExitAction::class.java).to(ProcessExit::class.java).`in`(Singleton::class.java)
         bind(Path::class.java).toInstance(configuration.directory)
@@ -181,6 +186,8 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
             ReplyQualityGuard::class.java,
             ResearchFactGuard::class.java,
             EngineManager::class.java,
+            NvidiaDeviceDiscovery::class.java,
+            OllamaDeviceSelector::class.java,
             EngineProcessLocator::class.java,
             DownloadWriter::class.java,
             RegistryBlobDownloader::class.java,
@@ -193,6 +200,7 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
             FlowValidation::class.java,
             CredentialStore::class.java,
             AutomatedReplyStore::class.java,
+            ActivityFeedbackStore::class.java,
             WritingStyleStore::class.java,
             ModelMeasurementStore::class.java,
             ConversationService::class.java,
@@ -334,7 +342,9 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
         flows: FlowEngine,
         tracing: ReplyTraceScope,
         diagnostics: DiagnosticLog,
-    ): ReplyCoordinator = ReplyCoordinator(settings, telegram, automated, flows, tracing, diagnostics, generator::reply)
+        feedback: ActivityFeedbackStore,
+    ): ReplyCoordinator =
+        ReplyCoordinator(settings, telegram, automated, flows, tracing, diagnostics, feedback, generator::reply)
 
     @Provides @Singleton
     fun json(): Json = Json { encodeDefaults = true }

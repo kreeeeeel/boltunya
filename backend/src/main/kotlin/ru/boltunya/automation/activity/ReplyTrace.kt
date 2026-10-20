@@ -7,6 +7,12 @@ import ru.boltunya.domain.ActivityEntry
 import ru.boltunya.domain.ActivityMessage
 import ru.boltunya.domain.ActivityStep
 
+private val FINAL_STATUSES = setOf(
+    ActivityStatus.SENT.value,
+    ActivityStatus.CANCELLED.value,
+    ActivityStatus.ERROR.value,
+)
+
 class ReplyTrace(private var entry: ActivityEntry, private val trigger: String) {
     private val attempts = mutableListOf<AttemptTrace>()
     private val steps = mutableListOf(ActivityStep("queued", System.currentTimeMillis()))
@@ -44,10 +50,15 @@ class ReplyTrace(private var entry: ActivityEntry, private val trigger: String) 
     }
 
     @Synchronized
-    fun finish(status: ActivityStatus, detail: String, text: String = "") {
+    fun generated(text: String) {
+        if (active()) response = text
+    }
+
+    @Synchronized
+    fun finish(status: ActivityStatus, detail: String, text: String? = null) {
         if (!active()) return
         phase(ActivityPhase.valueOf(status.name))
-        response = text
+        if (text != null) response = text
         val now = System.currentTimeMillis()
         attempts.stream().forEach { it.stop(now) }
         entry = entry.copy(
@@ -77,6 +88,7 @@ class ReplyTrace(private var entry: ActivityEntry, private val trigger: String) 
             outputTokens = usage.stream().mapToInt { it.second }.sum(),
             attempts = attempts.size,
             preview = response.ifBlank { trigger }.take(180),
+            feedbackAvailable = entry.status in FINAL_STATUSES && response.isNotBlank(),
             durationMs = if (entry.startedAt > 0 &&
                 active()
             ) {

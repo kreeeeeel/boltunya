@@ -23,6 +23,7 @@ enum class SettingKey(val jsonName: String, private val kind: SettingValueKind) 
     REPLY_DELAY_SECONDS("replyDelaySeconds", SettingValueKind.INTEGER),
     REPLY_INTERVAL_SECONDS("replyIntervalSeconds", SettingValueKind.INTEGER),
     DEFAULT_MODEL("defaultModel", SettingValueKind.STRING),
+    OLLAMA_DEVICE("ollamaDevice", SettingValueKind.STRING),
     GLOBAL_PROMPT("globalPrompt", SettingValueKind.STRING),
     GROUP_REPLIES("groupReplies", SettingValueKind.STRING),
     CUSTOM_STYLES("customStyles", SettingValueKind.LIST),

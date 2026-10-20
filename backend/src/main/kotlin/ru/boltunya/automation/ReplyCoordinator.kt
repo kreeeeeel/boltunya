@@ -9,6 +9,8 @@ import ru.boltunya.diagnostics.DiagnosticLog
 import ru.boltunya.diagnostics.DiagnosticSource
 import ru.boltunya.domain.ActivityDetails
 import ru.boltunya.domain.ActivityEntry
+import ru.boltunya.domain.ActivityFeedback
+import ru.boltunya.domain.ActivityFeedbackUpdate
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ChatRule
 import ru.boltunya.domain.GroupReplyMode
@@ -16,11 +18,13 @@ import ru.boltunya.domain.ReplyQueueState
 import ru.boltunya.domain.ReplyResult
 import ru.boltunya.exception.AppException
 import ru.boltunya.exception.impl.ActivityDeliveryStartedException
+import ru.boltunya.exception.impl.ActivityFeedbackUnavailableException
 import ru.boltunya.exception.impl.ActivityNotFoundException
 import ru.boltunya.exception.impl.ReplyCancelledException
 import ru.boltunya.exception.impl.ReplyDeliveryFailedException
 import ru.boltunya.exception.impl.TelegramRateLimitException
 import ru.boltunya.flows.FlowEngine
+import ru.boltunya.storage.ActivityFeedbackStore
 import ru.boltunya.storage.AutomatedReplyStore
 import ru.boltunya.storage.SettingsStore
 import ru.boltunya.telegram.TelegramGateway
@@ -43,6 +47,7 @@ class ReplyCoordinator(
     private val flows: FlowEngine? = null,
     private val tracing: ReplyTraceScope = ReplyTraceScope(),
     private val diagnostics: DiagnosticLog? = null,
+    private val feedback: ActivityFeedbackStore? = null,
     private val generate: (ChatRule, List<ChatMessage>) -> ReplyResult,
 ) : AutoCloseable {
     private val scheduler = Executors.newSingleThreadScheduledExecutor()
@@ -77,6 +82,7 @@ class ReplyCoordinator(
                 queuePosition = positions[entry.id] ?: 0,
                 priority = job?.priority ?: false,
                 waitUntil = job?.waitUntil ?: 0,
+                feedbackRating = feedback?.get(entry.id)?.rating,
             )
         }.toList()
     }
@@ -100,9 +106,26 @@ class ReplyCoordinator(
                 queuePosition = position,
                 priority = job?.priority ?: false,
                 waitUntil = job?.waitUntil ?: 0,
+                feedbackRating = feedback?.get(id)?.rating,
             ),
+            feedback = feedback?.get(id),
         )
     }
+
+    fun saveFeedback(id: String, update: ActivityFeedbackUpdate): ActivityFeedback = synchronized(gate) {
+        val details = log.details(id)
+        val store = feedback
+        if (!details.entry.feedbackAvailable || store == null) throw ActivityFeedbackUnavailableException()
+        store.save(id, update)
+    }
+
+    fun removeFeedback(id: String) = synchronized(gate) {
+        val details = log.details(id)
+        val store = feedback
+        if (!details.entry.feedbackAvailable || store == null) throw ActivityFeedbackUnavailableException()
+        store.remove(id)
+    }
+
     fun pauseQueue(paused: Boolean) = synchronized(gate) { queuePaused = paused }
     fun clearCompleted() = log.clearCompleted()
 
@@ -183,6 +206,7 @@ class ReplyCoordinator(
         job.thread = Thread.currentThread()
         val message = job.message
         val rule = settings.rule(message.chatId)
+        val resolvedRule = settings.resolve(rule)
         val generationEpoch = epoch.get()
         var indicator: java.util.concurrent.ScheduledFuture<*>? = null
         try {
@@ -206,9 +230,11 @@ class ReplyCoordinator(
                 val execution = flows?.execute(message, rule, context)
                 val result = execution?.reply ?: generate(rule, context)
                 tracing.phase(ActivityPhase.VALIDATING)
+                job.trace.generated(result.text)
                 // Commit delivery under the queue lock; never hold it across a blocking TDLib call.
                 synchronized(gate) {
                     if (job.cancelled.get() || !allowed(message, rule) || settings.rule(message.chatId) != rule ||
+                        settings.resolve(settings.rule(message.chatId)) != resolvedRule ||
                         settings.get().globalPrompt != globalPrompt || epoch.get() != generationEpoch
                     ) {
                         throw ReplyCancelledException()
@@ -225,7 +251,7 @@ class ReplyCoordinator(
                     automated?.record(message.chatId, sentId)
                 }
                 if (execution != null) flows?.commit(execution)
-                job.trace.finish(ActivityStatus.SENT, settings.resolve(rule).model, result.text)
+                job.trace.finish(ActivityStatus.SENT, resolvedRule.model, result.text)
             }
         } catch (exception: Exception) {
             if (job.cancelled.get() || exception is ReplyCancelledException || Thread.currentThread().isInterrupted) {

@@ -114,6 +114,7 @@ class ApiRouter @Inject constructor(
             }
             ApiRoute.PREVIEW -> json.encodeToJsonElement(preview.reply(body))
             ApiRoute.FLOWS -> json.encodeToJsonElement(flows.list())
+            ApiRoute.ENGINE_DEVICES -> json.encodeToJsonElement(engine.devices())
             ApiRoute.ENGINE_INSTALL, ApiRoute.ENGINE_START, ApiRoute.MODEL_PULL, ApiRoute.MODEL_CANCEL -> {
                 engine.act(route, body)
                 ok()
@@ -141,6 +142,12 @@ class ApiRouter @Inject constructor(
                 }
                 parts.size == ACTION_SEGMENTS && method == HttpMethod.POST && parts[ACTION_SEGMENT] == "priority" -> {
                     activity.prioritize(id)
+                    ok()
+                }
+                parts.size == ACTION_SEGMENTS && method == HttpMethod.PUT && parts[ACTION_SEGMENT] == "feedback" ->
+                    json.encodeToJsonElement(activity.feedback(id, body))
+                parts.size == ACTION_SEGMENTS && method == HttpMethod.DELETE && parts[ACTION_SEGMENT] == "feedback" -> {
+                    activity.removeFeedback(id)
                     ok()
                 }
                 else -> throw RouteNotFoundException()

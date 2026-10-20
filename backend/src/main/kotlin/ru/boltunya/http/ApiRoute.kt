@@ -16,6 +16,7 @@ enum class ApiRoute(val path: String, val method: HttpMethod) {
     PREVIEW("/api/preview", HttpMethod.POST),
     ENGINE_INSTALL("/api/engine/install", HttpMethod.POST),
     ENGINE_START("/api/engine/start", HttpMethod.POST),
+    ENGINE_DEVICES("/api/engine/devices", HttpMethod.GET),
     MODEL_PULL("/api/models/pull", HttpMethod.POST),
     MODEL_CANCEL("/api/models/cancel", HttpMethod.POST),
     METRICS("/api/metrics", HttpMethod.GET),

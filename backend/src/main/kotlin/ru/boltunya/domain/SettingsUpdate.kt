@@ -10,6 +10,8 @@ import kotlinx.serialization.Serializable
 data class SettingsUpdate(
     val paused: Boolean? = null,
     val defaultModel: String? = null,
+    @field:Size(max = 80)
+    val ollamaDevice: String? = null,
     @field:Size(max = 4000)
     val globalPrompt: String? = null,
     @field:Min(0) @field:Max(120)

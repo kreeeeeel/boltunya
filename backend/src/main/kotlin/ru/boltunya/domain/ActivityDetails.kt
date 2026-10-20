@@ -9,4 +9,5 @@ data class ActivityDetails(
     val response: String = "",
     val attempts: List<ActivityAttempt> = emptyList(),
     val steps: List<ActivityStep> = emptyList(),
+    val feedback: ActivityFeedback? = null,
 )

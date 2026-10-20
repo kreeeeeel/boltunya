@@ -5,6 +5,7 @@ import com.google.inject.Guice
 import com.google.inject.util.Modules
 import it.tdlight.jni.TdApi
 import ru.boltunya.ai.AiTestServices
+import ru.boltunya.ai.ComputeDeviceDiscovery
 import ru.boltunya.ai.ConversationService
 import ru.boltunya.ai.EngineManager
 import ru.boltunya.ai.OllamaRuntime
@@ -33,6 +34,7 @@ class TestWebServerFactory {
         storageClient: StorageClient = StorageClient { TdApi.StorageStatistics(0, 0, emptyArray()) },
         search: ExaMcpSearchClient? = null,
         diagnostics: DiagnosticLog? = null,
+        devices: ComputeDeviceDiscovery? = null,
         onQuit: () -> Unit,
     ): LocalWebServer {
         val overrides = object : AbstractModule() {
@@ -48,6 +50,7 @@ class TestWebServerFactory {
                 bind(StorageClient::class.java).toInstance(storageClient)
                 if (search != null) bind(ExaMcpSearchClient::class.java).toInstance(search)
                 if (diagnostics != null) bind(DiagnosticLog::class.java).toInstance(diagnostics)
+                if (devices != null) bind(ComputeDeviceDiscovery::class.java).toInstance(devices)
                 bind(LocalSession::class.java).toInstance(LocalSession(token))
                 bind(ExitAction::class.java).toInstance(ExitAction(onQuit))
             }

@@ -3,6 +3,8 @@ package ru.boltunya.ai
 import jakarta.inject.Inject
 import ru.boltunya.diagnostics.DiagnosticLog
 import ru.boltunya.diagnostics.DiagnosticSource
+import ru.boltunya.domain.ComputeDevice
+import ru.boltunya.domain.ComputeDeviceStatus
 import ru.boltunya.domain.EngineStatus
 import ru.boltunya.domain.ModelInfo
 import ru.boltunya.exception.IntegrationException
@@ -39,6 +41,7 @@ class EngineManager @Inject constructor(
     private val installation: OllamaInstallation = OllamaInstallation(directory),
     private val localModels: OllamaModelInventory = OllamaModelInventory(),
     private val diagnostics: DiagnosticLog? = null,
+    private val devices: OllamaDeviceSelector? = null,
 ) : AutoCloseable {
     private val executor = Executors.newSingleThreadExecutor()
 
@@ -61,7 +64,10 @@ class EngineManager @Inject constructor(
 
     @Volatile
     private var warming = ""
-    private var managedServer: ProcessHandle? = null
+
+    @Volatile private var managedServer: ProcessHandle? = null
+
+    @Volatile private var activeDevice: String? = null
 
     fun status(): EngineStatus {
         var online = true
@@ -78,21 +84,50 @@ class EngineManager @Inject constructor(
         )
     }
 
+    fun devices(): ComputeDeviceStatus {
+        val online = status().online
+        val managed = managedServer?.isAlive == true
+        return devices?.status(
+            online,
+            ollama.isLocalServer,
+            ollama.isDefaultLocalServer,
+            installation.executable() != null,
+            managed,
+            activeDevice,
+        ) ?: ComputeDeviceStatus(
+            "auto",
+            null,
+            managed,
+            false,
+            false,
+            "external",
+            listOf(ComputeDevice("auto", "Auto", "auto"), ComputeDevice("cpu", "CPU", "cpu")),
+        )
+    }
+
     @Synchronized
     fun start() {
         if (status().online) {
             if (ollama.isDefaultLocalServer && managedServer?.isAlive != true) {
                 managedServer = processes.find(directory.resolve("engine/ollama.exe").toAbsolutePath().normalize())
+                activeDevice = null
             }
             return
         }
         if (managedServer?.isAlive == true || !ollama.isDefaultLocalServer) return
         val executable = installation.executable() ?: return
+        val selected = devices?.selected() ?: "auto"
+        managedServer = prepareProcess(executable, selected).start().toHandle()
+        activeDevice = selected
+    }
+
+    internal fun prepareProcess(executable: Path, selected: String = devices?.selected() ?: "auto"): ProcessBuilder {
         val logs = directory.resolve("engine.log").toFile()
-        managedServer = ProcessBuilder(executable.toString(), "serve")
+        val process = ProcessBuilder(executable.toString(), "serve")
             .redirectOutput(ProcessBuilder.Redirect.appendTo(logs))
             .redirectError(ProcessBuilder.Redirect.appendTo(logs))
-            .start().toHandle()
+        process.environment().putAll(devices?.environment(selected).orEmpty())
+        return process
     }
 
     fun warm(model: String) {
