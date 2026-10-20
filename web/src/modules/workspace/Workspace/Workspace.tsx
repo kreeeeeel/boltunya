@@ -427,6 +427,7 @@ export function Workspace() {
                                 <Box className={styles.inspector}>
                                     <Inspector
                                         chat={chat}
+                                        customStyles={state.settings.customStyles ?? []}
                                         onConfigure={() => setEditing(chat)}
                                         onCollectContext={() => setContextChat(chat)}
                                         onDeleted={() => setDeletedChat(chat)}

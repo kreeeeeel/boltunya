@@ -10,6 +10,7 @@ import {ChatHistoryActions} from '@/modules/workspace/ChatHistoryActions';
 
 export function Inspector({
     chat,
+    customStyles,
     onConfigure,
     onEnable,
     onClose,
@@ -17,6 +18,9 @@ export function Inspector({
     onDeleted,
 }: InspectorProps) {
     const t = useTranslations();
+    const preset = customStyles.find((style) => style.id === chat.rule.styleId);
+    const style =
+        communicationStyles.find((item) => item.value === chat.rule.style) ?? communicationStyles[0];
     return (
         <Flex direction="column" className={styles.root} qa="conversation-settings">
             <Flex alignItems="center" justifyContent="space-between" className={styles.header}>
@@ -38,19 +42,8 @@ export function Inspector({
                     <Box className={styles.line} />
                     <Box>
                         <Text className={styles.sectionLabel}>{t('style')}</Text>
-                        <Label
-                            size="m"
-                            theme="info"
-                            icon={
-                                <Text>
-                                    {
-                                        communicationStyles.find((item) => item.value === chat.rule.style)
-                                            ?.emoji
-                                    }
-                                </Text>
-                            }
-                        >
-                            {t(chat.rule.style)}
+                        <Label size="m" theme="info" icon={<Text>{preset?.emoji ?? style.emoji}</Text>}>
+                            {preset?.name ?? t(style.value)}
                         </Label>
                     </Box>
                     <Box>

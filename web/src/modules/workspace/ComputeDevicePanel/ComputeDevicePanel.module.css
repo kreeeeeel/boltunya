@@ -1,0 +1,12 @@
+.option {
+    min-width: 0;
+    width: 100%;
+}
+
+.option > :first-child {
+    min-width: 0;
+}
+
+.option > :last-child {
+    white-space: nowrap;
+}

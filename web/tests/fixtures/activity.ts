@@ -13,6 +13,8 @@ export const testActivity: Activity[] = [
         thinking: 'Собеседник спрашивает о встрече. Уточню время, отвечу коротко и без лишних подробностей.',
         preview: 'Во сколько завтра встречаемся?',
         attempts: 1,
+        feedbackAvailable: false,
+        feedbackRating: null,
     },
     {
         id: 'queued',
@@ -25,6 +27,8 @@ export const testActivity: Activity[] = [
         phase: 'queued',
         queuePosition: 1,
         preview: 'Как прошёл день?',
+        feedbackAvailable: false,
+        feedbackRating: null,
     },
     {
         id: 'sent',
@@ -39,6 +43,8 @@ export const testActivity: Activity[] = [
         outputTokens: 28,
         attempts: 1,
         preview: 'Давай в шесть, мне удобно. Тебе норм?',
+        feedbackAvailable: true,
+        feedbackRating: null,
     },
     {
         id: 'error',
@@ -50,12 +56,15 @@ export const testActivity: Activity[] = [
         durationMs: 1500,
         phase: 'error',
         attempts: 1,
+        feedbackAvailable: false,
+        feedbackRating: null,
     },
 ];
 
 export function activityDetails(entry: Activity): ActivityDetails {
     return {
         entry,
+        feedback: null,
         trigger: 'Во сколько завтра встречаемся?',
         response: entry.status === 'sent' ? 'Давай в шесть, мне удобно. Тебе норм?' : '',
         steps: [

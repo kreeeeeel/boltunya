@@ -26,6 +26,7 @@ import {StyleOption} from '@/modules/workspace/StyleOption/StyleOption';
 import {ChatHistoryActions} from '@/modules/workspace/ChatHistoryActions';
 import {SaveDialogFooter} from '@/shared/ui/SaveDialogFooter/SaveDialogFooter';
 import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
+import {normalizeCommunicationRule} from '@/modules/workspace/model/normalizeCommunicationRule';
 
 export function RuleDialog({
     chat,
@@ -38,7 +39,12 @@ export function RuleDialog({
     onSave,
 }: RuleDialogProps) {
     const t = useTranslations();
-    const [rule, setRule] = useState(chat.rule);
+    const [rule, setRule] = useState(() =>
+        normalizeCommunicationRule(
+            chat.rule,
+            customStyles.map((style) => style.id),
+        ),
+    );
     const [test, setTest] = useState('');
     const [result, setResult] = useState<Reply | null>(null);
     const [busy, setBusy] = useState('');

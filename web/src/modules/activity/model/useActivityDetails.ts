@@ -3,6 +3,7 @@ import {useEffect, useState} from 'react';
 import {isActive} from '@/modules/activity/model/activity';
 import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
 import type {ActivityDetails} from '@/shared/api/client';
+import type {components} from '@/shared/api/schema';
 
 export function useActivityDetails(id: string) {
     const [details, setDetails] = useState<ActivityDetails | null>(null);
@@ -35,5 +36,8 @@ export function useActivityDetails(id: string) {
             clearTimeout(timer);
         };
     }, [id]);
-    return {details, error};
+    function updateFeedback(feedback: components['schemas']['ActivityFeedback'] | null) {
+        setDetails((previous) => (previous ? {...previous, feedback} : previous));
+    }
+    return {details, error, updateFeedback};
 }

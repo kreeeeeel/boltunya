@@ -3,14 +3,23 @@ import {useLocale, useTranslations} from 'next-intl';
 
 import {ActivityAttempt} from '@/modules/activity/ActivityAttempt/ActivityAttempt';
 import {useActivityDetails} from '@/modules/activity/model/useActivityDetails';
-import {seconds, statusTheme} from '@/modules/activity/model/activity';
+import {isActive, seconds, statusTheme} from '@/modules/activity/model/activity';
 import {TelegramAvatar} from '@/shared/ui/TelegramAvatar/TelegramAvatar';
 import styles from '@/modules/activity/ActivityDetailsDialog/ActivityDetailsDialog.module.css';
+import {ActivityFeedbackEditor} from '@/modules/activity/ActivityFeedbackEditor/ActivityFeedbackEditor';
 
-export function ActivityDetailsDialog({id, onClose}: {readonly id: string; readonly onClose: () => void}) {
+export function ActivityDetailsDialog({
+    id,
+    onClose,
+    onRefresh,
+}: {
+    readonly id: string;
+    readonly onClose: () => void;
+    readonly onRefresh: () => Promise<void>;
+}) {
     const t = useTranslations('events');
     const locale = useLocale();
-    const {details, error} = useActivityDetails(id);
+    const {details, error, updateFeedback} = useActivityDetails(id);
     const entry = details?.entry;
     return (
         <Dialog
@@ -117,11 +126,21 @@ export function ActivityDetailsDialog({id, onClose}: {readonly id: string; reado
                         {entry.status === 'error' && <Text color="danger">{entry.detail}</Text>}
                         {details.response && (
                             <Box className={styles.delivered}>
-                                <Text variant="subheader-1">{t('delivered')}</Text>
+                                <Text variant="subheader-1">
+                                    {t(entry.status === 'sent' ? 'delivered' : 'readyResponse')}
+                                </Text>
                                 <Box as="pre" className={styles.pre}>
                                     {details.response}
                                 </Box>
                             </Box>
+                        )}
+                        {!isActive(entry) && details.response.trim() && (
+                            <ActivityFeedbackEditor
+                                id={id}
+                                value={details.feedback ?? null}
+                                onUpdated={updateFeedback}
+                                onRefresh={onRefresh}
+                            />
                         )}
                         {details.attempts.map((attempt) => (
                             <ActivityAttempt key={attempt.number} attempt={attempt} />

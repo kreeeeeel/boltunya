@@ -5,6 +5,7 @@ import {workspaceState} from '../fixtures/workspace';
 import {testHistory} from '../fixtures/chats';
 import {testActivity} from '../fixtures/activity';
 import type {Message} from '@/shared/api/client';
+import {computeDevices} from '../fixtures/computeDevices';
 
 const launchFile = process.env.TIHO_LAUNCH_FILE ?? join(process.env.LOCALAPPDATA ?? '', 'Tiho', 'launch.url');
 
@@ -30,6 +31,16 @@ test.beforeEach(async ({page}) => {
             await route.fulfill({json: searchConnection});
         } else if (path === '/api/storage/locations') {
             await route.fulfill({json: {locations: []}});
+        } else if (path === '/api/engine/devices') {
+            await route.fulfill({
+                json: {
+                    ...computeDevices,
+                    managed: false,
+                    active: null,
+                    selectionSupported: false,
+                    limitation: 'external',
+                },
+            });
         } else if (path === '/api/cache') {
             await route.fulfill({
                 json: {
@@ -1096,6 +1107,54 @@ test('failed settings saves preserve edits and a successful retry stays open', a
     await expect(typing).not.toBeChecked();
 });
 
+test('GPU selection saves a supported device without restarting the running Ollama', async ({page}) => {
+    const state = structuredClone(workspaceState);
+    const engineActions: string[] = [];
+    page.on('request', (request) => {
+        if (new URL(request.url()).pathname.match(/^\/api\/engine\/(start|install)$/)) {
+            engineActions.push(request.url());
+        }
+    });
+    await page.route('**/api/state', (route) => route.fulfill({json: state}));
+    await page.route('**/api/engine/devices', (route) =>
+        route.fulfill({
+            json: {
+                ...computeDevices,
+                configured: state.settings.ollamaDevice,
+                restartRequired: state.settings.ollamaDevice !== 'auto',
+            },
+        }),
+    );
+    await page.route('**/api/settings', async (route) => {
+        Object.assign(state.settings, route.request().postDataJSON());
+        await route.fulfill({json: {ok: true}});
+    });
+    await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
+    await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
+    const dialog = page.getByRole('dialog', {name: 'Настройки', exact: true});
+    const panel = dialog.locator('[data-qa="compute-device-panel"]');
+    await panel.getByRole('combobox', {name: 'Устройство Ollama'}).click();
+    await page.getByRole('option', {name: /NVIDIA GeForce RTX 4070/}).click();
+    const save = page.waitForRequest(
+        (request) => request.method() === 'PATCH' && request.url().endsWith('/api/settings'),
+    );
+    await dialog.getByRole('button', {name: 'Сохранить настройки', exact: true}).click();
+    expect((await save).postDataJSON().ollamaDevice).toBe(computeDevices.devices[2].id);
+    await expect(dialog.getByRole('button', {name: 'Сохранено', exact: true})).toBeVisible();
+    await expect(panel.getByText('Применится при следующем запуске Ollama', {exact: true})).toBeVisible();
+    await panel.scrollIntoViewIfNeeded();
+    await page.screenshot({path: '../docs/resources/compute-device.png', animations: 'disabled'});
+    expect(engineActions).toEqual([]);
+});
+
+test('external Ollama device selection explains why its controls are disabled', async ({page}) => {
+    await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
+    await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
+    const panel = page.locator('[data-qa="compute-device-panel"]');
+    await expect(panel.getByRole('combobox', {name: 'Устройство Ollama'})).toBeDisabled();
+    await expect(panel.getByText(/Этой Ollama управляет внешний процесс или сервис/)).toBeVisible();
+});
+
 test('all writing styles have emoji and rough styles and imitation survive saving', async ({page}) => {
     await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
     await page.getByRole('combobox', {name: 'Стиль общения', exact: true}).click();
@@ -1280,19 +1339,55 @@ test('named writing styles can be saved and selected for a conversation', async 
     );
     await page.getByRole('button', {name: 'Сохранить настройки', exact: true}).click();
     const preset = (await saved).postDataJSON().customStyles[0];
-    expect(preset).toMatchObject({name: 'Спокойный', emoji: '🧊'});
+    expect(preset).toMatchObject({
+        name: 'Спокойный',
+        emoji: '🧊',
+        instructions: 'Коротко, спокойно и на ты. Без смайлов.',
+    });
     await expect(dialog.getByRole('status')).toHaveText('Сохранено');
     await expect(dialog.getByRole('button', {name: 'Сохранено', exact: true})).toBeVisible();
     await dialog.getByRole('button', {name: 'Отмена', exact: true}).click();
     await expect(dialog).toHaveCount(0);
     await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
     await page.getByRole('combobox', {name: 'Стиль общения', exact: true}).click();
+    await expect(page.getByRole('option', {name: 'Свой стиль', exact: true})).toHaveCount(0);
     await page.getByRole('option', {name: /Спокойный/}).click();
     const rule = page.waitForRequest(
         (request) => request.url().endsWith('/api/chats/41/rule') && request.method() === 'PUT',
     );
     await page.getByRole('button', {name: 'Сохранить настройки', exact: true}).click();
     expect((await rule).postDataJSON()).toMatchObject({style: 'custom', styleId: preset.id});
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
+    await expect(page.getByRole('combobox', {name: 'Стиль общения', exact: true})).toContainText('Спокойный');
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', {name: 'Параметры общения', exact: true}).click();
+    await expect(
+        page.locator('[data-qa="conversation-settings"]').getByText('Спокойный', {exact: true}),
+    ).toBeVisible();
+});
+
+test('legacy unnamed custom selections retain instructions and show a concrete style', async ({page}) => {
+    const state = structuredClone(workspaceState);
+    const chat = state.chats[0];
+    chat.rule = {...chat.rule, style: 'custom', styleId: '', instructions: 'Без длинных ответов.'};
+    await page.route('**/api/state', (route) => route.fulfill({json: state}));
+    await page.reload();
+    await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
+    await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
+    await expect(page.getByRole('combobox', {name: 'Стиль общения', exact: true})).toContainText(
+        'Дружелюбный',
+    );
+    await expect(page.getByRole('textbox', {name: 'Личные инструкции'})).toHaveValue('Без длинных ответов.');
+    const saved = page.waitForRequest(
+        (request) => request.method() === 'PUT' && request.url().endsWith(`/api/chats/${chat.id}/rule`),
+    );
+    await page.getByRole('button', {name: 'Сохранить настройки', exact: true}).click();
+    expect((await saved).postDataJSON()).toMatchObject({
+        style: 'friendly',
+        styleId: '',
+        instructions: 'Без длинных ответов.',
+    });
 });
 
 test('history loads automatically above the viewport and preserves the visible message', async ({page}) => {

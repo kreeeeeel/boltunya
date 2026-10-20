@@ -245,7 +245,7 @@
     "resumeOnStartup": "Enable AI when the app starts",
     "resumeOnStartupHint": "Start automatic replies for selected conversations whenever the app opens, including Windows startup.",
     "matchMyStyle": "Match my writing style",
-    "matchMyStyleHint": "Use your outgoing messages in this conversation for length, abbreviations, capitalization and punctuation. History stays on this computer.",
+    "matchMyStyleHint": "Uses writing patterns from your own messages: phrase length, casing and punctuation. The selected style sets the tone; past replies are not copied.",
     "restoringSession": "Restoring your Telegram session…",
     "aggressive": "Aggressive",
     "rough": "Street talk",
@@ -400,8 +400,8 @@
         "interval": "Memory update interval",
         "hours": "Every {count} h",
         "scheduleHint": "Starts with up to eight recent private chats and AI-enabled conversations. History is processed in batches; new messages are added at the chosen interval. Replies take priority.",
-        "globalHint": "Your writing style, habits and facts about you are learned from your own messages and used across conversations. AI replies and facts about contacts are excluded from this profile.",
-        "chatHint": "Compressed context from the entire available history. Deep processing is gradual and resumes after restarting.",
+        "globalHint": "Facts about you, interests and preferences are collected from your own messages and available across conversations. AI replies are excluded. Tone is controlled by the selected style and the separate writing style setting.",
+        "chatHint": "Facts about the contact, your relationship, agreements and events from available history. Deep analysis runs gradually and resumes after restart. The selected style controls the tone.",
         "notes": "Your notes",
         "notesHint": "Markdown is supported. Summarization preserves these notes.",
         "summary": "Conversation summary",
@@ -569,7 +569,21 @@
             "sending": "Sending to Telegram"
         },
         "requestTitle": "Sent to model",
-        "enableAi": "Enable AI"
+        "enableAi": "Enable AI",
+        "feedback": {
+            "title": "Rate this reply",
+            "good": "Good",
+            "bad": "Bad",
+            "commentAction": "Rate with a comment",
+            "comment": "Reply feedback",
+            "hint": "What worked well, and what should change in future replies?",
+            "privacy": "Ratings and comments stay on this computer. You can edit or remove them.",
+            "save": "Save feedback",
+            "saved": "Feedback saved",
+            "remove": "Remove feedback",
+            "refreshFailed": "Feedback saved. The events list could not refresh and will update later."
+        },
+        "readyResponse": "Generated reply"
     },
     "modelWarming": "Warming up",
     "diagnostics": {
@@ -611,6 +625,30 @@
             "ollama-runtime": "Ollama",
             "ollama-models": "Ollama models",
             "diagnostics": "Diagnostics"
+        }
+    },
+    "computeDevice": {
+        "title": "AI compute device",
+        "label": "Ollama device",
+        "auto": "Automatic",
+        "cpu": "CPU only",
+        "memory": "{value} GiB",
+        "refresh": "Refresh devices",
+        "unavailableSelection": "Selected device unavailable",
+        "nextStart": "The selection is saved in settings and takes effect the next time the app starts Ollama. Current generation will continue.",
+        "restartRequired": "Applies next time Ollama starts",
+        "active": "Running Ollama mode: {name}",
+        "nvidiaOnly": "Individual device selection supports NVIDIA. AMD and Intel remain available in automatic mode.",
+        "autoHint": "Automatic mode preserves your system GPU settings.",
+        "limitations": {
+            "external": "This Ollama instance is managed by another process or service. Device selection is available for Ollama started by this app.",
+            "remote": "Choose the compute device on the remote Ollama server.",
+            "missing-runtime": "Install Ollama on the models page first.",
+            "next-start": "The selection applies the next time the app starts Ollama."
+        },
+        "reasons": {
+            "compute": "This GPU is not supported by this Ollama version.",
+            "driver": "An NVIDIA driver update is recommended. Ollama will check compatibility."
         }
     }
 }

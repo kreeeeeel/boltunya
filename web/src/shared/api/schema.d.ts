@@ -602,6 +602,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/activity/{id}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Store explicit local human feedback for a completed event with a ready response. This does not train the model or alter memory. Omitted comments retain the previous comment. */
+        put: operations["saveActivityFeedback"];
+        post?: never;
+        /** @description Remove local human feedback. Repeated deletion on an eligible event is successful. */
+        delete: operations["removeActivityFeedback"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/engine/devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Discover safe GPU choices and indicate whether the running Ollama is app-managed. Does not stop, restart or change external Ollama, Docker, drivers or models. */
+        get: operations["engineDevices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -669,6 +704,11 @@ export interface components {
             autoDownloadAudio?: boolean;
             autoDownloadFiles?: boolean;
             autoDownloadMaxMb?: number;
+            /**
+             * @description auto, cpu, or a supported NVIDIA UUID discovered by the application. Applied only on the next app-managed Ollama launch.
+             * @default auto
+             */
+            ollamaDevice: string;
         };
         Chat: {
             id: string;
@@ -796,6 +836,16 @@ export interface components {
             /** Format: int64 */
             waitUntil?: number;
             preview?: string;
+            /**
+             * @description A final event has a nonempty ready response and can receive human feedback.
+             * @default false
+             */
+            feedbackAvailable: boolean;
+            /**
+             * @default null
+             * @enum {string|null}
+             */
+            feedbackRating: "good" | "bad" | null;
         };
         Error: {
             message: string;
@@ -843,6 +893,8 @@ export interface components {
             autoDownloadAudio?: boolean;
             autoDownloadFiles?: boolean;
             autoDownloadMaxMb?: number;
+            /** @description auto, cpu, or a supported discovered NVIDIA UUID. Saves a preference without stopping any process. */
+            ollamaDevice?: string;
         };
         State: {
             telegram: components["schemas"]["Telegram"];
@@ -1046,6 +1098,7 @@ export interface components {
             response: string;
             attempts: components["schemas"]["ActivityAttempt"][];
             steps: components["schemas"]["ActivityStep"][];
+            feedback?: components["schemas"]["ActivityFeedback"] | null;
         };
         DiagnosticEntry: {
             id: string;
@@ -1079,6 +1132,57 @@ export interface components {
         };
         StorageLocationReport: {
             locations: components["schemas"]["StorageLocation"][];
+        };
+        /** @enum {string} */
+        ActivityFeedbackRating: "good" | "bad";
+        ActivityFeedback: {
+            rating: components["schemas"]["ActivityFeedbackRating"];
+            comment: string;
+            /**
+             * Format: int64
+             * @description Unix epoch milliseconds of the last explicit user edit.
+             */
+            updatedAt: number;
+        };
+        ActivityFeedbackUpdate: {
+            rating: components["schemas"]["ActivityFeedbackRating"];
+            /** @description Omit to preserve the current comment. An explicit empty string clears it. */
+            comment?: string;
+        };
+        ComputeDevice: {
+            id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "auto" | "cpu" | "nvidia";
+            /** Format: int64 */
+            memoryBytes: number;
+            selectable: boolean;
+            /**
+             * @description compute disables explicit CUDA selection. driver is a recommendation warning and does not disable a device; the installed Ollama determines actual compatibility.
+             * @enum {string}
+             */
+            reason: "" | "compute" | "driver";
+        };
+        ComputeDeviceStatus: {
+            configured: string;
+            /** @description Launch mode recorded for the process started by this application, not a measurement of actual GPU offload. */
+            active: string | null;
+            managed: boolean;
+            selectionSupported: boolean;
+            restartRequired: boolean;
+            /** @enum {string} */
+            limitation: "" | "external" | "remote" | "missing-runtime" | "next-start";
+            devices: components["schemas"]["ComputeDevice"][];
+            /**
+             * @description Automatic mode preserves inherited Ollama/CUDA/HIP/Vulkan environment settings.
+             * @default true
+             */
+            autoUsesEnvironment: boolean;
+            /**
+             * @description Only NVIDIA UUIDs are currently selectable explicitly. AMD and Intel are left to automatic Ollama discovery.
+             * @default true
+             */
+            nvidiaSelectionOnly: boolean;
         };
     };
     responses: never;
@@ -3070,6 +3174,146 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StorageLocationReport"];
+                };
+            };
+            /** @description Local session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    saveActivityFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityFeedbackUpdate"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityFeedback"];
+                };
+            };
+            /** @description Invalid rating or comment */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Local session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Activity event not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The event is not final or has no ready response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    removeActivityFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ok"];
+                };
+            };
+            /** @description Local session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Activity event not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The event is not final or has no ready response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    engineDevices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Device choices and launch capabilities */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComputeDeviceStatus"];
                 };
             };
             /** @description Local session required */

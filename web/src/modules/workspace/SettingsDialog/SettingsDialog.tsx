@@ -11,6 +11,7 @@ import {SearchConnectionPanel} from '@/modules/workspace/SearchConnectionPanel';
 import {SaveDialogFooter} from '@/shared/ui/SaveDialogFooter/SaveDialogFooter';
 import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
 import {StorageLocations} from '@/modules/storage/StorageLocations/StorageLocations';
+import {ComputeDevicePanel} from '@/modules/workspace/ComputeDevicePanel/ComputeDevicePanel';
 
 export function SettingsDialog({
     settings,
@@ -38,6 +39,7 @@ export function SettingsDialog({
         closeToTray: settings.closeToTray ?? true,
         launchAtLogin: settings.launchAtLogin ?? false,
         resumeOnStartup: settings.resumeOnStartup ?? false,
+        ollamaDevice: settings.ollamaDevice ?? 'auto',
     });
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
@@ -174,6 +176,13 @@ export function SettingsDialog({
                             </Switch>
                             <Text className={styles.hint}>{t('resumeOnStartupHint')}</Text>
                         </Box>
+                    </Flex>
+                    <Flex direction="column" gap={3} className={styles.section}>
+                        <ComputeDevicePanel
+                            value={value.ollamaDevice}
+                            savedValue={settings.ollamaDevice ?? 'auto'}
+                            onUpdate={(ollamaDevice) => setValue({...value, ollamaDevice})}
+                        />
                     </Flex>
                     <Flex direction="column" gap={3} className={styles.section}>
                         <Text variant="subheader-2">{t('storage.autoTitle')}</Text>

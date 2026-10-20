@@ -7,6 +7,7 @@ import type {Activity} from '@/shared/api/client';
 import {TelegramAvatar} from '@/shared/ui/TelegramAvatar/TelegramAvatar';
 import styles from '@/modules/activity/ActivityCard/ActivityCard.module.css';
 import {ActivityProgress} from '@/modules/activity/ActivityProgress/ActivityProgress';
+import {ActivityRating} from '@/modules/activity/ActivityRating/ActivityRating';
 
 export function ActivityCard({
     entry,
@@ -14,12 +15,14 @@ export function ActivityCard({
     onOpen,
     onCancel,
     onPriority,
+    onRefresh,
 }: {
     readonly entry: Activity;
     readonly busy: boolean;
     readonly onOpen: () => void;
     readonly onCancel: () => void;
     readonly onPriority: () => void;
+    readonly onRefresh: () => Promise<void>;
 }) {
     const t = useTranslations('events');
     const locale = useLocale();
@@ -105,6 +108,14 @@ export function ActivityCard({
                     </Flex>
                 )}
             </Flex>
+            {entry.feedbackAvailable && (
+                <ActivityRating
+                    id={entry.id}
+                    rating={entry.feedbackRating}
+                    onDetails={onOpen}
+                    onRefresh={onRefresh}
+                />
+            )}
         </Box>
     );
 }

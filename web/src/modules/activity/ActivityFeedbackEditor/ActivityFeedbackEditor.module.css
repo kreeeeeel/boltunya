@@ -1,0 +1,9 @@
+.root {
+    padding: 18px;
+    border-radius: 16px;
+    background: var(--tiho-bg);
+}
+
+.privacy {
+    line-height: 1.6;
+}

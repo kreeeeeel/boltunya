@@ -1,0 +1,9 @@
+.root {
+    position: relative;
+    margin-top: 12px;
+    pointer-events: auto;
+}
+
+.label {
+    margin-right: auto;
+}

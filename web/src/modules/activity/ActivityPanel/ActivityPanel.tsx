@@ -140,6 +140,7 @@ export function ActivityPanel({
                                     entry={entry}
                                     busy={!!busy}
                                     onOpen={() => setSelected(entry.id)}
+                                    onRefresh={onRefresh}
                                     onCancel={() =>
                                         void act(entry.id, async () =>
                                             dataOrThrow(
@@ -170,7 +171,12 @@ export function ActivityPanel({
                 )}
             </Box>
             {selected && (
-                <ActivityDetailsDialog key={selected} id={selected} onClose={() => setSelected(null)} />
+                <ActivityDetailsDialog
+                    key={selected}
+                    id={selected}
+                    onClose={() => setSelected(null)}
+                    onRefresh={onRefresh}
+                />
             )}
         </ScrollArea>
     );

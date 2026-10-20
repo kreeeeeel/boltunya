@@ -4,16 +4,19 @@ import {join} from 'node:path';
 
 import {workspaceState} from '../fixtures/workspace';
 import {activityDetails, testActivity} from '../fixtures/activity';
+import type {components} from '@/shared/api/schema';
 
 test.beforeEach(async ({page}) => {
     const state = structuredClone(workspaceState);
     state.activity = structuredClone(testActivity);
     state.replyQueue = {paused: false, queued: 1, running: 1};
     state.settings.paused = false;
+    const feedbacks = new Map<string, components['schemas']['ActivityFeedback']>();
     await page.route('**/api/**', async (route) => {
         const request = route.request();
         const path = new URL(request.url()).pathname;
         const match = path.match(/^\/api\/activity\/([^/]+)(?:\/(cancel|priority))?$/);
+        const feedbackMatch = path.match(/^\/api\/activity\/([^/]+)\/feedback$/);
         if (path === '/api/state') {
             await route.fulfill({json: state});
         } else if (path === '/api/activity/queue') {
@@ -24,6 +27,24 @@ test.beforeEach(async ({page}) => {
                 ['queued', 'generating'].includes(entry.status),
             );
             await route.fulfill({json: {ok: true}});
+        } else if (feedbackMatch) {
+            const id = feedbackMatch[1];
+            const entry = state.activity.find((item) => item.id === id)!;
+            if (request.method() === 'DELETE') {
+                feedbacks.delete(id);
+                entry.feedbackRating = null;
+                await route.fulfill({json: {ok: true}});
+            } else {
+                const body = request.postDataJSON();
+                const feedback = {
+                    rating: body.rating,
+                    comment: body.comment ?? feedbacks.get(id)?.comment ?? '',
+                    updatedAt: Date.now(),
+                };
+                feedbacks.set(id, feedback);
+                entry.feedbackRating = body.rating;
+                await route.fulfill({json: feedback});
+            }
         } else if (match) {
             const entry = state.activity.find((item) => item.id === match[1])!;
             if (match[2] === 'cancel') {
@@ -37,7 +58,11 @@ test.beforeEach(async ({page}) => {
                 entry.priority = true;
                 entry.queuePosition = 1;
             }
-            await route.fulfill({json: match[2] ? {ok: true} : activityDetails(entry)});
+            await route.fulfill({
+                json: match[2]
+                    ? {ok: true}
+                    : {...activityDetails(entry), feedback: feedbacks.get(entry.id) ?? null},
+            });
         } else {
             await route.fulfill({json: {ok: true}});
         }
@@ -45,6 +70,71 @@ test.beforeEach(async ({page}) => {
     const launchFile = join(process.env.LOCALAPPDATA ?? '', 'Tiho', 'launch.url');
     await page.goto(process.env.TIHO_TEST_URL ?? readFileSync(launchFile, 'utf8'));
     await page.locator('[data-qa="nav-activity"]').click();
+});
+
+test('finished reply ratings support comments, edits and removal across card and details', async ({page}) => {
+    const card = page.locator('[data-qa="event-sent"]');
+    await card.getByRole('button', {name: 'Хорошо', exact: true}).click();
+    await expect(card.getByRole('button', {name: 'Хорошо', exact: true})).toHaveAttribute(
+        'aria-pressed',
+        'true',
+    );
+    await card.getByRole('button', {name: 'Оценить с комментарием', exact: true}).click();
+    const dialog = page.getByRole('dialog', {name: 'История ответа'});
+    const editor = dialog.locator('[data-qa="activity-feedback-editor"]');
+    await editor.getByRole('button', {name: 'Плохо', exact: true}).click();
+    await editor.getByRole('textbox', {name: 'Комментарий к ответу'}).fill('Слишком формально, лучше проще.');
+    const save = page.waitForRequest(
+        (request) => request.method() === 'PUT' && request.url().endsWith('/api/activity/sent/feedback'),
+    );
+    await editor.getByRole('button', {name: 'Сохранить оценку', exact: true}).click();
+    expect((await save).postDataJSON()).toEqual({rating: 'bad', comment: 'Слишком формально, лучше проще.'});
+    await expect(editor.getByRole('button', {name: 'Оценка сохранена', exact: true})).toBeVisible();
+    await page.screenshot({path: '../docs/resources/reply-feedback.png', animations: 'disabled'});
+    await page.keyboard.press('Escape');
+    await expect(card.getByRole('button', {name: 'Плохо', exact: true})).toHaveAttribute(
+        'aria-pressed',
+        'true',
+    );
+    await card.getByRole('button', {name: 'Оценить с комментарием', exact: true}).click();
+    await expect(editor.getByRole('textbox', {name: 'Комментарий к ответу'})).toHaveValue(
+        'Слишком формально, лучше проще.',
+    );
+    await editor.getByRole('button', {name: 'Снять оценку', exact: true}).click();
+    await expect(editor.getByRole('button', {name: 'Снять оценку', exact: true})).toHaveCount(0);
+    await page.keyboard.press('Escape');
+    await expect(card.getByRole('button', {name: 'Плохо', exact: true})).toHaveAttribute(
+        'aria-pressed',
+        'false',
+    );
+    await expect(page.locator('[data-qa="event-running"] [data-qa="activity-rating"]')).toHaveCount(0);
+    await expect(page.locator('[data-qa="event-error"] [data-qa="activity-rating"]')).toHaveCount(0);
+});
+
+test('failed feedback saves keep the comment draft and can be retried', async ({page}) => {
+    let fail = true;
+    await page.route('**/api/activity/sent/feedback', async (route) => {
+        if (fail) {
+            await route.fulfill({status: 503, json: {message: 'Не удалось сохранить оценку.'}});
+        } else {
+            await route.fallback();
+        }
+    });
+    await page
+        .locator('[data-qa="event-sent"]')
+        .getByRole('button', {name: 'Оценить с комментарием', exact: true})
+        .click();
+    const editor = page.locator('[data-qa="activity-feedback-editor"]');
+    await editor.getByRole('button', {name: 'Плохо', exact: true}).click();
+    const comment = editor.getByRole('textbox', {name: 'Комментарий к ответу'});
+    await comment.fill('Не учтена договорённость.');
+    await editor.getByRole('button', {name: 'Сохранить оценку', exact: true}).click();
+    await expect(editor.getByRole('alert')).toHaveText('Не удалось сохранить оценку.');
+    await expect(comment).toHaveValue('Не учтена договорённость.');
+    fail = false;
+    await editor.getByRole('button', {name: 'Сохранить оценку', exact: true}).click();
+    await expect(editor.getByRole('button', {name: 'Оценка сохранена', exact: true})).toBeVisible();
+    await expect(editor.getByRole('alert')).toHaveCount(0);
 });
 
 test('cards display a real queue, statuses and streamed thinking', async ({page}) => {
@@ -161,6 +251,17 @@ test('failed detail request shows an error and modal remains dismissible', async
     await expect(page.getByRole('dialog').getByRole('alert')).toHaveText('История уже очищена');
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+test('a generated reply with failed delivery is not labeled as sent to Telegram', async ({page}) => {
+    const details = activityDetails(testActivity[3]);
+    details.response = 'Готовый ответ, который не был отправлен.';
+    await page.route('**/api/activity/error', (route) => route.fulfill({json: details}));
+    await page.getByRole('button', {name: 'История: Команда проекта'}).click();
+    const dialog = page.getByRole('dialog', {name: 'История ответа'});
+    await expect(dialog.getByText('Готовый ответ', {exact: true})).toBeVisible();
+    await expect(dialog.getByText('Отправлено в Telegram', {exact: true})).toHaveCount(0);
+    await expect(dialog.getByText(details.response, {exact: true})).toBeVisible();
 });
 
 test('dark events use the app palette and readable card sizes', async ({page}) => {

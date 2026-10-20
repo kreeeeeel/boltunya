@@ -60,6 +60,7 @@ export const workspaceState: AppState = {
         globalPrompt: '',
         paused: true,
         defaultModel: 'qwen3:1.7b',
+        ollamaDevice: 'auto',
         rules: {},
         replyDelaySeconds: 3,
         replyIntervalSeconds: 3,

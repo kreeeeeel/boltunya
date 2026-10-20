@@ -1,6 +1,7 @@
 import {expect, test} from '@playwright/test';
 
 import {workspaceState} from '../fixtures/workspace';
+import {computeDevices} from '../fixtures/computeDevices';
 
 const errors = [
     {
@@ -89,6 +90,16 @@ test.beforeEach(async ({page}) => {
                     ],
                 },
             });
+        } else if (path === '/api/engine/devices') {
+            await route.fulfill({
+                json: {
+                    ...computeDevices,
+                    managed: false,
+                    active: null,
+                    selectionSupported: false,
+                    limitation: 'external',
+                },
+            });
         } else if (path === '/api/cache') {
             await route.fulfill({
                 json: {
@@ -111,7 +122,7 @@ test.beforeEach(async ({page}) => {
                     chatId: '',
                     notes: '',
                     summary:
-                        '## Как я общаюсь\n\n- Пишу **коротко** и на ты.\n- Ценю ясные ответы.\n\n## Обо мне\n\nЛюблю чай и вечерние прогулки.',
+                        '## Обо мне\n\n- Люблю **чай** и вечерние прогулки.\n- По выходным хожу в бассейн.\n\n## Договорённости\n\nВстречаемся с друзьями в субботу вечером.',
                     revision: '1',
                     updatedAt: 1792508000,
                     processedMessages: 1620,
@@ -167,8 +178,8 @@ test('generated memory renders Markdown without visible syntax markers', async (
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
     await page.getByRole('menuitem', {name: 'Память', exact: true}).click();
     const summary = page.locator('[data-qa="memory-summary"]');
-    await expect(summary.getByRole('heading', {name: 'Как я общаюсь'})).toBeVisible();
-    await expect(summary.locator('strong')).toHaveText('коротко');
+    await expect(summary.getByRole('heading', {name: 'Обо мне'})).toBeVisible();
+    await expect(summary.locator('strong')).toHaveText('чай');
     await expect(summary).not.toContainText('**');
     await page.screenshot({path: '../docs/resources/memory-formatted.png', animations: 'disabled'});
 });
