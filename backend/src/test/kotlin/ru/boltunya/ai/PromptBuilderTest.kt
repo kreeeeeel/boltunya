@@ -32,17 +32,19 @@ class PromptBuilderTest {
     }
 
     @Test
-    fun `includes contextual calm boundaries in conversation and research prompts`() {
+    fun `conversation and research prompts do not impose a scripted disagreement or override a sharp style`() {
         listOf(ResearchContext(), ResearchContext("search", "Verified facts")).stream().forEach { research ->
             val prompt = builder.build(
-                ChatRule(),
+                ChatRule(style = "aggressive"),
                 listOf(ChatMessage("1", "42", "Как убить время в дороге?", false, 1)),
                 research = research,
             )
             val system = prompt.first().text.orEmpty()
-            assertTrue(system.contains("Границы разговора"))
-            assertTrue(system.contains("против такого поступка"))
-            assertTrue(system.contains("На обычные вопросы отвечай нормально"))
+            assertFalse(system.contains("Границы разговора"))
+            assertFalse(system.contains("против такого поступка"))
+            assertFalse(system.contains("травл"))
+            assertFalse(system.contains("не оскорбляй"))
+            assertTrue(system.contains("колкий сарказм"))
             assertFalse(system.contains("{{boundaries}}"))
             assertEquals("Как убить время в дороге?", prompt.last().text)
         }

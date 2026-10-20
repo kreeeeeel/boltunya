@@ -68,7 +68,6 @@ class PromptBuilder(
                 "instructions" to rule.instructions,
                 "time" to time,
                 "date" to date,
-                "boundaries" to resources.prompt("ru/conversation/boundaries"),
             ),
         )
         fun researchContent(data: String): String = resources.prompt(

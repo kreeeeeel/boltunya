@@ -115,6 +115,17 @@ class ReplyQualityGuardTest {
     private val guard = ReplyQualityGuard()
 
     @Test
+    fun `retries a repeated refusal when the next incoming message asks an ordinary question`() {
+        val previous = "Я против такого поступка, давай лучше сменим тему."
+        val history = listOf(
+            ChatMessage("1", "42", previous, true, 0, automated = true),
+            ChatMessage("2", "42", "Как прошёл день?", false, 0),
+        )
+        assertTrue(guard.needsRetry(previous, history))
+        assertFalse(guard.needsRetry("да нормально, спокойно", history))
+    }
+
+    @Test
     fun `rejects unsolicited assistant boilerplate and repeated long phrases`() {
         val history = listOf(
             ChatMessage("1", "1", "Воу, я напишу тебе что-то интересное", true, 0),
