@@ -11,7 +11,7 @@ import kotlin.test.assertTrue
 @EnabledIfEnvironmentVariable(named = "TIHO_LIVE_AI", matches = "true")
 class LiveMemoryTest {
     @Test
-    fun `learns owner facts and style for another dialog without including assistant text`() {
+    fun `learns owner facts for another dialog without keeping writing style or assistant text`() {
         val client = AiTestServices()
         val model = System.getenv("TIHO_QUALITY_MODEL") ?: "gemma3:4b"
         assertTrue(model in client.installed())
@@ -39,6 +39,8 @@ class LiveMemoryTest {
         )
         assertTrue(summary.contains("Казан", ignoreCase = true))
         assertTrue(!summary.contains("Париж", ignoreCase = true))
+        assertTrue(!summary.contains("пишу коротко", ignoreCase = true))
+        assertTrue(!summary.contains("официальных фраз", ignoreCase = true))
         val reply = client.reply(
             ChatRule(model = model, internetAccess = false, matchMyStyle = false, creativity = 20),
             listOf(ChatMessage("3", "43", "В каком городе ты теперь живёшь?", false, 1792073000)),

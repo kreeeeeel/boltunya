@@ -17,7 +17,10 @@ class WritingStyleStore @Inject constructor(directory: Path) {
 
     @Synchronized
     fun update(chatId: String, history: List<ChatMessage>): List<ChatMessage> {
-        val incoming = history.stream().filter { it.outgoing && it.kind == "text" && it.text.length in 1..600 }
+        val incoming = history.stream().filter {
+            it.outgoing && !it.automated && it.kind == "text" &&
+                it.text.length in 1..600
+        }
             .map { ChatMessage(it.id, chatId, it.text, true, it.date) }.toList()
         val next = (samples[chatId].orEmpty() + incoming).distinctBy { it.id }.takeLast(50)
         if (samples[chatId] == next || next.isEmpty()) return next

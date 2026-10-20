@@ -45,7 +45,8 @@ class PersonalStyleBuilderTest {
         assertFalse(style.contains("Пиши официально"))
         assertFalse(style.contains("Я ИИ-помощник"))
         assertFalse(style.contains("Машинный пример"))
-        assertTrue(style.contains("общем профиле владельца"))
+        assertFalse(style.contains("общем профиле владельца"))
+        assertTrue(style.contains("Автоматические ответы ИИ не являются примерами"))
         assertTrue(style.contains("Факты и полный ответ по смыслу важнее краткости"))
     }
 

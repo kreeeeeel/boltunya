@@ -2,14 +2,10 @@ package ru.boltunya.ai.model
 
 import jakarta.inject.Inject
 import kotlinx.serialization.json.JsonObject
-import org.springframework.ai.chat.messages.AssistantMessage
 import org.springframework.ai.chat.messages.Message
 import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
-import org.springframework.ai.chat.metadata.ChatGenerationMetadata
 import org.springframework.ai.chat.model.ChatModel
-import org.springframework.ai.chat.model.ChatResponse
-import org.springframework.ai.chat.model.Generation
 import org.springframework.ai.chat.prompt.Prompt
 import org.springframework.ai.ollama.api.OllamaChatOptions
 import org.springframework.ai.ollama.api.ThinkOption
@@ -21,19 +17,15 @@ import org.springframework.web.reactive.function.client.WebClientException
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import ru.boltunya.ai.ModelInference
 import ru.boltunya.ai.OllamaRuntime
-import ru.boltunya.automation.activity.AttemptTrace
 import ru.boltunya.automation.activity.ReplyTraceScope
 import ru.boltunya.domain.ChatRule
 import ru.boltunya.domain.ModelMeasurement
 import ru.boltunya.exception.impl.EmptyMemorySummaryException
-import ru.boltunya.exception.impl.EmptyModelReplyException
 import ru.boltunya.exception.impl.EngineHttpFailedException
 import ru.boltunya.exception.impl.EngineUnavailableException
 import ru.boltunya.exception.impl.InvalidModelReplyException
 import ru.boltunya.storage.ModelMeasurementStore
 import tools.jackson.databind.json.JsonMapper
-import java.time.Duration
-import java.util.concurrent.atomic.AtomicReference
 
 private const val CONTEXT_TOKENS = 8192
 private const val MEMORY_RESPONSE_TOKENS = 1536
@@ -50,6 +42,7 @@ class ChatCompletionService @Inject constructor(
     private val inference: ModelInference,
     private val measurements: ModelMeasurementStore,
     private val tracing: ReplyTraceScope = ReplyTraceScope(),
+    private val responses: ModelResponseStream = ModelResponseStream(),
 ) {
     private val mapper = JsonMapper.builder().build()
 
@@ -105,7 +98,7 @@ class ChatCompletionService @Inject constructor(
         val built = options.build()
         val attempt = tracing.current()?.begin(rule.model, messages, mapper.writeValueAsString(built))
         val response = try {
-            if (attempt == null) model.call(Prompt(messages, built)) else stream(Prompt(messages, built), attempt)
+            responses.read(model.stream(Prompt(messages, built)), attempt)
         } catch (exception: RestClientResponseException) {
             throw EngineHttpFailedException(exception.statusCode.value(), exception)
         } catch (exception: WebClientResponseException) {
@@ -122,30 +115,6 @@ class ChatCompletionService @Inject constructor(
         val result = reader.read(response, (System.nanoTime() - started) / 1_000_000)
         attempt?.finish(result)
         return result
-    }
-
-    private fun stream(prompt: Prompt, attempt: AttemptTrace): ChatResponse {
-        val text = StringBuilder()
-        val thinking = StringBuilder()
-        val last = AtomicReference<ChatResponse>()
-        model.stream(prompt).doOnNext { chunk ->
-            last.set(chunk)
-            text.append(chunk.result?.output?.text.orEmpty())
-            thinking.append(chunk.result?.output?.metadata?.get("thinking") as? String ?: "")
-            attempt.append(chunk)
-        }.blockLast(Duration.ofMinutes(3))
-        val response = last.get() ?: throw EmptyModelReplyException()
-        return ChatResponse(
-            listOf(
-                Generation(
-                    AssistantMessage.builder().content(
-                        text.toString(),
-                    ).properties(mapOf("thinking" to thinking.toString())).build(),
-                    response.result?.metadata ?: ChatGenerationMetadata.NULL,
-                ),
-            ),
-            response.metadata,
-        )
     }
 
     fun summarize(model: String, instruction: String, data: String): String = inference.background {

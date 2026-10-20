@@ -15,6 +15,7 @@ import java.util.HexFormat
 
 private const val SUMMARY_START = "<!-- boltunya:auto:start -->"
 private const val SUMMARY_END = "<!-- boltunya:auto:end -->"
+private const val FACTS_MARKER = "<!-- boltunya:facts:$FACTUAL_MEMORY_VERSION -->"
 private const val MAX_NOTES_CHARACTERS = 16000
 private const val MAX_SUMMARY_CHARACTERS = 6000
 private const val MAX_DOCUMENT_BYTES = 256L * 1024
@@ -48,7 +49,8 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
         val profile = root.resolve(ownerId).resolve("PROFILE.md")
         if (Files.exists(profile) && Files.size(profile) > MAX_DOCUMENT_BYTES) throw MemoryTooLargeException()
         val notes = read("").notes
-        write(file(""), markdown(notes, if (Files.exists(profile)) Files.readString(profile).trim() else ""))
+        val ownerSummary = if (Files.exists(profile)) Files.readString(profile).trim() else ""
+        write(file(""), markdown(notes, content(ownerSummary), version(ownerSummary)))
         accountId = ownerId
         states = loaded
     }
@@ -82,7 +84,7 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
             text
         }
         val summary = if (hasSummary) text.substring(start + SUMMARY_START.length, end).trim() else ""
-        return StoredMemory(notes, summary, digest(notes), digest(text))
+        return StoredMemory(notes, content(summary), digest(notes), digest(text), version(summary))
     }
 
     fun hasNotes(chatId: String, notes: String): Boolean =
@@ -101,7 +103,7 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
         }
         val previous = read(chatId)
         if (previous.revision != revision) throw MemoryConflictException()
-        write(file(chatId), markdown(notes, previous.summary))
+        write(file(chatId), markdown(notes, previous.summary, previous.factsVersion))
     }
 
     @Synchronized
@@ -120,8 +122,10 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
             write(file(chatId), markdown(defaultNotes(chatId), ""))
         }
         val migrateProfile = previous.ownerMemoryVersion == 0 && previous.headId != 0L
+        val migrateFacts = previous.factsVersion < FACTUAL_MEMORY_VERSION &&
+            (previous.headId != 0L || previous.backfillBeforeId != 0L || previous.backfillComplete)
         if (messageId <= previous.observedId && (!manual || previous.manual) &&
-            (!ownerSource || previous.ownerSource) && !request && !migrateProfile && chatId in states
+            (!ownerSource || previous.ownerSource) && !request && !migrateProfile && !migrateFacts && chatId in states
         ) {
             return
         }
@@ -134,21 +138,23 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
             ownerSource = previous.ownerSource || ownerSource,
             changeVersion = previous.changeVersion + if (changed) 1 else 0,
         ).let { next ->
-            if (migrateProfile) {
+            if (migrateProfile || migrateFacts) {
                 next.copy(
                     headId = 0,
                     backfillBeforeId = 0,
                     backfillComplete = false,
                     deltaTargetId = 0,
+                    deltaTargetDate = 0,
                     deltaBeforeId = 0,
                     dirty = true,
+                    generation = previous.generation + 1,
                 )
             } else {
                 next
             }
         }
         if (request || manual && !previous.manual ||
-            ownerSource && !previous.ownerSource || migrateProfile || chatId !in states
+            ownerSource && !previous.ownerSource || migrateProfile || migrateFacts || chatId !in states
         ) {
             persist(next)
         } else {
@@ -177,7 +183,10 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
         if (ownerUpdate != null) {
             val general = read("")
             if (general.documentRevision != ownerUpdate.previous.documentRevision) return false
-            write(root.resolve(accountId).resolve("PROFILE.md"), ownerUpdate.summary.trim() + "\n")
+            write(
+                root.resolve(accountId).resolve("PROFILE.md"),
+                FACTS_MARKER + "\n" + ownerUpdate.summary.trim() + "\n",
+            )
             write(file(""), markdown(general.notes, ownerUpdate.summary))
         }
         write(file(previous.chatId), markdown(document.notes, summary))
@@ -190,6 +199,7 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
                 manual = current.manual,
                 ownerSource = current.ownerSource,
                 changeVersion = current.changeVersion,
+                factsVersion = FACTUAL_MEMORY_VERSION,
             ),
         )
         return true
@@ -242,8 +252,14 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
         resources.prompt("ru/memory/chat-file", mapOf("chatId" to chatId))
     }
 
-    private fun markdown(notes: String, summary: String): String =
-        notes + "\n\n" + SUMMARY_START + "\n" + summary.trim() + "\n" + SUMMARY_END + "\n"
+    private fun markdown(notes: String, summary: String, factsVersion: Int = FACTUAL_MEMORY_VERSION): String =
+        notes + "\n\n" + SUMMARY_START + "\n" +
+            (if (factsVersion == FACTUAL_MEMORY_VERSION) FACTS_MARKER + "\n" else "") +
+            summary.trim() + "\n" + SUMMARY_END + "\n"
+
+    private fun content(summary: String): String = summary.removePrefix(FACTS_MARKER).trim()
+
+    private fun version(summary: String): Int = if (summary.startsWith(FACTS_MARKER)) FACTUAL_MEMORY_VERSION else 0
 
     private fun persist(state: ChatMemoryState) {
         val next = states + (state.chatId to state)

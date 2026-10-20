@@ -3,6 +3,7 @@ package ru.boltunya.storage
 import kotlinx.serialization.json.Json
 import ru.boltunya.domain.AppSettings
 import ru.boltunya.domain.ChatRule
+import ru.boltunya.domain.CommunicationStyle
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
@@ -30,10 +31,11 @@ class SettingsStore(private val directory: Path) {
         if (rule.useDefaultModel) rule.copy(model = settings.defaultModel) else rule
 
     fun resolve(rule: ChatRule): ChatRule {
-        val resolved = resolveModel(rule)
-        val style = settings.customStyles.stream().filter { it.id == rule.styleId }.findFirst().orElse(null)
-            ?: return resolved
-        return resolved.copy(instructions = style.instructions + "\n" + rule.instructions)
+        val resolved = resolveModel(rule).copy(resolvedStyleInstructions = "")
+        if (resolved.style != CommunicationStyle.CUSTOM.key) return resolved
+        val style = settings.customStyles.stream().filter { it.id == resolved.styleId }.findFirst().orElse(null)
+            ?: return resolved.copy(style = CommunicationStyle.FRIENDLY.key, styleId = "")
+        return resolved.copy(resolvedStyleInstructions = style.instructions)
     }
 
     @Synchronized

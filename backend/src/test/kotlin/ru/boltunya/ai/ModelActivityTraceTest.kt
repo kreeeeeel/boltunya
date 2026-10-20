@@ -17,6 +17,36 @@ import kotlin.test.assertTrue
 
 class ModelActivityTraceTest {
     @Test
+    fun `untraced drafts and memory also aggregate streamed thinking separately from final text`() {
+        val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
+        server.createContext("/api/chat") { exchange ->
+            val body = String(exchange.requestBody.readAllBytes())
+            assertTrue(body.contains("\"stream\":true"))
+            exchange.responseHeaders.set("Content-Type", "application/x-ndjson")
+            exchange.sendResponseHeaders(200, 0)
+            exchange.responseBody.use { output ->
+                listOf(
+                    """{"message":{"role":"assistant","content":"","thinking":"Отдельное рассуждение"},"done":false}""",
+                    """{"message":{"role":"assistant","content":"Готовый ответ"},"done":true,"done_reason":"stop"}""",
+                ).stream().forEach {
+                    output.write((it + "\n").toByteArray())
+                    output.flush()
+                }
+            }
+        }
+        server.start()
+        try {
+            val ai = AiTestServices("http://127.0.0.1:${server.address.port}")
+            val result = ai.completion.generate(ChatRule(), listOf(UserMessage("Привет")))
+            assertEquals("Готовый ответ", result.text)
+            assertEquals("Отдельное рассуждение", result.thinking)
+            assertNull(ai.tracing.current())
+        } finally {
+            server.stop(0)
+        }
+    }
+
+    @Test
     fun `SDK streaming captures prompt thinking usage and final response independently`() {
         val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
         server.createContext("/api/chat") { exchange ->

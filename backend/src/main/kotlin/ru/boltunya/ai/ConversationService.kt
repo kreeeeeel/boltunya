@@ -61,6 +61,7 @@ class ConversationService @Inject constructor(
             )
         }
         val ownerInstructions = globalPrompt + "\n" + rule.instructions
+        val replyInstructions = ownerInstructions + "\n" + rule.resolvedStyleInstructions
         val instructions = ownerInstructions + "\n" + memoryFacts
         fun generate(context: List<Message>, format: JsonObject? = null, maxTokens: Int = rule.maxTokens) =
             completion.generate(rule, context, format, maxTokens)
@@ -94,7 +95,7 @@ class ConversationService @Inject constructor(
         if (quality.needsRetry(
                 text,
                 history,
-                ownerInstructions,
+                replyInstructions,
                 styleHistory,
                 compareSimilarReplies =
                 research.status == "none",
@@ -136,7 +137,7 @@ class ConversationService @Inject constructor(
         if (quality.needsRetry(
                 text,
                 history,
-                ownerInstructions,
+                replyInstructions,
                 styleHistory,
                 compareSimilarReplies =
                 research.status == "none",

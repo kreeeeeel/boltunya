@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Size
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import ru.boltunya.validation.ResourcePattern
 
 @Serializable
@@ -36,4 +37,6 @@ data class ChatRule(
     val sourceLinks: SourceLinks = SourceLinks.REQUESTED,
     val matchMyStyle: Boolean = true,
     val useMemory: Boolean = true,
+    @Transient
+    val resolvedStyleInstructions: String = "",
 )

@@ -23,10 +23,24 @@ class SettingsStoreTest {
         store.saveRule("42", rule)
         val restored = SettingsStore(directory)
         assertEquals(rule, restored.rule("42"))
-        assertEquals("Коротко и без официоза\nНе обещай встреч", restored.resolve(rule).instructions)
+        val resolved = restored.resolve(rule)
+        assertEquals("Не обещай встреч", resolved.instructions)
+        assertEquals("Коротко и без официоза", resolved.resolvedStyleInstructions)
+        store.saveRule("resolved", resolved)
+        assertFalse(Files.readString(directory.resolve("settings.json")).contains("resolvedStyleInstructions"))
         assertFalse(restored.get().ignoreAssistantTasks)
         restored.update { it.copy(customStyles = emptyList()) }
-        assertEquals(rule, restored.resolve(rule))
+        assertEquals(rule.copy(style = "friendly", styleId = ""), restored.resolve(rule))
+    }
+
+    @Test
+    fun `a builtin tone does not reuse stale named style instructions`() {
+        val store = SettingsStore(directory)
+        val preset = ru.boltunya.domain.WritingStyle("friends", "Друзья", "🙂", "Разговорный сленг")
+        store.update { it.copy(customStyles = listOf(preset)) }
+        val resolved = store.resolve(ChatRule(style = "business", styleId = preset.id))
+        assertEquals("business", resolved.style)
+        assertEquals("", resolved.resolvedStyleInstructions)
     }
 
     @Test

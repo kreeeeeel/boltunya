@@ -45,7 +45,13 @@ class PromptBuilder(
         memory: MemoryContext = MemoryContext(),
     ): List<Message> {
         val style = CommunicationStyle.entries.firstOrNull { it.key == rule.style } ?: CommunicationStyle.FRIENDLY
-        val tone = resources.prompt("ru/style/" + style.key)
+        val tone = if (style == CommunicationStyle.CUSTOM && rule.resolvedStyleInstructions.isNotBlank()) {
+            rule.resolvedStyleInstructions
+        } else {
+            resources.prompt(
+                "ru/style/" + if (style == CommunicationStyle.CUSTOM) CommunicationStyle.FRIENDLY.key else style.key,
+            )
+        }
         val emoji = if (rule.emoji) {
             resources.prompt("ru/conversation/emoji-on")
         } else {
@@ -59,12 +65,13 @@ class PromptBuilder(
         } else {
             ""
         }
+        val selectedStyle = resources.prompt(
+            "ru/conversation/selected-style",
+            mapOf("tone" to tone, "emoji" to emoji, "voice" to voice),
+        )
         val baseSystem = resources.prompt(
             if (research.status == "none") "ru/conversation/system" else "ru/research/system",
             mapOf(
-                "tone" to (tone),
-                "emoji" to (emoji),
-                "voice" to voice,
                 "globalPrompt" to (globalPrompt),
                 "instructions" to rule.instructions,
                 "time" to time,
@@ -92,7 +99,7 @@ class PromptBuilder(
         val memoryBudget = minOf(
             MAX_MEMORY_CONTEXT_CHARACTERS,
             (
-                MAX_PROMPT_CHARACTERS - baseSystem.length - externalOverhead.length -
+                MAX_PROMPT_CHARACTERS - baseSystem.length - selectedStyle.length - externalOverhead.length -
                     MIN_RECENT_CONTEXT_CHARACTERS -
                     MIN_RESEARCH_CONTEXT_CHARACTERS
                 ).coerceAtLeast(0),
@@ -112,7 +119,8 @@ class PromptBuilder(
             minOf(
                 MAX_EXTERNAL_CONTEXT_CHARACTERS,
                 (
-                    MAX_PROMPT_CHARACTERS - baseSystem.length - longTerm.length - externalOverhead.length -
+                    MAX_PROMPT_CHARACTERS - baseSystem.length - selectedStyle.length - longTerm.length -
+                        externalOverhead.length -
                         MIN_RECENT_CONTEXT_CHARACTERS
                     ).coerceAtLeast(0),
             )
@@ -121,7 +129,12 @@ class PromptBuilder(
         } else {
             researchContent(Json.encodeToString(links.forPrompt(rule, history, research)).take(externalBudget))
         }
-        val system = longTerm + "\n" + external + "\n" + baseSystem
+        val system = listOf(
+            baseSystem,
+            longTerm,
+            external,
+            selectedStyle,
+        ).filter(String::isNotBlank).joinToString("\n\n")
         val candidates = history.asReversed().stream()
             .filter { it.text.isNotBlank() }
             .filter {

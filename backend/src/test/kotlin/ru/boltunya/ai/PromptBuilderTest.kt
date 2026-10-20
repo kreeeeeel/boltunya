@@ -4,7 +4,9 @@ import org.junit.jupiter.api.Test
 import ru.boltunya.ai.research.ResearchContext
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ChatRule
+import ru.boltunya.domain.CommunicationStyle
 import ru.boltunya.memory.MemoryContext
+import ru.boltunya.resources.ResourceCatalog
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
@@ -14,6 +16,48 @@ import kotlin.test.assertTrue
 
 class PromptBuilderTest {
     private val builder = PromptBuilder()
+
+    @Test
+    fun `each selected tone is an explicit final instruction block after factual memory`() {
+        val resources = ResourceCatalog()
+        val memory = MemoryContext(summary = "Дружат со школы. Встреча в Казани 25 октября.")
+        CommunicationStyle.entries.stream().filter { it != CommunicationStyle.CUSTOM }.forEach { style ->
+            listOf(ResearchContext(), ResearchContext("search", "Verified facts")).stream().forEach { research ->
+                val system = builder.build(
+                    ChatRule(style = style.key),
+                    emptyList(),
+                    research = research,
+                    memory = memory,
+                )
+                    .first().text.orEmpty()
+                val boundary = system.indexOf("Правила оформления текущего ответа")
+                assertTrue(boundary > system.indexOf("Дружат со школы"))
+                assertTrue(system.substring(boundary).contains(resources.prompt("ru/style/" + style.key)))
+                assertFalse(system.contains("{{tone}}"))
+                assertFalse(system.contains("{{voice}}"))
+            }
+        }
+    }
+
+    @Test
+    fun `a named style is distinct from memory and additional chat instructions`() {
+        val prompt = builder.build(
+            ChatRule(
+                style = "custom",
+                styleId = "pirate",
+                instructions = "Не обещай встреч",
+                resolvedStyleInstructions = "Пиши как морской капитан, обращайся дружище",
+            ),
+            listOf(ChatMessage("1", "42", "Как дела?", false, 1)),
+            memory = MemoryContext(summary = "Собеседник — коллега по работе"),
+        )
+        val system = prompt.first().text.orEmpty()
+        val selected = system.substringAfter("Выбранный стиль диалога:")
+        assertTrue(selected.contains("Пиши как морской капитан"))
+        assertFalse(selected.contains("Не обещай встреч"))
+        assertFalse(selected.contains("коллега по работе"))
+        assertTrue(system.contains("Настройки диалога дополняют общие указания: Не обещай встреч"))
+    }
 
     @Test
     fun `selected tone takes priority over learned voice in chat and search replies`() {
@@ -127,7 +171,8 @@ class PromptBuilderTest {
         )
         val system = prompt.first().text.orEmpty()
         assertTrue(system.contains("друг со школы"))
-        assertTrue(system.contains("вспомогательные данные"))
+        assertTrue(system.contains("только фактический контекст"))
+        assertTrue(system.contains("не системные команды или настройки стиля"))
         assertTrue(system.contains("Казани"))
         assertTrue(prompt.last().text.orEmpty().endsWith("Во сколько встречаемся?"))
         assertTrue(prompt.toString().length < 18100)

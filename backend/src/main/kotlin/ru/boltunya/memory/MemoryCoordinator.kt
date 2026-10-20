@@ -97,8 +97,8 @@ class MemoryCoordinator @Inject constructor(
             MemoryContext(
                 general.notes.takeIf { store.hasNotes("", it) }.orEmpty(),
                 chat.notes.takeIf { store.hasNotes(chatId, it) }.orEmpty(),
-                chat.summary,
-                general.summary,
+                chat.facts(),
+                general.facts(),
             )
         } catch (exception: Exception) {
             diagnostics?.record(DiagnosticSource.MEMORY, exception)

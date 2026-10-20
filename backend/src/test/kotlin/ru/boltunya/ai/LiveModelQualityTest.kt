@@ -82,8 +82,8 @@ class LiveModelQualityTest {
                                             history,
                                             styleHistory = style,
                                             memory = MemoryContext(
-                                                ownerSummary =
-                                                "Пишет коротко, со строчной буквы, без официальных оборотов.",
+                                                ownerSummary = "Владелец работает программистом.",
+                                                summary = "Собеседник — давний друг.",
                                             ),
                                         )
                                     }

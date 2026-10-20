@@ -19,6 +19,7 @@ data class ChatMemoryState(
     val manual: Boolean = false,
     val ownerSource: Boolean = false,
     val ownerMemoryVersion: Int = 0,
+    val factsVersion: Int = 0,
     val processedMessages: Long = 0,
     val updatedAt: Long = 0,
     val recentUpdatedAt: Long = 0,

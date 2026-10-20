@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 private const val WARM_CONTEXT_TOKENS = 8192
 private const val LOCAL_OLLAMA_PORT = 11434
+private val MODEL_WARM_TIMEOUT = Duration.ofMinutes(30)
 private val LOOPBACK_HOSTS = setOf("127.0.0.1", "localhost", "[::1]", "::1")
 
 class OllamaRuntime(private val baseUrl: String) {
@@ -47,7 +48,7 @@ class OllamaRuntime(private val baseUrl: String) {
                 put("stream", false)
                 put("options", buildJsonObject { put("num_ctx", WARM_CONTEXT_TOKENS) })
             },
-            Duration.ofMinutes(3),
+            MODEL_WARM_TIMEOUT,
         )
     }
 

@@ -7,6 +7,7 @@ import ru.boltunya.resources.ResourceCatalog
 import ru.boltunya.storage.AutomatedReplyStore
 import java.nio.file.Path
 import java.time.Clock
+import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
 import java.util.stream.IntStream
@@ -16,6 +17,93 @@ import kotlin.test.assertTrue
 
 class MemoryProcessorTest {
     @TempDir lateinit var directory: Path
+
+    @Test
+    fun `summarizes stable history while new messages keep arriving without skipping unsettled replies`() {
+        val gateway = MemoryTelegramGateway()
+        val clock = AdvancingClock(Instant.ofEpochSecond(1000))
+        gateway.messages = IntStream.rangeClosed(1, 25).mapToObj { id ->
+            ChatMessage("$id", "42", "Факт $id", false, id.toLong())
+        }.toList() + ChatMessage("26", "42", "Новая реплика 26", false, 1000)
+        val store = MemoryStore(directory, ResourceCatalog())
+        store.activate("100")
+        store.observe("42", 26)
+        val seen = mutableListOf<String>()
+        val processor = MemoryProcessor(
+            gateway,
+            store,
+            MemoryBatchBuilder(AutomatedReplyStore(directory)),
+            MemorySummarizer { _, _, sources ->
+                seen.addAll(sources.map { it.id })
+                "Подтверждённые факты"
+            },
+            clock,
+            OwnerMemorySummarizer { _, existing, _ -> existing },
+        )
+        assertTrue(processor.process(store.state("42") ?: error("state"), "test", true))
+        assertEquals(25L, store.state("42")?.headId)
+        assertEquals((1..25).map(Int::toString), seen)
+        assertTrue(store.state("42")?.dirty == true)
+        listOf(27, 28).stream().forEach { id ->
+            clock.advance(Duration.ofSeconds(11))
+            gateway.messages = gateway.messages +
+                ChatMessage("$id", "42", "Новая реплика $id", false, clock.instant().epochSecond)
+            store.observe("42", id.toLong(), request = true)
+            assertTrue(processor.process(store.state("42") ?: error("state"), "test", true))
+            assertEquals((id - 1).toLong(), store.state("42")?.headId)
+            assertEquals((1 until id).map(Int::toString), seen)
+            assertTrue(store.state("42")?.dirty == true)
+        }
+        clock.advance(Duration.ofSeconds(11))
+        assertTrue(processor.process(store.state("42") ?: error("state"), "test", true))
+        assertEquals((1..28).map(Int::toString), seen)
+        assertEquals(28L, store.state("42")?.headId)
+        assertEquals(false, store.state("42")?.dirty)
+    }
+
+    @Test
+    fun `defers wholly unsettled initial or catchup candidates without completing or advancing memory`() {
+        val gateway = MemoryTelegramGateway()
+        gateway.messages = listOf(ChatMessage("10", "42", "Только что отправлено", false, 1000))
+        val store = MemoryStore(directory, ResourceCatalog())
+        store.activate("100")
+        store.observe("42", 10)
+        val processor = MemoryProcessor(
+            gateway,
+            store,
+            MemoryBatchBuilder(AutomatedReplyStore(directory)),
+            MemorySummarizer { _, _, _ -> error("Unsettled messages must not be summarized") },
+            Clock.fixed(Instant.ofEpochSecond(1000), ZoneOffset.UTC),
+            OwnerMemorySummarizer { _, _, _ -> error("Unsettled messages must not enter the owner profile") },
+        )
+        val initial = store.state("42") ?: error("state")
+        assertEquals(false, processor.process(initial, "test", true))
+        assertEquals(initial, store.state("42"))
+        assertEquals("", store.read("42").summary)
+        assertTrue(
+            store.commit(
+                initial,
+                store.read("42").documentRevision,
+                "Существующий факт",
+                initial.copy(
+                    headId = 9,
+                    observedId = 9,
+                    backfillComplete = true,
+                    dirty = false,
+                    ownerMemoryVersion = 1,
+                ),
+            ),
+        )
+        gateway.messages = listOf(ChatMessage("9", "42", "Известный факт", false, 1)) + gateway.messages
+        store.observe("42", 10, request = true)
+        val pending = store.state("42") ?: error("state")
+        assertEquals(9L, pending.headId)
+        assertEquals(FACTUAL_MEMORY_VERSION, pending.factsVersion)
+        assertTrue(pending.requested)
+        assertEquals(false, processor.process(pending, "test", true))
+        assertEquals(pending, store.state("42"))
+        assertEquals("Существующий факт", store.read("42").facts())
+    }
 
     @Test
     fun `global profile receives only real owner sources and merges facts from different dialogs`() {

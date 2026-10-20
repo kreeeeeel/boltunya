@@ -24,6 +24,7 @@ import ru.boltunya.ai.ReplyQualityGuard
 import ru.boltunya.ai.model.ChatCompletionService
 import ru.boltunya.ai.model.ModelPolicies
 import ru.boltunya.ai.model.ModelReplyReader
+import ru.boltunya.ai.model.ModelResponseStream
 import ru.boltunya.ai.model.SpringAiModelFactory
 import ru.boltunya.ai.research.CurrencyRatesClient
 import ru.boltunya.ai.research.ExaMcpSearchClient
@@ -306,6 +307,9 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
 
     @Provides @Singleton
     fun chatModel(factory: SpringAiModelFactory): ChatModel = factory.create(configuration.ollamaUrl)
+
+    @Provides @Singleton
+    fun modelResponseStream(): ModelResponseStream = ModelResponseStream()
 
     @Provides @Singleton
     fun media(gateway: Provider<TdLightGateway>): TelegramMediaStore = TelegramMediaStore(

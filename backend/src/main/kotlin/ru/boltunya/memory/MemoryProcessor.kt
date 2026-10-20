@@ -24,11 +24,12 @@ class MemoryProcessor @Inject constructor(
         } else {
             state.backfillBeforeId
         }
-        val page = telegram.history(state.chatId, HISTORY_PAGE_MESSAGES, before).sortedBy { it.id.toLong() }
-        if (recent &&
-            page.lastOrNull()?.date?.let { it > clock.instant().epochSecond - MESSAGE_SETTLE_SECONDS } == true
-        ) {
-            return false
+        val fetched = telegram.history(state.chatId, HISTORY_PAGE_MESSAGES, before).sortedBy { it.id.toLong() }
+        val page = if (recent) {
+            val settledBefore = clock.instant().epochSecond - MESSAGE_SETTLE_SECONDS
+            fetched.stream().takeWhile { it.date <= settledBefore }.toList()
+        } else {
+            fetched
         }
         val candidates = if (recent && state.headId != 0L) {
             page.filter {
@@ -38,21 +39,22 @@ class MemoryProcessor @Inject constructor(
         } else {
             page
         }
+        if (recent && page.size != fetched.size && candidates.isEmpty()) return false
         val batch = batches.select(candidates)
         val ownerSources = batch.sources.filter { it.speaker == MemorySpeaker.OWNER && it.text.isNotBlank() }
         val ownerUpdate = if (ownerSources.isEmpty()) {
             null
         } else {
             val owner = store.read("")
-            OwnerMemoryUpdate(owner, ownerSummarizer.summarizeOwner(model, owner.summary, ownerSources))
+            OwnerMemoryUpdate(owner, ownerSummarizer.summarizeOwner(model, owner.facts(), ownerSources))
         }
         val summary = if (batch.sources.any {
                 it.text.isNotBlank()
             }
         ) {
-            summarizer.summarize(model, previous.summary, batch.sources)
+            summarizer.summarize(model, previous.facts(), batch.sources)
         } else {
-            previous.summary
+            previous.facts()
         }
         val now = clock.instant().epochSecond
         val next = when {
