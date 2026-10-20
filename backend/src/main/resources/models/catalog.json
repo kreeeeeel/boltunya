@@ -236,7 +236,7 @@
     "memoryGb": 12,
     "speed": "balanced",
     "quality": "best",
-    "thinking": false,
+    "thinking": true,
     "contextTokens": 131072,
     "license": "MIT"
   },

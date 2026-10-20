@@ -45,8 +45,8 @@ class R1RequestPolicyTest {
             assertEquals(listOf(0.5, 0.5, 0.6, 0.7, 0.5), temperatures)
             requests.stream().forEach { request ->
                 val options = request.getValue("options").jsonObject
-                assertEquals("false", request.getValue("think").jsonPrimitive.content)
-                assertEquals("128", options.getValue("num_predict").jsonPrimitive.content)
+                assertEquals("true", request.getValue("think").jsonPrimitive.content)
+                assertEquals("2176", options.getValue("num_predict").jsonPrimitive.content)
                 assertTrue(listOf("top_p", "top_k", "repeat_penalty").none { it in options })
                 val sent = request.getValue("messages").jsonArray
                 assertEquals(

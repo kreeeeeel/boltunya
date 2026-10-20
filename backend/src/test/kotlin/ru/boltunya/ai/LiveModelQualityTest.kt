@@ -16,6 +16,8 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import org.junit.jupiter.api.function.ThrowingSupplier
 import org.opentest4j.AssertionFailedError
 import ru.boltunya.ai.research.ResearchPlanner
+import ru.boltunya.automation.activity.ReplyTrace
+import ru.boltunya.domain.ActivityEntry
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ChatRule
 import ru.boltunya.memory.MemoryContext
@@ -55,6 +57,10 @@ class LiveModelQualityTest {
                     val case = element.jsonObject
                     val id = case.getValue("id").jsonPrimitive.content
                     val history = Json.decodeFromJsonElement<List<ChatMessage>>(case.getValue("history"))
+                    val trace = ReplyTrace(
+                        ActivityEntry(id, "synthetic", "Synthetic", "generating", model, 0),
+                        history.last().text,
+                    )
                     val outcome = buildJsonObject {
                         put("model", model)
                         put("case", id)
@@ -63,22 +69,24 @@ class LiveModelQualityTest {
                             val reply = assertTimeoutPreemptively(
                                 Duration.ofMinutes(3),
                                 ThrowingSupplier {
-                                    services.reply(
-                                        ChatRule(
-                                            model = model,
-                                            style = case["style"]?.jsonPrimitive?.content ?: "friendly",
-                                            maxTokens = 128,
-                                            creativity = 20,
-                                            emoji = false,
-                                            internetAccess = case["research"]?.jsonPrimitive?.content == "true",
-                                        ),
-                                        history,
-                                        styleHistory = style,
-                                        memory = MemoryContext(
-                                            ownerSummary =
-                                            "Пишет коротко, со строчной буквы, без официальных оборотов.",
-                                        ),
-                                    )
+                                    services.tracing.capture(trace) {
+                                        services.reply(
+                                            ChatRule(
+                                                model = model,
+                                                style = case["style"]?.jsonPrimitive?.content ?: "friendly",
+                                                maxTokens = 128,
+                                                creativity = 20,
+                                                emoji = false,
+                                                internetAccess = case["research"]?.jsonPrimitive?.content == "true",
+                                            ),
+                                            history,
+                                            styleHistory = style,
+                                            memory = MemoryContext(
+                                                ownerSummary =
+                                                "Пишет коротко, со строчной буквы, без официальных оборотов.",
+                                            ),
+                                        )
+                                    }
                                 },
                             )
                             val checks = case.getValue("expected").jsonArray.map { pattern ->
@@ -121,6 +129,11 @@ class LiveModelQualityTest {
                             )
                             println("Model quality: $model / $id / ${exception.javaClass.simpleName}")
                         }
+                        val attempts = trace.details().attempts
+                        put("attempts", attempts.size)
+                        put("thinkingCharacters", attempts.sumOf { it.thinking.length })
+                        put("inputTokens", attempts.sumOf { it.inputTokens })
+                        put("outputTokens", attempts.sumOf { it.outputTokens })
                     }
                     report.add(outcome)
                     Files.writeString(file, Json.encodeToString(report))

@@ -117,7 +117,7 @@ class ConversationServiceTest {
         server.start()
         try {
             val result = AiTestServices("http://127.0.0.1:${server.address.port}").reply(
-                ChatRule(model = "deepseek-r1:14b", maxTokens = 128, internetAccess = false),
+                ChatRule(model = "deepseek-r1:8b", maxTokens = 128, internetAccess = false),
                 listOf(ChatMessage("1", "test", "Как дела?", false, 0)),
             )
             assertEquals(listOf(2176, 4608), budgets)
@@ -147,7 +147,7 @@ class ConversationServiceTest {
         try {
             assertFailsWith<EmptyModelReplyException> {
                 AiTestServices("http://127.0.0.1:${server.address.port}").reply(
-                    ChatRule(model = "deepseek-r1:14b", internetAccess = false),
+                    ChatRule(model = "deepseek-r1:8b", internetAccess = false),
                     listOf(ChatMessage("1", "test", "Как дела?", false, 0)),
                 )
             }

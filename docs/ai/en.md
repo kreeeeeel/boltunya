@@ -1,6 +1,8 @@
 # AI services
 
-DeepSeek R1 8B uses the [non-thinking mode supported by its Qwen3 distillation](https://ollama.com/blog/thinking) for short chat replies; other R1 sizes retain their reasoning budgets. The model card shows the mode used by the application. Reasoning output from any model is still kept separate from the delivered reply.
+Live checks exercise the streamed inference path used by automatic replies. The model matrix records attempt counts, token usage and thinking length in `backend/build/reports/model-quality.json`. The separate streaming check writes `streaming-quality.json` with loading, prompt and total durations, throughput and requested thinking mode. Both honor `TIHO_TEST_MODELS`; all messages are synthetic and nothing is sent to Telegram.
+
+DeepSeek R1 retains an explicit reasoning mode and a separate token allowance. [Thinking controls vary by installed model and template](https://docs.ollama.com/capabilities/thinking); an installed R1 8B emitted a thinking stream even with `think: false` during live validation. The application preserves its reasoning budget rather than assuming that flag always disables reasoning. Thinking output is audited separately and never used as the delivered reply.
 
 DeepSeek R1 temperature is constrained to 0.5–0.7, following the [official R1 recommendations](https://github.com/deepseek-ai/DeepSeek-R1#usage-recommendations). Other model families retain their temperature settings. All requests preserve Spring AI's native system/user/assistant messages. Sampling defaults (`top_p`, `top_k`, repetition penalty) come from the installed model instead of a shared override. Events record the actual request. The prompt places learned voice and memory before the selected conversation tone and explicitly gives that tone priority.
 
