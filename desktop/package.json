@@ -8,9 +8,11 @@
     "scripts": {
         "build": "tsc",
         "check": "tsc --noEmit",
+        "test": "npm run build && node --test tests/*.test.cjs",
         "start": "npm run build && electron .",
         "package": "npm run build && electron-builder --win portable --x64",
-        "test:smoke": "node tests/smoke.cjs"
+        "test:smoke": "node tests/smoke.cjs",
+        "test:updater": "npm run build && node tests/updater-smoke.cjs && node tests/startup-updater-smoke.cjs"
     },
     "devDependencies": {
         "electron": "44.7.2",
@@ -42,6 +44,10 @@
             {
                 "from": "assets/boltunya.png",
                 "to": "boltunya.png"
+            },
+            {
+                "from": "assets/apply-update.ps1",
+                "to": "apply-update.ps1"
             },
             {
                 "from": "../NOTICE.md",

@@ -23,6 +23,8 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Frontend checks failed' }
         npm.cmd run check --prefix desktop
         if ($LASTEXITCODE -ne 0) { throw 'Electron checks failed' }
+        npm.cmd test --prefix desktop
+        if ($LASTEXITCODE -ne 0) { throw 'Electron updater and storage checks failed' }
         & ./gradlew.bat check --no-daemon
         if ($LASTEXITCODE -ne 0) { throw 'Kotlin checks failed' }
     }

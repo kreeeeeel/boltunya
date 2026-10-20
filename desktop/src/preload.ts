@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('boltunyaDesktop', {
     state: () => ipcRenderer.invoke('window:state'),
     sync: () => ipcRenderer.invoke('window:sync'),
     quit: () => ipcRenderer.invoke('window:quit'),
+    openStorageLocation: (id: string) => ipcRenderer.invoke('storage:open', id),
     action: (action: string) => windowActions.has(action) ? ipcRenderer.invoke('window:action', action) : Promise.reject(new Error('Unsupported window action')),
     onState: (callback: (value: unknown) => void) => {
         const listener = (_event: Electron.IpcRendererEvent, value: unknown) => callback(value);

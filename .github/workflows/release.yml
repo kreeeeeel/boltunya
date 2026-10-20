@@ -58,6 +58,8 @@ jobs:
         run: |
           npm run test:smoke --prefix desktop
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run test:updater --prefix desktop
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: Boltunya-Windows

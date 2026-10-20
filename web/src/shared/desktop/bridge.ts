@@ -14,6 +14,7 @@ declare global {
             sync: () => Promise<void>;
             quit: () => Promise<void>;
             action: (action: string) => Promise<void>;
+            openStorageLocation: (id: string) => Promise<void>;
             onState: (callback: (state: DesktopWindowState) => void) => () => void;
         };
         boltunyaTray?: {action: (action: string) => Promise<void>};
