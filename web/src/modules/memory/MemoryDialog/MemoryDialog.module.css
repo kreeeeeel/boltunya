@@ -16,7 +16,6 @@
     border-radius: 12px;
     background: var(--tiho-chat);
     padding: 14px;
-    white-space: pre-wrap;
     overflow-wrap: anywhere;
     font-size: 14px;
     line-height: 1.65;

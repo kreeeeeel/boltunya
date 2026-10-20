@@ -50,9 +50,10 @@
 }
 
 .engineActions {
-    flex: 0 0 176px;
+    flex: 0 1 176px;
     width: 176px;
     max-width: 100%;
+    min-width: 0;
 }
 
 .engineAction {
@@ -78,7 +79,7 @@
 .cards {
     margin-top: 20px;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
     gap: 16px;
 }
 

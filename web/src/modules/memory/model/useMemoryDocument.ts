@@ -106,8 +106,10 @@ export function useMemoryDocument(chatId: string) {
             setDocument(value);
             setNotes(value.notes);
             revision.current = value.revision;
+            return true;
         } catch (cause) {
             setError(errorMessage(cause));
+            return false;
         } finally {
             setBusy(false);
         }

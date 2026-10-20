@@ -5,6 +5,8 @@ import {useState} from 'react';
 import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
 import type {AppState} from '@/shared/api/client';
 import {EmojiPicker} from '@/shared/ui/EmojiPicker/EmojiPicker';
+import {SaveDialogFooter} from '@/shared/ui/SaveDialogFooter/SaveDialogFooter';
+import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
 
 type WritingStyle = NonNullable<AppState['settings']['customStyles']>[number];
 export function StylesDialog({
@@ -21,6 +23,7 @@ export function StylesDialog({
     const [selected, setSelected] = useState(styles[0]?.id ?? '');
     const [error, setError] = useState('');
     const [busy, setBusy] = useState(false);
+    const feedback = useSaveFeedback(items);
     const active = items.find((item) => item.id === selected);
     function update(values: Partial<WritingStyle>) {
         setItems(items.map((item) => (item.id === selected ? {...item, ...values} : item)));
@@ -31,10 +34,12 @@ export function StylesDialog({
             return;
         }
         setBusy(true);
+        setError('');
+        feedback.clearSaved();
         try {
             dataOrThrow(await api.PATCH('/api/settings', {body: {customStyles: items}}));
             await onRefresh();
-            onClose();
+            feedback.markSaved();
         } catch (cause) {
             setError(errorMessage(cause));
         } finally {
@@ -124,12 +129,13 @@ export function StylesDialog({
                     {error && <Text color="danger">{error}</Text>}
                 </Flex>
             </Dialog.Body>
-            <Dialog.Footer
-                textButtonApply={t('save')}
-                textButtonCancel={t('cancel')}
-                onClickButtonApply={() => void save()}
-                onClickButtonCancel={onClose}
-                loading={busy}
+            <SaveDialogFooter
+                saved={feedback.saved}
+                saveLabel={t('save')}
+                cancelLabel={t('cancel')}
+                onSave={() => void save()}
+                onClose={onClose}
+                busy={busy}
             />
         </Dialog>
     );

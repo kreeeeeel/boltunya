@@ -401,7 +401,8 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
                                         size="l"
                                         view={defaultModel === model.id ? 'outlined-info' : 'action'}
                                         disabled={defaultModel === model.id || !!busy}
-                                        loading={busy === model.id}
+                                        loading={busy === model.id || engine.warming === model.id}
+                                        aria-busy={busy === model.id || engine.warming === model.id}
                                         onClick={() =>
                                             void action(model.id, async () => {
                                                 dataOrThrow(
@@ -416,7 +417,13 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
                                             })
                                         }
                                     >
-                                        {t(defaultModel === model.id ? 'chosen' : 'choose')}
+                                        {t(
+                                            busy === model.id || engine.warming === model.id
+                                                ? 'modelWarming'
+                                                : defaultModel === model.id
+                                                  ? 'chosen'
+                                                  : 'choose',
+                                        )}
                                     </Button>
                                 ) : (
                                     <Button

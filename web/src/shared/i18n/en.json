@@ -78,7 +78,7 @@
     "internetAccessHint": "Weather and current information. External services receive only the search query or city.",
     "save": "Save settings",
     "cancel": "Cancel",
-    "saved": "Settings saved",
+    "saved": "Saved",
     "ruleTitle": "Conversation with {name}",
     "ruleHint": "Settings for this conversation",
     "preview": "Try this style",
@@ -568,6 +568,49 @@
             "validating": "Checking reply",
             "sending": "Sending to Telegram"
         },
-        "requestTitle": "Sent to model"
+        "requestTitle": "Sent to model",
+        "enableAi": "Enable AI"
+    },
+    "modelWarming": "Warming up",
+    "diagnostics": {
+        "title": "Errors",
+        "description": "Application issues and steps to resolve them.",
+        "refresh": "Refresh",
+        "clear": "Clear errors",
+        "loading": "Loading errors",
+        "empty": "No errors",
+        "emptyDescription": "If something goes wrong, details will appear here.",
+        "occurrences": "Occurrences: {count}",
+        "details": "Error details",
+        "happened": "What happened",
+        "solution": "What you can do",
+        "technical": "Technical information",
+        "lastOccurrence": "Last seen: {date}",
+        "firstOccurrence": "First seen: {date}",
+        "privacy": "The log does not contain conversations, access keys or memory contents.",
+        "close": "Close",
+        "sources": {
+            "reply": "AI reply",
+            "engine": "Ollama",
+            "memory": "Memory",
+            "http": "Application",
+            "update": "Update"
+        }
+    },
+    "storageLocations": {
+        "title": "File locations",
+        "description": "Application data, memory and local model folders on this computer.",
+        "open": "Open in Explorer",
+        "openNamed": "Open: {name}",
+        "desktopOnly": "Available in the desktop app",
+        "external": "External location",
+        "names": {
+            "application": "Application data",
+            "memory": "Memory bank",
+            "telegram-cache": "Telegram cache",
+            "ollama-runtime": "Ollama",
+            "ollama-models": "Ollama models",
+            "diagnostics": "Diagnostics"
+        }
     }
 }

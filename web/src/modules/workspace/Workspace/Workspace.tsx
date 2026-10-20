@@ -14,6 +14,7 @@ import {
     NodesRight,
     BookOpen,
     Books,
+    CircleExclamation,
 } from '@gravity-ui/icons';
 import {useTranslations} from 'next-intl';
 import {useEffect, useRef, useState} from 'react';
@@ -34,7 +35,7 @@ import {FlowEditor} from '@/modules/flows/FlowEditor/FlowEditor';
 import {RuleDialog} from '@/modules/workspace/RuleDialog/RuleDialog';
 import {useWorkspace} from '@/modules/workspace/hooks/useWorkspace';
 import {Welcome} from '@/modules/workspace/Welcome/Welcome';
-import {mergeMessages} from '@/modules/workspace/model/mergeMessages';
+import {mergeMessages, mergeRecentMessages} from '@/modules/workspace/model/mergeMessages';
 import styles from '@/modules/workspace/Workspace/Workspace.module.css';
 import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
 import type {Chat, ChatRule} from '@/shared/api/client';
@@ -44,6 +45,7 @@ import {desktopBridge} from '@/shared/desktop/bridge';
 import {MemoryDialog} from '@/modules/memory/MemoryDialog/MemoryDialog';
 import {ContextCollectionDialog} from '@/modules/memory/ContextCollectionDialog/ContextCollectionDialog';
 import {DeletedMessagesDialog} from '@/modules/workspace/DeletedMessagesDialog/DeletedMessagesDialog';
+import {ErrorsPanel} from '@/modules/diagnostics/ErrorsPanel/ErrorsPanel';
 
 export function Workspace() {
     const t = useTranslations();
@@ -133,7 +135,7 @@ export function Workspace() {
             await api.GET('/api/chats/{chatId}/messages', {params: {path: {chatId: chat.id}}}),
         );
         setMessages((previous) =>
-            selectedChat.current === chat.id ? mergeMessages(previous, latest) : previous,
+            selectedChat.current === chat.id ? mergeRecentMessages(previous, latest) : previous,
         );
         await refresh();
     }
@@ -262,11 +264,16 @@ export function Workspace() {
                             {id: 'activity', icon: Clock},
                             {id: 'metrics', icon: ChartColumn},
                             {id: 'flows', icon: NodesRight},
+                            {id: 'errors', icon: CircleExclamation},
                         ].map((item) => (
                             <Tooltip
                                 key={item.id}
                                 content={t(
-                                    item.id === 'metrics' || item.id === 'flows' ? item.id + 'Nav' : item.id,
+                                    item.id === 'errors'
+                                        ? 'diagnostics.title'
+                                        : item.id === 'metrics' || item.id === 'flows'
+                                          ? item.id + 'Nav'
+                                          : item.id,
                                 )}
                                 placement="right"
                             >
@@ -278,9 +285,11 @@ export function Workspace() {
                                     aria-current={tab === item.id ? 'page' : undefined}
                                     onClick={() => setTab(item.id)}
                                     aria-label={t(
-                                        item.id === 'metrics' || item.id === 'flows'
-                                            ? item.id + 'Nav'
-                                            : item.id,
+                                        item.id === 'errors'
+                                            ? 'diagnostics.title'
+                                            : item.id === 'metrics' || item.id === 'flows'
+                                              ? item.id + 'Nav'
+                                              : item.id,
                                     )}
                                 >
                                     <Icon data={item.icon} size={21} />
@@ -438,6 +447,7 @@ export function Workspace() {
                             <FlowEditor chats={chats} />
                         </Box>
                     )}
+                    {tab === 'errors' && <ErrorsPanel />}
                     {tab === 'models' && !stateLoading && (
                         <Box className={styles.panel}>
                             <ModelsPanel

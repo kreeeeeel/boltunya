@@ -1,0 +1,32 @@
+.location {
+    padding: 12px;
+    border-radius: 14px;
+    background: var(--g-color-base-generic);
+}
+
+.details {
+    flex: 1;
+    min-width: 0;
+}
+
+.label,
+.path,
+.note {
+    display: block;
+}
+
+.label {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.path {
+    overflow-wrap: anywhere;
+    user-select: text;
+    font-size: 13px;
+}
+
+.note {
+    line-height: 1.5;
+    margin-top: 4px;
+}

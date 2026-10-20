@@ -1,0 +1,23 @@
+.block {
+    padding: 16px;
+    border-radius: 14px;
+    background: var(--g-color-base-generic);
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+    user-select: text;
+}
+
+.label {
+    display: block;
+    font-weight: 650;
+    margin-bottom: 10px;
+}
+
+.code {
+    font-family: var(--g-font-family-monospace);
+}
+
+.value {
+    text-align: right;
+    min-width: 0;
+}

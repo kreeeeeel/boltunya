@@ -1,9 +1,16 @@
 'use client';
 
-import {Box, Button, Dialog, Flex, Label, Skeleton, Text, TextArea} from '@gravity-ui/uikit';
+import {Box, Button, Dialog, Flex, Icon, Label, Skeleton, Text, TextArea} from '@gravity-ui/uikit';
+import {FolderOpen} from '@gravity-ui/icons';
+import {useState} from 'react';
 import {useLocale, useTranslations} from 'next-intl';
 import {useMemoryDocument} from '@/modules/memory/model/useMemoryDocument';
 import styles from '@/modules/memory/MemoryDialog/MemoryDialog.module.css';
+import {MarkdownContent} from '@/shared/ui/MarkdownContent/MarkdownContent';
+import {SaveDialogFooter} from '@/shared/ui/SaveDialogFooter/SaveDialogFooter';
+import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
+import {desktopBridge} from '@/shared/desktop/bridge';
+import {errorMessage} from '@/shared/api/client';
 
 export function MemoryDialog({
     chatId = '',
@@ -18,6 +25,24 @@ export function MemoryDialog({
     const locale = useLocale();
     const memory = useMemoryDocument(chatId);
     const document = memory.document;
+    const feedback = useSaveFeedback(memory.notes);
+    const [folderError, setFolderError] = useState('');
+
+    async function openFolder() {
+        setFolderError('');
+        try {
+            await desktopBridge()?.openStorageLocation('memory');
+        } catch (cause) {
+            setFolderError(errorMessage(cause));
+        }
+    }
+
+    async function save() {
+        feedback.clearSaved();
+        if (await memory.save()) {
+            feedback.markSaved();
+        }
+    }
     return (
         <Dialog
             open
@@ -103,7 +128,7 @@ export function MemoryDialog({
                                     {t(chatId ? 'memory.summary' : 'memory.ownerSummary')}
                                 </Text>
                                 <Box className={styles.summary} qa="memory-summary">
-                                    <Text>{document.summary || t('memory.empty')}</Text>
+                                    <MarkdownContent>{document.summary || t('memory.empty')}</MarkdownContent>
                                 </Box>
                                 <Text color="secondary" className={styles.hint}>
                                     {t(document.backfillComplete ? 'memory.complete' : 'memory.scanning')}
@@ -136,6 +161,17 @@ export function MemoryDialog({
                             <Text color="secondary" className={styles.path}>
                                 {document.relativePath}
                             </Text>
+                            {desktopBridge() && (
+                                <Button view="flat-secondary" onClick={() => void openFolder()}>
+                                    <Icon data={FolderOpen} size={18} />
+                                    {t('storageLocations.open')}
+                                </Button>
+                            )}
+                            {folderError && (
+                                <Text color="danger" role="alert">
+                                    {folderError}
+                                </Text>
+                            )}
                         </Flex>
                     )
                 )}
@@ -146,13 +182,14 @@ export function MemoryDialog({
                     </Flex>
                 )}
             </Dialog.Body>
-            <Dialog.Footer
-                textButtonApply={t('memory.save')}
-                textButtonCancel={t('close')}
-                onClickButtonApply={() => void memory.save()}
-                onClickButtonCancel={onClose}
-                loading={memory.busy}
-                propsButtonApply={{disabled: !document || memory.notes === document.notes}}
+            <SaveDialogFooter
+                saved={feedback.saved}
+                saveLabel={t('memory.save')}
+                cancelLabel={t('close')}
+                onSave={() => void save()}
+                onClose={onClose}
+                busy={memory.busy}
+                disabled={!document || memory.notes === document.notes}
             />
         </Dialog>
     );

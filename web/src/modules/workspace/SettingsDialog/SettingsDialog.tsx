@@ -8,6 +8,9 @@ import styles from '@/modules/workspace/SettingsDialog/SettingsDialog.module.css
 import {desktopBridge} from '@/shared/desktop/bridge';
 import {CachePanel} from '@/modules/workspace/CachePanel/CachePanel';
 import {SearchConnectionPanel} from '@/modules/workspace/SearchConnectionPanel';
+import {SaveDialogFooter} from '@/shared/ui/SaveDialogFooter/SaveDialogFooter';
+import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
+import {StorageLocations} from '@/modules/storage/StorageLocations/StorageLocations';
 
 export function SettingsDialog({
     settings,
@@ -38,16 +41,16 @@ export function SettingsDialog({
     });
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
-    const [savedValue, setSavedValue] = useState<typeof value | null>(null);
+    const feedback = useSaveFeedback(value);
     async function save() {
         setBusy(true);
         setError('');
-        setSavedValue(null);
+        feedback.clearSaved();
         try {
             dataOrThrow(await api.PATCH('/api/settings', {body: value}));
             await desktopBridge()?.sync();
             await onRefresh();
-            setSavedValue(value);
+            feedback.markSaved();
         } catch (cause) {
             setError(errorMessage(cause));
         } finally {
@@ -209,24 +212,22 @@ export function SettingsDialog({
                         <CachePanel />
                     </Flex>
                     <Flex direction="column" gap={3} className={styles.section}>
+                        <StorageLocations />
+                    </Flex>
+                    <Flex direction="column" gap={3} className={styles.section}>
                         <SearchConnectionPanel />
                     </Flex>
                     {error && <Text color="danger">{error}</Text>}
                 </Flex>
             </Dialog.Body>
-            <Dialog.Footer
-                textButtonApply={t('save')}
-                textButtonCancel={t('cancel')}
-                onClickButtonApply={() => void save()}
-                onClickButtonCancel={onClose}
-                loading={busy}
-            >
-                {savedValue === value && (
-                    <Text role="status" color="secondary">
-                        {t('saved')}
-                    </Text>
-                )}
-            </Dialog.Footer>
+            <SaveDialogFooter
+                saved={feedback.saved}
+                saveLabel={t('save')}
+                cancelLabel={t('cancel')}
+                onSave={() => void save()}
+                onClose={onClose}
+                busy={busy}
+            />
         </Dialog>
     );
 }

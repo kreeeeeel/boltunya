@@ -28,6 +28,10 @@
     line-height: 1.6;
 }
 
+.enable {
+    margin-bottom: 20px;
+}
+
 .empty {
     min-height: calc(100dvh - 84px);
     align-items: center;

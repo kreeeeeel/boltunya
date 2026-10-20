@@ -47,6 +47,22 @@ export function ActivityPanel({
             (a.status === 'queued' ? (a.queuePosition ?? 0) - (b.queuePosition ?? 0) : b.date - a.date)
         );
     });
+    const enableButton = assistantPaused ? (
+        <Button
+            view="action"
+            size="l"
+            loading={busy === 'enable'}
+            disabled={!!busy}
+            onClick={() =>
+                void act('enable', async () =>
+                    dataOrThrow(await api.PATCH('/api/settings', {body: {paused: false}})),
+                )
+            }
+        >
+            <Icon data={CirclePlay} size={18} />
+            {t('events.enableAi')}
+        </Button>
+    ) : null;
     return (
         <ScrollArea className={styles.root}>
             <Box className={styles.content}>
@@ -60,6 +76,7 @@ export function ActivityPanel({
                         />
                         <Text variant="header-1">{t('noActivity')}</Text>
                         <Text color="secondary">{t('noActivityText')}</Text>
+                        {enableButton}
                     </Flex>
                 ) : (
                     <>
@@ -115,6 +132,7 @@ export function ActivityPanel({
                         <Text className={styles.privacy} color="secondary">
                             {t('events.retention')}
                         </Text>
+                        {assistantPaused && <Box className={styles.enable}>{enableButton}</Box>}
                         <Box className={styles.cards} qa="events-grid">
                             {ordered.map((entry) => (
                                 <ActivityCard

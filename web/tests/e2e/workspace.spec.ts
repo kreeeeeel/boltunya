@@ -28,6 +28,8 @@ test.beforeEach(async ({page}) => {
         } else if (path === '/api/search/check') {
             searchConnection = {...searchConnection, state: 'limited'};
             await route.fulfill({json: searchConnection});
+        } else if (path === '/api/storage/locations') {
+            await route.fulfill({json: {locations: []}});
         } else if (path === '/api/cache') {
             await route.fulfill({
                 json: {
@@ -131,7 +133,7 @@ test('chat selection, sending, filtering and saving a rule use the real API flow
     expect(savedRule.useDefaultModel).toBe(false);
     expect(savedRule.internetAccess).toBe(false);
     await expect(page.getByRole('dialog')).toBeVisible();
-    await expect(page.getByRole('status')).toHaveText('Настройки сохранены');
+    await expect(page.getByRole('status')).toHaveText('Сохранено');
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.getByRole('textbox', {name: 'Поиск по диалогам'}).fill('Марк');
@@ -838,7 +840,7 @@ test('profile menu saves shared instructions and signs out without a settings pa
         globalPrompt: 'Не назначай встречи без моего подтверждения.',
     });
     await expect(page.getByRole('dialog')).toBeVisible();
-    await expect(page.getByRole('status')).toHaveText('Настройки сохранены');
+    await expect(page.getByRole('status')).toHaveText('Сохранено');
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
@@ -1052,7 +1054,7 @@ test('settings persist reply pacing, typing, tray and Windows startup options', 
         resumeOnStartup: true,
     });
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByRole('status')).toHaveText('Настройки сохранены');
+    await expect(dialog.getByRole('status')).toHaveText('Сохранено');
     await dialog.locator('.g-dialog-body').evaluate((body) => {
         body.scrollTop = 0;
     });
@@ -1089,7 +1091,7 @@ test('failed settings saves preserve edits and a successful retry stays open', a
     await expect(typing).not.toBeChecked();
     fail = false;
     await dialog.getByRole('button', {name: 'Сохранить настройки', exact: true}).click();
-    await expect(dialog.getByRole('status')).toHaveText('Настройки сохранены');
+    await expect(dialog.getByRole('status')).toHaveText('Сохранено');
     await expect(dialog.getByText('Тестовая ошибка сохранения', {exact: true})).toHaveCount(0);
     await expect(typing).not.toBeChecked();
 });
@@ -1163,7 +1165,7 @@ test('reply length and delay occupy separate full-width rows and retain their va
     await dialog.getByRole('button', {name: 'Сохранить настройки', exact: true}).click();
     expect((await saved).postDataJSON()).toMatchObject({maxTokens: 512, delaySeconds: 1});
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByRole('status')).toHaveText('Настройки сохранены');
+    await expect(dialog.getByRole('status')).toHaveText('Сохранено');
     await page.keyboard.press('Escape');
     await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
     await expect(page.getByRole('slider', {name: 'Длина ответа', exact: true})).toHaveAttribute(
@@ -1279,6 +1281,9 @@ test('named writing styles can be saved and selected for a conversation', async 
     await page.getByRole('button', {name: 'Сохранить настройки', exact: true}).click();
     const preset = (await saved).postDataJSON().customStyles[0];
     expect(preset).toMatchObject({name: 'Спокойный', emoji: '🧊'});
+    await expect(dialog.getByRole('status')).toHaveText('Сохранено');
+    await expect(dialog.getByRole('button', {name: 'Сохранено', exact: true})).toBeVisible();
+    await dialog.getByRole('button', {name: 'Отмена', exact: true}).click();
     await expect(dialog).toHaveCount(0);
     await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
     await page.getByRole('combobox', {name: 'Стиль общения', exact: true}).click();
@@ -1443,6 +1448,10 @@ test('Ollama actions distinguish missing installed and downloading runtimes with
     await expect(progress).toBeVisible();
     await expect(engine.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '37');
     const downloading = await progress.boundingBox();
+    const engineBounds = await engine.boundingBox();
+    expect(downloading!.x + downloading!.width).toBeLessThanOrEqual(
+        engineBounds!.x + engineBounds!.width - 16,
+    );
     expect(Math.abs(initial!.width - downloading!.width)).toBeLessThanOrEqual(1);
     expect(initial!.height).toBeCloseTo(downloading!.height, 2);
     await page.screenshot({path: '../docs/resources/ollama-download.png', animations: 'disabled'});
@@ -1466,6 +1475,25 @@ test('Ollama actions distinguish missing installed and downloading runtimes with
     await engine.getByRole('button', {name: 'Запустить Ollama', exact: true}).click();
     await expect(engine.getByText('Ollama работает', {exact: true})).toBeVisible();
     await expect(engine.getByRole('button', {name: 'Запустить Ollama', exact: true})).toHaveCount(0);
+});
+
+test('downloaded models show visible warmup text instead of a selected loading button', async ({page}) => {
+    const state = structuredClone(workspaceState);
+    state.engine.warming = state.settings.defaultModel;
+    await page.route('**/api/state', (route) => route.fulfill({json: state}));
+    await page.reload();
+    await page.locator('[data-qa="nav-models"]').click();
+    const card = page.locator(`[data-model-id="${state.settings.defaultModel}"]`);
+    const button = card.getByRole('button', {name: 'Прогревается', exact: true});
+    await expect(button).toBeVisible();
+    await expect(button.getByText('Прогревается', {exact: true})).toBeVisible();
+    await expect(button).toHaveAttribute('aria-busy', 'true');
+    const opacity = await button
+        .getByText('Прогревается', {exact: true})
+        .evaluate((element) => getComputedStyle(element).opacity);
+    expect(opacity).toBe('1');
+    state.engine.warming = '';
+    await expect(card.getByRole('button', {name: 'Выбрана', exact: true})).toBeVisible();
 });
 
 test('empty activity is centered and uses the generated illustration', async ({page}) => {

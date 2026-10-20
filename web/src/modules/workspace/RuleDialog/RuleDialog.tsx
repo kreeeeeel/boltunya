@@ -24,6 +24,8 @@ import {ReplySkeleton} from '@/shared/ui/ReplySkeleton/ReplySkeleton';
 import {communicationStyles} from '@/modules/workspace/model/communicationStyles';
 import {StyleOption} from '@/modules/workspace/StyleOption/StyleOption';
 import {ChatHistoryActions} from '@/modules/workspace/ChatHistoryActions';
+import {SaveDialogFooter} from '@/shared/ui/SaveDialogFooter/SaveDialogFooter';
+import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
 
 export function RuleDialog({
     chat,
@@ -41,15 +43,15 @@ export function RuleDialog({
     const [result, setResult] = useState<Reply | null>(null);
     const [busy, setBusy] = useState('');
     const [error, setError] = useState('');
-    const [savedRule, setSavedRule] = useState<ChatRule | null>(null);
+    const feedback = useSaveFeedback(rule);
 
     async function save() {
         setBusy('save');
         setError('');
-        setSavedRule(null);
+        feedback.clearSaved();
         try {
             await onSave(rule);
-            setSavedRule(rule);
+            feedback.markSaved();
         } catch (cause) {
             setError(errorMessage(cause));
         } finally {
@@ -354,20 +356,15 @@ export function RuleDialog({
                     {error && <Text color="danger">{error}</Text>}
                 </Flex>
             </Dialog.Body>
-            <Dialog.Footer
-                textButtonApply={t('save')}
-                textButtonCancel={t('cancel')}
-                onClickButtonCancel={onClose}
-                onClickButtonApply={() => void save()}
-                loading={busy === 'save'}
-                propsButtonApply={{disabled: !!busy}}
-            >
-                {savedRule === rule && (
-                    <Text role="status" color="secondary">
-                        {t('saved')}
-                    </Text>
-                )}
-            </Dialog.Footer>
+            <SaveDialogFooter
+                saved={feedback.saved}
+                saveLabel={t('save')}
+                cancelLabel={t('cancel')}
+                onClose={onClose}
+                onSave={() => void save()}
+                busy={busy === 'save'}
+                disabled={!!busy}
+            />
         </Dialog>
     );
 }

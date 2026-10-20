@@ -3,6 +3,8 @@ import {useTranslations} from 'next-intl';
 import {useState} from 'react';
 
 import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
+import {SaveDialogFooter} from '@/shared/ui/SaveDialogFooter/SaveDialogFooter';
+import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
 
 export function GlobalPromptDialog({
     value,
@@ -17,15 +19,15 @@ export function GlobalPromptDialog({
     const [prompt, setPrompt] = useState(value);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
-    const [savedPrompt, setSavedPrompt] = useState<string | null>(null);
+    const feedback = useSaveFeedback(prompt);
     async function save() {
         setBusy(true);
         setError('');
-        setSavedPrompt(null);
+        feedback.clearSaved();
         try {
             dataOrThrow(await api.PATCH('/api/settings', {body: {globalPrompt: prompt}}));
             await onRefresh();
-            setSavedPrompt(prompt);
+            feedback.markSaved();
         } catch (cause) {
             setError(errorMessage(cause));
         } finally {
@@ -57,19 +59,14 @@ export function GlobalPromptDialog({
                     {error && <Text color="danger">{error}</Text>}
                 </Flex>
             </Dialog.Body>
-            <Dialog.Footer
-                textButtonApply={t('save')}
-                textButtonCancel={t('cancel')}
-                onClickButtonApply={() => void save()}
-                onClickButtonCancel={onClose}
-                loading={busy}
-            >
-                {savedPrompt === prompt && (
-                    <Text role="status" color="secondary">
-                        {t('saved')}
-                    </Text>
-                )}
-            </Dialog.Footer>
+            <SaveDialogFooter
+                saved={feedback.saved}
+                saveLabel={t('save')}
+                cancelLabel={t('cancel')}
+                onSave={() => void save()}
+                onClose={onClose}
+                busy={busy}
+            />
         </Dialog>
     );
 }
