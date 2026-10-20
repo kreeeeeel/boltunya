@@ -24,6 +24,7 @@ private const val ERROR_RETRY_SECONDS = 300L
 private const val CONFIG_REFRESH_SECONDS = 60L
 private const val OWNER_SOURCE_CHAT_LIMIT = 8L
 private const val OWNER_SOURCE_MAX_AGE_DAYS = 90L
+private const val SHUTDOWN_TIMEOUT_SECONDS = 5L
 
 class MemoryCoordinator @Inject constructor(
     private val store: MemoryStore,
@@ -365,5 +366,13 @@ class MemoryCoordinator @Inject constructor(
         closed = true
         executor.shutdownNow()
         inference.interruptBackground()
+        try {
+            if (!executor.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                System.err.println("Conversation memory worker did not stop within the shutdown timeout")
+            }
+        } catch (_: InterruptedException) {
+            Thread.currentThread().interrupt()
+            System.err.println("Conversation memory shutdown was interrupted")
+        }
     }
 }
