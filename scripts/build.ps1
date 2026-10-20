@@ -17,6 +17,8 @@ try {
         }
     }
     if (-not $SkipChecks) {
+        node.exe --test scripts/tests/diagnose-ai.test.cjs
+        if ($LASTEXITCODE -ne 0) { throw 'Diagnostic script checks failed' }
         npm.cmd run check --prefix web
         if ($LASTEXITCODE -ne 0) { throw 'Frontend checks failed' }
         npm.cmd run check --prefix desktop

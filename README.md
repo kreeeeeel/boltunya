@@ -42,7 +42,7 @@ The chat list uses two-line previews and a small AI badge on enabled conversatio
 
 ## Get started
 
-Models are instructed to answer clearly harmful requests with brief, calm disagreement in the owner's voice. Ordinary conversation, figurative language and questions about protecting your own account remain part of normal conversation.
+Conversation prompts follow the selected tone and owner instructions. They do not inject a shared disagreement or refusal template. Individual models can still have their own response policies.
 
 **Windows x64** is supported. Download **Boltunya.exe** from [Releases](https://github.com/kreeeeeel/boltunya/releases/latest) and open it. The portable EXE includes Electron, the Kotlin application, a Java runtime and the static web interface. A separate Java or Node.js installation is not needed to run it. Ollama and model weights are additional downloads managed from the model page. TDLib may require the [Microsoft Visual C++ x64 runtime](https://aka.ms/vs/17/release/vc_redist.x64.exe).
 
@@ -151,6 +151,14 @@ Get-Content -LiteralPath '.\SHA256.txt'
 ```
 
 ## Further documentation
+
+If AI does not respond on another computer, download **Diagnose-AI.ps1** from the release, leave Boltunya open and run it in PowerShell:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Diagnose-AI.ps1 -TestModel
+```
+
+The report `boltunya-diagnostics.json` is written to the Desktop. It contains runtime/model availability, RAM/GPU metadata, automation settings and structured generation status. The optional `-TestModel` runs a synthetic preview without sending a Telegram message. Without this flag, no generation runs. Chats, contact identifiers, API credentials, prompts, generated text and raw logs are excluded. Share the report together with the error text visible in **Events**; event details themselves can contain private conversations. See the [diagnostic guide](docs/diagnostics/ru.md) for interpreting results.
 
 [Russian guide](docs/ru.md) · [Architecture](docs/architecture/en.md) · [Dependency injection](docs/dependency-injection/en.md) · [Memory bank](docs/memory/en.md) · [Web search](docs/internet/en.md) · [Storage and cache](docs/storage/en.md)
 

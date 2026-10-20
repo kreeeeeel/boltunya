@@ -64,6 +64,7 @@ jobs:
           path: |
             complie/Болтунья.exe
             complie/SHA256.txt
+            scripts/diagnose-ai.ps1
           if-no-files-found: error
       - name: Publish GitHub release
         shell: pwsh
@@ -75,9 +76,10 @@ jobs:
           $releaseDirectory='build/release'
           New-Item -ItemType Directory -Force -Path $releaseDirectory | Out-Null
           Copy-Item -LiteralPath 'complie/Болтунья.exe' -Destination "$releaseDirectory/Boltunya.exe"
+          Copy-Item -LiteralPath 'scripts/diagnose-ai.ps1' -Destination "$releaseDirectory/Diagnose-AI.ps1"
           $hash=(Get-FileHash -Algorithm SHA256 -LiteralPath "$releaseDirectory/Boltunya.exe").Hash.ToLowerInvariant()
           "$hash  Boltunya.exe" | Set-Content -Encoding utf8 "$releaseDirectory/SHA256.txt"
-          gh release create "v$version" "$releaseDirectory/Boltunya.exe" "$releaseDirectory/SHA256.txt" --target "$env:GITHUB_SHA" --title "Boltunya $version" --generate-notes
+          gh release create "v$version" "$releaseDirectory/Boltunya.exe" "$releaseDirectory/SHA256.txt" "$releaseDirectory/Diagnose-AI.ps1" --target "$env:GITHUB_SHA" --title "Boltunya $version" --generate-notes
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $release=gh api "repos/$env:GITHUB_REPOSITORY/releases/tags/v$version" | ConvertFrom-Json
           $exe=$release.assets | Where-Object name -eq 'Boltunya.exe'
