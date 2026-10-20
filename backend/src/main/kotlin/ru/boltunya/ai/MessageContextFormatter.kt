@@ -28,7 +28,11 @@ class MessageContextFormatter @Inject constructor(private val resources: Resourc
             "ru/conversation/attributed-message",
             mapOf(
                 "id" to JsonPrimitive(message.id).toString(),
-                "name" to JsonPrimitive(message.senderName.take(MAX_AUTHOR_CHARACTERS)).toString(),
+                "name" to JsonPrimitive(
+                    message.senderName.take(MAX_AUTHOR_CHARACTERS).ifBlank {
+                        resources.prompt("ru/conversation/contact")
+                    },
+                ).toString(),
                 "sender" to JsonPrimitive(message.senderId).toString(),
                 "reply" to reply,
                 "text" to message.text.take(textLimit),

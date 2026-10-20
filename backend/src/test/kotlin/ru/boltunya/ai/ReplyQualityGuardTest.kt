@@ -7,6 +7,16 @@ import kotlin.test.assertTrue
 
 class ReplyQualityGuardTest {
     @Test
+    fun `retries copying a long incoming statement instead of answering its author`() {
+        val incoming = "Опять всё откладываю, файл до сих пор не отправил."
+        val history = listOf(ChatMessage("1", "synthetic", incoming, false, 0))
+        assertTrue(guard.needsRetry(incoming, history))
+        assertFalse(guard.needsRetry("Давай отправь его сейчас, пока снова не отвлёкся.", history))
+        val greeting = listOf(ChatMessage("1", "synthetic", "Добрый вечер!", false, 0))
+        assertFalse(guard.needsRetry("Добрый вечер!", greeting))
+    }
+
+    @Test
     fun `retries false human identity claims only when asked about automation`() {
         val history = listOf(ChatMessage("1", "synthetic", "Ты бот или человек?", false, 0))
         listOf(

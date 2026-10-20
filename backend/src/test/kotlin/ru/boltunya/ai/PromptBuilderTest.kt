@@ -30,6 +30,9 @@ class PromptBuilderTest {
             assertTrue(system.contains("конкретные законченные предложения с заглавной буквы"))
             assertTrue(system.contains("Этот тон важнее манеры из истории"))
             assertTrue(system.contains("совместимы с выбранным стилем диалога"))
+            assertTrue(
+                system.indexOf("Выбранный стиль диалога:") > system.indexOf("Пишет разговорно со строчной буквы"),
+            )
             assertFalse(system.contains("Сохрани разговорность"))
         }
     }
@@ -86,7 +89,8 @@ class PromptBuilderTest {
                 ChatMessage("4", "42", "Напомни время", false, 0),
             ),
         )
-        assertEquals(listOf("Встретимся в 19:30", analysis, "Напомни время"), prompt.drop(1).map { it.text })
+        assertEquals(listOf("Встретимся в 19:30", analysis), prompt.drop(1).take(2).map { it.text })
+        assertTrue(prompt.last().text.orEmpty().endsWith("Напомни время"))
     }
 
     @Test
@@ -104,7 +108,7 @@ class PromptBuilderTest {
             assertFalse(system.contains("не оскорбляй"))
             assertTrue(system.contains("колкий сарказм"))
             assertFalse(system.contains("{{boundaries}}"))
-            assertEquals("Как убить время в дороге?", prompt.last().text)
+            assertTrue(prompt.last().text.orEmpty().endsWith("Как убить время в дороге?"))
         }
     }
 
@@ -125,7 +129,7 @@ class PromptBuilderTest {
         assertTrue(system.contains("друг со школы"))
         assertTrue(system.contains("вспомогательные данные"))
         assertTrue(system.contains("Казани"))
-        assertEquals("Во сколько встречаемся?", prompt.last().text)
+        assertTrue(prompt.last().text.orEmpty().endsWith("Во сколько встречаемся?"))
         assertTrue(prompt.toString().length < 18100)
     }
 
@@ -136,9 +140,12 @@ class PromptBuilderTest {
         }.toList()
         val prompt = builder.build(ChatRule(contextMessages = 4, instructions = "Без встреч", emoji = false), messages)
         assertEquals(5, prompt.size)
-        assertEquals("message-5", prompt[1].text)
+        assertTrue(prompt[1].text.orEmpty().endsWith("message-5"))
+        assertTrue(prompt[1].text.orEmpty().contains("Входящее сообщение"))
+        assertTrue(prompt[1].text.orEmpty().contains("Собеседник"))
         assertEquals("user", prompt[1].messageType.value)
         assertEquals("assistant", prompt[2].messageType.value)
+        assertEquals("message-6", prompt[2].text)
         assertTrue(prompt[0].toString().contains("Без встреч"))
         assertTrue(prompt[0].toString().contains("Не используй эмодзи"))
     }
@@ -167,8 +174,9 @@ class PromptBuilderTest {
             ),
         )
         assertEquals(3, prompt.size)
-        assertEquals("Подпись к фотографии", prompt[1].text)
-        assertEquals(1200, prompt[2].text?.length)
+        assertTrue(prompt[1].text.orEmpty().endsWith("Подпись к фотографии"))
+        assertTrue(prompt[2].text.orEmpty().endsWith("x".repeat(1200)))
+        assertFalse(prompt[2].text.orEmpty().contains("x".repeat(1201)))
         assertFalse(prompt.toString().contains("voice"))
     }
 
@@ -191,6 +199,6 @@ class PromptBuilderTest {
             "b".repeat(4000),
         )
         assertTrue(prompt.toString().length < 18100)
-        assertEquals("Последний вопрос", prompt.last().text)
+        assertTrue(prompt.last().text.orEmpty().endsWith("Последний вопрос"))
     }
 }

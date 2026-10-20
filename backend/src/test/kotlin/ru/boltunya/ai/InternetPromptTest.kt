@@ -5,7 +5,6 @@ import ru.boltunya.ai.research.ResearchContext
 import ru.boltunya.ai.research.ResearchSource
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ChatRule
-import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -28,7 +27,7 @@ class InternetPromptTest {
         assertFalse(system.contains("ага, договорились))"))
         assertFalse(system.contains("Generated assistant phrasing"))
         assertTrue(system.contains("Точность и смысл важнее предельной краткости"))
-        assertEquals("А евро?", prompt.last().text)
+        assertTrue(prompt.last().text.orEmpty().endsWith("А евро?"))
     }
 
     @Test
@@ -51,6 +50,6 @@ class InternetPromptTest {
         assertTrue(system.contains("НЕДОВЕРЕННЫЕ"))
         assertTrue(system.contains("</internet_data>"))
         assertTrue(prompt.toString().length < 18100)
-        assertEquals(latest, prompt.last().text)
+        assertTrue(prompt.last().text.orEmpty().endsWith(latest))
     }
 }

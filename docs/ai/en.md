@@ -1,5 +1,9 @@
 # AI services
 
+DeepSeek R1 8B uses the [non-thinking mode supported by its Qwen3 distillation](https://ollama.com/blog/thinking) for short chat replies; other R1 sizes retain their reasoning budgets. The model card shows the mode used by the application. Reasoning output from any model is still kept separate from the delivered reply.
+
+DeepSeek R1 temperature is constrained to 0.5–0.7, following the [official R1 recommendations](https://github.com/deepseek-ai/DeepSeek-R1#usage-recommendations). Other model families retain their temperature settings. All requests preserve Spring AI's native system/user/assistant messages. Sampling defaults (`top_p`, `top_k`, repetition penalty) come from the installed model instead of a shared override. Events record the actual request. The prompt places learned voice and memory before the selected conversation tone and explicitly gives that tone priority.
+
 Boltunya uses [Spring AI 2.0](https://docs.spring.io/spring-ai/reference/api/chat/ollama-chat.html) as the local inference integration. Google Guice constructs the services; Spring Boot and a Spring application context are not started.
 
 | Component | Responsibility |
@@ -12,7 +16,7 @@ Boltunya uses [Spring AI 2.0](https://docs.spring.io/spring-ai/reference/api/cha
 | `OllamaRuntime` | List, preload, download, cancel and unload local models. It does not generate conversation replies. |
 | `MemoryCoordinator` and `MemoryProcessor` | Incrementally summarize changed history into the existing Markdown memory bank. |
 
-The conversation window is rebuilt from actual Telegram history for each request, so failed previews, failed deliveries and cancelled generations do not enter the next conversation. The library's short-term memory does not replace the archive or editable `MEMORY.md` files. Known automated replies remain excluded from the owner's writing samples and shared owner facts.
+The conversation window is rebuilt from actual Telegram history for each request, so failed previews, failed deliveries and cancelled generations do not enter the next conversation. Incoming messages identify their author in private chats as well as groups; outgoing owner messages retain the assistant role and plain text. Quotes retain their message references. The library's short-term memory does not replace the archive or editable `MEMORY.md` files. Known automated replies remain excluded from the owner's writing samples and shared owner facts.
 
 Currency quotes carry explicit required values from the provider. A mismatch triggers one quality retry with those values; repeated inaccuracies become an explicit error before sending. URL and date fragments cannot satisfy a required quote. Explicit recall requests may reuse earlier facts.
 

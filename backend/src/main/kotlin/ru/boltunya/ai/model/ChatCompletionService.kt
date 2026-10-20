@@ -40,9 +40,6 @@ private const val MEMORY_RESPONSE_TOKENS = 1536
 private const val MAX_REASONING_TOKENS = 4096
 private const val RETRY_RESPONSE_TOKENS = 512
 private const val KEEP_ALIVE = "20m"
-private const val REPETITION_PENALTY = 1.05
-private const val TOP_P = 0.8
-private const val TOP_K = 20
 private const val MEMORY_CREATIVITY = 10
 
 class ChatCompletionService @Inject constructor(
@@ -92,10 +89,11 @@ class ChatCompletionService @Inject constructor(
         reasoningTokens: Int,
     ): ModelCompletion {
         runtime.track(rule.model)
+        val temperature = (if (schema != null) 0.0 else rule.creativity / 100.0)
+            .coerceIn(policy.minimumTemperature, policy.maximumTemperature)
         val options = OllamaChatOptions.builder().model(rule.model)
-            .temperature(if (schema != null) 0.0 else rule.creativity / 100.0)
+            .temperature(temperature)
             .numPredict(maxTokens + reasoningTokens).numCtx(CONTEXT_TOKENS).keepAlive(KEEP_ALIVE)
-            .repeatPenalty(REPETITION_PENALTY).topP(TOP_P).topK(TOP_K)
         when (policy.thinking) {
             ThinkingMode.DISABLED -> options.thinkOption(ThinkOption.ThinkBoolean.DISABLED)
             ThinkingMode.ENABLED -> options.thinkOption(ThinkOption.ThinkBoolean.ENABLED)

@@ -57,19 +57,27 @@
   },
   "deepseek-r1:1.5b": {
     "thinking": "enabled",
-    "reasoningTokens": 2048
+    "reasoningTokens": 2048,
+    "minimumTemperature": 0.5,
+    "maximumTemperature": 0.7
   },
   "deepseek-r1:8b": {
-    "thinking": "enabled",
-    "reasoningTokens": 2048
+    "thinking": "disabled",
+    "reasoningTokens": 0,
+    "minimumTemperature": 0.5,
+    "maximumTemperature": 0.7
   },
   "deepseek-r1:14b": {
     "thinking": "enabled",
-    "reasoningTokens": 2048
+    "reasoningTokens": 2048,
+    "minimumTemperature": 0.5,
+    "maximumTemperature": 0.7
   },
   "deepseek-r1:32b": {
     "thinking": "enabled",
-    "reasoningTokens": 2048
+    "reasoningTokens": 2048,
+    "minimumTemperature": 0.5,
+    "maximumTemperature": 0.7
   },
   "gpt-oss:20b": {
     "thinking": "low",

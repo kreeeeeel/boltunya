@@ -117,7 +117,7 @@ class ConversationServiceTest {
         server.start()
         try {
             val result = AiTestServices("http://127.0.0.1:${server.address.port}").reply(
-                ChatRule(model = "deepseek-r1:8b", maxTokens = 128, internetAccess = false),
+                ChatRule(model = "deepseek-r1:14b", maxTokens = 128, internetAccess = false),
                 listOf(ChatMessage("1", "test", "Как дела?", false, 0)),
             )
             assertEquals(listOf(2176, 4608), budgets)
@@ -147,7 +147,7 @@ class ConversationServiceTest {
         try {
             assertFailsWith<EmptyModelReplyException> {
                 AiTestServices("http://127.0.0.1:${server.address.port}").reply(
-                    ChatRule(model = "deepseek-r1:8b", internetAccess = false),
+                    ChatRule(model = "deepseek-r1:14b", internetAccess = false),
                     listOf(ChatMessage("1", "test", "Как дела?", false, 0)),
                 )
             }
@@ -179,10 +179,11 @@ class ConversationServiceTest {
             val body = Json.parseToJsonElement(requestBody).jsonObject
             assertEquals("false", body["think"]?.jsonPrimitive?.content)
             assertEquals("20m", body["keep_alive"]?.jsonPrimitive?.content)
-            assertEquals(
-                "Как дела?",
-                body["messages"]?.jsonArray?.last()?.jsonObject?.get("content")?.jsonPrimitive?.content,
-            )
+            val incoming = body["messages"]?.jsonArray?.last()?.jsonObject?.get(
+                "content",
+            )?.jsonPrimitive?.content.orEmpty()
+            assertTrue(incoming.contains("Собеседник"))
+            assertTrue(incoming.endsWith("Как дела?"))
             assertEquals("Привет!", result.text)
             assertEquals(100.0, result.tokensPerSecond)
         } finally {

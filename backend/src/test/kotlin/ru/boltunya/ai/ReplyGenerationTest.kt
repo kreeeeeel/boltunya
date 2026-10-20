@@ -12,6 +12,7 @@ import java.net.InetSocketAddress
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class ReplyGenerationTest {
     @Test
@@ -22,7 +23,9 @@ class ReplyGenerationTest {
             val body = Json.parseToJsonElement(String(exchange.requestBody.readAllBytes())).jsonObject
             assertFalse(body.containsKey("format"))
             val messages = body["messages"]?.jsonArray.orEmpty()
-            assertEquals("Привет! Как дела?", messages.last().jsonObject["content"]?.jsonPrimitive?.content)
+            assertTrue(
+                messages.last().jsonObject["content"]?.jsonPrimitive?.content.orEmpty().endsWith("Привет! Как дела?"),
+            )
             calls.incrementAndGet()
             val bytes = """{"message":{"content":"Привет! Всё хорошо, а у тебя?"}}""".toByteArray()
             exchange.responseHeaders.set("Content-Type", "application/json")

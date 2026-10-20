@@ -6,6 +6,7 @@ import ru.boltunya.resources.ResourceCatalog
 import java.util.Locale
 
 private val resources = ResourceCatalog()
+private const val MIN_STATEMENT_ECHO_CHARACTERS = 32
 
 class ReplyQualityGuard @Inject constructor() {
     fun needsRetry(
@@ -19,7 +20,10 @@ class ReplyQualityGuard @Inject constructor() {
         val answer = normalize(reply)
         val incomingText = history.lastOrNull { !it.outgoing }?.text.orEmpty()
         val latestIncoming = normalize(incomingText)
-        if (answer == latestIncoming && answer.contains(' ') && incomingText.contains('?') && reply.contains('?')) {
+        val copiedQuestion = incomingText.contains('?') && reply.contains('?')
+        if (answer == latestIncoming && answer.contains(' ') &&
+            (copiedQuestion || answer.length >= MIN_STATEMENT_ECHO_CHARACTERS)
+        ) {
             return true
         }
         val han = resources.regex("common/ReplyQualityGuard-1")

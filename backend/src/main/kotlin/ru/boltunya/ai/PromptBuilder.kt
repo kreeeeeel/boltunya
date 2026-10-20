@@ -59,7 +59,6 @@ class PromptBuilder(
         } else {
             ""
         }
-        val structured = history.any { it.group || it.replyToId.isNotBlank() || it.replyText.isNotBlank() }
         val baseSystem = resources.prompt(
             if (research.status == "none") "ru/conversation/system" else "ru/research/system",
             mapOf(
@@ -71,7 +70,7 @@ class PromptBuilder(
                 "time" to time,
                 "date" to date,
             ),
-        ) + if (structured) "\n" + resources.prompt("ru/conversation/authors") else ""
+        ) + "\n" + resources.prompt("ru/conversation/authors")
         fun researchContent(data: String): String = resources.prompt(
             "ru/research/context",
             mapOf(
@@ -122,7 +121,7 @@ class PromptBuilder(
         } else {
             researchContent(Json.encodeToString(links.forPrompt(rule, history, research)).take(externalBudget))
         }
-        val system = baseSystem + "\n" + longTerm + "\n" + external
+        val system = longTerm + "\n" + external + "\n" + baseSystem
         val candidates = history.asReversed().stream()
             .filter { it.text.isNotBlank() }
             .filter {
@@ -130,7 +129,7 @@ class PromptBuilder(
                     !resources.regex("intent/internal-analysis").containsMatchIn(it.text)
             }
             .map { message ->
-                val text = if (structured && !message.outgoing) {
+                val text = if (!message.outgoing) {
                     authors.content(message, MAX_MESSAGE_CHARACTERS)
                 } else {
                     message.text.take(MAX_MESSAGE_CHARACTERS)
