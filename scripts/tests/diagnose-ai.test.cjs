@@ -103,6 +103,7 @@ test('keeps a structured generation error without copying the server response', 
     const {report} = await collect(t, {testModel: true, error: true});
     assert.equal(report.generation.status, 'ENGINE_UNAVAILABLE');
     assert.equal(report.generation.httpStatus, 502);
+    assert.ok(report.generation.requestDurationMs >= 0);
 });
 
 test('rejects a nonlocal application descriptor before sending its cookie', async t => {

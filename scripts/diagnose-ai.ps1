@@ -102,7 +102,9 @@ if ($null -ne $state) {
     if ($selectedModel -and $report.system.memoryMb -and $selectedModel.memoryGb * 1024 -gt $report.system.memoryMb) { $report.findings += 'MODEL_EXCEEDS_SYSTEM_MEMORY_ESTIMATE' }
     if ($TestModel) {
         $body = @{ text = 'Say hello in one short sentence.'; rule = @{ model = $selected; useDefaultModel = $false; internetAccess = $false; matchMyStyle = $false; useMemory = $false } } | ConvertTo-Json -Depth 4
+        $generationTimer = [Diagnostics.Stopwatch]::StartNew()
         $test = Invoke-DiagnosticRequest "$base/api/preview" $headers $body 190
+        $report.generation.requestDurationMs = $generationTimer.ElapsedMilliseconds
         $report.generation.status = $(if ($test.ok -and $test.data.text) { 'OK' } elseif ($test.ok) { 'EMPTY_REPLY' } else { $test.code })
         $report.generation.httpStatus = $test.status
         if ($test.ok) { $report.generation.durationMs = $test.data.durationMs; $report.generation.tokensPerSecond = $test.data.tokensPerSecond }
