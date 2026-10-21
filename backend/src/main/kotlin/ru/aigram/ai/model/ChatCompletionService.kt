@@ -69,8 +69,8 @@ class ChatCompletionService @Inject constructor(
     fun modelName(rule: ChatRule, task: ModelTask = ModelTask.REPLY): String =
         targets?.resolve(task, rule)?.model ?: rule.model
 
-    fun instructions(rule: ChatRule, globalPrompt: String): String {
-        val target = targets?.resolve(ModelTask.REPLY, rule) ?: return globalPrompt
+    fun instructions(rule: ChatRule, globalPrompt: String, task: ModelTask = ModelTask.REPLY): String {
+        val target = targets?.resolve(task, rule) ?: return globalPrompt
         val text = promptSettings?.get(target)?.instructions.orEmpty()
         return if (text.isBlank()) {
             globalPrompt

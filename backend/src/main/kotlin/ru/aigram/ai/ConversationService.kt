@@ -67,7 +67,7 @@ class ConversationService @Inject constructor(
                 mapOf("memory" to Json.encodeToString(memory.limited(MEMORY_PLANNER_CHARACTERS))),
             )
         }
-        val modelPrompt = completion.instructions(rule, globalPrompt)
+        val modelPrompt = completion.instructions(rule, globalPrompt, task)
         val ownerInstructions = modelPrompt + "\n" + rule.instructions
         val instructions = ownerInstructions + "\n" + memoryFacts
         fun generate(
