@@ -1,6 +1,7 @@
 package ru.aigram.exception
 
 enum class ErrorCode(val status: Int) {
+    INVALID_MODEL_PROMPT(400),
     MODEL_PROFILE_CHANGED(409),
     INVALID_CONTEXT_SELECTION(400),
     MODEL_CONTEXT_LIMIT(400),

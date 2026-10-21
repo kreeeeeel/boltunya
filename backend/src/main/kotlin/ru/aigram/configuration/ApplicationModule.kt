@@ -37,6 +37,8 @@ import ru.aigram.ai.profile.ModelTargetResolver
 import ru.aigram.ai.profile.ProfileChatOptions
 import ru.aigram.ai.profile.ProfileContextBudget
 import ru.aigram.ai.profile.ProfileModelFactory
+import ru.aigram.ai.prompt.ModelPromptStore
+import ru.aigram.ai.prompt.PromptTokenEstimator
 import ru.aigram.ai.research.CurrencyRatesClient
 import ru.aigram.ai.research.ExaMcpSearchClient
 import ru.aigram.ai.research.ExaResultParser
@@ -59,6 +61,7 @@ import ru.aigram.automation.MemoryWorkQueue
 import ru.aigram.automation.PersonalReplyGenerator
 import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.automation.ReplyDeliveryPolicy
+import ru.aigram.automation.activity.ActivityHistoryStore
 import ru.aigram.automation.activity.ReplyTraceScope
 import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.http.ApiRouter
@@ -83,6 +86,7 @@ import ru.aigram.http.endpoint.MediaEndpoint
 import ru.aigram.http.endpoint.MemoryEndpoint
 import ru.aigram.http.endpoint.ModelProfilesEndpoint
 import ru.aigram.http.endpoint.PreviewEndpoint
+import ru.aigram.http.endpoint.PromptEndpoint
 import ru.aigram.http.endpoint.SearchEndpoint
 import ru.aigram.http.endpoint.SettingsEndpoint
 import ru.aigram.http.endpoint.StateEndpoint
@@ -188,6 +192,9 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
             ModelTargetResolver::class.java,
             ProfileChatOptions::class.java,
             ProfileContextBudget::class.java,
+            ModelPromptStore::class.java,
+            PromptTokenEstimator::class.java,
+            PromptEndpoint::class.java,
             ProfileModelFactory::class.java,
             ModelProfilesEndpoint::class.java,
             AppearanceEndpoint::class.java,
@@ -246,6 +253,7 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
             CredentialStore::class.java,
             AutomatedReplyStore::class.java,
             ActivityFeedbackStore::class.java,
+            ActivityHistoryStore::class.java,
             WritingStyleStore::class.java,
             ModelMeasurementStore::class.java,
             ConversationService::class.java,
@@ -383,6 +391,7 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
         diagnostics: DiagnosticLog,
         feedback: ActivityFeedbackStore,
         exclusions: ContextExclusionStore,
+        history: ActivityHistoryStore,
     ): ReplyCoordinator = ReplyCoordinator(
         settings,
         telegram,
@@ -391,6 +400,7 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
         diagnostics,
         feedback,
         exclusions = exclusions,
+        history = history,
         generate = generator::reply,
     )
 

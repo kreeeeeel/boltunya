@@ -9,7 +9,8 @@ import java.util.concurrent.CountDownLatch
 
 fun main(args: Array<String>) {
     val directory = Path.of(
-        System.getenv("BOLTUNYA_DATA_DIR") ?: System.getenv("TIHO_DATA_DIR") ?: "${System.getenv("LOCALAPPDATA")}/Tiho",
+        System.getenv("AIGRAM_DATA_DIR") ?: System.getenv("BOLTUNYA_DATA_DIR") ?: System.getenv("TIHO_DATA_DIR")
+            ?: "${System.getenv("LOCALAPPDATA")}/Aigram",
     )
     Guice.createInjector(
         ApplicationModule(ApplicationConfiguration(directory, args.contains("--startup"))),

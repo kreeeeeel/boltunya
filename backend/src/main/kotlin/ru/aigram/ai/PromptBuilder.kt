@@ -137,14 +137,18 @@ class PromptBuilder(
             external,
             selectedStyle,
         ).filter(String::isNotBlank).joinToString("\n\n")
+        val latest = history.lastOrNull {
+            !it.contextExcluded && (it.text.isNotBlank() || images[it.id].orEmpty().isNotEmpty())
+        }
         val candidates = history.asReversed().stream()
             .filter { !it.contextExcluded }
             .filter { it.text.isNotBlank() || images[it.id].orEmpty().isNotEmpty() }
             .map { message ->
+                val limit = if (message.id == latest?.id) Int.MAX_VALUE else MAX_MESSAGE_CHARACTERS
                 val text = if (!message.outgoing) {
-                    authors.content(message, MAX_MESSAGE_CHARACTERS)
+                    authors.content(message, limit)
                 } else {
-                    message.text.take(MAX_MESSAGE_CHARACTERS)
+                    message.text.take(limit)
                 }
                 if (message.outgoing) {
                     AssistantMessage.builder().content(text).build()
@@ -154,10 +158,11 @@ class PromptBuilder(
             }.collect(Collectors.toList()).asReversed()
 
         var characters = 0
+        var selectedMessages = 0
         val contextBudget = minOf(MAX_CONTEXT_CHARACTERS, MAX_PROMPT_CHARACTERS - system.length)
         val selected = candidates.asReversed().stream().takeWhile {
             characters += it.toString().length
-            characters <= contextBudget
+            selectedMessages++ == 0 || characters <= contextBudget
         }.collect(Collectors.toList()).asReversed()
 
         val context = MessageWindowChatMemory.builder().maxMessages(rule.contextMessages + 1).build()

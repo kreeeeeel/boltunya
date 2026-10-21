@@ -36,8 +36,6 @@ private const val STARTUP_DELAY_SECONDS = 30L
 private const val WORK_INTERVAL_SECONDS = 15L
 private const val ERROR_RETRY_SECONDS = 300L
 private const val CONFIG_REFRESH_SECONDS = 60L
-private const val OWNER_SOURCE_CHAT_LIMIT = 8L
-private const val OWNER_SOURCE_MAX_AGE_DAYS = 90L
 private const val SHUTDOWN_TIMEOUT_SECONDS = 5L
 
 class MemoryCoordinator @Inject constructor(
@@ -94,21 +92,19 @@ class MemoryCoordinator @Inject constructor(
         if (!settings.get().memoryEnabled || !settings.rule(message.chatId).useMemory) return
         if (!attach()) return
         val rule = settings.rule(message.chatId)
-        val ownMessage =
-            message.outgoing && !message.automated && !automated.contains(message.chatId, message.id) && !message.group
+        if (!rule.enabled ||
+            message.outgoing && (message.automated || automated.contains(message.chatId, message.id))
+        ) {
+            return
+        }
         if (message.group) {
             groupChatIds = groupChatIds + message.chatId
-            if (store.state(message.chatId)?.manual != true && !groupEnabled(rule)) return
+            if (!groupEnabled(rule)) return
         }
-        val state = store.state(message.chatId)
-        if (!rule.enabled && state?.manual != true && state?.ownerSource != true && !ownMessage) return
         if (message.group && exclusions?.excludes(attachedAccount, message.chatId, message.id) != true) {
             roster?.record(attachedAccount, message.chatId, listOf(message))
         }
-        store.observe(message.chatId, message.id.toLongOrNull() ?: return, ownerSource = ownMessage)
-        if (!message.outgoing && rule.enabled && !settings.get().paused) {
-            inference.interruptBackground(targets?.resolve(ModelTask.REPLY, rule)?.executionGroup ?: "shared")
-        }
+        store.observe(message.chatId, message.id.toLongOrNull() ?: return)
     }
 
     fun context(rule: ChatRule, history: List<ChatMessage>): MemoryContext {
@@ -117,8 +113,8 @@ class MemoryCoordinator @Inject constructor(
         if (chatId.toLongOrNull() == null) return MemoryContext()
         return try {
             if (!attach()) return MemoryContext()
-            if (rule.useMemory) store.observe(chatId, history.last().id.toLongOrNull() ?: 0, manual = !rule.enabled)
-            if (rule.useMemory) roster?.record(attachedAccount, chatId, history)
+            if (rule.useMemory && rule.enabled) store.observe(chatId, history.last().id.toLongOrNull() ?: 0)
+            if (rule.useMemory && rule.enabled) roster?.record(attachedAccount, chatId, history)
             val general = store.read("")
             val chat = if (rule.useMemory) store.read(chatId) else StoredMemory("", "", "", "")
             MemoryContext(
@@ -149,7 +145,7 @@ class MemoryCoordinator @Inject constructor(
         if (chatId == null) {
             refreshConfigured(true)
             if (rebuild || immediate) {
-                val selected = store.states().filter(::allowed)
+                val selected = store.states().filter(::automaticallyAllowed)
                 if (rebuild) store.rebuildOwner()
                 selected.stream().forEach { state ->
                     cancelledUntil.remove(state.chatId)
@@ -175,8 +171,6 @@ class MemoryCoordinator @Inject constructor(
                     }
                 }
                 if (immediate && selected.isNotEmpty()) {
-                    cancelOutstanding()
-                    inference.interruptBackground()
                     scheduleNext()
                 }
             }
@@ -188,14 +182,19 @@ class MemoryCoordinator @Inject constructor(
             if (rebuild) store.rebuild(chatId) else store.observe(chatId, manual = true, request = true)
             failures.remove(chatId)
             errors.remove(chatId)
-            if (immediate) {
-                collections.removeIf { it.chatId == chatId }
-                collections.add(MemoryCollectionRequest(chatId, rebuild, store.state(chatId)?.processedMessages ?: 0))
-                cancelOutstanding()
-                inference.interruptBackground()
-                scheduleNext()
-            }
+            collections.removeIf { it.chatId == chatId }
+            collections.add(MemoryCollectionRequest(chatId, rebuild, store.state(chatId)?.processedMessages ?: 0))
+            if (immediate) scheduleNext()
         }
+    }
+
+    @Synchronized
+    fun invalidateContext(chatId: String) {
+        if (closed || !attach()) return
+        if (store.state(chatId) == null && store.read(chatId).summary.isBlank()) return
+        cancel(chatId)
+        store.rebuild(chatId, manual = false)
+        store.cancelCollection(chatId)
     }
 
     @Synchronized
@@ -220,7 +219,7 @@ class MemoryCoordinator @Inject constructor(
     private fun pending(request: MemoryCollectionRequest): Boolean {
         val state = store.state(request.chatId) ?: return false
         return allowed(state) && !suspended(request.chatId) &&
-            (state.requested || state.deltaTargetId != 0L || request.rebuild && !state.backfillComplete)
+            (state.requested || state.deltaTargetId != 0L || !state.backfillComplete)
     }
 
     private fun collection(chatId: String): MemoryCollectionProgress {
@@ -229,7 +228,7 @@ class MemoryCoordinator @Inject constructor(
         val queue = requests.filter { pending(it) || processing == it.chatId && !suspended(it.chatId) }
         val selected = queue.filter { chatId.isEmpty() || it.chatId == chatId }
         if (selected.isEmpty()) return MemoryCollectionProgress()
-        val running = selected.any { it.chatId == processing }
+        val running = selected.any { it.chatId == processing } && queueMemoryPosition() == 0
         val status = when {
             running -> MemoryStatus.PROCESSING
             selected.any { errors.containsKey(it.chatId) } -> MemoryStatus.ERROR
@@ -252,6 +251,9 @@ class MemoryCoordinator @Inject constructor(
         )
     }
 
+    private fun queueMemoryPosition(): Int =
+        outstanding.get().takeIf(String::isNotEmpty)?.let(queue::memoryQueuePosition) ?: 0
+
     fun document(chatId: String): MemoryDocument {
         attach()
         val document = store.read(chatId)
@@ -263,12 +265,12 @@ class MemoryCoordinator @Inject constructor(
             !enabled -> MemoryStatus.DISABLED
             chatId.isNotEmpty() && suspended(chatId) ->
                 if (document.summary.isNotBlank()) MemoryStatus.READY else MemoryStatus.IDLE
-            chatId.isEmpty() && processing.isNotEmpty() -> MemoryStatus.PROCESSING
+            chatId.isEmpty() && processing.isNotEmpty() && queueMemoryPosition() == 0 -> MemoryStatus.PROCESSING
             chatId.isEmpty() && waitingModel && active.isNotEmpty() -> MemoryStatus.WAITING_MODEL
             chatId.isEmpty() && active.any { !it.backfillComplete || it.dirty || it.requested } ->
                 MemoryStatus.QUEUED
             chatId.isEmpty() && all.isNotEmpty() -> MemoryStatus.READY
-            processing == chatId && chatId.isNotEmpty() -> MemoryStatus.PROCESSING
+            processing == chatId && chatId.isNotEmpty() && queueMemoryPosition() == 0 -> MemoryStatus.PROCESSING
             errors.containsKey(chatId) -> MemoryStatus.ERROR
             waitingModel && (state?.dirty == true || state?.backfillComplete == false) -> MemoryStatus.WAITING_MODEL
             state != null && allowed(
@@ -416,11 +418,6 @@ class MemoryCoordinator @Inject constructor(
         }
     }
 
-    private fun cancelOutstanding() {
-        val id = outstanding.get()
-        if (id.isNotEmpty()) queue.cancelMemory(id)
-    }
-
     private fun scheduleNext() = synchronized(executor) {
         if (!closed) executor.execute { tick() }
     }
@@ -454,33 +451,27 @@ class MemoryCoordinator @Inject constructor(
         val chats = telegram.chats()
         listedChatIds = chats.map { it.id }.toSet()
         groupChatIds = chats.filter { it.kind != "private" }.map { it.id }.toSet()
-        val cutoff = clock.instant().epochSecond - TimeUnit.DAYS.toSeconds(OWNER_SOURCE_MAX_AGE_DAYS)
-        val sources = chats.stream()
-            .filter { it.kind == "private" && it.date > cutoff && it.date > 0 && settings.rule(it.id).useMemory }
-            .sorted(compareByDescending { it.date })
-            .limit(OWNER_SOURCE_CHAT_LIMIT).map { it.id }.toList().toSet()
         chats.stream().filter { chat ->
             val rule = settings.rule(chat.id)
-            val state = store.state(chat.id)
-            rule.useMemory &&
-                (rule.enabled || state?.manual == true || state?.ownerSource == true || chat.id in sources) &&
-                (chat.kind == "private" || store.state(chat.id)?.manual == true || groupEnabled(rule))
+            rule.enabled && rule.useMemory && (chat.kind == "private" || groupEnabled(rule))
         }.forEach { chat ->
             val id = chat.lastMessageId.toLongOrNull() ?: 0
             val previous = store.state(chat.id)
-            store.observe(
-                chat.id,
-                id,
-                request = onStartup && (previous == null || id > previous.headId),
-                ownerSource = chat.id in sources,
-            )
+            store.observe(chat.id, id, request = onStartup && (previous == null || id > previous.headId))
         }
     }
 
-    private fun allowed(state: ChatMemoryState): Boolean {
+    private fun automaticallyAllowed(state: ChatMemoryState): Boolean {
         val rule = settings.rule(state.chatId)
-        return state.chatId in listedChatIds && rule.useMemory && (rule.enabled || state.manual || state.ownerSource) &&
-            (state.chatId !in groupChatIds || state.manual || groupEnabled(rule))
+        return state.chatId in listedChatIds && rule.useMemory && rule.enabled &&
+            (state.chatId !in groupChatIds || groupEnabled(rule))
+    }
+
+    private fun allowed(state: ChatMemoryState): Boolean {
+        if (automaticallyAllowed(state)) return true
+        val explicit = state.manual && collections.stream().anyMatch { it.chatId == state.chatId }
+        val requested = explicit && (state.requested || state.deltaTargetId != 0L || !state.backfillComplete)
+        return state.chatId in listedChatIds && settings.rule(state.chatId).useMemory && requested
     }
 
     private fun groupEnabled(rule: ChatRule): Boolean =

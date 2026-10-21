@@ -9,7 +9,7 @@ class ReplyJob(
     val id: String,
     val message: ChatMessage,
     val trace: ReplyTrace,
-    val readyAt: Long,
+    var readyAt: Long,
     val waitUntil: Long,
     var order: Long,
     val draft: (() -> ReplyResult)? = null,
@@ -18,7 +18,6 @@ class ReplyJob(
 ) {
     val cancelled = AtomicBoolean()
     var priority = false
-    var preempted = false
 
     @Volatile var delivering = false
 

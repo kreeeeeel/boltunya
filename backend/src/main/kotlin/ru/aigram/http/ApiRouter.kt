@@ -9,6 +9,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
 import ru.aigram.ai.profile.ProfileModelFactory
+import ru.aigram.exception.impl.MalformedPayloadException
 import ru.aigram.exception.impl.MethodNotAllowedException
 import ru.aigram.exception.impl.RouteNotFoundException
 import ru.aigram.http.endpoint.ActivityEndpoint
@@ -24,6 +25,7 @@ import ru.aigram.http.endpoint.MediaEndpoint
 import ru.aigram.http.endpoint.MemoryEndpoint
 import ru.aigram.http.endpoint.ModelProfilesEndpoint
 import ru.aigram.http.endpoint.PreviewEndpoint
+import ru.aigram.http.endpoint.PromptEndpoint
 import ru.aigram.http.endpoint.SearchEndpoint
 import ru.aigram.http.endpoint.SettingsEndpoint
 import ru.aigram.http.endpoint.StateEndpoint
@@ -67,6 +69,7 @@ class ApiRouter @Inject constructor(
     private val attachments: AttachmentEndpoint,
     private val uploads: UploadEndpoint,
     private val exclusions: ContextExclusionEndpoint,
+    private val prompts: PromptEndpoint,
 ) : AutoCloseable {
     fun handle(exchange: HttpExchange) {
         val path = exchange.requestURI.path
@@ -86,6 +89,9 @@ class ApiRouter @Inject constructor(
         val route = ApiRoute.entries.firstOrNull { it.path == path && it.method == method }
         val result = when (route) {
             ApiRoute.STATE -> json.encodeToJsonElement(state.get())
+            ApiRoute.MODEL_PROMPTS -> json.encodeToJsonElement(prompts.list())
+            ApiRoute.MODEL_PROMPTS_SAVE -> json.encodeToJsonElement(prompts.save(body))
+            ApiRoute.PROMPT_BUDGET -> json.encodeToJsonElement(prompts.budget(body))
             ApiRoute.MODEL_PROFILES -> json.encodeToJsonElement(models.list())
             ApiRoute.MODEL_PROFILES_CREATE -> json.encodeToJsonElement(models.save(null, body))
             ApiRoute.MODEL_ROUTING -> json.encodeToJsonElement(models.routing())
@@ -93,6 +99,15 @@ class ApiRouter @Inject constructor(
             ApiRoute.APPEARANCE -> json.encodeToJsonElement(appearance.get())
             ApiRoute.APPEARANCE_SAVE -> json.encodeToJsonElement(appearance.update(body))
             ApiRoute.STICKERS -> json.encodeToJsonElement(attachments.catalog())
+            ApiRoute.ACTIVITY_HISTORY -> {
+                val query = exchange.requestURI.query.orEmpty().split('&').associate {
+                    it.substringBefore('=') to it.substringAfter('=', "")
+                }
+                val limit = query["limit"]?.let { it.toIntOrNull() ?: throw MalformedPayloadException() } ?: 30
+                json.encodeToJsonElement(activity.history(query["cursor"], limit))
+            }
+            ApiRoute.ACTIVITY_HISTORY_SETTINGS -> json.encodeToJsonElement(activity.storage())
+            ApiRoute.ACTIVITY_HISTORY_CONFIGURE -> json.encodeToJsonElement(activity.configure(body))
             ApiRoute.ACTIVITY_CLEAR -> {
                 activity.clear()
                 ok()
@@ -299,5 +314,6 @@ class ApiRouter @Inject constructor(
     override fun close() {
         validation.close()
         modelClients.close()
+        activity.close()
     }
 }

@@ -3406,6 +3406,161 @@
           }
         ]
       }
+    },
+    "/api/activity/history": {
+      "get": {
+        "operationId": "activityHistory",
+        "tags": [
+          "Activity"
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 30
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityHistoryPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/activity/history/settings": {
+      "get": {
+        "operationId": "activityHistorySettings",
+        "tags": [
+          "Activity"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityHistoryStorage"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "configureActivityHistory",
+        "tags": [
+          "Activity"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivityHistorySettings"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityHistoryStorage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/model-prompts": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelPromptReport"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelPromptSettings"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelPromptSettings"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/prompts/budget": {
+      "post": {
+        "description": "Estimate saved or draft instructions without reading Telegram history or calling a model. Generation validates the full assembled context separately.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromptBudgetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptBudgetReport"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -6012,6 +6167,211 @@
             ]
           },
           "excluded": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ActivityHistorySettings": {
+        "type": "object",
+        "required": [
+          "retentionDays",
+          "maxStorageMb"
+        ],
+        "properties": {
+          "retentionDays": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 36500,
+            "default": 0
+          },
+          "maxStorageMb": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1048576,
+            "default": 0
+          }
+        }
+      },
+      "ActivityHistoryStorage": {
+        "type": "object",
+        "required": [
+          "retentionDays",
+          "maxStorageMb",
+          "bytes",
+          "recording",
+          "errorCode"
+        ],
+        "properties": {
+          "retentionDays": {
+            "type": "integer"
+          },
+          "maxStorageMb": {
+            "type": "integer"
+          },
+          "bytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "recording": {
+            "type": "boolean"
+          },
+          "errorCode": {
+            "type": "string"
+          }
+        }
+      },
+      "ActivityHistoryPage": {
+        "type": "object",
+        "required": [
+          "entries",
+          "nextCursor",
+          "hasMore",
+          "total",
+          "storage"
+        ],
+        "properties": {
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Activity"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasMore": {
+            "type": "boolean"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "storage": {
+            "$ref": "#/components/schemas/ActivityHistoryStorage"
+          }
+        }
+      },
+      "ModelPromptSettings": {
+        "type": "object",
+        "required": [
+          "model"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "maxLength": 160
+          },
+          "profileId": {
+            "type": "string",
+            "default": "",
+            "maxLength": 36
+          },
+          "instructions": {
+            "type": "string",
+            "default": "",
+            "maxLength": 20000
+          },
+          "contextWindow": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 512,
+            "maximum": 2097152
+          },
+          "tokenEncoding": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "cl100k",
+              "o200k"
+            ]
+          }
+        }
+      },
+      "ModelPromptReport": {
+        "type": "object",
+        "required": [
+          "prompts"
+        ],
+        "properties": {
+          "prompts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModelPromptSettings"
+            }
+          }
+        }
+      },
+      "PromptBudgetRequest": {
+        "type": "object",
+        "properties": {
+          "rule": {
+            "$ref": "#/components/schemas/ChatRule"
+          },
+          "globalPrompt": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "preferences": {
+            "$ref": "#/components/schemas/ModelPromptSettings"
+          }
+        }
+      },
+      "PromptBudgetReport": {
+        "type": "object",
+        "required": [
+          "model",
+          "profileId",
+          "contextWindow",
+          "maxContextTokens",
+          "systemTokens",
+          "reservedOutputTokens",
+          "remainingTokens",
+          "fits",
+          "tokenEncoding",
+          "preferences",
+          "estimated",
+          "includesHistory"
+        ],
+        "properties": {
+          "model": {
+            "type": "string"
+          },
+          "profileId": {
+            "type": "string"
+          },
+          "contextWindow": {
+            "type": "integer"
+          },
+          "maxContextTokens": {
+            "type": "integer"
+          },
+          "systemTokens": {
+            "type": "integer"
+          },
+          "reservedOutputTokens": {
+            "type": "integer"
+          },
+          "remainingTokens": {
+            "type": "integer"
+          },
+          "fits": {
+            "type": "boolean"
+          },
+          "tokenEncoding": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "cl100k",
+              "o200k"
+            ]
+          },
+          "preferences": {
+            "$ref": "#/components/schemas/ModelPromptSettings"
+          },
+          "estimated": {
+            "type": "boolean"
+          },
+          "includesHistory": {
             "type": "boolean"
           }
         }

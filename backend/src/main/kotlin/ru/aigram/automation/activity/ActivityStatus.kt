@@ -5,6 +5,7 @@ enum class ActivityStatus(val value: String) {
     GENERATING("generating"),
     SENT("sent"),
     READY("ready"),
+    INTERRUPTED("interrupted"),
     CANCELLED("cancelled"),
     ERROR("error"),
 }

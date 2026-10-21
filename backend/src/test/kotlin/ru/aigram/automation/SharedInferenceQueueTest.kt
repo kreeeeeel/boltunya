@@ -6,6 +6,7 @@ import org.springframework.ai.chat.messages.UserMessage
 import ru.aigram.ai.model.ModelCompletion
 import ru.aigram.automation.activity.ReplyTraceScope
 import ru.aigram.domain.ActivityKind
+import ru.aigram.domain.ChatRule
 import ru.aigram.domain.ReplyResult
 import ru.aigram.exception.impl.BackgroundInferenceDeferredException
 import ru.aigram.storage.SettingsStore
@@ -19,7 +20,6 @@ import java.util.concurrent.atomic.AtomicReference
 import java.util.stream.IntStream
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -120,16 +120,17 @@ class SharedInferenceQueueTest {
     }
 
     @Test
-    fun `new draft preempts automatic memory and preserves its deferred checkpoint signal`() {
+    fun `new draft waits for independent automatic memory without cancelling it`() {
         val started = CountDownLatch(1)
         val completed = AtomicReference<Throwable?>()
+        val release = CountDownLatch(1)
         val finished = CountDownLatch(1)
         ReplyCoordinator(SettingsStore(directory), FakeTelegramGateway()) { _, _ ->
             ReplyResult("auto", 0, 0.0)
         }.use { queue ->
             val task = memory(action = {
                 started.countDown()
-                CountDownLatch(1).await(5, TimeUnit.SECONDS)
+                release.await(5, TimeUnit.SECONDS)
             }, completed = {
                 completed.set(it)
                 finished.countDown()
@@ -137,10 +138,47 @@ class SharedInferenceQueueTest {
             queue.enqueueMemory(task)
             assertTrue(started.await(2, TimeUnit.SECONDS))
             val draft = queue.enqueueDraft("43", "test") { ReplyResult("foreground", 0, 0.0) }
+            assertEquals("queued", queue.draft(draft.id).status)
+            assertEquals("generating", queue.details(task.id).entry.status)
+            release.countDown()
             assertTrue(finished.await(2, TimeUnit.SECONDS))
-            assertIs<BackgroundInferenceDeferredException>(completed.get())
+            assertEquals(null, completed.get())
             await { queue.draft(draft.id).status == "ready" }
-            assertEquals("cancelled", queue.details(task.id).entry.status)
+            assertEquals("ready", queue.details(task.id).entry.status)
+        }
+    }
+
+    @Test
+    fun `resource deferral requeues the same memory event instead of cancelling collection`() {
+        val runs = AtomicInteger()
+        val completed = AtomicInteger()
+        ReplyCoordinator(SettingsStore(directory), FakeTelegramGateway()) { _, _ ->
+            ReplyResult("auto", 0, 0.0)
+        }.use { queue ->
+            val task = memory(action = {
+                if (runs.incrementAndGet() == 1) throw BackgroundInferenceDeferredException()
+            }, completed = { completed.incrementAndGet() })
+            queue.enqueueMemory(task)
+            await { queue.details(task.id).entry.status == "ready" && completed.get() == 1 }
+            assertEquals(2, runs.get())
+            assertEquals(1, completed.get())
+            assertEquals(1, queue.activities().size)
+            assertTrue(queue.details(task.id).steps.any { it.phase == "waiting-resource" })
+        }
+    }
+
+    @Test
+    fun `ordinary political question enters the reply queue when assistant task filtering is enabled`() {
+        val settings = SettingsStore(directory)
+        settings.update { it.copy(paused = false, ignoreAssistantTasks = true) }
+        settings.saveRule("42", ChatRule(enabled = true))
+        val gateway = FakeTelegramGateway()
+        val message = gateway.messages.first().copy(text = "Ты каких политических взглядов?")
+        ReplyCoordinator(settings, gateway) { _, _ -> ReplyResult("reply", 0, 0.0) }.use { queue ->
+            queue.pauseQueue(true)
+            queue.onMessage(message)
+            assertEquals(message.text, queue.details(queue.activities().single().id).trigger)
+            assertEquals("queued", queue.activities().single().status)
         }
     }
 

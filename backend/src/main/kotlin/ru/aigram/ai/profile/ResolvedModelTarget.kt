@@ -1,5 +1,7 @@
 package ru.aigram.ai.profile
 
+import ru.aigram.ai.prompt.TokenEncoding
+
 /** Safe request target: deliberately contains no credential. */
 data class ResolvedModelTarget(
     val profileId: String = "",
@@ -10,4 +12,5 @@ data class ResolvedModelTarget(
     val capabilities: ModelCapabilities = ModelCapabilities(),
     val options: ModelProfileOptions = ModelProfileOptions(),
     val executionGroup: String = "shared",
+    val tokenEncoding: TokenEncoding = TokenEncoding.AUTO,
 )

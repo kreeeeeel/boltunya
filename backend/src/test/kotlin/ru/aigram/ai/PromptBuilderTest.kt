@@ -209,16 +209,17 @@ class PromptBuilderTest {
     }
 
     @Test
-    fun `includes media captions skips empty media and caps long message content`() {
+    fun `includes captions and caps only older message content`() {
         val prompt = builder.build(
             ChatRule(),
             listOf(
                 ChatMessage("1", "1", "Подпись к фотографии", false, 0, "photo"),
                 ChatMessage("3", "1", "", false, 0, "voice"),
                 ChatMessage("2", "1", "x".repeat(50000), false, 0),
+                ChatMessage("4", "1", "Последний вопрос", false, 0),
             ),
         )
-        assertEquals(3, prompt.size)
+        assertEquals(4, prompt.size)
         assertTrue(prompt[1].text.orEmpty().endsWith("Подпись к фотографии"))
         assertTrue(prompt[2].text.orEmpty().endsWith("x".repeat(1200)))
         assertFalse(prompt[2].text.orEmpty().contains("x".repeat(1201)))

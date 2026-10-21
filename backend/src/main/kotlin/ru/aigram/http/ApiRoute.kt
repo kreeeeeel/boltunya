@@ -2,6 +2,9 @@ package ru.aigram.http
 
 enum class ApiRoute(val path: String, val method: HttpMethod) {
     STATE("/api/state", HttpMethod.GET),
+    MODEL_PROMPTS("/api/model-prompts", HttpMethod.GET),
+    MODEL_PROMPTS_SAVE("/api/model-prompts", HttpMethod.PUT),
+    PROMPT_BUDGET("/api/prompts/budget", HttpMethod.POST),
     MODEL_PROFILES("/api/model-profiles", HttpMethod.GET),
     MODEL_PROFILES_CREATE("/api/model-profiles", HttpMethod.POST),
     MODEL_ROUTING("/api/model-routing", HttpMethod.GET),
@@ -9,6 +12,9 @@ enum class ApiRoute(val path: String, val method: HttpMethod) {
     APPEARANCE("/api/appearance", HttpMethod.GET),
     APPEARANCE_SAVE("/api/appearance", HttpMethod.PUT),
     STICKERS("/api/stickers", HttpMethod.GET),
+    ACTIVITY_HISTORY("/api/activity/history", HttpMethod.GET),
+    ACTIVITY_HISTORY_SETTINGS("/api/activity/history/settings", HttpMethod.GET),
+    ACTIVITY_HISTORY_CONFIGURE("/api/activity/history/settings", HttpMethod.PUT),
     ACTIVITY_CLEAR("/api/activity", HttpMethod.DELETE),
     ACTIVITY_QUEUE("/api/activity/queue", HttpMethod.PATCH),
     SEARCH_CONNECTION("/api/search/connection", HttpMethod.GET),

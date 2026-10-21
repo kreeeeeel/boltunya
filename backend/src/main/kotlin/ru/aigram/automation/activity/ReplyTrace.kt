@@ -11,6 +11,7 @@ import ru.aigram.domain.ActivityStep
 private val FINAL_STATUSES = setOf(
     ActivityStatus.SENT.value,
     ActivityStatus.READY.value,
+    ActivityStatus.INTERRUPTED.value,
     ActivityStatus.CANCELLED.value,
     ActivityStatus.ERROR.value,
 )
@@ -45,9 +46,21 @@ class ReplyTrace(private var entry: ActivityEntry, private var trigger: String) 
     }
 
     @Synchronized
+    fun defer() {
+        if (!active()) return
+        val now = System.currentTimeMillis()
+        attempts.stream().forEach { it.stop(now) }
+        entry = entry.copy(status = ActivityStatus.QUEUED.value)
+        phase(ActivityPhase.WAITING_RESOURCE)
+    }
+
+    @Synchronized
     fun start() {
         if (!active()) return
-        entry = entry.copy(status = ActivityStatus.GENERATING.value, startedAt = System.currentTimeMillis())
+        entry = entry.copy(
+            status = ActivityStatus.GENERATING.value,
+            startedAt = if (entry.startedAt > 0) entry.startedAt else System.currentTimeMillis(),
+        )
         phase(ActivityPhase.CONTEXT)
     }
 

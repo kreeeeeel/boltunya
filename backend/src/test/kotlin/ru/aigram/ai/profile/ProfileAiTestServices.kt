@@ -6,6 +6,7 @@ import ru.aigram.ai.model.ChatCompletionService
 import ru.aigram.ai.model.ModelPolicies
 import ru.aigram.ai.model.ModelReplyReader
 import ru.aigram.ai.model.SpringAiModelFactory
+import ru.aigram.ai.prompt.ModelPromptStore
 import ru.aigram.automation.activity.ReplyTraceScope
 import ru.aigram.configuration.ApplicationConfiguration
 import ru.aigram.resources.ResourceCatalog
@@ -16,6 +17,7 @@ import java.nio.file.Path
 class ProfileAiTestServices(directory: Path) : AutoCloseable {
     private val resources = ResourceCatalog()
     val profiles = ModelProfileStore(directory, ModelCredentialVault(directory), resources)
+    val prompts = ModelPromptStore(directory)
     val routing = ModelRoutingStore(directory)
     val settings = SettingsStore(directory)
     val targets = ModelTargetResolver(profiles, routing, settings, ApplicationConfiguration(directory, false))
@@ -25,7 +27,7 @@ class ProfileAiTestServices(directory: Path) : AutoCloseable {
     val completion = ChatCompletionService(
         factory.create("http://127.0.0.1:1"), ModelPolicies(resources), ModelReplyReader(),
         OllamaRuntime("http://127.0.0.1:1"), ModelInference(), ModelMeasurementStore(directory), tracing,
-        targets = targets, clients = clients,
+        targets = targets, clients = clients, promptSettings = prompts,
     )
 
     override fun close() {

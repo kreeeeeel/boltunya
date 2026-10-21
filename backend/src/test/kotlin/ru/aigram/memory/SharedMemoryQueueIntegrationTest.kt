@@ -24,6 +24,54 @@ class SharedMemoryQueueIntegrationTest {
     @TempDir lateinit var directory: Path
 
     @Test
+    fun `requesting another chat and a draft never cancels the first queued collection`() {
+        val settings = SettingsStore(directory)
+        settings.saveRule("42", ChatRule(enabled = true))
+        settings.saveRule("43", ChatRule(enabled = true))
+        val telegram = MemoryTelegramGateway()
+        telegram.messages = listOf(
+            ChatMessage("1", "42", "First fact", false, 1),
+            ChatMessage("2", "43", "Second fact", false, 2),
+        )
+        val automated = AutomatedReplyStore(directory)
+        val store = MemoryStore(directory, ResourceCatalog())
+        val processor = MemoryProcessor(
+            telegram,
+            store,
+            MemoryBatchBuilder(automated),
+            MemorySummarizer { _, _, _ -> "Collected facts" },
+            Clock.systemUTC(),
+            OwnerMemorySummarizer { _, old, _ -> old },
+        )
+        ReplyCoordinator(settings, telegram) { _, _ -> ReplyResult("Never sent", 0, 0.0) }.use { queue ->
+            queue.pauseQueue(true)
+            MemoryModelServer().use { server ->
+                MemoryCoordinator(
+                    store, settings, telegram, server.start().runtime, processor, ModelInference(), Clock.systemUTC(),
+                    automated, Provider { queue },
+                ).use { memory ->
+                    memory.refresh("42", immediate = true)
+                    await { queue.activities().any { it.kind == ActivityKind.MEMORY } }
+                    val first = queue.activities().single().id
+                    memory.refresh("43", immediate = true)
+                    val draft = queue.enqueueDraft("43", "test") { ReplyResult("Only draft", 0, 0.0) }
+                    assertEquals("queued", queue.details(first).entry.status)
+                    assertTrue(memory.document("43").collection.active)
+                    assertTrue(telegram.reads.isEmpty())
+                    queue.pauseQueue(false)
+                    await {
+                        queue.draft(draft.id).status == "ready" &&
+                            store.read("42").summary == "Collected facts" &&
+                            store.read("43").summary == "Collected facts"
+                    }
+                    assertTrue(queue.activities().none { it.status == "cancelled" })
+                    assertEquals(setOf("42", "43"), telegram.reads.map { it.first }.toSet())
+                }
+            }
+        }
+    }
+
+    @Test
     fun `memory collection waits in the shared queue and cancellation preserves notes without reading history`() {
         val settings = SettingsStore(directory)
         settings.saveRule("42", ChatRule(enabled = true))

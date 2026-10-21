@@ -1,5 +1,6 @@
 package ru.aigram.automation
 
+import ru.aigram.automation.activity.ActivityHistoryStore
 import ru.aigram.automation.activity.ActivityLog
 import ru.aigram.automation.activity.ActivityPhase
 import ru.aigram.automation.activity.ActivityStatus
@@ -11,6 +12,7 @@ import ru.aigram.domain.ActivityDetails
 import ru.aigram.domain.ActivityEntry
 import ru.aigram.domain.ActivityFeedback
 import ru.aigram.domain.ActivityFeedbackUpdate
+import ru.aigram.domain.ActivityHistoryPage
 import ru.aigram.domain.ActivityKind
 import ru.aigram.domain.ChatMessage
 import ru.aigram.domain.ChatRule
@@ -59,6 +61,7 @@ class ReplyCoordinator(
     private val feedback: ActivityFeedbackStore? = null,
     private val delivery: ReplyDeliveryPolicy = ReplyDeliveryPolicy(settings),
     private val exclusions: ContextExclusionStore? = null,
+    private val history: ActivityHistoryStore? = null,
     private val generate: (ChatRule, List<ChatMessage>) -> ReplyResult,
 ) : AutoCloseable,
     MemoryWorkQueue {
@@ -76,7 +79,7 @@ class ReplyCoordinator(
     private val pending = linkedMapOf<String, ReplyJob>()
     private val latest = ConcurrentHashMap<String, String>()
     private val drafts = ConcurrentHashMap<String, ReplyResult>()
-    private val log = ActivityLog()
+    private val log = ActivityLog(history) { telegram.status().userId }
     private val typing = TypingIndicator(telegram)
     private val epoch = AtomicLong()
     private val tasks = AssistantTaskFilter()
@@ -116,6 +119,22 @@ class ReplyCoordinator(
                 feedbackRating = feedback?.get(entry.id)?.rating,
             )
         }.toList()
+    }
+
+    fun currentActivities(): List<ActivityEntry> {
+        var completed = 0
+        return activities().stream().filter { entry ->
+            entry.status == "queued" || entry.status == "generating" || ++completed <= 30
+        }.toList()
+    }
+
+    fun historyPage(cursor: String?, limit: Int): ActivityHistoryPage {
+        val page = history?.page(telegram.status().userId, cursor, limit) ?: return ActivityHistoryPage()
+        return page.copy(
+            entries = page.entries.stream().map { entry ->
+                entry.copy(feedbackRating = feedback?.get(entry.id)?.rating)
+            }.toList(),
+        )
     }
 
     fun queue(): ReplyQueueState = synchronized(gate) {
@@ -190,7 +209,6 @@ class ReplyCoordinator(
             action,
             telegram.status().userId,
         )
-        preemptAutomaticMemory()
         PreviewJob(id, ActivityStatus.QUEUED.value)
     }
 
@@ -267,7 +285,6 @@ class ReplyCoordinator(
             System.currentTimeMillis() + delay,
             ++order,
         )
-        preemptAutomaticMemory()
     }
 
     override fun enqueueMemory(task: MemoryQueueTask) = synchronized(gate) {
@@ -302,14 +319,6 @@ class ReplyCoordinator(
     override fun memoryQueuePosition(id: String): Int = synchronized(gate) {
         val job = pending[id] ?: return@synchronized 0
         pending.values.stream().filter { jobOrder.compare(it, job) < 0 }.count().toInt() + 1
-    }
-
-    private fun preemptAutomaticMemory() {
-        if (active.size < settings.get().maxParallelTasks) return
-        val job = active.values.stream().filter { it.memory != null && !it.memory.explicit && !it.priority }
-            .findFirst().orElse(null) ?: return
-        job.preempted = true
-        cancelJob(job)
     }
 
     private fun dispatch() = synchronized(gate) {
@@ -500,6 +509,7 @@ class ReplyCoordinator(
     private fun respondMemory(job: ReplyJob) {
         job.thread = Thread.currentThread()
         var failure: Throwable? = null
+        var deferred = false
         try {
             if (job.cancelled.get() || closed ||
                 telegram.status().userId != job.accountId
@@ -514,15 +524,18 @@ class ReplyCoordinator(
             if (job.cancelled.get()) throw ReplyCancelledException()
             job.trace.finish(ActivityStatus.READY, task.model)
         } catch (exception: Exception) {
+            deferred = exception is BackgroundInferenceDeferredException && !job.cancelled.get() && !closed
             val cancelled = job.cancelled.get() || exception is ReplyCancelledException ||
-                exception is BackgroundInferenceDeferredException || Thread.currentThread().isInterrupted
+                Thread.currentThread().isInterrupted
             failure = when {
-                job.preempted || exception is BackgroundInferenceDeferredException ->
+                exception is BackgroundInferenceDeferredException ->
                     BackgroundInferenceDeferredException()
                 cancelled -> ReplyCancelledException()
                 else -> exception
             }
-            if (cancelled) {
+            if (deferred) {
+                job.trace.defer()
+            } else if (cancelled) {
                 job.trace.finish(
                     ActivityStatus.CANCELLED,
                     if (failure is AppException) failure.message else ReplyCancelledException().message,
@@ -537,8 +550,16 @@ class ReplyCoordinator(
         } finally {
             Thread.interrupted()
             job.thread = null
-            synchronized(gate) { active.remove(job.id) }
-            job.memory?.finish(failure)
+            synchronized(gate) {
+                active.remove(job.id)
+                if (deferred && !closed && !job.cancelled.get()) {
+                    job.readyAt = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(QUEUE_TICK_MS)
+                    pending[job.id] = job
+                } else {
+                    deferred = false
+                }
+            }
+            if (!deferred) job.memory?.finish(failure)
             log.prune()
         }
     }
@@ -552,7 +573,7 @@ class ReplyCoordinator(
             null
         ) {
             job.memory?.finish(
-                if (job.preempted) BackgroundInferenceDeferredException() else ReplyCancelledException(),
+                ReplyCancelledException(),
             )
         }
     }
@@ -604,5 +625,6 @@ class ReplyCoordinator(
         scheduler.shutdownNow()
         worker.shutdownNow()
         typing.close()
+        history?.close()
     }
 }

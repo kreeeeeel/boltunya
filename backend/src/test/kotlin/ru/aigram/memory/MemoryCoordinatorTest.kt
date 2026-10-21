@@ -208,8 +208,9 @@ class MemoryCoordinatorTest {
     }
 
     @Test
-    fun `bootstraps from eight recent private chats and shares owner profile without chat memory`() {
+    fun `automatically collects only AI enabled chats and never subscribes from owner messages`() {
         val settings = SettingsStore(directory)
+        settings.saveRule("149", ChatRule(enabled = true))
         val telegram = MemoryTelegramGateway()
         telegram.chatIds = (1..150).map(Int::toString)
         telegram.messages = (1..150).map { ChatMessage("$it", "$it", "Я люблю чай", true, 1000L + it) }
@@ -239,7 +240,7 @@ class MemoryCoordinatorTest {
             )
                 .use { coordinator ->
                     coordinator.tick()
-                    assertEquals((142..149).map(Int::toString).toSet(), store.states().map { it.chatId }.toSet())
+                    assertEquals(setOf("149"), store.states().map { it.chatId }.toSet())
                     assertEquals(1, telegram.reads.size)
                     val context = coordinator.context(
                         ChatRule(useMemory = false),
@@ -250,7 +251,7 @@ class MemoryCoordinatorTest {
                     assertEquals(null, store.state("42"))
                     val owner = ChatMessage("900", "10", "Я люблю кофе", true, 1000)
                     coordinator.observe(owner)
-                    assertTrue(store.state("10")?.ownerSource == true)
+                    assertEquals(null, store.state("10"))
                     automated.record("11", "901")
                     coordinator.observe(ChatMessage("901", "11", "Автоматический ответ", true, 1000))
                     assertEquals(null, store.state("11"))
@@ -301,7 +302,7 @@ class MemoryCoordinatorTest {
                 assertTrue(telegram.reads.isEmpty())
                 coordinator.refresh("42")
                 coordinator.tick()
-                assertEquals(1, telegram.reads.size)
+                assertEquals("42", telegram.reads.first().first)
                 assertTrue(store.state("42")?.manual == true)
             }
         }

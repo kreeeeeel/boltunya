@@ -18,7 +18,7 @@ class StateEndpoint @Inject constructor(
         engine.status(),
         settings.get(),
         telegram.chats(),
-        replies.activities(),
+        replies.currentActivities(),
         replies.queue(),
     )
 }

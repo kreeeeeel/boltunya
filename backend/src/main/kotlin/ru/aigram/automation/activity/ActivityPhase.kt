@@ -14,6 +14,7 @@ enum class ActivityPhase(val value: String) {
     WAITING_DELIVERY("waiting-delivery"),
     SENT("sent"),
     READY("ready"),
+    INTERRUPTED("interrupted"),
     CANCELLED("cancelled"),
     ERROR("error"),
 }

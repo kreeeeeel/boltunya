@@ -67,7 +67,8 @@ class ConversationService @Inject constructor(
                 mapOf("memory" to Json.encodeToString(memory.limited(MEMORY_PLANNER_CHARACTERS))),
             )
         }
-        val ownerInstructions = globalPrompt + "\n" + rule.instructions
+        val modelPrompt = completion.instructions(rule, globalPrompt)
+        val ownerInstructions = modelPrompt + "\n" + rule.instructions
         val instructions = ownerInstructions + "\n" + memoryFacts
         fun generate(
             context: List<Message>,
@@ -99,7 +100,7 @@ class ConversationService @Inject constructor(
                 0.0,
             )
         }
-        val baseMessages = prompts.build(rule, history, globalPrompt, research, styleHistory, memory, images)
+        val baseMessages = prompts.build(rule, history, modelPrompt, research, styleHistory, memory, images)
         val messages = if (stickers.isEmpty()) baseMessages else mediaPlanner.messages(baseMessages, stickers)
         val replySchema = if (stickers.isEmpty()) null else mediaPlanner.schema(stickers)
         fun read(text: String) = if (stickers.isEmpty()) ModelReplyPlan(text) else mediaPlanner.read(text, stickers)
@@ -112,7 +113,7 @@ class ConversationService @Inject constructor(
             val retryBase = prompts.build(
                 rule,
                 history,
-                globalPrompt,
+                modelPrompt,
                 research,
                 styleHistory,
                 memory,
