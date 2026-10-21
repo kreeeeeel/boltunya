@@ -60,7 +60,7 @@ memory/
 
 ## API и проверки
 
-Контракт: `backend/contract/api.yaml`. Все маршруты защищены существующей локальной сессией, проверкой Host/Origin:
+Контракт: `backend/contract/api/schema/api.yaml`. Все маршруты защищены существующей локальной сессией, проверкой Host/Origin:
 
 - `GET/PATCH /api/memory`: общие заметки.
 - `POST /api/memory/refresh`: проверка изменившихся используемых диалогов.

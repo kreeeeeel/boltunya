@@ -107,6 +107,7 @@ Full exit stops the application-managed Ollama process. An independently managed
 | --- | --- |
 | `desktop/` | Electron window, isolated preload, native lifecycle, tray and startup |
 | `backend/` | Kotlin/JVM, Spring Boot, TDLib, automation, search, memory and local API |
+| `backend/contract/` | Split OpenAPI source, generated Spring interfaces/DTOs, Kotlin and TypeScript HTTP clients |
 | `web/` | TypeScript, React, Next.js static export, Gravity UI and generated API types |
 | `.github/workflows/` | Windows checks, portable packaging and GitHub Releases |
 | `docker/` | Development/checking containers; not the signed-in desktop application |
@@ -114,7 +115,7 @@ Full exit stops the application-managed Ollama process. An independently managed
 | `docs/` | English/Russian feature documentation and synthetic screenshots |
 | `complie/` | Generated EXE and SHA-256 checksum; intentionally ignored by Git |
 
-The Kotlin package is `ru.aigram`. Prompts, literal language vocabularies, errors and model metadata live in backend resources. The OpenAPI contract is `backend/contract/api.yaml`; `openapi-typescript` generates the frontend types. The local API uses a private loopback session and Host/Origin checks. The renderer has no Node.js access.
+The Kotlin package is `ru.aigram`. Prompts, literal language vocabularies, errors and model metadata live in backend resources. The single OpenAPI source is `backend/contract/api/schema/api.yaml`, with feature operations and individual model/enum files. Gradle validates and bundles it before generating Spring interfaces/DTOs, a Kotlin WebClient SDK and an installable TypeScript HTTP SDK. Generated files remain under each module's `build/` directory. The current web transport derives its transitional types from the same source. See [client modules and usage](docs/api-client/en.md). The local API uses a private loopback session and Host/Origin checks. The renderer has no Node.js access.
 
 Spring AI's Ollama and OpenAI adapters provide typed requests, structured responses, separate thinking output and inference statistics. Saved connections and optional task routes choose an installed local model or API connection separately for replies, memory, research and vision. See [task routing and image analysis](docs/ai/tasks-en.md). Local tasks share a resource gate, while independent endpoints can run concurrently within the queue limit. `ConversationService` coordinates search and final replies; `ChatCompletionService` owns inference, and `OllamaRuntime` owns local model management. Spring AI `ChatMemory` builds the recent conversation window; the Markdown memory bank retains long-term summaries and owner facts. Spring Boot wires these services through constructor injection and functional integration configurations. The existing private HTTP bridge remains temporarily during the [contract migration](docs/migration/en.md). See [AI architecture](docs/ai/en.md).
 

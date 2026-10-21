@@ -189,6 +189,7 @@ memory/
 | --- | --- |
 | `desktop/` | Electron, окно, preload, трей, автозапуск |
 | `backend/` | Kotlin, Telegram, ИИ, память, поиск, локальный HTTP API |
+| `backend/contract/` | Единый OpenAPI по функциям, generated Spring API/DTO, Kotlin- и TypeScript HTTP-клиенты |
 | `web/` | Интерфейс, темы, переводы, сгенерированные типы API |
 | `.github/workflows/` | CI и публикация Windows-релизов |
 | `docker/` | Контейнеры для проверок и предпросмотра |
@@ -196,7 +197,7 @@ memory/
 | `docs/` | Документация и тестовые скриншоты |
 | `complie/` | Итоговый EXE и SHA256; не хранится в Git |
 
-Основной пакет — `ru.aigram`. Внедрение зависимостей использует Spring Boot. Конкретные исключения находятся в `exception/impl`, коды и тексты ошибок разделены. Промпты, словари языков, тексты ошибок и каталог моделей вынесены в `backend/src/main/resources`. Типы frontend генерируются из `backend/contract/api.yaml`.
+Основной пакет — `ru.aigram`. Внедрение зависимостей использует Spring Boot. Конкретные исключения находятся в `exception/impl`, коды и тексты ошибок разделены. Промпты, словари языков, тексты ошибок и каталог моделей вынесены в `backend/src/main/resources`. Единый OpenAPI начинается с `backend/contract/api/schema/api.yaml`; операции разделены по функциям, модели и enum — по файлам. Gradle проверяет ссылки и собирает контракт перед генерацией Spring API/DTO, Kotlin WebClient и полноценного TypeScript HTTP-клиента. Generated-код остаётся в `build/`. Текущий веб-транспорт получает переходные типы из того же источника. [Модули и использование клиентов](api-client/ru.md).
 
 Локальный API защищён сессионным секретом и проверкой Host/Origin. Renderer не имеет доступа к Node.js; preload открывает ограниченный IPC. Шрифты Noto Sans встроены локально и покрывают все четыре языка.
 

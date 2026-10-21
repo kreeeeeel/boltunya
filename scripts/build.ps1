@@ -30,8 +30,15 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Kotlin checks failed' }
     }
     & ./scripts/create-icon.ps1 -OutputPath (Join-Path $projectRoot 'desktop/assets/aigram.ico') -PngPath (Join-Path $projectRoot 'desktop/assets/aigram.png')
-    & ./gradlew.bat :backend:prepareDesktop "-PappVersion=$Version" --no-daemon
+    & ./gradlew.bat :backend:prepareDesktop :backend:contract:client:typescript:packageClient "-PappVersion=$Version" --no-daemon
     if ($LASTEXITCODE -ne 0) { throw 'Backend and web build failed' }
+    $clientPackageDirectory=Join-Path $projectRoot 'backend/contract/client/typescript/build/package'
+    $clientManifest=Get-Content -Raw -LiteralPath (Join-Path $clientPackageDirectory 'manifest.json') | ConvertFrom-Json
+    if ($clientManifest.name -ne '@aigram/api-client' -or $clientManifest.version -ne $Version) { throw 'API client package version does not match the application' }
+    $clientArchive=[System.IO.Path]::GetFullPath((Join-Path $clientPackageDirectory $clientManifest.filename))
+    if ([System.IO.Path]::GetDirectoryName($clientArchive) -ne [System.IO.Path]::GetFullPath($clientPackageDirectory) -or -not (Test-Path -LiteralPath $clientArchive -PathType Leaf)) { throw 'API client archive is missing or outside its package directory' }
+    New-Item -ItemType Directory -Force -Path $compileDirectory | Out-Null
+    Copy-Item -LiteralPath $clientArchive -Destination (Join-Path $compileDirectory 'Aigram-API-Client.tgz')
     $runtime=Join-Path $projectRoot 'build/runtime'
     $runtimeModules=@('java.base','java.desktop','java.instrument','java.net.http','jdk.httpserver','jdk.crypto.ec','java.logging','java.management','jdk.management','jdk.unsupported','java.naming','java.sql','jdk.charsets')
     $runtimeJava=Join-Path $runtime 'bin/java.exe'
@@ -55,7 +62,10 @@ try {
     npm.cmd run package --prefix desktop -- --config.extraMetadata.version=$Version "--config.portable.unpackDirName=$unpackName" "--config.directories.output=$compileDirectory" --publish never
     if ($LASTEXITCODE -ne 0) { throw 'Electron portable build failed' }
     $executable=Join-Path $compileDirectory 'Aigram.exe'
-    (Get-FileHash -Algorithm SHA256 -LiteralPath $executable).Hash.ToLowerInvariant() + '  Aigram.exe' | Set-Content -Encoding utf8 (Join-Path $compileDirectory 'SHA256.txt')
+    @(
+        (Get-FileHash -Algorithm SHA256 -LiteralPath $executable).Hash.ToLowerInvariant() + '  Aigram.exe'
+        (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $compileDirectory 'Aigram-API-Client.tgz')).Hash.ToLowerInvariant() + '  Aigram-API-Client.tgz'
+    ) | Set-Content -Encoding utf8 (Join-Path $compileDirectory 'SHA256.txt')
     if(-not $SkipShortcut) {
         $shortcutShell=New-Object -ComObject WScript.Shell
         $shortcut=$shortcutShell.CreateShortcut((Join-Path $projectRoot 'Aigram.lnk'))

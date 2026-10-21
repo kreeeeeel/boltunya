@@ -30,4 +30,4 @@ The global delivery mode is reply or standalone send, with a per-chat override. 
 
 Photo analysis and AI sticker choice are separately disabled by default for every chat. Photo analysis requires a Vision-capable selected target and opt-in before any image is downloaded for inference. An enabled remote provider receives image bytes and the associated conversation context. Native Telegram photo files are limited to 10 MiB for inference. Text and optional stickers are produced by one structured model request; only sticker IDs from a bounded recent/favorite allowlist are accepted. The capability must support structured output. Manual text drafts do not automatically send or choose stickers.
 
-See [the OpenAPI contract](../../backend/contract/api.yaml) and [model connections](../ai/providers-en.md).
+See [the OpenAPI contract](../../backend/contract/api/schema/api.yaml) and [model connections](../ai/providers-en.md).

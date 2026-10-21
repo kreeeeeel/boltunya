@@ -12,7 +12,7 @@ Aigram сохраняет каталог локальных моделей Ollam
 
 Публичные профили и маршруты находятся в `models/profiles.json` и `models/routing.json` внутри каталога данных приложения. Зашифрованные ключи — в `models/credentials/<profile-id>.credentials`. Хранилище локальных моделей Ollama сохраняется.
 
-Контракт: [api.yaml](../../backend/contract/api.yaml), `/api/model-profiles` и `/api/model-routing`.
+Контракт: [api.yaml](../../backend/contract/api/schema/api.yaml), `/api/model-profiles` и `/api/model-routing`.
 
 Источники реализации: [Spring AI OpenAI](https://docs.spring.io/spring-ai/reference/api/chat/openai-chat.html), [OpenAI Chat Completions](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create), [Groq](https://console.groq.com/docs/openai), [DeepSeek](https://api-docs.deepseek.com/), [OpenRouter](https://openrouter.ai/developers).
 

@@ -10,16 +10,26 @@ The migration keeps the Electron shell, static Next.js interface, portable execu
 - [x] Place internal `StoredUpload` state in `domain.media`; improve upload and lifecycle readability.
 - [x] Local verification: 400 Kotlin tests (11 opt-in live tests skipped), 153 UI unit tests, 38 Electron tests, 10 script tests and 107 browser scenarios; formatting, lint and type checks passed.
 - [x] Package and launch `complie/Aigram.exe` 2.6.29 with bundled Java. Native window/tray/startup, updater recovery/profile migration and media smoke checks passed. Existing Telegram authorization, settings and manual notes survived the actual restart.
-- [ ] Verify the pushed checkpoint's Windows release and SHA-256. The release workflow publishes the matching source commit, meaningful changelog and verification link; inspect [Windows Actions](https://github.com/kreeeeeel/boltunya/actions/workflows/release.yml) and the matching release before marking publication complete.
+- [x] Published and verified [v2.6.29](https://github.com/kreeeeeel/boltunya/releases/tag/v2.6.29), source `7f6fae0`, with green Windows CI and matching EXE/tag/checksum. The published executable replaced the local build and retained the actual Telegram session and notes.
 
-## Next checkpoint — generated contracts
+## Current checkpoint — generated contracts
 
-1. Inventory the existing operation IDs, methods, URLs, request/response shapes and local security tests before replacing handlers.
-   The current source contains 59 paths, 73 operations and 78 schemas. Three operations lack `operationId` (`GET`/`PUT /api/model-prompts` and `POST /api/prompts/budget`); 38 operations lack tags. Verify their actual payloads and media range/error responses before code generation.
-2. Split the single OpenAPI source into feature operations and individual model files. Add contract API, Kotlin client, TypeScript client and handwritten client-wrapper Gradle modules inside `backend`; keep the executable backend module until consumers can switch together.
-3. Generate Kotlin Spring interfaces/DTOs, the Kotlin WebClient client and a complete TypeScript HTTP client into `build/generated`. Validate all references before generation, clear obsolete output and verify generation from a clean checkout.
-4. Implement Spring MVC controllers and per-feature transformers. Add Jakarta validation and one exception handler without changing required desktop/web contracts. Preserve upload limits, static exports, media access, loopback binding and session/Host/Origin checks.
-5. Update web/Electron consumers and build ordering, run compatibility and native startup/update tests, then delete `ru.aigram.http`, its server/router/handlers and replaced dependencies. The old HTTP bridge is a temporary adapter, not a completed HTTP migration.
+- [x] Preserve a semantic baseline for all 59 paths, 73 operations and original 78 schemas. Add the three missing operation IDs and feature tags. Compatibility tests compare each resolved operation/model, including optional PATCH fields, nullable values, string IDs, binary uploads and the `tiho` session scheme.
+- [x] Split the single source under `backend/contract/api/schema`: eight feature operation files and one file per named model/enum. Extract 28 shared enums and two request models without changing their resolved wire shapes; the root now contains 108 named schemas.
+- [x] Add contract API, generated Kotlin WebClient, typed Kotlin wrapper and full TypeScript HTTP SDK Gradle modules. One Gradle bundle preserves named nested references; every generator consumes that bundle after validating the original tree. Direct generation from the split files lost types in OpenAPI Generator 7.25.0, so bundled-type checks are required.
+- [x] Keep generated sources, compiled SDK output and npm tarballs under `build/`; remove the tracked frontend declaration file. Current web `openapi-fetch` types derive from the same canonical source until its transport switches with the controllers.
+- [x] Local verification: 415 Kotlin tests (11 optional live tests skipped), seven installed TypeScript SDK tests, 153 UI unit tests, 38 Electron tests, 10 script tests and 107 browser scenarios passed. The isolated Gradle regeneration test removed obsolete source and classes without a clean build. Native window/tray/startup, updater recovery/profile migration and media checks passed.
+- [x] Built and launched local `complie/Aigram.exe` 2.6.30. The actual restart retained Telegram authorization, settings and manual memory notes. The SDK archive has the matching version and is included in the checksum file.
+
+Publication is verified against the pushed source commit, green [Windows Actions](https://github.com/kreeeeeel/boltunya/actions/workflows/release.yml), published EXE/SDK digests and an actual launch of the downloaded executable. The release page and local `complie/VERIFICATION.md` record that result; a successful local package alone is not publication.
+
+Usage and compatibility details: [API clients](../api-client/en.md). The Kotlin SDK uses the generator's supported Jackson 2 WebClient codecs on Spring 7; the generated Spring API uses Boot 4/Jackson 3.
+
+## Next checkpoint — Spring MVC cutover
+
+1. Implement the generated Spring interfaces with thin feature controllers and transformers. Apply Jakarta validation and a single exception handler; keep existing required methods, URLs and JSON payloads.
+2. Replace the private server and routing with Spring MVC. Verify binary uploads, media range/error responses, static exports, loopback binding, the descriptor/session protocol, Host/Origin protection and graceful shutdown against the existing HTTP tests.
+3. Switch web/Electron consumers to generated transport, run browser and native startup/tray/updater checks, then remove `ru.aigram.http`, its server/router/handlers and dependencies. The current bridge is explicitly temporary; this foundation release does not complete HTTP migration.
 
 ## Following checkpoint — functional packages and cleanup
 

@@ -12,7 +12,7 @@ Optional task routing assigns reply, memory, research planning and vision to sep
 
 Public profiles and routing live in `models/profiles.json` and `models/routing.json` beneath the application data directory. Encrypted secrets live in `models/credentials/<profile-id>.credentials`. Local Ollama models continue to use their existing storage.
 
-Contract: [api.yaml](../../backend/contract/api.yaml), `/api/model-profiles` and `/api/model-routing`.
+Contract: [api.yaml](../../backend/contract/api/schema/api.yaml), `/api/model-profiles` and `/api/model-routing`.
 
 Implementation references: [Spring AI OpenAI](https://docs.spring.io/spring-ai/reference/api/chat/openai-chat.html), [OpenAI Chat Completions](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create), [Groq compatibility](https://console.groq.com/docs/openai), [DeepSeek](https://api-docs.deepseek.com/), [OpenRouter](https://openrouter.ai/developers).
 

@@ -60,7 +60,7 @@ This is compressed context, not a verbatim archive or guaranteed recall of every
 
 ## API and validation
 
-`backend/contract/api.yaml` describes the local-session-protected API. Existing Host/Origin checks apply:
+`backend/contract/api/schema/api.yaml` describes the local-session-protected API. Existing Host/Origin checks apply:
 
 - `GET/PATCH /api/memory`: global notes.
 - `POST /api/memory/refresh`: changed chats already in use.

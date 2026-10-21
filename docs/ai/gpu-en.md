@@ -24,4 +24,4 @@ AMD and Intel devices remain under Ollama's automatic detection. Explicit AMD se
 
 ## Local API
 
-[OpenAPI](../../backend/contract/api.yaml) describes `GET /api/engine/devices` and `PATCH /api/settings` with `ollamaDevice: auto | cpu | GPU-UUID`. Device discovery requires the local session. The status includes configured and known active modes, whether the process is managed, selection support, restart requirements and explicit limitations. Unsupported new choices return `INVALID_OLLAMA_DEVICE` with HTTP 400.
+[OpenAPI](../../backend/contract/api/schema/api.yaml) describes `GET /api/engine/devices` and `PATCH /api/settings` with `ollamaDevice: auto | cpu | GPU-UUID`. Device discovery requires the local session. The status includes configured and known active modes, whether the process is managed, selection support, restart requirements and explicit limitations. Unsupported new choices return `INVALID_OLLAMA_DEVICE` with HTTP 400.

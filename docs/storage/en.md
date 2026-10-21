@@ -28,7 +28,7 @@ Deletion cancels a pending reply to that message. Archived deleted content is us
 
 ## API and validation
 
-`backend/contract/api.yaml` describes the API. Existing local-session authorization and Host/Origin checks apply:
+`backend/contract/api/schema/api.yaml` describes the API. Existing local-session authorization and Host/Origin checks apply:
 
 - `GET /api/cache`: current statistics.
 - `POST /api/cache/clear`: cleanup and remaining statistics.
@@ -57,7 +57,7 @@ The **Errors** page records failed replies, model downloads and warmup, memory o
 
 The support log excludes exception messages, Telegram message contents, account and chat identifiers, prompts and credentials. Technical metadata is limited to HTTP status, exception types, application stack locations and updater stages. It does not include a raw log or a full generation trace. Desktop updater failures are imported from the fixed file `desktop/updates/last-error.json`; clearing the history also clears this imported source.
 
-The local authenticated API is defined in [the OpenAPI contract](../../backend/contract/api.yaml):
+The local authenticated API is defined in [the OpenAPI contract](../../backend/contract/api/schema/api.yaml):
 
 - `GET /api/storage/locations` — known folders, availability and whether Explorer can open them.
 - `GET /api/diagnostics/errors` — safe grouped errors and details.
