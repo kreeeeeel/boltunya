@@ -4,6 +4,7 @@ import ru.aigram.automation.activity.ActivityHistoryStore
 import ru.aigram.automation.activity.ActivityLog
 import ru.aigram.automation.activity.ReplyJob
 import ru.aigram.automation.activity.ReplyTraceScope
+import ru.aigram.automation.activity.withCurrentAvatar
 import ru.aigram.automation.proactive.ProactiveTask
 import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.domain.ai.PreviewJob
@@ -46,6 +47,7 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantLock
+import java.util.stream.Collectors
 
 private const val MESSAGE_DEBOUNCE_MS = 800L
 private const val QUEUE_TICK_MS = 100L
@@ -112,6 +114,7 @@ class ReplyCoordinator(
 
     fun activities(): List<ActivityEntry> = synchronized(gate) {
         val positions = linkedMapOf<String, Int>()
+        val chats = currentChats()
         pending.values.stream().sorted(jobOrder).forEach { positions[it.id] = positions.size + 1 }
         log.summaries().stream().map { entry ->
             val job = pending[entry.id] ?: active[entry.id]
@@ -120,7 +123,7 @@ class ReplyCoordinator(
                 priority = job?.priority == true || entry.priority,
                 waitUntil = job?.waitUntil ?: 0,
                 feedbackRating = feedback?.get(entry.id)?.rating,
-            )
+            ).withCurrentAvatar(chats[entry.chatId])
         }.toList()
     }
 
@@ -138,9 +141,10 @@ class ReplyCoordinator(
             return ActivityHistoryPage()
         }
 
+        val chats = currentChats()
         return page.copy(
             entries = page.entries.stream().map { entry ->
-                entry.copy(feedbackRating = feedback?.get(entry.id)?.rating)
+                entry.copy(feedbackRating = feedback?.get(entry.id)?.rating).withCurrentAvatar(chats[entry.chatId])
             }.toList(),
         )
     }
@@ -151,6 +155,7 @@ class ReplyCoordinator(
 
     fun details(id: String): ActivityDetails = synchronized(gate) {
         val details = log.details(id)
+        val chats = currentChats()
         val queued = pending[id]
         val job = queued ?: active[id]
         val position = if (queued == null) {
@@ -164,10 +169,13 @@ class ReplyCoordinator(
                 priority = job?.priority == true || details.entry.priority,
                 waitUntil = job?.waitUntil ?: 0,
                 feedbackRating = feedback?.get(id)?.rating,
-            ),
+            ).withCurrentAvatar(chats[details.entry.chatId]),
             feedback = feedback?.get(id),
         )
     }
+
+    private fun currentChats(): Map<String, ChatSummary> = telegram.chats().stream()
+        .collect(Collectors.toMap(ChatSummary::id) { it })
 
     fun saveFeedback(id: String, update: ActivityFeedbackUpdate): ActivityFeedback = synchronized(gate) {
         val details = log.details(id)

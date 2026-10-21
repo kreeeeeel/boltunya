@@ -1,5 +1,7 @@
 # Local event history
 
+Event cards and details resolve their avatar from the current Telegram chat with the same chat ID. Archived TDLib file URLs are never used as a photo fallback: file identifiers can be reassigned after reconnecting. Missing/deleted photos and global memory tasks show initials instead of an unrelated image.
+
 Events and full requested model traces are stored under `<profile>/activity/<telegram-owner-id>/`, separate from the privacy-safe diagnostics log. The live state contains active tasks and a small recent window; `/api/activity/history` loads terminal events in cursor pages. Details load one trace by ID. Queued or running tasks found after a restart become `interrupted`; they are never silently resent or resumed.
 
 Defaults keep history forever with no disk quota. Optional settings allow a retention duration and a quota in MiB; zero means unlimited. An explicitly enabled quota stops recording with a visible status instead of deleting old events. Raising or removing it retries pending writes. An individual trace is limited to 32 MiB and reports a visible error if exceeded. Clearing completed history affects only the current Telegram account and preserves active work. Private prompts and responses are stored only in this local history, never copied into support diagnostics.
