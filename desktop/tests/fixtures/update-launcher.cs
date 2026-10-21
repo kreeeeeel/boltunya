@@ -7,8 +7,15 @@ public class LAUNCHER_NAME {
         string directory = Environment.GetEnvironmentVariable("AIGRAM_SYNTHETIC_UPDATES");
         string log = Environment.GetEnvironmentVariable("AIGRAM_SYNTHETIC_LAUNCHES");
         string mode = "LAUNCHER_MODE";
+        string processes = Environment.GetEnvironmentVariable("AIGRAM_SYNTHETIC_PROCESSES");
+        if (!String.IsNullOrEmpty(processes)) File.AppendAllText(processes, Process.GetCurrentProcess().Id + ":" + mode + "\n");
         File.AppendAllText(log, mode + ":" + String.Join("|", args) + "\n");
-        if (mode == "old") return;
+        if (mode == "old") {
+            string release = Environment.GetEnvironmentVariable("AIGRAM_SYNTHETIC_EXIT_RELEASE");
+            DateTime deadline = DateTime.UtcNow.AddSeconds(30);
+            while (!String.IsNullOrEmpty(release) && !File.Exists(release) && DateTime.UtcNow < deadline) Thread.Sleep(50);
+            return;
+        }
         string nonce = Array.Find(args, value => value.StartsWith("--update-session="));
         if (nonce == null) return;
         nonce = nonce.Substring("--update-session=".Length);

@@ -24,6 +24,7 @@ Release versions are assigned by Windows CI. Each GitHub release includes the fi
 - The full local quality gate passed 548 Kotlin tests (12 optional live tests skipped), 10 installed TypeScript SDK tests, 232 UI unit tests, 38 Electron tests and 10 script tests. Formatting, types, lint, generated-contract compatibility and the optimized web build passed.
 - All 127 browser scenarios were verified across the full run and final focused reruns, including both themes and compact windows. Three synthetic cases passed against the already installed `deepseek-r1:8b`: ordinary replies, requested native formatting and unrelated-participant relevance. No real Telegram messages or model downloads were used.
 - Release publication additionally requires Windows packaging, native window/tray, updater and media gates, matching EXE/SDK hashes and an actual-profile restart. Prompt adherence remains model-dependent; the live cases are regression checks, not a guarantee for every model or question.
+- Updater recovery tests wait for their exact native fixture processes to exit before cleanup, including a deliberately slow restored launcher. Recovery assertions remain unchanged; the test never terminates unrelated applications.
 - Existing sessions, memory, prompts and opt-in states remain compatible. No chats or automatic replies are enabled by this update.
 
 ## 2026-10-21 — Lossless Telegram message editing
