@@ -15,6 +15,47 @@ vi.mock('@/shared/api/client', async (original) => ({
 }));
 afterEach(() => {
     delete window.boltunyaDesktop;
+    delete window.aigramDesktop;
+});
+
+it('opens speech assets through the allowlisted speech storage ID', async () => {
+    const openStorageLocation = vi.fn().mockResolvedValue(undefined);
+    window.aigramDesktop = {
+        state: vi.fn(),
+        sync: vi.fn(),
+        quit: vi.fn(),
+        action: vi.fn(),
+        onState: vi.fn(),
+        openStorageLocation,
+    };
+    mocks.storageLocations.mockResolvedValue({
+        locations: [
+            {
+                id: 'speech',
+                label: '',
+                path: 'C:/profile/speech',
+                available: true,
+                openable: true,
+                kind: 'directory',
+                note: '',
+            },
+        ],
+    });
+    render(
+        <NextIntlClientProvider locale="ru" messages={ru}>
+            <ThemeProvider>
+                <StorageLocations />
+            </ThemeProvider>
+        </NextIntlClientProvider>,
+    );
+    fireEvent.click(
+        await screen.findByRole('button', {
+            name: ru.storageLocations.openNamed.replace('{name}', ru.storageLocations.names.speech),
+        }),
+    );
+    await waitFor(() => expect(openStorageLocation).toHaveBeenCalledExactlyOnceWith('speech'));
+    expect(screen.getByText(ru.storageLocations.names.speech, {exact: true})).toBeVisible();
+    expect(screen.getByText('C:/profile/speech')).toBeVisible();
 });
 it('opens known storage IDs through Electron and keeps external locations disabled', async () => {
     const openStorageLocation = vi.fn().mockResolvedValue(undefined);

@@ -1,9 +1,23 @@
 import {Box, Button, DropdownMenu, Flex, Icon, Text, TextArea, Tooltip} from '@gravity-ui/uikit';
-import {FaceSmile, File, Paperclip, PaperPlane, Picture, Sparkles, Sticker, Video} from '@gravity-ui/icons';
+import {
+    FaceSmile,
+    File,
+    Paperclip,
+    PaperPlane,
+    Picture,
+    Sparkles,
+    Sticker,
+    Video,
+    Microphone,
+    Text as TextIcon,
+} from '@gravity-ui/icons';
 import {useEffect, useRef, useState} from 'react';
 import {useTranslations} from 'next-intl';
 import {api} from '@/shared/api/client';
 import type {Text as OutgoingText} from '@aigram/api-client';
+import type {PreviewJobRequest} from '@aigram/api-client';
+import {useSpeechState} from '@/modules/speech/model/useSpeechState';
+import {speechReady} from '@/modules/speech/model/speechReady';
 import {MessageDraftEditor} from '@/modules/messages/MessageDraftEditor/MessageDraftEditor';
 import {AttachmentDialog} from '@/modules/media/AttachmentDialog/AttachmentDialog';
 import type {AttachmentSelection} from '@/modules/media/AttachmentDialog/AttachmentDialog';
@@ -27,23 +41,30 @@ export function ConversationComposer({
     onRichChange,
     onRichError,
     onRichConsumed,
+    voiceSynthesisModel = 'piper-ru-irina',
+    onVoiceSettings,
 }: {
     readonly chatId: string;
     readonly text: string;
     readonly onTextChange: (text: string) => void;
     readonly busy: 'send' | 'draft' | '';
     readonly onSend: () => Promise<void>;
-    readonly onDraft: () => Promise<void>;
+    readonly onDraft: (output?: PreviewJobRequest['output']) => Promise<void>;
     readonly onMediaSent: () => Promise<void>;
     readonly richDraft?: {id: string; message: OutgoingText};
     readonly richError?: string;
     readonly onRichChange?: (id: string, message: OutgoingText) => void;
     readonly onRichError?: (id: string) => void;
     readonly onRichConsumed?: (id: string) => void;
+    readonly voiceSynthesisModel?: string;
+    readonly onVoiceSettings?: () => void;
 }) {
     const t = useTranslations();
     const chatUi = useTranslations('chatUi');
     const media = useMediaMessages();
+    const [draftMenuOpened, setDraftMenuOpened] = useState(false);
+    const speech = useSpeechState(draftMenuOpened);
+    const voiceReady = speechReady(speech.state?.assets ?? [], voiceSynthesisModel);
     const [error, setError] = useState('');
     const [selection, setSelection] = useState<AttachmentSelection[]>();
     const [attachmentDraft, setAttachmentDraft] = useState<typeof richDraft>();
@@ -186,18 +207,45 @@ export function ConversationComposer({
                         </Button>
                     )}
                 />
-                <Tooltip content={t('draft')}>
-                    <Button
-                        className={styles.composerButton}
-                        view="flat-secondary"
-                        loading={busy === 'draft'}
-                        disabled={!!busy}
-                        onClick={() => void onDraft()}
-                        aria-label={t('draft')}
-                    >
-                        <Icon data={Sparkles} size={19} />
-                    </Button>
-                </Tooltip>
+                <DropdownMenu
+                    onOpenToggle={(open) => {
+                        if (open) {
+                            setDraftMenuOpened(true);
+                        }
+                    }}
+                    items={[
+                        {
+                            text: t('voice.generateText'),
+                            iconStart: <Icon data={TextIcon} size={18} />,
+                            action: () => void onDraft('text'),
+                        },
+                        {
+                            text: t('voice.generateVoice'),
+                            iconStart: <Icon data={Microphone} size={18} />,
+                            disabled: !voiceReady,
+                            title: voiceReady ? undefined : t('voice.modelsRequired'),
+                            action: () => void onDraft('voice'),
+                        },
+                        ...(!voiceReady && onVoiceSettings
+                            ? [{text: t('voice.openSettings'), action: onVoiceSettings}]
+                            : []),
+                    ]}
+                    popupProps={{placement: ['top-start', 'bottom-start'], className: styles.attachmentMenu}}
+                    renderSwitcher={(props) => (
+                        <Tooltip content={t('draft')}>
+                            <Button
+                                {...props}
+                                className={styles.composerButton}
+                                view="flat-secondary"
+                                loading={busy === 'draft'}
+                                disabled={!!busy}
+                                aria-label={t('draft')}
+                            >
+                                <Icon data={Sparkles} size={19} />
+                            </Button>
+                        </Tooltip>
+                    )}
+                />
                 {richDraft ? (
                     <Box className={styles.input} />
                 ) : (

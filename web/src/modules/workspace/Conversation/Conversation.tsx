@@ -18,7 +18,8 @@ import {DraftPreparationError} from '@/modules/workspace/model/DraftPreparationE
 import {StatusNotice} from '@/shared/ui/StatusNotice/StatusNotice';
 import {MessageEditDialog} from '@/modules/messages/MessageEditDialog/MessageEditDialog';
 import type {Message} from '@/shared/api/client';
-import type {Text as OutgoingText} from '@aigram/api-client';
+import type {Text as OutgoingText, GeneratedVoice, Reply, PreviewJobRequest} from '@aigram/api-client';
+import {VoiceDraftPreview} from '@/modules/speech/VoiceDraftPreview/VoiceDraftPreview';
 
 export function Conversation({
     chat,
@@ -37,6 +38,10 @@ export function Conversation({
     onMemory,
     onSend,
     onDraft,
+    onVoiceSynthesis,
+    onVoiceSend,
+    voiceSynthesisModel,
+    onVoiceSettings,
     onBack,
     onEarlier,
 }: ConversationProps) {
@@ -48,6 +53,7 @@ export function Conversation({
         return () => clearInterval(timer);
     }, []);
     const [input, setInput] = useState<{message: OutgoingText; richId?: string}>({message: {text: ''}});
+    const [voiceDraft, setVoiceDraft] = useState<Reply & {voice: GeneratedVoice}>();
     const text = input.message.text;
     const [richFailure, setRichFailure] = useState<{id: string; message: string}>();
     const richError = richFailure && richFailure.id === input.richId ? richFailure.message : '';
@@ -70,6 +76,15 @@ export function Conversation({
         }
     }, []);
     const anchor = useRef<{id: string; top: number; first: string} | null>(null);
+    const keepBottom = useCallback(() => {
+        const area = scroll.current;
+        if (area && stick.current && !contextMenus.current.size && !pagination.current) {
+            const bottom = Math.max(0, area.scrollHeight - area.clientHeight);
+            if (Math.abs(area.scrollTop - bottom) > 1) {
+                area.scrollTop = bottom;
+            }
+        }
+    }, []);
 
     useEffect(() => {
         if (!editedMessage) {
@@ -133,13 +148,16 @@ export function Conversation({
             stick.current = true;
             contextMenus.current.clear();
         }
-        if (stick.current && !contextMenus.current.size) {
-            const area = scroll.current;
-            if (area) {
-                area.scrollTop = area.scrollHeight;
-            }
-        }
-    }, [chat?.id, messages, activeReply?.id, activeReply?.thinking, activeReply?.phase]);
+        keepBottom();
+    }, [
+        chat?.id,
+        messages,
+        activeReply?.id,
+        activeReply?.thinking,
+        activeReply?.phase,
+        voiceDraft?.voice.id,
+        keepBottom,
+    ]);
 
     async function send() {
         if (!text.trim() || busy || richError) {
@@ -163,7 +181,7 @@ export function Conversation({
         }
     }
 
-    async function draft(messageId?: string) {
+    async function draft(messageId?: string, output: PreviewJobRequest['output'] = 'text') {
         if (busy) {
             return;
         }
@@ -171,7 +189,15 @@ export function Conversation({
         setLocalError('');
         setDraftNotice(undefined);
         try {
-            const result = await onDraft(messageId);
+            const result = output === 'voice' ? await onDraft(messageId, output) : await onDraft(messageId);
+            if (output === 'voice') {
+                if (!result.voice) {
+                    throw new Error(t('voice.generationFailed'));
+                }
+                setVoiceDraft({...result, voice: result.voice});
+                return;
+            }
+            setVoiceDraft(undefined);
             setInput({
                 message: {text: result.text, entities: result.entities ?? []},
                 ...(result.entities?.length ? {richId: crypto.randomUUID()} : {}),
@@ -273,6 +299,7 @@ export function Conversation({
                         viewportRef={scroll}
                         qa="conversation-messages"
                         className={styles.messages}
+                        onResize={keepBottom}
                         onScroll={() => {
                             const el = scroll.current;
                             if (el && !contextMenus.current.size) {
@@ -366,6 +393,31 @@ export function Conversation({
                             {localError || error}
                         </Text>
                     )}
+                    {voiceDraft && onVoiceSynthesis && onVoiceSend && (
+                        <Box className={styles.voiceDraft}>
+                            <VoiceDraftPreview
+                                key={voiceDraft.voice.id}
+                                draft={voiceDraft}
+                                onSynthesize={async (text) => {
+                                    setBusy('draft');
+                                    try {
+                                        return await onVoiceSynthesis(text);
+                                    } finally {
+                                        setBusy('');
+                                    }
+                                }}
+                                onSend={async (id) => {
+                                    setBusy('send');
+                                    try {
+                                        await onVoiceSend(id);
+                                    } finally {
+                                        setBusy('');
+                                    }
+                                }}
+                                onDiscard={() => setVoiceDraft(undefined)}
+                            />
+                        </Box>
+                    )}
                     <ConversationComposer
                         chatId={chat.id}
                         text={text}
@@ -385,7 +437,9 @@ export function Conversation({
                         }
                         busy={busy}
                         onSend={send}
-                        onDraft={() => draft()}
+                        onDraft={(output) => draft(undefined, output)}
+                        voiceSynthesisModel={voiceSynthesisModel}
+                        onVoiceSettings={onVoiceSettings}
                         onMediaSent={onMediaSent ?? onRefresh}
                     />
                 </Flex>

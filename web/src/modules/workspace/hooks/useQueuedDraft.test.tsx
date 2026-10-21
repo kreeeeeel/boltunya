@@ -6,11 +6,17 @@ import {useQueuedDraft} from '@/modules/workspace/hooks/useQueuedDraft';
 import {defaultRule} from '@/shared/api/client';
 import ru from '@/shared/i18n/ru.json';
 import type {Reply} from '@/shared/api/client';
-const mocks = vi.hoisted(() => ({enqueuePreviewJob: vi.fn(), previewJob: vi.fn(), cancelActivity: vi.fn()}));
+const mocks = vi.hoisted(() => ({
+    enqueuePreviewJob: vi.fn(),
+    previewJob: vi.fn(),
+    cancelActivity: vi.fn(),
+    enqueueVoiceDraft: vi.fn(),
+}));
 vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
     api: {
         activity: {cancelActivity: mocks.cancelActivity},
+        speech: {enqueueVoiceDraft: mocks.enqueueVoiceDraft},
         models: {
             enqueuePreviewJob: mocks.enqueuePreviewJob,
             previewJob: mocks.previewJob,
@@ -43,7 +49,7 @@ it('uses the shared queue, polls progress and returns only a ready draft', async
         const view = renderHook(() => useQueuedDraft('42', refresh), {wrapper});
         let output: Promise<Reply>;
         await act(async () => {
-            output = view.result.current(defaultRule, '99');
+            output = view.result.current.generate(defaultRule, '99');
             await vi.advanceTimersByTimeAsync(1500);
             expect(await output).toMatchObject({text: 'Короткий ответ', durationMs: 100});
         });
@@ -70,7 +76,7 @@ it('preserves the actual Telegram entities in a ready generated draft', async ()
     };
     mocks.enqueuePreviewJob.mockResolvedValue({...reply('ready'), result});
     const view = renderHook(() => useQueuedDraft('42', async () => {}), {wrapper});
-    expect(await view.result.current(defaultRule)).toEqual(result);
+    expect(await view.result.current.generate(defaultRule)).toEqual(result);
     view.unmount();
 });
 it('stops polling on navigation without cancelling the queued job', async () => {
@@ -85,7 +91,7 @@ it('stops polling on navigation without cancelling the queued job', async () => 
         });
         let output: Promise<unknown>;
         await act(async () => {
-            output = view.result.current(defaultRule).catch((cause) => cause);
+            output = view.result.current.generate(defaultRule).catch((cause) => cause);
             await vi.advanceTimersByTimeAsync(0);
         });
         view.rerender({id: '43'});
@@ -103,17 +109,40 @@ it('stops polling on navigation without cancelling the queued job', async () => 
 it('reports a cancelled job without returning an empty reply', async () => {
     mocks.enqueuePreviewJob.mockResolvedValue(reply('cancelled'));
     const view = renderHook(() => useQueuedDraft('42', async () => {}), {wrapper});
-    await expect(view.result.current(defaultRule)).rejects.toThrow(ru.draftQueue.cancelled);
-    await expect(view.result.current(defaultRule)).rejects.toMatchObject({status: 'cancelled'});
+    await expect(view.result.current.generate(defaultRule)).rejects.toThrow(ru.draftQueue.cancelled);
+    await expect(view.result.current.generate(defaultRule)).rejects.toMatchObject({status: 'cancelled'});
     view.unmount();
 });
 
 it('preserves the failure reason and distinguishes it from cancellation', async () => {
     mocks.enqueuePreviewJob.mockResolvedValue({...reply('error'), error: 'Модель не ответила.'});
     const view = renderHook(() => useQueuedDraft('42', async () => {}), {wrapper});
-    await expect(view.result.current(defaultRule)).rejects.toMatchObject({
+    await expect(view.result.current.generate(defaultRule)).rejects.toMatchObject({
         status: 'error',
         message: 'Модель не ответила.',
     });
+    view.unmount();
+});
+
+it('queues literal voice synthesis independently of AI generation and preserves the ready audio', async () => {
+    const result = {
+        text: '  Новый текст 🙂 ',
+        durationMs: 100,
+        tokensPerSecond: 0,
+        voice: {
+            id: 'voice-2',
+            url: '/api/speech/audio/voice-2',
+            mimeType: 'audio/ogg',
+            duration: 1,
+            waveform: [],
+        },
+    };
+    mocks.enqueueVoiceDraft.mockResolvedValue({...reply('ready'), result});
+    const view = renderHook(() => useQueuedDraft('42', async () => {}), {wrapper});
+    expect(await view.result.current.synthesize(result.text)).toEqual(result);
+    expect(mocks.enqueueVoiceDraft).toHaveBeenCalledWith(
+        {voiceDraftRequest: {chatId: '42', text: result.text}},
+        expect.objectContaining({signal: expect.any(AbortSignal)}),
+    );
     view.unmount();
 });

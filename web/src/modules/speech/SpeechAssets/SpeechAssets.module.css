@@ -1,0 +1,11 @@
+.asset {
+    padding: 16px;
+    border-radius: 16px;
+    background: var(--g-color-base-generic);
+    min-width: 0;
+}
+
+.identity {
+    min-width: 0;
+    flex: 1;
+}

@@ -13,6 +13,7 @@ interface ScrollAreaProps {
     readonly qa?: string;
     readonly viewportRef?: RefObject<HTMLDivElement | null>;
     readonly onScroll?: () => void;
+    readonly onResize?: () => void;
     readonly busy?: boolean;
     readonly fillViewport?: boolean;
 }
@@ -23,6 +24,7 @@ export function ScrollArea({
     qa,
     viewportRef,
     onScroll,
+    onResize,
     busy,
     fillViewport = false,
 }: ScrollAreaProps) {
@@ -48,7 +50,10 @@ export function ScrollArea({
     }, []);
 
     useEffect(() => {
-        const observer = new ResizeObserver(measure);
+        const observer = new ResizeObserver(() => {
+            onResize?.();
+            measure();
+        });
         if (viewport.current) {
             observer.observe(viewport.current);
         }
@@ -56,7 +61,7 @@ export function ScrollArea({
             observer.observe(content.current);
         }
         return () => observer.disconnect();
-    }, [measure]);
+    }, [measure, onResize]);
 
     const overflow = metrics.total - metrics.height;
     const thumbHeight = Math.min(metrics.height, Math.max(32, metrics.height ** 2 / (metrics.total || 1)));

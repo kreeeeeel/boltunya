@@ -2357,6 +2357,7 @@ for (const dark of [false, true]) {
             await expect(page.locator('[data-qa="conversation-generation-error"]')).toHaveCount(1);
             const prepare = page.getByRole('button', {name: ru.draft, exact: true});
             await prepare.click();
+            await page.getByRole('menuitem', {name: ru.voice.generateText, exact: true}).click();
             const title = terminal === 'cancelled' ? ru.draftQueue.cancelled : ru.draftQueue.failed;
             const notice = page.getByRole(terminal === 'cancelled' ? 'status' : 'alert', {
                 name: title,
@@ -2378,6 +2379,7 @@ for (const dark of [false, true]) {
             await expect(page.locator('[data-qa="conversation-generation-error"]')).toHaveCount(0);
             await expect(contentAlerts).toHaveCount(0);
             await prepare.click();
+            await page.getByRole('menuitem', {name: ru.voice.generateText, exact: true}).click();
             await expect(input).toHaveValue('Проверенный новый черновик');
             await expect(notice).toHaveCount(0);
             await expect(page.locator('[data-qa="conversation-generation-error"]')).toHaveCount(0);

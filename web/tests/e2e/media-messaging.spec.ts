@@ -221,6 +221,7 @@ test('photo viewer supports navigation and zoom and Escape leaves the chat open'
 
 test('manual generation uses a queue card while keeping the composer visible', async ({page}) => {
     await page.getByRole('button', {name: ru.draft, exact: true}).click();
+    await page.getByRole('menuitem', {name: ru.voice.generateText, exact: true}).click();
     await expect(page.locator('[data-qa="conversation-generation"]')).toBeVisible();
     await expect(page.getByRole('textbox', {name: ru.messagePlaceholder, exact: true})).toBeVisible();
     await expect(page.locator('[data-qa="message-composer"] .g-skeleton')).toHaveCount(0);

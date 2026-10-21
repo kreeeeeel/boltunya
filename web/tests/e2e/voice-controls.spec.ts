@@ -1,0 +1,309 @@
+import {expect, test} from '@playwright/test';
+import type {Locator, Page} from '@playwright/test';
+import {copyFileSync, mkdirSync, readFileSync} from 'node:fs';
+import {join} from 'node:path';
+import {workspaceState} from '../fixtures/workspace';
+import {testHistory} from '../fixtures/chats';
+import {speechState as installedSpeech} from '../fixtures/speech';
+import {installVoiceMocks} from '../fixtures/voiceDemo';
+import {chooseSettingsSection} from '../fixtures/settings';
+import ru from '../../src/shared/i18n/ru.json';
+
+const title = 'Синтетический голосовой чат';
+const proof = join(process.cwd(), '..', 'build', 'voice-ui');
+
+async function prepare(page: Page, dark: boolean) {
+    const state = structuredClone(workspaceState);
+    state.settings.voiceInputEnabled = false;
+    state.settings.voiceReplyMode = 'text';
+    state.settings.voiceReplyProbability = 50;
+    state.settings.voiceRecognitionModel = 'whisper-tiny';
+    state.settings.voiceSynthesisModel = 'piper-ru-irina';
+    state.settings.voiceSpeechRate = 1;
+    state.chats[0].title = title;
+    const speech = structuredClone(installedSpeech);
+    const mocks = await installVoiceMocks(page, {
+        state,
+        speech,
+        history: testHistory('41'),
+        audioPath: join(process.cwd(), 'tests', 'fixtures', 'voice.ogg'),
+        dark,
+    });
+    const launch =
+        process.env.TIHO_TEST_URL ??
+        readFileSync(
+            process.env.TIHO_LAUNCH_FILE ?? join(process.env.LOCALAPPDATA ?? '', 'Aigram', 'launch.url'),
+            'utf8',
+        );
+    await page.goto(launch);
+    await expect(page.locator('body')).toContainClass('g-root_theme_' + (dark ? 'dark' : 'light'));
+    return mocks;
+}
+
+async function settings(page: Page) {
+    await page.getByRole('button', {name: ru.profileMenu, exact: true}).click();
+    const popup = page
+        .getByRole('menuitem', {name: ru.settings, exact: true})
+        .locator('xpath=ancestor::*[contains(@class,"g-popup")][1]');
+    await expect
+        .poll(() =>
+            popup.evaluate((element) =>
+                getComputedStyle(element).getPropertyValue('--g-popup-border-width').trim(),
+            ),
+        )
+        .toBe('0px');
+    await page.getByRole('menuitem', {name: ru.settings, exact: true}).click();
+    await chooseSettingsSection(page, 'voice');
+    return page.getByRole('dialog', {name: ru.settings, exact: true});
+}
+
+async function capture(page: Page, target: Locator, name: string, dark: boolean) {
+    mkdirSync(proof, {recursive: true});
+    for (const width of [1440, 390]) {
+        await page.setViewportSize({width, height: 900});
+        await page.evaluate(
+            () =>
+                new Promise<void>((resolve) =>
+                    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+                ),
+        );
+        await target.scrollIntoViewIfNeeded();
+        await expect(target).toBeInViewport();
+        await expect
+            .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+            .toBe(true);
+        await page.screenshot({
+            path: join(proof, `${name}-${dark ? 'dark' : 'light'}-${width}.png`),
+            animations: 'disabled',
+        });
+        if (dark && width === 1440 && (name === 'voice-settings' || name === 'voice-draft')) {
+            copyFileSync(
+                join(proof, `${name}-dark-1440.png`),
+                join(process.cwd(), '..', 'docs', 'resources', `${name}-dark.png`),
+            );
+        }
+    }
+    await page.setViewportSize({width: 1440, height: 900});
+}
+
+for (const dark of [false, true]) {
+    test(`settings test speaks exact text with unsaved voice and speed in ${dark ? 'dark' : 'light'}`, async ({
+        page,
+    }) => {
+        const {state, speech, previews, requests, sent, controls} = await prepare(page, dark);
+        speech.assets.push({
+            ...speech.assets[2],
+            id: 'alternative-voice',
+            title: 'Синтетический второй голос',
+        });
+        await page.evaluate(() => {
+            const scope = window as typeof window & {openedSpeechFolders?: string[]};
+            scope.openedSpeechFolders = [];
+            window.aigramDesktop = {
+                state: async () => ({available: true, maximized: false, visible: true, minimized: false}),
+                sync: async () => {},
+                quit: async () => {},
+                action: async () => {},
+                onState: () => () => {},
+                openStorageLocation: async (id) => {
+                    scope.openedSpeechFolders?.push(id);
+                },
+            };
+        });
+        const dialog = await settings(page);
+        await dialog.getByRole('combobox', {name: ru.voice.models.synthesis, exact: true}).click();
+        await page.getByRole('option', {name: 'Синтетический второй голос', exact: true}).click();
+        await dialog.getByRole('slider', {name: ru.voice.speechRate, exact: true}).press('ArrowRight');
+        const preview = dialog.locator('[data-qa="speech-preview"]');
+        const input = preview.getByRole('textbox', {name: ru.voice.previewText, exact: true});
+        await input.fill('');
+        await expect(preview.getByRole('button', {name: ru.voice.previewCheck, exact: true})).toBeDisabled();
+        await input.fill('  Проверяем выбранный голос 🙂 ');
+        await preview.getByRole('button', {name: ru.voice.previewCheck, exact: true}).click();
+        await expect(preview.locator('audio')).toHaveAttribute('src', '/api/speech/audio/voice-job-1');
+        await expect
+            .poll(() => preview.locator('audio').evaluate((element: HTMLAudioElement) => element.duration))
+            .toBeGreaterThan(4);
+        expect(previews).toEqual([
+            {text: '  Проверяем выбранный голос 🙂 ', modelId: 'alternative-voice', speed: 1.1},
+        ]);
+        expect(state.settings.voiceSynthesisModel).toBe('piper-ru-irina');
+        expect(state.settings.voiceSpeechRate).toBe(1);
+        expect(sent).toEqual([]);
+        await preview.getByRole('button', {name: ru.voice.play, exact: true}).click();
+        await expect
+            .poll(() => preview.locator('audio').evaluate((element: HTMLAudioElement) => element.paused))
+            .toBe(false);
+        await capture(page, preview, 'voice-settings-preview', dark);
+        const folder = dialog
+            .locator('[data-qa="speech-toolbar"]')
+            .getByRole('button', {name: ru.voice.openFolder, exact: true});
+        await expect(folder).toBeEnabled();
+        await folder.click();
+        expect(
+            await page.evaluate(
+                () => (window as typeof window & {openedSpeechFolders?: string[]}).openedSpeechFolders,
+            ),
+        ).toEqual(['speech']);
+        await input.fill('Вторая проверка');
+        await expect(preview.locator('audio')).toHaveCount(0);
+        controls.holdPreview = true;
+        await preview.getByRole('button', {name: ru.voice.previewCheck, exact: true}).click();
+        await expect.poll(() => previews.length).toBe(2);
+        await preview.getByRole('button', {name: ru.voice.cancel, exact: true}).click();
+        await expect(preview.getByText(ru.voice.previewCancelled, {exact: true})).toBeVisible();
+        expect(requests).toContain('CANCEL voice-job-2');
+        await preview.getByRole('button', {name: ru.voice.previewCheck, exact: true}).click();
+        await expect.poll(() => previews.length).toBe(3);
+        await dialog.getByRole('button', {name: ru.close, exact: true}).click();
+        await expect.poll(() => requests.includes('CANCEL voice-job-3')).toBe(true);
+        expect(sent).toEqual([]);
+    });
+
+    test(`compatible custom voice import refreshes the selectable catalog in ${dark ? 'dark' : 'light'}`, async ({
+        page,
+    }) => {
+        const {imports, uploads, sent} = await prepare(page, dark);
+        const dialog = await settings(page);
+        const importToggle = dialog
+            .locator('[data-qa="speech-toolbar"]')
+            .getByRole('button', {name: ru.voice.importModel, exact: true});
+        await expect(importToggle).toHaveAttribute('aria-expanded', 'false');
+        await expect(dialog.getByRole('region', {name: ru.voice.importModel, exact: true})).toHaveCount(0);
+        await importToggle.click();
+        await expect(importToggle).toHaveAttribute('aria-expanded', 'true');
+        await expect(dialog.getByRole('region', {name: ru.voice.importModel, exact: true})).toBeVisible();
+        const form = dialog.locator('[data-qa="speech-model-import"]');
+        await form.locator('input[type="file"]').setInputFiles({
+            name: 'synthetic-voice.tar.bz2',
+            mimeType: 'application/x-bzip2',
+            buffer: Buffer.from('Synthetic model archive for mocked import endpoint'),
+        });
+        await form.getByRole('textbox', {name: ru.voice.importName, exact: true}).fill('Мой тестовый голос');
+        await form.getByRole('textbox', {name: ru.voice.importLanguage, exact: true}).fill('ru');
+        await form
+            .getByRole('textbox', {name: ru.voice.importLicense, exact: true})
+            .fill('Synthetic fixture, not a distributable model');
+        await capture(
+            page,
+            form.getByRole('button', {name: ru.voice.importSubmit, exact: true}),
+            'voice-import',
+            dark,
+        );
+        await form.getByRole('button', {name: ru.voice.importSubmit, exact: true}).click();
+        await expect(form.getByRole('status')).toHaveText(ru.voice.importReady);
+        expect(uploads).toEqual(['synthetic-voice.tar.bz2']);
+        expect(imports).toEqual([
+            {
+                uploadId: '00000000-0000-0000-0000-000000000001',
+                title: 'Мой тестовый голос',
+                language: 'ru',
+                license: 'Synthetic fixture, not a distributable model',
+            },
+        ]);
+        await expect(dialog.getByText(ru.voice.imported, {exact: true})).toBeVisible();
+        await dialog.getByRole('combobox', {name: ru.voice.models.synthesis, exact: true}).click();
+        await page.getByRole('option', {name: 'Мой тестовый голос', exact: true}).click();
+        await expect(dialog.getByRole('combobox', {name: ru.voice.models.synthesis, exact: true})).toHaveText(
+            'Мой тестовый голос',
+        );
+        expect(sent).toEqual([]);
+    });
+
+    test(`voice preferences and explicit asset downloads in ${dark ? 'dark' : 'light'}`, async ({page}) => {
+        const {state, speech, requests} = await prepare(page, dark);
+        speech.assets.forEach((asset) => {
+            asset.installed = false;
+        });
+        const dialog = await settings(page);
+        await expect(
+            dialog
+                .locator('[data-qa="speech-preview"]')
+                .getByRole('button', {name: ru.voice.previewCheck, exact: true}),
+        ).toBeDisabled();
+        await expect(
+            dialog.getByRole('switch', {name: ru.voice.recognitionEnabled, exact: true}),
+        ).not.toBeChecked();
+        expect(requests).toEqual([]);
+        await dialog.getByRole('switch', {name: ru.voice.recognitionEnabled, exact: true}).press('Space');
+        await dialog.getByRole('combobox', {name: ru.voice.replyMode, exact: true}).click();
+        await page.getByRole('option', {name: ru.voice.replyModes.random, exact: true}).click();
+        await dialog.getByRole('slider', {name: ru.voice.probability, exact: true}).press('End');
+        await dialog.getByRole('button', {name: ru.save, exact: true}).click();
+        await expect(dialog.getByRole('button', {name: ru.saved, exact: true})).toBeVisible();
+        expect(state.settings).toMatchObject({
+            voiceInputEnabled: true,
+            voiceReplyMode: 'random',
+            voiceReplyProbability: 100,
+        });
+        await dialog
+            .getByRole('button', {
+                name: ru.voice.installAsset.replace('{name}', speech.assets[0].title),
+                exact: true,
+            })
+            .click();
+        await expect(
+            dialog.getByRole('progressbar', {
+                name: ru.voice.assetProgress.replace('{name}', speech.assets[0].title),
+                exact: true,
+            }),
+        ).toHaveAttribute('aria-valuenow', '25');
+        await capture(page, dialog.locator('[data-qa="speech-assets"]'), 'voice-settings', dark);
+        await dialog
+            .getByRole('button', {
+                name: ru.voice.cancelAsset.replace('{name}', speech.assets[0].title),
+                exact: true,
+            })
+            .click();
+        await expect(dialog.getByText(ru.voice.phases.cancelled, {exact: true})).toBeVisible();
+        expect(requests).toEqual(['POST sherpa-runtime', 'DELETE sherpa-runtime']);
+    });
+
+    test(`voice draft plays real audio and edits resynthesize before sending in ${dark ? 'dark' : 'light'}`, async ({
+        page,
+    }) => {
+        const {sent} = await prepare(page, dark);
+        await page.getByRole('button', {name: title, exact: true}).click();
+        const normal = page.getByRole('textbox', {name: ru.messagePlaceholder, exact: true});
+        await normal.fill('Мой обычный текст');
+        await page.getByRole('button', {name: ru.draft, exact: true}).click();
+        const generate = page.waitForRequest(
+            (request) =>
+                new URL(request.url()).pathname === '/api/preview/jobs' && request.method() === 'POST',
+        );
+        await page.getByRole('menuitem', {name: ru.voice.generateVoice, exact: true}).click();
+        expect((await generate).postDataJSON()).toMatchObject({output: 'voice'});
+        const preview = page.locator('[data-qa="voice-draft"]');
+        await expect(preview).toBeVisible();
+        await expect
+            .poll(() => preview.locator('audio').evaluate((element: HTMLAudioElement) => element.readyState))
+            .toBeGreaterThan(0);
+        await expect
+            .poll(() => preview.locator('audio').evaluate((element: HTMLAudioElement) => element.duration))
+            .toBeGreaterThan(4);
+        await expect(preview.locator('audio')).toHaveAttribute('src', '/api/speech/audio/voice-job-1');
+        await preview.getByRole('button', {name: ru.voice.play, exact: true}).click();
+        await expect
+            .poll(() => preview.locator('audio').evaluate((element: HTMLAudioElement) => element.paused))
+            .toBe(false);
+        const transcript = preview.getByRole('textbox', {name: ru.voice.transcript, exact: true});
+        await transcript.fill('Изменённый текст для озвучки.');
+        await expect(preview.getByRole('button', {name: ru.voice.sendDraft, exact: true})).toBeDisabled();
+        await expect(preview.locator('audio')).toHaveCount(0);
+        const synthesis = page.waitForRequest(
+            (request) => new URL(request.url()).pathname === '/api/speech/drafts',
+        );
+        await preview.getByRole('button', {name: ru.voice.regenerate, exact: true}).click();
+        expect((await synthesis).postDataJSON()).toEqual({
+            chatId: '41',
+            text: 'Изменённый текст для озвучки.',
+        });
+        await expect(preview.getByRole('button', {name: ru.voice.sendDraft, exact: true})).toBeEnabled();
+        await capture(page, preview, 'voice-draft', dark);
+        await preview.getByRole('button', {name: ru.voice.sendDraft, exact: true}).click();
+        await expect.poll(() => sent.length).toBe(1);
+        expect(sent[0]).toEqual({voiceId: 'voice-job-2'});
+        await expect(preview).toHaveCount(0);
+        await expect(normal).toHaveValue('Мой обычный текст');
+    });
+}

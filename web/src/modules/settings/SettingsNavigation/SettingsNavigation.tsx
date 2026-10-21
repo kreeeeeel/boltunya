@@ -10,6 +10,7 @@ import {
     Palette,
     Pencil,
     Picture,
+    Microphone,
     Route,
     Sliders,
     Sparkles,
@@ -28,6 +29,7 @@ import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
 const sectionIcons = {
     application: Gear,
     replies: Comments,
+    voice: Microphone,
     proactive: Comment,
     prompt: Pencil,
     styles: Sparkles,

@@ -13,6 +13,7 @@ import type {SettingsSectionId} from '@/modules/settings/model/settingsSections'
 import {createSettingsDraft} from '@/modules/settings/model/settingsDraft';
 import {ApplicationSettings} from '@/modules/settings/ApplicationSettings/ApplicationSettings';
 import {ReplySettings} from '@/modules/settings/ReplySettings/ReplySettings';
+import {VoiceSettings} from '@/modules/settings/VoiceSettings/VoiceSettings';
 import {ProactiveSettings} from '@/modules/settings/ProactiveSettings/ProactiveSettings';
 import {MediaSettings} from '@/modules/settings/MediaSettings/MediaSettings';
 import {PromptSettings} from '@/modules/settings/PromptSettings/PromptSettings';
@@ -138,6 +139,7 @@ export function SettingsCenter({
                     [
                         'application',
                         'replies',
+                        'voice',
                         'proactive',
                         'prompt',
                         'styles',
@@ -151,6 +153,7 @@ export function SettingsCenter({
             >
                 {id === 'application' && <ApplicationSettings {...common} />}
                 {id === 'replies' && <ReplySettings {...common} />}
+                {id === 'voice' && <VoiceSettings {...common} />}
                 {id === 'proactive' && (
                     <ProactiveSettings
                         {...common}

@@ -149,6 +149,7 @@ async function openSettings(page: Page) {
 
 async function richDraft(page: Page) {
     await page.getByRole('button', {name: ru.draft, exact: true}).click();
+    await page.getByRole('menuitem', {name: ru.voice.generateText, exact: true}).click();
     const editor = page.getByRole('textbox', {name: ru.messagePlaceholder, exact: true});
     await expect(editor).toHaveAttribute('contenteditable', 'true');
     await expect(editor).toContainClass('ProseMirror');

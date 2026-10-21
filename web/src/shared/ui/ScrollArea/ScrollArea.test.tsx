@@ -45,3 +45,34 @@ it('uses live dimensions when pagination expands content before ResizeObserver f
     fireEvent.keyDown(scrollbar, {key: 'Home'});
     expect(viewport.scrollTop).toBe(0);
 });
+
+it('notifies layout changes separately from user scrolling', () => {
+    let resize = () => {};
+    vi.stubGlobal(
+        'ResizeObserver',
+        class {
+            constructor(callback: () => void) {
+                resize = callback;
+            }
+            observe() {}
+            disconnect() {}
+        },
+    );
+    const onResize = vi.fn();
+    const onScroll = vi.fn();
+    const view = render(
+        <NextIntlClientProvider locale="ru" messages={ru}>
+            <ThemeProvider>
+                <ScrollArea qa="viewport" onResize={onResize} onScroll={onScroll}>
+                    <Box>Content</Box>
+                </ScrollArea>
+            </ThemeProvider>
+        </NextIntlClientProvider>,
+    );
+    const viewport = view.container.querySelector('[data-qa="viewport"]')!;
+    fireEvent.scroll(viewport);
+    expect(onScroll).toHaveBeenCalledOnce();
+    expect(onResize).not.toHaveBeenCalled();
+    act(resize);
+    expect(onResize).toHaveBeenCalledOnce();
+});

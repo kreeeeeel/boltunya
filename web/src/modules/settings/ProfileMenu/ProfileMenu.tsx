@@ -22,7 +22,7 @@ export function ProfileMenu({
     return (
         <DropdownMenu
             size="l"
-            popupProps={{placement: 'right-end'}}
+            popupProps={{placement: 'right-end', className: styles.popup}}
             renderSwitcher={(props) => (
                 <Button
                     {...props}

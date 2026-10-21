@@ -37,3 +37,21 @@ test('rejects external, unavailable, relative and file paths', async () => {
         }
     } finally { await rm(directory, {recursive: true, force: true}); }
 });
+
+test('opens the current speech directory by id without accepting a user-supplied path', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'aigram-speech-storage-'));
+    const opened = [];
+    let requests = 0;
+    const locations = new StorageLocations(async () => {
+        requests++;
+        return {locations: [{id: 'speech', path: directory, kind: 'directory', openable: true}]};
+    }, async path => { opened.push(path); return ''; });
+    try {
+        await locations.openLocation('speech');
+        assert.deepEqual(opened, [await realpath(directory)]);
+        await assert.rejects(locations.openLocation('speech/../../Windows'), error => error.message.includes('Unknown storage'));
+        await assert.rejects(locations.openLocation({id: 'speech', path: directory}), error => error.message.includes('Unknown storage'));
+        assert.equal(requests, 1);
+        assert.equal(opened.length, 1);
+    } finally { await rm(directory, {recursive: true, force: true}); }
+});

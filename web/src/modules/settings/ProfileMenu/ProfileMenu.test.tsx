@@ -5,6 +5,7 @@ import {expect, it, vi} from 'vitest';
 import {ProfileMenu} from '@/modules/settings/ProfileMenu/ProfileMenu';
 import {workspaceState} from '@tests/fixtures/workspace';
 import ru from '@/shared/i18n/ru.json';
+import styles from '@/modules/settings/ProfileMenu/ProfileMenu.module.css';
 
 it('offers one settings entry and account actions without duplicate section shortcuts', async () => {
     const onSettings = vi.fn();
@@ -21,6 +22,9 @@ it('offers one settings entry and account actions without duplicate section shor
         </NextIntlClientProvider>,
     );
     fireEvent.click(screen.getByRole('button', {name: ru.profileMenu}));
+    expect((await screen.findByRole('menuitem', {name: ru.settings})).closest('.g-popup')).toHaveClass(
+        styles.popup,
+    );
     expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent).filter(Boolean)).toEqual([
         ru.settings,
         ru.logout,

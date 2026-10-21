@@ -2,6 +2,7 @@ import {useEffect, useRef} from 'react';
 import {useTranslations} from 'next-intl';
 import {api} from '@/shared/api/client';
 import type {ChatRule} from '@/shared/api/client';
+import type {PreviewJob, PreviewJobRequest} from '@aigram/api-client';
 import {DraftPreparationError} from '@/modules/workspace/model/DraftPreparationError';
 const POLL_INTERVAL_MS = 750;
 function nextPoll(signal: AbortSignal) {
@@ -25,7 +26,7 @@ export function useQueuedDraft(chatId: string | undefined, onRefresh: () => Prom
     const t = useTranslations('draftQueue');
     const pending = useRef<AbortController | null>(null);
     useEffect(() => () => pending.current?.abort(), [chatId]);
-    async function run(rule: ChatRule, messageId?: string) {
+    async function execute(enqueue: (signal: AbortSignal) => Promise<PreviewJob>) {
         if (!chatId) {
             throw new DOMException('Aborted', 'AbortError');
         }
@@ -34,14 +35,7 @@ export function useQueuedDraft(chatId: string | undefined, onRefresh: () => Prom
         pending.current = controller;
         const signal = controller.signal;
         try {
-            let job = await api.models.enqueuePreviewJob(
-                {
-                    previewJobRequest: {chatId, rule, ...(messageId ? {messageId} : {})},
-                },
-                {
-                    signal,
-                },
-            );
+            let job = await enqueue(signal);
             await onRefresh();
             while (job.status === 'queued' || job.status === 'generating') {
                 await nextPoll(signal);
@@ -69,5 +63,24 @@ export function useQueuedDraft(chatId: string | undefined, onRefresh: () => Prom
             }
         }
     }
-    return run;
+    return {
+        generate: (rule: ChatRule, messageId?: string, output: PreviewJobRequest['output'] = 'text') =>
+            execute((signal) =>
+                api.models.enqueuePreviewJob(
+                    {
+                        previewJobRequest: {
+                            chatId: chatId ?? '',
+                            rule,
+                            ...(messageId ? {messageId} : {}),
+                            ...(output === 'voice' ? {output} : {}),
+                        },
+                    },
+                    {signal},
+                ),
+            ),
+        synthesize: (text: string) =>
+            execute((signal) =>
+                api.speech.enqueueVoiceDraft({voiceDraftRequest: {chatId: chatId ?? '', text}}, {signal}),
+            ),
+    };
 }

@@ -1,6 +1,6 @@
 export const settingsGroups = [
     {id: 'application', sections: ['application']},
-    {id: 'assistant', sections: ['replies', 'proactive', 'prompt', 'styles']},
+    {id: 'assistant', sections: ['replies', 'voice', 'proactive', 'prompt', 'styles']},
     {id: 'intelligence', sections: ['providers', 'routing', 'compute', 'search']},
     {id: 'memory', sections: ['memory', 'collection']},
     {id: 'appearance', sections: ['appearance', 'language']},

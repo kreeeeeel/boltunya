@@ -1,0 +1,9 @@
+.root {
+    min-width: 0;
+    padding: 12px 0;
+}
+
+.file {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}

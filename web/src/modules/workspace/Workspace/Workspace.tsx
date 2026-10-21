@@ -169,11 +169,11 @@ export function Workspace() {
         );
         await refresh();
     }
-    async function draft(messageId?: string) {
+    async function draft(messageId?: string, output?: Parameters<typeof queuedDraft.generate>[2]) {
         if (!chat) {
             throw new DOMException('Aborted', 'AbortError');
         }
-        return queuedDraft(chat.rule, messageId);
+        return queuedDraft.generate(chat.rule, messageId, output);
     }
     function select(id: string) {
         if (id === selected) {
@@ -374,6 +374,24 @@ export function Workspace() {
                                     }}
                                     onSend={send}
                                     onDraft={draft}
+                                    onVoiceSynthesis={queuedDraft.synthesize}
+                                    onVoiceSend={async (voiceId) => {
+                                        if (chat) {
+                                            await api.speech.sendVoiceDraft({
+                                                chatId: chat.id,
+                                                voiceSendRequest: {voiceId},
+                                            });
+                                            try {
+                                                await refreshConversation();
+                                            } catch (cause) {
+                                                setActionError(errorMessage(cause));
+                                            }
+                                        }
+                                    }}
+                                    voiceSynthesisModel={
+                                        state.settings.voiceSynthesisModel ?? 'piper-ru-irina'
+                                    }
+                                    onVoiceSettings={() => setSettingsSection('voice')}
                                     onBack={() => {
                                         selectedChat.current = null;
                                         setSelected(null);

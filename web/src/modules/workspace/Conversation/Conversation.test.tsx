@@ -7,19 +7,20 @@ import {Conversation} from '@/modules/workspace/Conversation/Conversation';
 import {DraftPreparationError} from '@/modules/workspace/model/DraftPreparationError';
 import {workspaceState} from '@tests/fixtures/workspace';
 import ru from '@/shared/i18n/ru.json';
-import type {Reply} from '@/shared/api/client';
+import type {Message, Reply} from '@/shared/api/client';
 
 vi.mock('@/modules/media/MediaViewer/MediaViewerProvider', () => ({
     MediaViewerProvider: ({children}: {children: import('react').ReactNode}) => children,
+    useMediaViewer: () => undefined,
 }));
 
-function renderConversation(onDraft: () => Promise<Reply>, onSend = vi.fn()) {
+function renderConversation(onDraft: () => Promise<Reply>, onSend = vi.fn(), messages: Message[] = []) {
     return render(
         <NextIntlClientProvider locale="ru" messages={ru}>
             <ThemeProvider>
                 <Conversation
                     chat={workspaceState.chats[0]}
-                    messages={[]}
+                    messages={messages}
                     error=""
                     onDraft={onDraft}
                     onRefresh={vi.fn()}
@@ -37,6 +38,7 @@ function renderConversation(onDraft: () => Promise<Reply>, onSend = vi.fn()) {
 
 async function requestDraft() {
     fireEvent.click(screen.getByRole('button', {name: ru.draft}));
+    fireEvent.click(await screen.findByRole('menuitem', {name: ru.voice.generateText}));
     await act(async () => {
         await vi.dynamicImportSettled();
     });
@@ -138,4 +140,58 @@ it('keeps a typed reply and displays a generation failure with its reason', asyn
     expect(notice).toHaveTextContent('Модель не ответила.');
     expect(notice.querySelector('svg')).not.toBeNull();
     expect(input).toHaveValue('Мой черновик');
+});
+
+it('keeps the bottom on a resize without moving older history or an open message menu', async () => {
+    const callbacks = new Map<Element, () => void>();
+    vi.stubGlobal(
+        'ResizeObserver',
+        class {
+            private readonly callback: () => void;
+            constructor(callback: () => void) {
+                this.callback = callback;
+            }
+            observe(element: Element) {
+                callbacks.set(element, this.callback);
+            }
+            unobserve(element: Element) {
+                callbacks.delete(element);
+            }
+            disconnect() {}
+        },
+    );
+    const view = renderConversation(vi.fn(), vi.fn(), [
+        {
+            id: '1',
+            chatId: workspaceState.chats[0].id,
+            text: 'Message',
+            outgoing: false,
+            date: 1,
+            kind: 'text',
+        },
+    ]);
+    const viewport = view.container.querySelector<HTMLElement>('[data-qa="conversation-messages"]')!;
+    Object.defineProperties(viewport, {
+        clientHeight: {configurable: true, value: 200},
+        scrollHeight: {configurable: true, value: 1000},
+    });
+    act(() => callbacks.get(viewport)?.());
+    expect(viewport.scrollTop).toBe(800);
+    Object.defineProperty(viewport, 'clientHeight', {configurable: true, value: 100});
+    act(() => callbacks.get(viewport)?.());
+    expect(viewport.scrollTop).toBe(900);
+    viewport.scrollTop = 300;
+    fireEvent.scroll(viewport);
+    Object.defineProperty(viewport, 'scrollHeight', {configurable: true, value: 1200});
+    act(() => callbacks.get(viewport)?.());
+    expect(viewport.scrollTop).toBe(300);
+    viewport.scrollTop = 1100;
+    fireEvent.scroll(viewport);
+    const row = view.container.querySelector('[data-message-id="1"]')!;
+    fireEvent.contextMenu(row, {clientX: 10, clientY: 10});
+    await screen.findByRole('menuitem', {name: ru.messageMenu.copyText});
+    viewport.scrollTop = 1050;
+    Object.defineProperty(viewport, 'scrollHeight', {configurable: true, value: 1300});
+    act(() => callbacks.get(viewport)?.());
+    expect(viewport.scrollTop).toBe(1050);
 });

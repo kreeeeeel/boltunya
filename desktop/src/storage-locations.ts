@@ -1,7 +1,7 @@
 import {realpath, stat} from 'node:fs/promises';
 import {isAbsolute} from 'node:path';
 
-const LOCATION_IDS = new Set(['application', 'memory', 'telegram-cache', 'ollama-runtime', 'ollama-models', 'diagnostics']);
+const LOCATION_IDS = new Set(['application', 'memory', 'telegram-cache', 'ollama-runtime', 'ollama-models', 'diagnostics', 'speech']);
 
 type Location = {id: string; path: string; openable: boolean; kind: string};
 

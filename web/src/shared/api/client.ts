@@ -5,6 +5,7 @@ import {
     MemoryApi,
     ModelsApi,
     SettingsApi,
+    SpeechApi,
     SystemApi,
     TelegramApi,
 } from '@aigram/api-client';
@@ -19,6 +20,7 @@ export const api = {
     memory: new MemoryApi(apiConfiguration),
     models: new ModelsApi(apiConfiguration),
     settings: new SettingsApi(apiConfiguration),
+    speech: new SpeechApi(apiConfiguration),
     system: new SystemApi(apiConfiguration),
     telegram: new TelegramApi(apiConfiguration),
 };

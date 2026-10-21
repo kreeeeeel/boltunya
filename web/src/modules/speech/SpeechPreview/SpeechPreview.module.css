@@ -1,0 +1,6 @@
+.root {
+    padding: 16px;
+    min-width: 0;
+    border-radius: 16px;
+    background: var(--g-color-base-generic);
+}

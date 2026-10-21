@@ -26,3 +26,22 @@ it('keeps AI formatting opt-in for older saved settings', () => {
     expect(createSettingsDraft(settings).formatReplies).toBe(false);
     expect(createSettingsDraft(settings).replyProcessingMode).toBe('replace');
 });
+
+it('keeps voice recognition opt-in and preserves every explicit speech preference', () => {
+    expect(createSettingsDraft(workspaceState.settings)).toMatchObject({
+        voiceInputEnabled: false,
+        voiceReplyMode: 'text',
+        voiceRecognitionModel: 'whisper-tiny',
+        voiceSynthesisModel: 'piper-ru-irina',
+        voiceSpeechRate: 1,
+    });
+    const preferences = {
+        voiceInputEnabled: true,
+        voiceReplyMode: 'mirror' as const,
+        voiceReplyProbability: 75,
+        voiceRecognitionModel: 'whisper-small',
+        voiceSynthesisModel: 'custom-voice',
+        voiceSpeechRate: 1.5,
+    };
+    expect(createSettingsDraft({...workspaceState.settings, ...preferences})).toMatchObject(preferences);
+});

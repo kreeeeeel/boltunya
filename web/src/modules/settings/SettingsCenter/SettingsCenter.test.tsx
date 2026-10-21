@@ -6,13 +6,20 @@ import {useState} from 'react';
 import {SettingsCenter} from '@/modules/settings/SettingsCenter/SettingsCenter';
 import {workspaceState} from '@tests/fixtures/workspace';
 import ru from '@/shared/i18n/ru.json';
-const mocks = vi.hoisted(() => ({settings: vi.fn(), updateChatMemory: vi.fn(), updateGlobalMemory: vi.fn()}));
+import {speechState} from '@tests/fixtures/speech';
+const mocks = vi.hoisted(() => ({
+    settings: vi.fn(),
+    updateChatMemory: vi.fn(),
+    updateGlobalMemory: vi.fn(),
+    speechState: vi.fn(),
+}));
 vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
     api: {
         settings: {
             settings: mocks.settings,
         },
+        speech: {speechState: mocks.speechState},
         memory: {
             updateChatMemory: mocks.updateChatMemory,
             updateGlobalMemory: mocks.updateGlobalMemory,
@@ -68,6 +75,59 @@ it('preserves section drafts and success feedback when refreshed settings arrive
     expect(onClose).not.toHaveBeenCalled();
     fireEvent.change(screen.getByRole('textbox', {name: ru.styleName}), {target: {value: 'Новый'}});
     expect(within(region).queryByRole('button', {name: ru.saved})).toBeNull();
+});
+
+it('keeps the voice preferences as a shared draft and saves them without enabling automatic replies', async () => {
+    mocks.settings.mockResolvedValue({ok: true});
+    mocks.speechState.mockResolvedValue(speechState);
+    render(
+        <NextIntlClientProvider locale="ru" messages={ru}>
+            <ThemeProvider>
+                <SettingsCenter
+                    settings={workspaceState.settings}
+                    initialSection="voice"
+                    onClose={vi.fn()}
+                    onRefresh={async () => {}}
+                />
+            </ThemeProvider>
+        </NextIntlClientProvider>,
+    );
+    expect(screen.getByRole('switch', {name: ru.voice.recognitionEnabled})).not.toBeChecked();
+    const importToggle = screen.getByRole('button', {name: ru.voice.importModel});
+    expect(importToggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('region', {name: ru.voice.importModel})).not.toBeInTheDocument();
+    fireEvent.click(importToggle);
+    const importForm = screen.getByRole('region', {name: ru.voice.importModel});
+    expect(importForm).toBeVisible();
+    expect(importToggle).toHaveAttribute('aria-controls', importForm.id);
+    expect(importToggle).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.change(screen.getByRole('textbox', {name: ru.voice.importName}), {
+        target: {value: 'Мой голос'},
+    });
+    fireEvent.click(importToggle);
+    expect(screen.queryByRole('region', {name: ru.voice.importModel})).not.toBeInTheDocument();
+    fireEvent.click(importToggle);
+    expect(screen.getByRole('textbox', {name: ru.voice.importName})).toHaveValue('Мой голос');
+    fireEvent.click(importToggle);
+    fireEvent.click(screen.getByRole('switch', {name: ru.voice.recognitionEnabled}));
+    fireEvent.click(screen.getByRole('combobox', {name: ru.voice.replyMode}));
+    fireEvent.click(await screen.findByRole('option', {name: ru.voice.replyModes.mirror}));
+    fireEvent.click(screen.getByRole('menuitem', {name: ru.settingsCenter.sections.application}));
+    fireEvent.click(screen.getByRole('menuitem', {name: ru.settingsCenter.sections.voice}));
+    expect(screen.getByRole('switch', {name: ru.voice.recognitionEnabled})).toBeChecked();
+    fireEvent.click(screen.getByRole('button', {name: ru.save}));
+    await waitFor(() =>
+        expect(mocks.settings).toHaveBeenCalledWith(
+            expect.objectContaining({
+                settingsUpdate: expect.objectContaining({
+                    voiceInputEnabled: true,
+                    voiceReplyMode: 'mirror',
+                    voiceSynthesisModel: 'piper-ru-irina',
+                }),
+            }),
+        ),
+    );
+    expect(screen.getByRole('dialog', {name: ru.settings})).toBeVisible();
 });
 it('shows a save failure once in the active section while preserving visited drafts', async () => {
     mocks.settings.mockRejectedValue(new Error('Cannot save'));

@@ -1,0 +1,21 @@
+.root {
+    padding: 14px;
+    border-radius: 16px;
+    background: var(--tiho-panel);
+    min-width: 0;
+}
+
+.play {
+    --g-button-height: 40px;
+
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.timeline {
+    min-width: 0;
+    flex: 1;
+}
