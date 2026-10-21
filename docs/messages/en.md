@@ -19,3 +19,11 @@ Before editing, the backend rechecks ownership, permission, account/connection i
 An edit replaces the local archived text and invalidates affected AI context. Obsolete personal writing samples are removed or updated; known automated replies retain their provenance and do not become owner-style examples. UI mutation guards stop a history request that started before saving from replacing the confirmed result, including edits with the same second-resolution timestamp.
 
 This feature is verified using synthetic TDLib messages, test transports and browser fixtures; tests do not edit anyone's real Telegram messages.
+
+## Optional AI reply formatting
+
+**Settings → Assistant → Apply formatting** adds a separate reply instruction and is off by default. The model may use moderate bold, italic, strikethrough, spoilers, quotes, code and links; the selected communication style remains the priority.
+
+The existing CommonMark parser produces native Telegram entities with UTF-16 offsets. Unsupported image markup or unsafe links preserve the entire literal response instead of discarding content. Generated drafts retain their entities in the compact visual composer, including after edits and when transferred to the first attachment caption. Ordinary manually typed text stays literal. Types, overlap, URLs and Unicode boundaries are validated before cancelling queued work or consuming uploads.
+
+History still uses role `user` with verified author metadata in JSON envelopes. A separate output instruction requires only the final message. If a model nevertheless emits that exact envelope, the backend extracts `message`; malformed recognized metadata fails explicitly. Ordinary JSON/code responses, research plans and sticker schemas retain their separate handling.

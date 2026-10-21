@@ -73,3 +73,17 @@ Run `:backend:check`, generated-contract validation and clean generation when in
 These are follow-up candidates, not part of this migration's implementation or release gate.
 
 Compatibility references: [Spring AI versions](https://docs.spring.io/spring-ai/reference/getting-started.html), [Boot requirements](https://docs.spring.io/spring-boot/system-requirements.html), [Boot Kotlin support](https://docs.spring.io/spring-boot/reference/features/kotlin.html), [Kotlin/Gradle compatibility](https://kotlinlang.org/docs/gradle-configure-project.html).
+
+## Current manual checkpoint — reply output and idle configuration
+
+The recurring improvement automation is paused at the user's request. This manually requested release fixes history-envelope leakage, adds opt-in native formatting and makes idle follow-ups configurable per chat, with a global active-chat directory. No unrelated enhancement starts while this request is active.
+
+- [x] Add resource-based output/formatting instructions and conversation-only envelope decoding.
+- [x] Extend the single contract and pure mappings with optional entities and typed idle-message fields; retain strict PATCH defaults and the original wire baseline.
+- [x] Complete native outgoing entities and literal/AI proactive modes with shared queue guards.
+- [x] Add global/per-chat restart, finish-and-combine and sequential-each policies, with bounded FIFO, anchored history and exact TDLib automated-send provenance. Preserve manual owner cancellation and account/context safeguards.
+- [x] Pass the full local gate: 548 Kotlin tests (12 optional live skipped), 10 installed SDK tests, 232 UI tests, 38 Electron tests, 10 script tests, formatting/type/lint checks and the optimized web build. Verify all 127 browser scenarios across full/focused runs and inspect light/dark/compact screenshots.
+- [x] Verify three synthetic cases on the installed `deepseek-r1:8b`: ordinary replies, native formatting and unrelated participant relevance. Save timing-only evidence without prompts or responses.
+- [ ] Publish through Windows CI; verify native packaging/updater/media gates, tag/source, EXE/SDK checksums and actual-profile restart. Record the release result in its notes and local `complie/VERIFICATION.md`.
+
+Details: [reply formatting](../messages/en.md#optional-ai-reply-formatting), [idle messages](../ai/conversation-support-en.md). The next step is validation and publication of this bounded manual release, not automatic feature work.

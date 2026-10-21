@@ -2,7 +2,7 @@
 
 [Русская версия](ru.md)
 
-The canonical contract is [`backend/contract/api/schema/api.yaml`](../../backend/contract/api/schema/api.yaml). It describes 61 paths, 76 operations and 119 named schemas. Operation documents live in `schema/operations/`; reusable models and enums live in `schema/models/`. Relative references connect these files. Message editing uses revision-protected `messageEditOptions` and `editMessage` operations; see [editing](../messages/en.md).
+The canonical contract is [`backend/contract/api/schema/api.yaml`](../../backend/contract/api/schema/api.yaml). It describes 61 paths, 76 operations and 122 named schemas. Operation documents live in `schema/operations/`; reusable models and enums live in `schema/models/`. Relative references connect these files. Message editing uses revision-protected `messageEditOptions` and `editMessage` operations; see [editing](../messages/en.md).
 
 Spring Boot owns dependency injection and the embedded servlet server. Feature controllers implement all eight generated Spring MVC interfaces; components reuse application services and stateless top-level extension functions map generated DTOs to feature domain models without Spring beans. The previous `ru.aigram.http` server/router has been removed. The web application calls the generated feature operations from `@aigram/api-client`; its workspace alias resolves the canonical generated SDK source. The previous `openapi-fetch` transport, separate type generator and schema bridge have been removed.
 
@@ -167,3 +167,5 @@ The wrapper explicitly installs `Jackson2JsonEncoder` and `Jackson2JsonDecoder` 
 Generator options are documented for [`kotlin-spring`](https://openapi-generator.tech/docs/generators/kotlin-spring/), [`kotlin`](https://openapi-generator.tech/docs/generators/kotlin/) and [`typescript-fetch`](https://openapi-generator.tech/docs/generators/typescript-fetch/). Spring documents WebClient's explicit codec and filter configuration in its [client builder reference](https://docs.spring.io/spring-framework/reference/web/webflux-webclient/client-builder.html).
 
 Checked-in template adaptations and upstream licenses are recorded in the [server template notice](../../backend/contract/api/templates/NOTICE.md), [Kotlin client template notice](../../backend/contract/client/openapi/templates/NOTICE.md) and [Fetch runtime notice](../../backend/contract/client/typescript/templates/NOTICE.md).
+
+Reply controls are additive: SettingsUpdate keeps formatReplies and replyProcessingMode optional, without PATCH defaults; chat rules add proactiveMessageMode, proactiveText and replyInterruptionMode. Reply/Text carry optional UTF-16 entities, and attachment requests carry captionEntities. These fields use the same generated transports and strict boundary validation.

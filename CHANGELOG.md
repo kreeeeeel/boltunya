@@ -2,6 +2,30 @@
 
 Release versions are assigned by Windows CI. Each GitHub release includes the first dated entry below, the tested source commit and its verification run.
 
+## 2026-10-21 — Reliable reply output and configurable idle messages
+
+### Added
+
+- Add per-chat idle messages with an explicit AI or predefined-text mode, a custom delay and an independent per-chat opt-in. Settings lists the configured chats and opens their communication controls.
+- Add an optional Assistant setting for moderate AI formatting. Convert supported Markdown into native Telegram entities, keep rich generated drafts editable, and retain formatting in the first attachment caption. The default remains off.
+- Extend the canonical contract and all generated clients with optional formatting entities, the formatting preference and typed idle-message configuration.
+- Add global and per-chat incoming-message policies: restart, finish and combine, or reply to each message sequentially. Preserve the existing restart default and bounded shared queue.
+
+### Fixed
+
+- Decode a recognized conversation-history JSON envelope before validating facts, formatting links or sending the final message. Ordinary JSON/code answers and research/sticker schemas remain intact. Separate output instructions reinforce the selected communication style.
+- Detect silence after either participant's last read message. Preserve the shared queue, group permissions, account/settings/activity checks and durable one-follow-up-until-reply guard. Predefined text bypasses model inference and remains literal.
+- Validate outgoing entity types, Unicode boundaries, nesting and links before side effects. Preserve unsupported markup as complete literal text rather than losing references or URLs.
+- Keep unrelated participant names and tags out of replies through a separate relevance instruction; retain factual memory and the selected tone.
+- Serialize replies within each chat, anchor their history to the intended message and distinguish automated outgoing messages through native TDLib send correlation. Manual owner messages retain priority.
+
+### Verification and compatibility
+
+- The full local quality gate passed 548 Kotlin tests (12 optional live tests skipped), 10 installed TypeScript SDK tests, 232 UI unit tests, 38 Electron tests and 10 script tests. Formatting, types, lint, generated-contract compatibility and the optimized web build passed.
+- All 127 browser scenarios were verified across the full run and final focused reruns, including both themes and compact windows. Three synthetic cases passed against the already installed `deepseek-r1:8b`: ordinary replies, requested native formatting and unrelated-participant relevance. No real Telegram messages or model downloads were used.
+- Release publication additionally requires Windows packaging, native window/tray, updater and media gates, matching EXE/SDK hashes and an actual-profile restart. Prompt adherence remains model-dependent; the live cases are regression checks, not a guarantee for every model or question.
+- Existing sessions, memory, prompts and opt-in states remain compatible. No chats or automatic replies are enabled by this update.
+
 ## 2026-10-21 — Lossless Telegram message editing
 
 ### Added

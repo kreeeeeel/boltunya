@@ -2,7 +2,7 @@
 
 [English version](en.md)
 
-Единственный исходный контракт — [`backend/contract/api/schema/api.yaml`](../../backend/contract/api/schema/api.yaml). Он описывает 61 путь, 76 операций и 119 именованных схем. Операции находятся в `schema/operations/`, общие модели и перечисления — в `schema/models/`. Файлы связаны относительными ссылками. Редактирование использует операции `messageEditOptions` и `editMessage` с проверкой ревизии; см. [редактирование](../messages/ru.md).
+Единственный исходный контракт — [`backend/contract/api/schema/api.yaml`](../../backend/contract/api/schema/api.yaml). Он описывает 61 путь, 76 операций и 122 именованные схемы. Операции находятся в `schema/operations/`, общие модели и перечисления — в `schema/models/`. Файлы связаны относительными ссылками. Редактирование использует операции `messageEditOptions` и `editMessage` с проверкой ревизии; см. [редактирование](../messages/ru.md).
 
 Spring Boot управляет зависимостями и встроенным servlet-сервером. Контроллеры по функциям реализуют все восемь сгенерированных интерфейсов Spring MVC; компоненты используют сервисы приложения, а stateless extension-функции верхнего уровня связывают generated DTO с domain-моделями без Spring-бинов. Предыдущий сервер и роутер `ru.aigram.http` удалены. Веб-интерфейс вызывает generated-операции по функциям из `@aigram/api-client`; workspace alias использует SDK, созданный из единого контракта. Прежние транспорт `openapi-fetch`, отдельный генератор типов и промежуточный schema-файл удалены.
 
@@ -167,3 +167,5 @@ fun history(origin: URI, token: () -> String): List<Message>? =
 Настройки генераторов описаны в документации [`kotlin-spring`](https://openapi-generator.tech/docs/generators/kotlin-spring/), [`kotlin`](https://openapi-generator.tech/docs/generators/kotlin/) и [`typescript-fetch`](https://openapi-generator.tech/docs/generators/typescript-fetch/). Настройка кодеков и фильтров WebClient приведена в [справочнике Spring](https://docs.spring.io/spring-framework/reference/web/webflux-webclient/client-builder.html).
 
 Изменения шаблонов и исходные лицензии отмечены в уведомлениях для [серверного контракта](../../backend/contract/api/templates/NOTICE.md), [Kotlin-клиента](../../backend/contract/client/openapi/templates/NOTICE.md) и [Fetch runtime](../../backend/contract/client/typescript/templates/NOTICE.md).
+
+Новые поля добавлены совместимо: formatReplies и replyProcessingMode в SettingsUpdate необязательны и не сбрасывают PATCH при отсутствии. Правила чата содержат proactiveMessageMode, proactiveText и replyInterruptionMode. Reply/Text передают необязательные entities с UTF-16, вложения — captionEntities. Всё использует те же сгенерированные клиенты и строгую валидацию на границе.
