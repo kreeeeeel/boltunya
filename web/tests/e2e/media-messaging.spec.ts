@@ -6,106 +6,6 @@ import type {Message} from '../../src/shared/api/client';
 import ru from '../../src/shared/i18n/ru.json';
 import labels from '../../src/modules/media/i18n/ru.json';
 
-for (const dark of [false, true]) {
-    test(`compact sticker packs use background selection without hover fills in ${dark ? 'dark' : 'light'} theme`, async ({
-        page,
-    }) => {
-        const sticker = {
-            id: 's1',
-            setId: 'set-1',
-            emoji: '🙂',
-            width: 128,
-            height: 128,
-            media: {
-                fileId: 101,
-                mimeType: 'image/webp',
-                fileName: 'smile.webp',
-                width: 128,
-                height: 128,
-                thumbnailFileId: 0,
-                size: 800,
-            },
-        };
-        await page.route('**/api/appearance', (route) =>
-            route.fulfill({json: {mode: dark ? 'dark' : 'light', tokens: {}, css: ''}}),
-        );
-        await page.route('**/api/stickers', (route) =>
-            route.fulfill({
-                json: {
-                    recent: Array.from({length: 20}, (_, index) => ({...sticker, id: 's' + index})),
-                    favorites: [],
-                    sets: [
-                        {id: 'set-1', title: 'Улыбки', name: 'smiles', count: 1},
-                        {id: 'set-2', title: 'Любимые коты', name: 'cats', count: 1},
-                    ],
-                },
-            }),
-        );
-        await page.route('**/api/stickers/sets/set-1', (route) => route.fulfill({json: [sticker]}));
-        await page.route('**/api/media/101', (route) =>
-            route.fulfill({
-                contentType: 'image/svg+xml',
-                body: '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128"><circle cx="64" cy="64" r="52" fill="#ffd668"/><circle cx="46" cy="52" r="5" fill="#473626"/><circle cx="82" cy="52" r="5" fill="#473626"/><path d="M40 76Q64 102 88 76" fill="none" stroke="#473626" stroke-width="6" stroke-linecap="round"/></svg>',
-            }),
-        );
-        await page.reload();
-        await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
-        await page.getByRole('button', {name: labels.stickers, exact: true}).click();
-        const picker = page.locator('[data-qa="sticker-picker"]');
-        const recent = picker.getByRole('tab', {name: labels.recent, exact: true});
-        await expect(recent).toHaveAttribute('aria-selected', 'true');
-        expect((await recent.boundingBox())!.width).toBeLessThanOrEqual(42);
-        await expect(picker.getByRole('button', {name: '🙂', exact: true})).toHaveCount(20);
-        const populatedHeight = (await picker.boundingBox())!.height;
-        const desktopColumns = await picker
-            .locator('button[aria-label="🙂"]')
-            .first()
-            .evaluate(
-                (element) => getComputedStyle(element.parentElement!).gridTemplateColumns.split(' ').length,
-            );
-        await picker.getByRole('tab', {name: 'Улыбки', exact: true}).click();
-        const selected = picker.getByRole('tab', {name: 'Улыбки', exact: true});
-        await expect(selected).toHaveAttribute('aria-selected', 'true');
-        await expect(selected).toHaveCSS('border-width', '0px');
-        const stickerButton = picker.getByRole('button', {name: '🙂', exact: true});
-        await expect(stickerButton).toHaveCount(1);
-        expect((await picker.boundingBox())!.height).toBeLessThan(populatedHeight);
-        await expect
-            .poll(() =>
-                selected.evaluate((element) => {
-                    const packBounds = element.getBoundingClientRect();
-                    const titleBounds = element.querySelector('.g-text')!.getBoundingClientRect();
-
-                    return Math.abs(
-                        titleBounds.y + titleBounds.height / 2 - packBounds.y - packBounds.height / 2,
-                    );
-                }),
-            )
-            .toBeLessThan(1);
-        await stickerButton.hover();
-        expect(
-            await stickerButton.evaluate((element) => getComputedStyle(element, '::before').backgroundColor),
-        ).toBe('rgba(0, 0, 0, 0)');
-        await page.screenshot({
-            path: `../docs/resources/stickers-${dark ? 'dark' : 'light'}.png`,
-            animations: 'disabled',
-        });
-        await recent.click();
-        await page.setViewportSize({width: 360, height: 640});
-        const mobileColumns = await picker
-            .locator('button[aria-label="🙂"]')
-            .first()
-            .evaluate(
-                (element) => getComputedStyle(element.parentElement!).gridTemplateColumns.split(' ').length,
-            );
-        expect(mobileColumns).toBeLessThan(desktopColumns);
-        const mobileBounds = (await picker.boundingBox())!;
-        expect(mobileBounds.x).toBeGreaterThanOrEqual(0);
-        expect(mobileBounds.x + mobileBounds.width).toBeLessThanOrEqual(360);
-        expect(mobileBounds.height).toBeLessThan(520);
-    });
-}
-
 test.beforeEach(async ({page}) => {
     const state = structuredClone(workspaceState);
     state.chats = [
@@ -330,7 +230,7 @@ for (const dark of [false, true]) {
         }
     });
 
-    test(`composer inserts emoji and gives attachment actions icons in ${dark ? 'dark' : 'light'} theme`, async ({
+    test(`composer offers manual voice and attachment actions without emoji or sticker pickers in ${dark ? 'dark' : 'light'} theme`, async ({
         page,
     }) => {
         await page.route('**/api/appearance', (route) =>
@@ -340,12 +240,10 @@ for (const dark of [false, true]) {
         await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
         const input = page.getByRole('textbox', {name: ru.messagePlaceholder, exact: true});
         await input.fill('Before selected after');
-        await input.evaluate((element) => (element as HTMLTextAreaElement).setSelectionRange(7, 15));
-        await page.getByRole('button', {name: ru.chooseEmoji, exact: true}).click();
-        const emojiPicker = page.getByRole('dialog', {name: ru.chooseEmoji, exact: true});
-        await emojiPicker.getByRole('button', {name: '🙂', exact: true}).click();
-        await expect(input).toHaveValue('Before 🙂 after');
-        await expect(input).toBeFocused();
+        await expect(page.getByRole('button', {name: ru.chooseEmoji, exact: true})).toHaveCount(0);
+        await expect(page.getByRole('button', {name: labels.stickers, exact: true})).toHaveCount(0);
+        await expect(page.getByRole('button', {name: ru.voice.manualTitle, exact: true})).toBeVisible();
+        await expect(input).toHaveValue('Before selected after');
         await page.getByRole('button', {name: labels.attach, exact: true}).click();
         for (const name of ['Фотографии', 'Видео', labels.documents]) {
             const icon = page.getByRole('menuitem', {name, exact: true}).locator('.g-menu__item-icon');

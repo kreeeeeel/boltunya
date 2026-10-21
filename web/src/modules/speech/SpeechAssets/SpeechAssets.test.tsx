@@ -86,3 +86,49 @@ it('labels imported voices without inventing download actions or empty source li
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', {name: ru.voice.download})).not.toBeInTheDocument();
 });
+
+it('keeps search and language filters independent per tab without changing the selected model', async () => {
+    const state = {
+        ...speechState,
+        assets: [
+            ...speechState.assets,
+            {...speechState.assets[2], id: 'english-voice', title: 'English Voice', languages: ['en']},
+        ],
+    };
+    const select = vi.fn();
+    function surface(kind: 'runtime' | 'recognition' | 'synthesis') {
+        return (
+            <NextIntlClientProvider locale="ru" messages={ru}>
+                <ThemeProvider>
+                    <SpeechAssets
+                        state={state}
+                        error=""
+                        busy=""
+                        reload={vi.fn()}
+                        install={vi.fn()}
+                        cancel={vi.fn()}
+                        kind={kind}
+                        selected={{synthesis: 'piper-ru-irina'}}
+                        onSelect={select}
+                    />
+                </ThemeProvider>
+            </NextIntlClientProvider>
+        );
+    }
+    const view = render(surface('synthesis'));
+    const search = screen.getByRole('textbox', {name: ru.voice.searchModels});
+    fireEvent.change(search, {target: {value: 'PIPER'}});
+    expect(screen.queryByText('English Voice', {exact: true})).not.toBeInTheDocument();
+    fireEvent.change(search, {target: {value: ''}});
+    fireEvent.click(screen.getByRole('combobox', {name: ru.voice.languageFilter}));
+    fireEvent.click(await screen.findByRole('option', {name: 'английский'}));
+    expect(screen.getByText('English Voice', {exact: true})).toBeVisible();
+    expect(screen.queryByText(speechState.assets[2].title, {exact: true})).not.toBeInTheDocument();
+    expect(select).not.toHaveBeenCalled();
+    view.rerender(surface('runtime'));
+    expect(screen.getByText(speechState.assets[0].title, {exact: true})).toBeVisible();
+    expect(screen.getByRole('combobox', {name: ru.voice.languageFilter})).toBeDisabled();
+    view.rerender(surface('synthesis'));
+    expect(screen.getByText('English Voice', {exact: true})).toBeVisible();
+    expect(screen.queryByText(speechState.assets[2].title, {exact: true})).not.toBeInTheDocument();
+});

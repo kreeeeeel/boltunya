@@ -1,34 +1,54 @@
 import {Check, Xmark} from '@gravity-ui/icons';
 import {Button, Flex, Icon, Loader, Text, TextArea} from '@gravity-ui/uikit';
-import {useState} from 'react';
+import {useImperativeHandle, useRef, useState} from 'react';
+import type {Ref} from 'react';
+import type {SpeechAsset} from '@aigram/api-client';
 import {useTranslations} from 'next-intl';
 import {SpeechPlayer} from '@/modules/speech/VoiceDraftPreview/SpeechPlayer';
 import {useSpeechPreview} from '@/modules/speech/model/useSpeechPreview';
+import {speechReady} from '@/modules/speech/model/speechReady';
 import styles from '@/modules/speech/SpeechPreview/SpeechPreview.module.css';
+
+export interface SpeechPreviewHandle {
+    readonly check: (modelId: string) => void;
+}
 
 export function SpeechPreview({
     modelId,
     speed,
     ready,
+    assets,
+    ref,
 }: {
     readonly modelId: string;
     readonly speed: number;
     readonly ready: boolean;
+    readonly assets?: SpeechAsset[];
+    readonly ref?: Ref<SpeechPreviewHandle>;
 }) {
     const t = useTranslations('voice');
     const [text, setText] = useState(() => t('previewSample'));
     const preview = useSpeechPreview();
+    const input = useRef<HTMLTextAreaElement | null>(null);
     const [submitted, setSubmitted] = useState({text: '', modelId: '', speed: 0});
     const tooLong = text.length > 4096;
     const current = text === submitted.text && modelId === submitted.modelId && speed === submitted.speed;
 
-    async function check() {
-        if (preview.busy || !ready || !text.trim() || tooLong) {
+    async function check(selected = modelId) {
+        const selectedReady = selected === modelId ? ready : speechReady(assets ?? [], selected);
+        if (preview.busy || !selectedReady || !text.trim() || tooLong) {
+            input.current?.focus({preventScroll: true});
             return;
         }
-        setSubmitted({text, modelId, speed});
-        await preview.run({text, modelId, speed});
+        setSubmitted({text, modelId: selected, speed});
+        await preview.run({text, modelId: selected, speed});
     }
+
+    useImperativeHandle(ref, () => ({
+        check: (selected) => {
+            void check(selected);
+        },
+    }));
 
     return (
         <Flex direction="column" gap={3} className={styles.root} qa="speech-preview">
@@ -36,6 +56,7 @@ export function SpeechPreview({
             <Text color="secondary">{t('previewHint')}</Text>
             <TextArea
                 value={text}
+                controlRef={input}
                 onUpdate={setText}
                 disabled={preview.busy}
                 minRows={3}

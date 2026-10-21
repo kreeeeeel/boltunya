@@ -9,6 +9,7 @@ import type {
     SpeechPreviewRequest,
     SpeechModelImportRequest,
     VoiceSendRequest,
+    VoiceDraftRequest,
 } from '@aigram/api-client';
 
 export const demoTranscript = 'Привет! Это проверка голосовых сообщений. Сегодня хорошая погода.';
@@ -146,9 +147,10 @@ export async function installVoiceMocks(
     const requests: string[] = [];
     const jobs = new Map<string, PreviewJob>();
     const previews: SpeechPreviewRequest[] = [];
+    const drafts: VoiceDraftRequest[] = [];
     const imports: SpeechModelImportRequest[] = [];
     const uploads: string[] = [];
-    const controls = {holdPreview: false};
+    const controls = {holdPreview: false, holdManual: false};
     let sequence = 0;
     await surface.route('**/api/**', async (route) => {
         const request = route.request();
@@ -274,6 +276,9 @@ export async function installVoiceMocks(
             if (path === '/api/speech/preview') {
                 previews.push(body);
             }
+            if (path === '/api/speech/drafts') {
+                drafts.push(body);
+            }
             const id = 'voice-job-' + ++sequence;
             const voice =
                 path === '/api/speech/drafts' || path === '/api/speech/preview' || body.output === 'voice';
@@ -298,7 +303,11 @@ export async function installVoiceMocks(
             };
             jobs.set(id, {
                 id,
-                status: path === '/api/speech/preview' && controls.holdPreview ? 'generating' : 'ready',
+                status:
+                    (path === '/api/speech/preview' && controls.holdPreview) ||
+                    (path === '/api/speech/drafts' && controls.holdManual)
+                        ? 'generating'
+                        : 'ready',
                 result,
                 error: '',
             });
@@ -342,5 +351,5 @@ export async function installVoiceMocks(
             });
         }
     });
-    return {state, speech, sent, requests, previews, imports, uploads, controls};
+    return {state, speech, sent, requests, previews, imports, uploads, controls, drafts};
 }

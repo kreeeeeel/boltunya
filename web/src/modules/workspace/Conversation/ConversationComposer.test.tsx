@@ -1,6 +1,6 @@
 import {ThemeProvider} from '@gravity-ui/uikit';
 import {NextIntlClientProvider} from 'next-intl';
-import {fireEvent, render, screen, waitFor} from '@testing-library/react';
+import {fireEvent, render, screen} from '@testing-library/react';
 import {useState} from 'react';
 import {expect, it, vi} from 'vitest';
 import {ConversationComposer} from '@/modules/workspace/Conversation/ConversationComposer';
@@ -53,18 +53,12 @@ it('keeps the input visible during queued generation and preserves a typed draft
     expect(document.querySelector('.g-skeleton')).toBeNull();
 });
 
-it('inserts an emoji at the selected text and returns focus without sending or opening stickers', async () => {
+it('removes emoji and sticker controls while exposing manual voice without changing the plain draft', () => {
     render(<Example />);
-    const input = screen.getByRole('textbox', {name: ru.messagePlaceholder}) as HTMLTextAreaElement;
-    input.focus();
-    input.setSelectionRange(7, 15);
-    fireEvent.click(screen.getByRole('button', {name: ru.chooseEmoji}));
-    const picker = await screen.findByRole('dialog', {name: ru.chooseEmoji});
-    fireEvent.click(screen.getByRole('button', {name: '🙂'}));
-    await waitFor(() => expect(input).toHaveValue('Before 🙂 after'));
-    await waitFor(() => expect(input).toHaveFocus());
-    expect(input.selectionStart).toBe(9);
-    await waitFor(() => expect(picker).not.toBeVisible());
+    expect(screen.getByRole('textbox', {name: ru.messagePlaceholder})).toHaveValue('Before selected after');
+    expect(screen.queryByRole('button', {name: ru.chooseEmoji})).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', {name: 'Стикеры'})).not.toBeInTheDocument();
+    expect(screen.getByRole('button', {name: ru.voice.manualTitle})).toBeEnabled();
     expect(document.querySelector('[data-qa="sticker-picker"]')).toBeNull();
 });
 

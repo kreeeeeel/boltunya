@@ -54,7 +54,6 @@ export function ConversationSkeleton() {
                     <Skeleton className={styles.input} height={18} />
                     <Skeleton width={32} height={32} qa="skeleton-composer-control" />
                     <Skeleton width={32} height={32} qa="skeleton-composer-control" />
-                    <Skeleton width={32} height={32} qa="skeleton-composer-control" />
                 </Flex>
             </Box>
         </Flex>

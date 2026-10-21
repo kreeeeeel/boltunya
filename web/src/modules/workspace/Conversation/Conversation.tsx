@@ -41,6 +41,7 @@ export function Conversation({
     onVoiceSynthesis,
     onVoiceSend,
     voiceSynthesisModel,
+    voiceSpeechRate,
     onVoiceSettings,
     onBack,
     onEarlier,
@@ -439,6 +440,7 @@ export function Conversation({
                         onSend={send}
                         onDraft={(output) => draft(undefined, output)}
                         voiceSynthesisModel={voiceSynthesisModel}
+                        voiceSpeechRate={voiceSpeechRate}
                         onVoiceSettings={onVoiceSettings}
                         onMediaSent={onMediaSent ?? onRefresh}
                     />

@@ -7,7 +7,7 @@ import {MessageDraftEditor} from '@/modules/messages/MessageDraftEditor/MessageD
 import styles from '@/modules/messages/MessageEditEditor/MessageEditEditor.module.css';
 import ru from '@/shared/i18n/ru.json';
 
-it('renders actual marks and updates Telegram ranges through the compact editor and emoji picker', async () => {
+it('renders actual marks and updates Telegram ranges when Unicode text is pasted into the compact editor', async () => {
     const change = vi.fn();
     const error = vi.fn();
     const submit = vi.fn().mockResolvedValue(undefined);
@@ -32,14 +32,16 @@ it('renders actual marks and updates Telegram ranges through the compact editor 
     await waitFor(() => expect(change).toHaveBeenLastCalledWith(initial));
     const editor = screen.getByRole('textbox', {name: ru.messagePlaceholder});
     expect(editor.querySelector(`.${styles.bold}`)).toHaveTextContent('Слово');
+    expect(screen.queryByRole('button', {name: ru.chooseEmoji})).not.toBeInTheDocument();
     fireEvent.keyDown(editor, {key: 'Enter', code: 'Enter'});
     expect(submit).toHaveBeenCalledOnce();
     expect(change).toHaveBeenLastCalledWith(initial);
     fireEvent.keyDown(editor, {key: 'Enter', code: 'Enter', shiftKey: true});
     await waitFor(() => expect(change).toHaveBeenLastCalledWith({...initial, text: initial.text + '\n'}));
     fireEvent.click(screen.getByRole('button', {name: ru.messageEditFormat.italic}));
-    fireEvent.click(screen.getByRole('button', {name: ru.chooseEmoji}));
-    fireEvent.click(await screen.findByRole('button', {name: '🙂'}));
+    fireEvent.paste(editor, {
+        clipboardData: {getData: (type: string) => (type === 'text/plain' ? '🙂' : '')},
+    });
     await waitFor(() =>
         expect(change).toHaveBeenLastCalledWith({
             text: initial.text + '\n🙂',

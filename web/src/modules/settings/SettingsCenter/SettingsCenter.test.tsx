@@ -92,7 +92,7 @@ it('keeps the voice preferences as a shared draft and saves them without enablin
             </ThemeProvider>
         </NextIntlClientProvider>,
     );
-    expect(screen.getByRole('switch', {name: ru.voice.recognitionEnabled})).not.toBeChecked();
+    expect(screen.queryByRole('combobox', {name: ru.voice.replyMode})).not.toBeInTheDocument();
     const importToggle = screen.getByRole('button', {name: ru.voice.importModel});
     expect(importToggle).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByRole('region', {name: ru.voice.importModel})).not.toBeInTheDocument();
@@ -109,7 +109,10 @@ it('keeps the voice preferences as a shared draft and saves them without enablin
     fireEvent.click(importToggle);
     expect(screen.getByRole('textbox', {name: ru.voice.importName})).toHaveValue('Мой голос');
     fireEvent.click(importToggle);
+    fireEvent.click(screen.getByRole('tab', {name: ru.voice.tabs.recognition}));
+    expect(screen.getByRole('switch', {name: ru.voice.recognitionEnabled})).not.toBeChecked();
     fireEvent.click(screen.getByRole('switch', {name: ru.voice.recognitionEnabled}));
+    fireEvent.click(screen.getByRole('menuitem', {name: ru.settingsCenter.sections.replies}));
     fireEvent.click(screen.getByRole('combobox', {name: ru.voice.replyMode}));
     fireEvent.click(await screen.findByRole('option', {name: ru.voice.replyModes.mirror}));
     fireEvent.click(screen.getByRole('menuitem', {name: ru.settingsCenter.sections.application}));

@@ -445,6 +445,20 @@
     border-radius: 9px;
 }
 
+.bubble:is([data-message-kind='voice'], [data-message-kind='audio']):not(:has(.messageText)) .messageMeta {
+    right: 11px;
+    bottom: 6px;
+    float: none;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    color: var(--tiho-muted);
+}
+
+.outgoing:is([data-message-kind='voice'], [data-message-kind='audio']):not(:has(.messageText)) .messageMeta {
+    color: var(--tiho-green);
+}
+
 .stickerBubble {
     background: transparent;
     box-shadow: none;

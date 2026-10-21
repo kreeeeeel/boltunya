@@ -1,19 +1,16 @@
 import {Box, Button, DropdownMenu, Flex, Icon, Text, TextArea, Tooltip} from '@gravity-ui/uikit';
 import {
-    FaceSmile,
     File,
     Paperclip,
     PaperPlane,
     Picture,
     Sparkles,
-    Sticker,
     Video,
     Microphone,
     Text as TextIcon,
 } from '@gravity-ui/icons';
 import {useEffect, useRef, useState} from 'react';
 import {useTranslations} from 'next-intl';
-import {api} from '@/shared/api/client';
 import type {Text as OutgoingText} from '@aigram/api-client';
 import type {PreviewJobRequest} from '@aigram/api-client';
 import {useSpeechState} from '@/modules/speech/model/useSpeechState';
@@ -21,11 +18,10 @@ import {speechReady} from '@/modules/speech/model/speechReady';
 import {MessageDraftEditor} from '@/modules/messages/MessageDraftEditor/MessageDraftEditor';
 import {AttachmentDialog} from '@/modules/media/AttachmentDialog/AttachmentDialog';
 import type {AttachmentSelection} from '@/modules/media/AttachmentDialog/AttachmentDialog';
-import {StickerPicker} from '@/modules/media/StickerPicker/StickerPicker';
 import {useMediaMessages} from '@/modules/media/i18n/messages';
 import {validAttachments} from '@/modules/media/model/uploads';
 import type {AttachmentKind} from '@/modules/media/model/uploads';
-import {EmojiPicker} from '@/shared/ui/EmojiPicker/EmojiPicker';
+import {VoiceComposeDialog} from '@/modules/speech/VoiceComposeDialog/VoiceComposeDialog';
 import styles from '@/modules/workspace/Conversation/Conversation.module.css';
 const MAX_MESSAGE_LENGTH = 4096;
 export function ConversationComposer({
@@ -42,6 +38,7 @@ export function ConversationComposer({
     onRichError,
     onRichConsumed,
     voiceSynthesisModel = 'piper-ru-irina',
+    voiceSpeechRate = 1,
     onVoiceSettings,
 }: {
     readonly chatId: string;
@@ -57,6 +54,7 @@ export function ConversationComposer({
     readonly onRichError?: (id: string) => void;
     readonly onRichConsumed?: (id: string) => void;
     readonly voiceSynthesisModel?: string;
+    readonly voiceSpeechRate?: number;
     readonly onVoiceSettings?: () => void;
 }) {
     const t = useTranslations();
@@ -70,10 +68,8 @@ export function ConversationComposer({
     const [attachmentDraft, setAttachmentDraft] = useState<typeof richDraft>();
     const [readyRichId, setReadyRichId] = useState<string>();
     const [kind, setKind] = useState<AttachmentKind>('media');
-    const [stickers, setStickers] = useState(false);
+    const [voiceComposeOpened, setVoiceComposeOpened] = useState(false);
     const files = useRef<HTMLInputElement>(null);
-    const input = useRef<HTMLTextAreaElement>(null);
-    const [stickerAnchor, setStickerAnchor] = useState<HTMLButtonElement | null>(null);
     const urls = useRef(new Set<string>());
     const richTooLong = !!richDraft && Array.from(text).length > MAX_MESSAGE_LENGTH;
     const sendDisabled =
@@ -94,19 +90,6 @@ export function ConversationComposer({
                       : '';
             files.current.click();
         }
-    }
-    function insertEmoji(emoji: string) {
-        const start = input.current?.selectionStart ?? text.length;
-        const end = input.current?.selectionEnd ?? start;
-        const next = text.slice(0, start) + emoji + text.slice(end);
-        if (next.length > MAX_MESSAGE_LENGTH) {
-            return;
-        }
-        onTextChange(next);
-        requestAnimationFrame(() => {
-            input.current?.focus({preventScroll: true});
-            input.current?.setSelectionRange(start + emoji.length, start + emoji.length);
-        });
     }
     function closeAttachments() {
         selection?.forEach((item) => {
@@ -250,7 +233,6 @@ export function ConversationComposer({
                     <Box className={styles.input} />
                 ) : (
                     <TextArea
-                        controlRef={input}
                         view="clear"
                         size="l"
                         className={styles.input}
@@ -269,26 +251,14 @@ export function ConversationComposer({
                         }}
                     />
                 )}
-                {!richDraft && (
-                    <EmojiPicker
-                        value=""
-                        trigger={<Icon data={FaceSmile} size={20} />}
-                        className={styles.composerButton}
-                        disabled={busy === 'send'}
-                        placement="top-end"
-                        returnFocus={false}
-                        onUpdate={insertEmoji}
-                    />
-                )}
                 <Button
-                    ref={setStickerAnchor}
                     className={styles.composerButton}
                     view="flat-secondary"
-                    aria-label={media.stickers}
+                    aria-label={t('voice.manualTitle')}
                     disabled={busy === 'send'}
-                    onClick={() => setStickers((value) => !value)}
+                    onClick={() => setVoiceComposeOpened(true)}
                 >
-                    <Icon data={Sticker} size={20} />
+                    <Icon data={Microphone} size={20} />
                 </Button>
                 <Button
                     view="action"
@@ -317,17 +287,14 @@ export function ConversationComposer({
                     }}
                 />
             )}
-            {stickers && (
-                <StickerPicker
-                    anchor={stickerAnchor}
-                    onClose={() => setStickers(false)}
-                    onPick={async (stickerId) => {
-                        await api.chats.sendSticker({
-                            chatId,
-                            sendStickerRequest: {stickerId},
-                        });
-                        await onMediaSent();
-                    }}
+            {voiceComposeOpened && (
+                <VoiceComposeDialog
+                    chatId={chatId}
+                    defaultModelId={voiceSynthesisModel}
+                    defaultSpeed={voiceSpeechRate}
+                    onClose={() => setVoiceComposeOpened(false)}
+                    onSent={onMediaSent}
+                    onSettings={onVoiceSettings}
                 />
             )}
         </Box>

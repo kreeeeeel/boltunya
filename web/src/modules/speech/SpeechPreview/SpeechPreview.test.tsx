@@ -1,9 +1,11 @@
 import {ThemeProvider} from '@gravity-ui/uikit';
 import {NextIntlClientProvider} from 'next-intl';
-import {fireEvent, render, screen, waitFor} from '@testing-library/react';
+import {act, fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {expect, it, vi} from 'vitest';
+import {createRef} from 'react';
 import {SpeechPreview} from '@/modules/speech/SpeechPreview/SpeechPreview';
-import {generatedVoice} from '@tests/fixtures/speech';
+import type {SpeechPreviewHandle} from '@/modules/speech/SpeechPreview/SpeechPreview';
+import {generatedVoice, speechState} from '@tests/fixtures/speech';
 import ru from '@/shared/i18n/ru.json';
 
 const preview = vi.hoisted(() => ({
@@ -60,4 +62,28 @@ it('applies the request limit in UTF-16 units, including emoji at the exact boun
     fireEvent.change(input, {target: {value: '🙂'.repeat(2049)}});
     expect(screen.getByRole('button', {name: ru.voice.previewCheck})).toBeDisabled();
     expect(screen.getByRole('alert')).toHaveTextContent(ru.voice.transcriptTooLong);
+});
+
+it('checks the explicit installed card voice with the current text and speed before preferences are saved', async () => {
+    preview.run.mockClear();
+    const ref = createRef<SpeechPreviewHandle>();
+    const assets = [...speechState.assets, {...speechState.assets[2], id: 'selected-card-voice'}];
+    render(
+        <NextIntlClientProvider locale="ru" messages={ru}>
+            <ThemeProvider>
+                <SpeechPreview ref={ref} modelId="piper-ru-irina" speed={1.4} ready assets={assets} />
+            </ThemeProvider>
+        </NextIntlClientProvider>,
+    );
+    fireEvent.change(screen.getByRole('textbox', {name: ru.voice.previewText}), {
+        target: {value: '  Точная проверка 🙂 '},
+    });
+    await act(async () => {
+        ref.current?.check('selected-card-voice');
+    });
+    expect(preview.run).toHaveBeenCalledExactlyOnceWith({
+        text: '  Точная проверка 🙂 ',
+        modelId: 'selected-card-voice',
+        speed: 1.4,
+    });
 });

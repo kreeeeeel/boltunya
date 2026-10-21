@@ -3,11 +3,13 @@ import {useTranslations} from 'next-intl';
 
 import type {SettingsDraftSectionProps} from '@/modules/settings/model/SettingsDraftSectionProps';
 import type {SettingsDraft} from '@/modules/settings/model/settingsDraft';
+import {VoiceReplySettings} from '@/modules/settings/VoiceReplySettings/VoiceReplySettings';
 
 export function ReplySettings({value, onUpdate}: SettingsDraftSectionProps) {
     const t = useTranslations();
     return (
         <Flex direction="column" gap={5}>
+            <VoiceReplySettings value={value} onUpdate={onUpdate} />
             <Text color="secondary">{t('queueHint')}</Text>
             {(['replyDelaySeconds', 'replyIntervalSeconds'] as const).map((key) => (
                 <Flex direction="column" gap={3} key={key}>

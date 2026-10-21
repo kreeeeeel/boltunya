@@ -7,16 +7,41 @@ import {audioTime, decodeWaveform} from '@/modules/workspace/MessageMedia/wavefo
 import styles from '@/modules/workspace/MessageMedia/AudioMessage.module.css';
 
 export function AudioMessage({message}: {readonly message: Message}) {
+    const media = message.media;
+    const source = `/api/media/${media?.fileId}${media?.cacheVersion ? '?v=' + media.cacheVersion : ''}`;
+
+    return <AudioPlayback key={source} message={message} source={source} />;
+}
+
+function AudioPlayback({message, source}: {readonly message: Message; readonly source: string}) {
     const t = useTranslations();
     const root = useRef<HTMLDivElement>(null);
     const [playing, setPlaying] = useState(false);
     const [position, setPosition] = useState(0);
     const [duration, setDuration] = useState(message.media?.duration ?? 0);
     const [error, setError] = useState(false);
+    const failed = useRef(false);
+    const downloaded = message.media?.downloaded === true;
+    const previousDownloaded = useRef(downloaded);
+    const uniqueId = message.media?.uniqueId ?? '';
+    const previousUniqueId = useRef(uniqueId);
     useEffect(() => {
         const player = root.current?.querySelector('audio');
         return () => player?.pause();
     }, []);
+    useEffect(() => {
+        const completed = downloaded && !previousDownloaded.current;
+        previousDownloaded.current = downloaded;
+        const replaced =
+            uniqueId !== '' && previousUniqueId.current !== '' && uniqueId !== previousUniqueId.current;
+        if (uniqueId) {
+            previousUniqueId.current = uniqueId;
+        }
+        const player = root.current?.querySelector('audio');
+        if (player && (replaced || (completed && failed.current && player.paused))) {
+            player.load();
+        }
+    }, [downloaded, uniqueId]);
     const samples = decodeWaveform(message.media?.waveform ?? []);
     const bars = Array.from({length: 32}, (_, index) =>
         samples.length
@@ -47,34 +72,51 @@ export function AudioMessage({message}: {readonly message: Message}) {
             return;
         }
         try {
+            if (error) {
+                element.load();
+            }
             if (element.paused) {
                 await element.play();
             } else {
                 element.pause();
             }
+            failed.current = false;
             setError(false);
         } catch {
+            failed.current = true;
             setError(true);
         }
     }
     return (
-        <Box ref={root} className={styles.root}>
+        <Box ref={root} className={styles.root} qa="message-audio">
             <Box
                 as="audio"
-                src={`/api/media/${message.media?.fileId}`}
+                src={source}
                 preload="metadata"
                 className={styles.audio}
                 onPlay={() => setPlaying(true)}
                 onPause={() => setPlaying(false)}
                 onEnded={() => setPlaying(false)}
+                onEmptied={() => {
+                    setPlaying(false);
+                    setPosition(0);
+                    setDuration(message.media?.duration ?? 0);
+                }}
                 onTimeUpdate={() => setPosition(audio()?.currentTime ?? 0)}
+                onLoadStart={() => {
+                    failed.current = false;
+                    setError(false);
+                }}
                 onLoadedMetadata={() => {
                     const value = audio()?.duration;
                     if (value !== undefined && Number.isFinite(value)) {
                         setDuration(value);
                     }
                 }}
-                onError={() => setError(true)}
+                onError={() => {
+                    failed.current = true;
+                    setError(true);
+                }}
             />
             <Flex gap={3} alignItems="center">
                 <Button
@@ -123,7 +165,7 @@ export function AudioMessage({message}: {readonly message: Message}) {
                             />
                         ))}
                     </Box>
-                    <Text className={styles.time}>
+                    <Text className={styles.time} qa="message-audio-duration">
                         {audioTime(playing || position > 0 ? position : duration)}
                     </Text>
                 </Flex>

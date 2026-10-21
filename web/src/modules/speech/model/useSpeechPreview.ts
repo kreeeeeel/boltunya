@@ -1,12 +1,12 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {useTranslations} from 'next-intl';
-import type {PreviewJob, SpeechPreviewRequest} from '@aigram/api-client';
+import type {GeneratedVoice, PreviewJob, SpeechPreviewRequest} from '@aigram/api-client';
 import {api, errorMessage} from '@/shared/api/client';
 import {ApiRequestError} from '@/shared/api/ApiRequestError';
 
 const POLL_INTERVAL_MS = 750;
 
-export function useSpeechPreview() {
+export function useSpeechPreview(chatId?: string) {
     const t = useTranslations('voice');
     const [job, setJob] = useState<PreviewJob>();
     const [busy, setBusy] = useState(false);
@@ -46,10 +46,13 @@ export function useSpeechPreview() {
                 });
             }
         },
-        [cancelKnownJob],
+        [cancelKnownJob, chatId],
     );
 
-    async function run(request: SpeechPreviewRequest) {
+    async function run(
+        request: SpeechPreviewRequest,
+        callbacks?: {readonly onReady?: (voice: GeneratedVoice) => void; readonly onSettled?: () => void},
+    ) {
         pending.current?.abort();
         if (poll.current) {
             clearTimeout(poll.current);
@@ -79,12 +82,17 @@ export function useSpeechPreview() {
             if (next.status === 'error' || (next.status === 'ready' && !next.result?.voice)) {
                 setError(next.error || t('previewFailed'));
             }
+            if (next.status === 'ready' && next.result?.voice) {
+                callbacks?.onReady?.(next.result.voice);
+            }
+            callbacks?.onSettled?.();
         }
 
         function failed(cause: unknown) {
             if (!controller.signal.aborted) {
                 setBusy(false);
                 setError(cause instanceof ApiRequestError ? t('previewFailed') : errorMessage(cause));
+                callbacks?.onSettled?.();
             }
         }
 
@@ -99,6 +107,7 @@ export function useSpeechPreview() {
                         setBusy(false);
                         setCancelling(false);
                         setError(errorMessage(cause));
+                        callbacks?.onSettled?.();
                     }
                     return;
                 }
@@ -107,10 +116,22 @@ export function useSpeechPreview() {
             activeJob.current = undefined;
             setJob(undefined);
             setCancelling(false);
-            const next = await api.speech.previewSpeech(
-                {speechPreviewRequest: request},
-                {signal: controller.signal},
-            );
+            const next = chatId
+                ? await api.speech.enqueueVoiceDraft(
+                      {
+                          voiceDraftRequest: {
+                              chatId,
+                              text: request.text,
+                              modelId: request.modelId,
+                              speed: request.speed,
+                          },
+                      },
+                      {signal: controller.signal},
+                  )
+                : await api.speech.previewSpeech(
+                      {speechPreviewRequest: request},
+                      {signal: controller.signal},
+                  );
             await receive(next);
         } catch (cause) {
             failed(cause);

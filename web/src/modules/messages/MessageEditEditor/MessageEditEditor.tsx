@@ -13,7 +13,6 @@ import {
     QuoteOpen,
     ArrowUturnCcwLeft,
     ArrowUturnCwRight,
-    FaceSmile,
 } from '@gravity-ui/icons';
 import {Box, Button, Flex, Icon, TextInput, Toaster, ToasterProvider} from '@gravity-ui/uikit';
 import {useCallback, useEffect, useState} from 'react';
@@ -31,7 +30,6 @@ import type {
     MessageEditFormat,
 } from '@/modules/messages/MessageEditEditor/MessageEditEditor.types';
 import styles from '@/modules/messages/MessageEditEditor/MessageEditEditor.module.css';
-import {EmojiPicker} from '@/shared/ui/EmojiPicker/EmojiPicker';
 
 const tools = [
     {format: 'bold', icon: Bold},
@@ -177,21 +175,6 @@ export function MessageEditEditor({
                 >
                     <Icon data={ArrowUturnCwRight} size={16} />
                 </Button>
-                {compact && (
-                    <EmojiPicker
-                        value=""
-                        trigger={<Icon data={FaceSmile} size={16} />}
-                        disabled={disabled || bridge.failed || !view}
-                        placement="top-end"
-                        returnFocus={false}
-                        onUpdate={(emoji) => {
-                            if (view && !disabled && !bridge.failed) {
-                                view.dispatch(view.state.tr.insertText(emoji).scrollIntoView());
-                                view.focus();
-                            }
-                        }}
-                    />
-                )}
             </Flex>
             {linkOpen && (
                 <Flex gap={2} className={styles.linkForm} wrap>

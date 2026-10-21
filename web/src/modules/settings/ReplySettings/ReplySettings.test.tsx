@@ -32,3 +32,47 @@ it('keeps reply controls separate while preserving proactive preferences in the 
         }),
     );
 });
+
+it('configures automatic voice replies in Replies while preserving selected speech models and STT', async () => {
+    const update = vi.fn();
+    const value = {
+        ...createSettingsDraft(workspaceState.settings),
+        voiceInputEnabled: true,
+        voiceSynthesisModel: 'custom-voice',
+        voiceReplyMode: 'random' as const,
+        voiceReplyProbability: 25,
+    };
+    render(
+        <NextIntlClientProvider locale="ru" messages={ru}>
+            <ThemeProvider>
+                <ReplySettings value={value} onUpdate={update} />
+            </ThemeProvider>
+        </NextIntlClientProvider>,
+    );
+    expect(screen.getByRole('combobox', {name: ru.voice.replyMode})).toHaveTextContent(
+        ru.voice.replyModes.random,
+    );
+    // rc-slider reads the legacy key fields that browsers also supply for End.
+    fireEvent.keyDown(screen.getByRole('slider', {name: ru.voice.probability}), {
+        key: 'End',
+        code: 'End',
+        keyCode: 35,
+        which: 35,
+    });
+    expect(update).toHaveBeenCalledWith(
+        expect.objectContaining({
+            voiceReplyProbability: 100,
+            voiceSynthesisModel: 'custom-voice',
+            voiceInputEnabled: true,
+        }),
+    );
+    fireEvent.click(screen.getByRole('combobox', {name: ru.voice.replyMode}));
+    fireEvent.click(await screen.findByRole('option', {name: ru.voice.replyModes.mirror}));
+    expect(update).toHaveBeenCalledWith(
+        expect.objectContaining({
+            voiceReplyMode: 'mirror',
+            voiceSynthesisModel: 'custom-voice',
+            voiceInputEnabled: true,
+        }),
+    );
+});

@@ -391,6 +391,7 @@ export function Workspace() {
                                     voiceSynthesisModel={
                                         state.settings.voiceSynthesisModel ?? 'piper-ru-irina'
                                     }
+                                    voiceSpeechRate={state.settings.voiceSpeechRate ?? 1}
                                     onVoiceSettings={() => setSettingsSection('voice')}
                                     onBack={() => {
                                         selectedChat.current = null;

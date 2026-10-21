@@ -23,6 +23,7 @@ export interface ConversationProps {
     readonly onVoiceSynthesis?: (text: string) => Promise<Reply>;
     readonly onVoiceSend?: (voiceId: string) => Promise<void>;
     readonly voiceSynthesisModel?: string;
+    readonly voiceSpeechRate?: number;
     readonly onVoiceSettings?: () => void;
     readonly onBack: () => void;
     readonly onEarlier: () => Promise<boolean>;

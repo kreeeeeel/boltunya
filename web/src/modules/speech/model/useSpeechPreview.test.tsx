@@ -6,11 +6,16 @@ import {useSpeechPreview} from '@/modules/speech/model/useSpeechPreview';
 import {generatedVoice} from '@tests/fixtures/speech';
 import ru from '@/shared/i18n/ru.json';
 
-const mocks = vi.hoisted(() => ({previewSpeech: vi.fn(), previewJob: vi.fn(), cancelActivity: vi.fn()}));
+const mocks = vi.hoisted(() => ({
+    previewSpeech: vi.fn(),
+    enqueueVoiceDraft: vi.fn(),
+    previewJob: vi.fn(),
+    cancelActivity: vi.fn(),
+}));
 vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
     api: {
-        speech: {previewSpeech: mocks.previewSpeech},
+        speech: {previewSpeech: mocks.previewSpeech, enqueueVoiceDraft: mocks.enqueueVoiceDraft},
         models: {previewJob: mocks.previewJob},
         activity: {cancelActivity: mocks.cancelActivity},
     },
@@ -184,4 +189,23 @@ it('shares an in-flight cancellation with unmount and does not enqueue after clo
         await next;
     });
     expect(mocks.previewSpeech).toHaveBeenCalledOnce();
+});
+
+it('queues chat-bound manual speech with exact per-request voice and speed without an LLM or global save', async () => {
+    mocks.enqueueVoiceDraft.mockResolvedValue({
+        id: 'chat-voice',
+        status: 'ready',
+        result: {text: '  Мой текст 🙂 ', voice: generatedVoice},
+    });
+    const view = renderHook(() => useSpeechPreview('42'), {wrapper});
+    await act(async () => {
+        await view.result.current.run({text: '  Мой текст 🙂 ', modelId: 'custom-voice', speed: 1.3});
+    });
+    expect(mocks.enqueueVoiceDraft).toHaveBeenCalledExactlyOnceWith(
+        {voiceDraftRequest: {chatId: '42', text: '  Мой текст 🙂 ', modelId: 'custom-voice', speed: 1.3}},
+        {signal: expect.any(AbortSignal)},
+    );
+    expect(mocks.previewSpeech).not.toHaveBeenCalled();
+    expect(view.result.current.voice).toEqual(generatedVoice);
+    view.unmount();
 });

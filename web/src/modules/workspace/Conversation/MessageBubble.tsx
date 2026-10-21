@@ -84,7 +84,13 @@ export function MessageBubble({
                     className={styles.messageText}
                 />
             )}
-            <Flex justifyContent="flex-end" alignItems="center" gap={1} className={styles.messageMeta}>
+            <Flex
+                justifyContent="flex-end"
+                alignItems="center"
+                gap={1}
+                className={styles.messageMeta}
+                qa="message-meta"
+            >
                 {message.deleted && (
                     <Tooltip
                         content={t('deleted.at', {

@@ -1,5 +1,6 @@
 import {expect, test} from '@playwright/test';
 import type {Locator, Page} from '@playwright/test';
+import type {SpeechAsset} from '@aigram/api-client';
 import {copyFileSync, mkdirSync, readFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {workspaceState} from '../fixtures/workspace';
@@ -87,6 +88,163 @@ async function capture(page: Page, target: Locator, name: string, dark: boolean)
 }
 
 for (const dark of [false, true]) {
+    test(`manual voice composer previews exact text and speaks-and-sends edits without losing the normal draft in ${dark ? 'dark' : 'light'}`, async ({
+        page,
+    }) => {
+        const {state, speech, sent, drafts} = await prepare(page, dark);
+        speech.assets.push({
+            ...speech.assets[2],
+            id: 'manual-alternative',
+            title: 'Синтетический голос для ручной озвучки',
+        });
+        await page.getByRole('button', {name: title, exact: true}).click();
+        const normal = page.getByRole('textbox', {name: ru.messagePlaceholder, exact: true});
+        await normal.fill('Мой обычный черновик');
+        await expect(page.getByRole('button', {name: ru.chooseEmoji, exact: true})).toHaveCount(0);
+        await expect(page.getByRole('button', {name: 'Стикеры', exact: true})).toHaveCount(0);
+        await page.getByRole('button', {name: ru.voice.manualTitle, exact: true}).click();
+        const dialog = page.getByRole('dialog', {name: ru.voice.manualTitle, exact: true});
+        await dialog.getByRole('combobox', {name: ru.voice.models.synthesis, exact: true}).click();
+        await page.getByRole('option', {name: 'Синтетический голос для ручной озвучки', exact: true}).click();
+        const text = dialog.getByRole('textbox', {name: ru.voice.manualText, exact: true});
+        await text.fill('  Дословная проверка 🙂 ');
+        await dialog.getByRole('button', {name: ru.voice.previewCheck, exact: true}).click();
+        await expect(dialog.locator('audio')).toHaveAttribute('src', '/api/speech/audio/voice-job-1');
+        await expect
+            .poll(() => dialog.locator('audio').evaluate((element: HTMLAudioElement) => element.duration))
+            .toBeGreaterThan(4);
+        await dialog.getByRole('button', {name: ru.voice.play, exact: true}).click();
+        await expect
+            .poll(() => dialog.locator('audio').evaluate((element: HTMLAudioElement) => element.paused))
+            .toBe(false);
+        await capture(
+            page,
+            dialog.getByRole('button', {name: ru.voice.manualSpeakAndSend, exact: true}),
+            'manual-voice',
+            dark,
+        );
+        expect(sent).toEqual([]);
+        await text.fill('Изменённый текст для отправки.');
+        await expect(dialog.locator('audio')).toHaveCount(0);
+        await expect(
+            dialog.getByRole('button', {name: ru.voice.manualSpeakAndSend, exact: true}),
+        ).toBeEnabled();
+        await dialog.getByRole('button', {name: ru.voice.manualSpeakAndSend, exact: true}).click();
+        await expect(dialog.getByRole('button', {name: ru.voice.manualSent, exact: true})).toBeDisabled();
+        expect(drafts).toEqual([
+            {chatId: '41', text: '  Дословная проверка 🙂 ', modelId: 'manual-alternative', speed: 1},
+            {chatId: '41', text: 'Изменённый текст для отправки.', modelId: 'manual-alternative', speed: 1},
+        ]);
+        expect(sent).toEqual([{voiceId: 'voice-job-2'}]);
+        expect(state.settings.voiceSynthesisModel).toBe('piper-ru-irina');
+        await dialog.getByRole('button', {name: ru.close, exact: true}).click();
+        await expect(normal).toHaveValue('Мой обычный черновик');
+    });
+
+    test(`manual voice cancellation and closing prevent automatic delivery in ${dark ? 'dark' : 'light'}`, async ({
+        page,
+    }) => {
+        const {controls, sent, requests, drafts} = await prepare(page, dark);
+        controls.holdManual = true;
+        await page.getByRole('button', {name: title, exact: true}).click();
+        await page.getByRole('button', {name: ru.voice.manualTitle, exact: true}).click();
+        const dialog = page.getByRole('dialog', {name: ru.voice.manualTitle, exact: true});
+        await dialog
+            .getByRole('textbox', {name: ru.voice.manualText, exact: true})
+            .fill('Этот текст не отправляется.');
+        await dialog.getByRole('button', {name: ru.voice.manualSpeakAndSend, exact: true}).click();
+        await expect.poll(() => drafts.length).toBe(1);
+        await dialog.getByRole('button', {name: ru.voice.cancel, exact: true}).click();
+        await expect(dialog.getByText(ru.voice.previewCancelled, {exact: true})).toBeVisible();
+        expect(sent).toEqual([]);
+        await dialog.getByRole('button', {name: ru.voice.manualSpeakAndSend, exact: true}).click();
+        await expect.poll(() => drafts.length).toBe(2);
+        await dialog.getByRole('button', {name: ru.close, exact: true}).click();
+        await expect(dialog).toHaveCount(0);
+        await expect.poll(() => requests.includes('CANCEL voice-job-2')).toBe(true);
+        expect(sent).toEqual([]);
+    });
+
+    test(`speech catalog tabs and filters preserve selected voices with real card preview in ${dark ? 'dark' : 'light'}`, async ({
+        page,
+    }) => {
+        const {state, speech, previews, sent} = await prepare(page, dark);
+        const catalog = JSON.parse(
+            readFileSync(
+                join(process.cwd(), '..', 'backend', 'src', 'main', 'resources', 'speech', 'catalog.json'),
+                'utf8',
+            ),
+        ) as {asset: Omit<SpeechAsset, 'installed'>}[];
+        const english = catalog.find(
+            (entry) => entry.asset.kind === 'synthesis' && entry.asset.languages.includes('en'),
+        )?.asset;
+        expect(english).toBeDefined();
+        if (!english) {
+            throw new Error('Shipping catalog must include an English voice for this fixture');
+        }
+        speech.assets = catalog.map(({asset}) => ({
+            ...asset,
+            installed: asset.kind !== 'synthesis' || asset.id === 'piper-ru-irina' || asset.id === english.id,
+        }));
+        const dialog = await settings(page);
+        const catalogView = dialog.locator('[data-qa="speech-assets"]');
+        const search = catalogView.getByRole('textbox', {name: ru.voice.searchModels, exact: true});
+        await expect(dialog.getByRole('tab', {name: ru.voice.tabs.synthesis, exact: true})).toHaveAttribute(
+            'aria-selected',
+            'true',
+        );
+        await expect(catalogView.locator('[data-qa="speech-asset"]')).toHaveCount(
+            catalog.filter(({asset}) => asset.kind === 'synthesis').length,
+        );
+        await capture(page, search, 'speech-library', dark);
+        await search.fill('piper-ru-irina');
+        await expect(catalogView.locator('[data-qa="speech-asset"]')).toHaveCount(1);
+        await expect(search).toBeFocused();
+        await search.fill('');
+        await catalogView.getByRole('combobox', {name: ru.voice.languageFilter, exact: true}).click();
+        await page
+            .getByRole('option', {
+                name: new Intl.DisplayNames(['ru'], {type: 'language'}).of('en'),
+                exact: true,
+            })
+            .click();
+        await expect(catalogView.locator('[data-qa="speech-asset"]')).toHaveCount(
+            catalog.filter(({asset}) => asset.kind === 'synthesis' && asset.languages.includes('en')).length,
+        );
+        const currentVoice = dialog.getByRole('combobox', {name: ru.voice.models.synthesis, exact: true});
+        await expect(currentVoice).toContainText(
+            speech.assets.find((asset) => asset.id === 'piper-ru-irina')?.title ?? '',
+        );
+        await dialog.getByRole('tab', {name: ru.voice.tabs.runtime, exact: true}).click();
+        await expect(catalogView.locator('[data-qa="speech-asset"]')).toHaveCount(1);
+        await expect(
+            catalogView.getByRole('combobox', {name: ru.voice.languageFilter, exact: true}),
+        ).toBeDisabled();
+        await dialog.getByRole('tab', {name: ru.voice.tabs.synthesis, exact: true}).click();
+        await expect(
+            catalogView.getByRole('combobox', {name: ru.voice.languageFilter, exact: true}),
+        ).toContainText(new Intl.DisplayNames(['ru'], {type: 'language'}).of('en') ?? '');
+        await catalogView
+            .getByRole('button', {name: ru.voice.selectAsset.replace('{name}', english.title), exact: true})
+            .click();
+        await expect(currentVoice).toContainText(english.title);
+        expect(state.settings.voiceSynthesisModel).toBe('piper-ru-irina');
+        await capture(page, search, 'voice-catalog', dark);
+        await catalogView
+            .getByRole('button', {name: ru.voice.previewAsset.replace('{name}', english.title), exact: true})
+            .click();
+        const preview = dialog.locator('[data-qa="speech-preview"]');
+        await expect(preview.locator('audio')).toHaveAttribute('src', '/api/speech/audio/voice-job-1');
+        expect(previews[0]).toMatchObject({modelId: english.id, speed: 1, text: ru.voice.previewSample});
+        await expect
+            .poll(() => preview.locator('audio').evaluate((element: HTMLAudioElement) => element.duration))
+            .toBeGreaterThan(4);
+        await dialog.getByRole('button', {name: ru.save, exact: true}).click();
+        await expect(dialog.getByRole('button', {name: ru.saved, exact: true})).toBeVisible();
+        expect(state.settings.voiceSynthesisModel).toBe(english.id);
+        expect(sent).toEqual([]);
+    });
+
     test(`settings test speaks exact text with unsaved voice and speed in ${dark ? 'dark' : 'light'}`, async ({
         page,
     }) => {
@@ -221,11 +379,13 @@ for (const dark of [false, true]) {
                 .locator('[data-qa="speech-preview"]')
                 .getByRole('button', {name: ru.voice.previewCheck, exact: true}),
         ).toBeDisabled();
+        await dialog.getByRole('tab', {name: ru.voice.tabs.recognition, exact: true}).click();
         await expect(
             dialog.getByRole('switch', {name: ru.voice.recognitionEnabled, exact: true}),
         ).not.toBeChecked();
         expect(requests).toEqual([]);
         await dialog.getByRole('switch', {name: ru.voice.recognitionEnabled, exact: true}).press('Space');
+        await chooseSettingsSection(page, 'replies');
         await dialog.getByRole('combobox', {name: ru.voice.replyMode, exact: true}).click();
         await page.getByRole('option', {name: ru.voice.replyModes.random, exact: true}).click();
         await dialog.getByRole('slider', {name: ru.voice.probability, exact: true}).press('End');
@@ -236,18 +396,31 @@ for (const dark of [false, true]) {
             voiceReplyMode: 'random',
             voiceReplyProbability: 100,
         });
-        await dialog
-            .getByRole('button', {
-                name: ru.voice.installAsset.replace('{name}', speech.assets[0].title),
-                exact: true,
-            })
-            .click();
+        await chooseSettingsSection(page, 'voice');
+        await dialog.getByRole('tab', {name: ru.voice.tabs.runtime, exact: true}).click();
+        const download = dialog.getByRole('button', {
+            name: ru.voice.installAsset.replace('{name}', speech.assets[0].title),
+            exact: true,
+        });
+        const initialHeight = await download.evaluate((element) => element.getBoundingClientRect().height);
+        expect(initialHeight).toBe(36);
+        await download.click();
         await expect(
             dialog.getByRole('progressbar', {
                 name: ru.voice.assetProgress.replace('{name}', speech.assets[0].title),
                 exact: true,
             }),
         ).toHaveAttribute('aria-valuenow', '25');
+        await expect
+            .poll(() =>
+                dialog
+                    .getByRole('button', {
+                        name: ru.voice.cancelAsset.replace('{name}', speech.assets[0].title),
+                        exact: true,
+                    })
+                    .evaluate((element) => element.getBoundingClientRect().height),
+            )
+            .toBe(initialHeight);
         await capture(page, dialog.locator('[data-qa="speech-assets"]'), 'voice-settings', dark);
         await dialog
             .getByRole('button', {

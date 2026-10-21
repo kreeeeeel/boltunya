@@ -1,7 +1,7 @@
 .root {
     width: 280px;
     max-width: 100%;
-    padding: 8px 8px 6px;
+    padding: 6px 8px 4px;
 }
 
 .audio {
@@ -40,7 +40,9 @@
 }
 
 .time {
+    align-self: flex-start;
     font-size: 13px;
+    line-height: 18px;
     color: var(--tiho-muted);
 }
 

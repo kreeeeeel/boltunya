@@ -1,0 +1,33 @@
+.modal {
+    --g-modal-border-radius: 20px;
+    --g-modal-margin: 16px;
+}
+
+.dialog {
+    width: min(520px, calc(100vw - 32px));
+    max-width: none;
+}
+
+.body {
+    min-width: 0;
+}
+
+.actions {
+    justify-content: flex-end;
+    width: 100%;
+}
+
+.primary {
+    min-width: 0;
+    max-width: 100%;
+}
+
+@media (width <= 440px) {
+    .actions {
+        column-gap: 6px;
+    }
+
+    .primary {
+        flex-basis: 100%;
+    }
+}
