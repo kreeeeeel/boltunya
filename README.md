@@ -24,10 +24,11 @@ Aigram is a Windows desktop application for reading Telegram conversations and m
 
 - **A familiar conversation view.** Avatars, formatted text, clickable links, replies, photos, video, audio, documents, spoilers and static/animated stickers. Group messages show author photos and names, with consecutive messages grouped by sender. The selected conversation's wallpaper spans the workspace behind opaque panels and floating navigation. History loads as you scroll without losing your position.
 - **An explicit tone per conversation.** The selected built-in or named custom style is a separate system instruction. Optional adaptation uses only real outgoing messages and cannot replace that style. Known AI replies are excluded.
-- **Local models with a useful catalog.** Search 27 downloadable models across Qwen, Gemma, DeepSeek, GPT-OSS, Llama, Mistral and Phi. Compare memory estimates, context, reasoning, license and download size; measure speed on your own machine. Install Ollama and models from the application with progress feedback.
+- **Local models with a useful catalog.** Search downloadable models across Qwen, Gemma, DeepSeek, GPT-OSS, Llama, Mistral and Phi. Compare memory estimates, context, reasoning, license and download size; measure speed on your own machine. Install Ollama and models from the application with progress feedback.
 - **Explicit compute selection.** Choose automatic placement, CPU or a detected NVIDIA GPU for app-managed Ollama. External services remain under their own configuration; AMD and Intel use Ollama's automatic selection. [Device settings](docs/ai/gpu-en.md).
 - **Current information, naturally phrased.** Keyless search, Open-Meteo weather, dated news and official exchange rates. Short follow-ups retain the previous topic. Replies are instructed to preserve significant digits and dates while matching your style; links are limited to retrieved sources and follow your preferences.
 - **A memory bank you control.** Shared owner facts and habits, per-chat summaries, editable notes, incremental background collection and manual deep rebuilds with progress, queue state and cancellation.
+- **Opt-in conversation support.** Globally or per chat, resume an idle conversation after a configurable interval. Initiatives use the shared queue and wait for a real response before sending another. [How it works](docs/ai/conversation-support-en.md).
 - **One controllable queue.** Automatic replies, manual drafts and memory collection share a queue. Keep processing sequential or allow up to four concurrent tasks, with resource guidance, cancellation and priorities. Delivery to each conversation remains ordered. Group automation starts disabled.
 - **A visible reply queue.** Pause dispatch, prioritize or stop tasks, inspect prompts, streamed thinking, responses and token/timing metrics, and rate completed replies with an optional comment. Full traces persist locally and load in pages across restarts. [Queue and trace details](docs/activity/en.md).
 - **Built-in troubleshooting.** The Errors page groups failures into cards with a timestamp, occurrence count, explanation and recovery steps. Detail dialogs show safe technical metadata, without copying conversation text or credentials into the error log.
@@ -63,6 +64,8 @@ While an automatic reply is queued or generated, the open conversation displays 
 
 Screenshots: [reply progress](docs/resources/chat-generation.png) · [saved settings](docs/resources/settings-saved.png).
 
+Chat controls: [stickers](docs/resources/stickers-dark.png) · [message context menu](docs/resources/message-menu-left-dark.png) · [task model filters](docs/resources/task-models-dark.png) · [local task routing](docs/resources/task-routing-dark.png).
+
 Use the profile menu to open the settings center or sign out. Language, appearance, custom styles, shared memory and owner instructions have dedicated settings sections. Conversation settings contain memory collection and per-chat preferences. Memory summaries render Markdown, including headings, lists and emphasis. Photos, other media and deleted-message snapshots have cache and retention controls. The storage section lists actual data locations and opens available folders in Windows Explorer; external Ollama services are identified separately.
 
 ## Data and privacy
@@ -78,6 +81,7 @@ The persistent profile is `%LOCALAPPDATA%\Aigram`, including the Electron profil
 | `activity/` | Account-scoped event archive, trace details and storage policy |
 | `models/profiles.json`, `models/credentials/` | Model connection metadata and DPAPI-protected secrets |
 | `appearance.json` | Theme tokens and validated workspace CSS |
+| `automation/initiatives.json` | Account-scoped follow-up delivery checkpoints; no message text |
 | `context-exclusions/` | Account-scoped AI context exclusions |
 | `telegram.credentials` | API credentials protected by Windows DPAPI |
 | `telegram/` | TDLib session database and downloaded media |
@@ -111,7 +115,7 @@ Full exit stops the application-managed Ollama process. An independently managed
 
 The Kotlin package is `ru.aigram`. Prompts, literal language vocabularies, errors and model metadata live in backend resources. The OpenAPI contract is `backend/contract/api.yaml`; `openapi-typescript` generates the frontend types. The local API uses a private loopback session and Host/Origin checks. The renderer has no Node.js access.
 
-Spring AI's Ollama and OpenAI adapters provide typed requests, structured responses, separate thinking output and inference statistics. Saved connections and optional task routes choose the model for replies, memory, research and vision. Local tasks share a resource gate, while independent endpoints can run concurrently within the queue limit. `ConversationService` coordinates search and final replies; `ChatCompletionService` owns inference, and `OllamaRuntime` owns local model management. Spring AI `ChatMemory` builds the recent conversation window; the Markdown memory bank retains long-term summaries and owner facts. Guice wires these services without starting a Spring Boot application. See [AI architecture](docs/ai/en.md).
+Spring AI's Ollama and OpenAI adapters provide typed requests, structured responses, separate thinking output and inference statistics. Saved connections and optional task routes choose an installed local model or API connection separately for replies, memory, research and vision. See [task routing and image analysis](docs/ai/tasks-en.md). Local tasks share a resource gate, while independent endpoints can run concurrently within the queue limit. `ConversationService` coordinates search and final replies; `ChatCompletionService` owns inference, and `OllamaRuntime` owns local model management. Spring AI `ChatMemory` builds the recent conversation window; the Markdown memory bank retains long-term summaries and owner facts. Guice wires these services without starting a Spring Boot application. See [AI architecture](docs/ai/en.md).
 
 Prompt settings show the selected model’s working context, reserved output budget and estimated space remaining for history. Independent instructions can be saved per model and connection. Oversized mandatory context fails explicitly without silently losing the latest question. [Token budgets and model prompts](docs/ai/prompts-en.md).
 

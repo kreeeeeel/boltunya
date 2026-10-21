@@ -28,7 +28,7 @@ Factual generated sections carry a version marker. Legacy automatic summaries ma
 
 ## Scheduling and processing
 
-The worker starts 30 seconds after startup and waits for authentication. Automatic and global collection use only chats whose AI rule is enabled and permits memory. Receiving or sending a message in another chat does not enroll it. An explicit single-chat collection is a one-time request: it may finish that history even while AI is disabled, but does not subscribe to subsequent messages. Completed, unchanged chats are skipped. Only chats actually present in Telegram’s main or archive list are eligible, not arbitrary cached TDLib objects.
+The worker starts 30 seconds after startup and waits for authentication. By default, automatic and global collection use only chats whose AI rule is enabled and permits memory. **Settings → Memory → Collection scope** can explicitly expand this to all allowed conversations, including chats without automatic replies. Chat-level memory opt-outs still apply, and broadcast channels are excluded. Receiving or sending a message in another chat does not enroll it. An explicit single-chat collection is a one-time request: it may finish that history even while AI is disabled, but does not subscribe to subsequent messages. Completed, unchanged chats are skipped. Only chats actually present in Telegram’s main or archive list are eligible, not arbitrary cached TDLib objects.
 
 An initial pass reads the newest messages so useful memory becomes available quickly. A separate backfill cursor then moves toward the beginning of the chat. Each pass fetches up to 100 messages and selects a bounded input chunk. Messages outside that chunk remain behind the cursor and are included later. One chunk from one chat is processed every 15 seconds, plus generation time. Chats rotate, and checkpoints resume after restarting.
 
@@ -48,7 +48,7 @@ An unfinished explicit request for a disabled chat does not restart automaticall
 
 - **Settings → Memory** edits global notes and shows the tracked-chat count.
 - Conversation settings open chat memory, generated summaries and collection progress.
-- **Update memory** refreshes the selected chat; global collection checks AI-enabled chats that permit memory.
+- **Update memory** refreshes the selected chat; global collection follows the configured collection scope and chat memory permissions.
 - **Rebuild summary** preserves manual notes and restarts deep processing.
 - **Use chat memory** controls that chat’s prompt context and collection; the existing shared owner profile remains available.
 
@@ -64,7 +64,7 @@ This is compressed context, not a verbatim archive or guaranteed recall of every
 - `POST /api/memory/refresh`: changed chats already in use.
 - `GET/PATCH/POST /api/memory/{chatId}`: read, edit notes and refresh/rebuild.
 
-PATCH requires notes and their `revision`; stale edits return 409. A rebuild uses `{"rebuild":true}`. Settings are `memoryEnabled` and `memoryIntervalHours`; chat rules use `useMemory`.
+PATCH requires notes and their `revision`; stale edits return 409. A rebuild uses `{"rebuild":true}`. Settings are `memoryEnabled`, `memoryIntervalHours` and `memoryCollectionScope` (`ai-enabled` by default, or `all-allowed`); chat rules use `useMemory`.
 
 Tests cover a 700-message history, resumed checkpoints, large deltas, scheduling during backfill, skipping unused/unchanged chats, account isolation, Markdown preservation, conflicts, inference priority, HTTP protection and note editing. Optional `LiveMemoryTest` uses an already installed model and synthetic messages only; it never sends Telegram messages.
 
@@ -74,7 +74,7 @@ The “Collect context” button in communication settings opens a separate dial
 
 A manual run sends `POST /api/memory/{chatId}` with `immediate: true` and the chosen `rebuild` value. It queues that conversation without waiting for the hourly interval. It does not cancel another chat’s running collection or reply. Disabled memory must be enabled explicitly. Closing the dialog does not cancel collection.
 
-**Settings → Memory → Collect global context** runs the same process only for AI-enabled conversations that permit memory. “New messages” preserves existing memory. “Entire available history” clears generated owner facts and eligible chat summaries while preserving manual notes. A full run uses `POST /api/memory/refresh` with `{"rebuild":true,"immediate":true}`. One memory batch runs at a time in the shared queue.
+**Settings → Memory → Collect global context** runs the same process for conversations permitted by the configured collection scope. “New messages” preserves existing memory. “Entire available history” clears generated owner facts and eligible chat summaries while preserving manual notes. A full run uses `POST /api/memory/refresh` with `{"rebuild":true,"immediate":true}`. One memory batch runs at a time in the shared queue.
 
 Private headers show the first active Telegram username and omit the line when absent. Group headers use cached participant counts from Telegram updates without per-chat network requests. Unknown counts display “Group”. The `Chat` API exposes `username` and nullable `memberCount`.
 
