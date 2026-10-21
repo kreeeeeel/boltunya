@@ -48,7 +48,8 @@ class SpeechArchiveInstaller {
                         val relative = name.removePrefix(definition.archiveRoot).removePrefix("/")
                         val selected = definition.requiredFiles.stream().anyMatch {
                             relative == it || relative.startsWith("$it/")
-                        } || relative == "MODEL_CARD" || relative.startsWith("LICENSE")
+                        } || relative == "MODEL_CARD" || relative.startsWith("LICENSE") ||
+                            relative.startsWith("COPYING") || relative == "README" || relative == "README.md"
                         if (selected && entry.isFile) {
                             val destination = target.resolve(relative).normalize()
                             if (!destination.startsWith(target)) {

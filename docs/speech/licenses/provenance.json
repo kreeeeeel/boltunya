@@ -204,5 +204,11 @@
     "url": "https://svn.code.sf.net/p/lame/svn/tags/RELEASE__3_100/lame/COPYING",
     "sha256": "bfe4a52dc4645385f356a8e83cc54216a293e3b6f1cb4f79f5fc0277abf937fd",
     "sizeBytes": 25284
+  },
+  {
+    "file": "GLaDOS-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/dnhkng/GLaDOS/main/LICENSE.txt",
+    "sha256": "62050a19a4fd287ea5daef68002dbc89025940fe584ad431db821eb0f8d46e15",
+    "sizeBytes": 1065
   }
 ]

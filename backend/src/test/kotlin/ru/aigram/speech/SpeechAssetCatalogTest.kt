@@ -27,7 +27,7 @@ class SpeechAssetCatalogTest {
             progress(3)
         }
         speechCatalog(directory, download).use { catalog ->
-            assertEquals(5, catalog.list().size)
+            assertEquals(65, catalog.list().size)
             assertTrue(catalog.list().none { it.installed })
             assertEquals(0, count.get())
             assertFalse(Files.exists(directory.resolve("speech")))

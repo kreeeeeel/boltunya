@@ -120,5 +120,1505 @@
       "espeak-ng-data"
     ],
     "modelFile": "en_US-amy-low.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-ru-denis",
+      "title": "Piper · Денис · Russian (RU)",
+      "kind": "synthesis",
+      "languages": [
+        "ru"
+      ],
+      "sizeBytes": 21058905,
+      "license": "Dataset terms reported by upstream model card: CC0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/ru/ru_RU/denis/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ru_RU-denis-medium-int8.tar.bz2",
+    "sha256": "d710e29eb7854c42461d16d65d3cef753cc559639ca75806edc75ba71f23af66",
+    "archiveRoot": "vits-piper-ru_RU-denis-medium-int8",
+    "requiredFiles": [
+      "ru_RU-denis-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "ru_RU-denis-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-ru-dmitri",
+      "title": "Piper · Дмитрий · Russian (RU)",
+      "kind": "synthesis",
+      "languages": [
+        "ru"
+      ],
+      "sizeBytes": 21129441,
+      "license": "Dataset terms reported by upstream model card: CC0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/ru/ru_RU/dmitri/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ru_RU-dmitri-medium-int8.tar.bz2",
+    "sha256": "7636793307f634ce54c6e65528a91a61683114f1a6635a08caf64ba6c54e6a63",
+    "archiveRoot": "vits-piper-ru_RU-dmitri-medium-int8",
+    "requiredFiles": [
+      "ru_RU-dmitri-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "ru_RU-dmitri-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-uk-lada",
+      "title": "Piper · Лада · Ukrainian (UA)",
+      "kind": "synthesis",
+      "languages": [
+        "uk"
+      ],
+      "sizeBytes": 13332976,
+      "license": "Dataset terms reported by upstream model card: Apache 2.0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/uk/uk_UA/lada/x_low/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-uk_UA-lada-x_low-int8.tar.bz2",
+    "sha256": "5ba331ec01c811d605951c30ad7f9f57dfe87aaaefb9295c83012867db14a91a",
+    "archiveRoot": "vits-piper-uk_UA-lada-x_low-int8",
+    "requiredFiles": [
+      "uk_UA-lada-x_low.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "uk_UA-lada-x_low.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-kk-iseke",
+      "title": "Piper · Iseke · Kazakh (KZ)",
+      "kind": "synthesis",
+      "languages": [
+        "kk"
+      ],
+      "sizeBytes": 13385789,
+      "license": "Dataset terms reported by upstream model card: CC-BY-4.0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/kk/kk_KZ/iseke/x_low/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-kk_KZ-iseke-x_low-int8.tar.bz2",
+    "sha256": "d9df34e49fbcc05fb76476da8be030a1db908ce7886cf05960615cd30b6d142d",
+    "archiveRoot": "vits-piper-kk_KZ-iseke-x_low-int8",
+    "requiredFiles": [
+      "kk_KZ-iseke-x_low.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "kk_KZ-iseke-x_low.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-kk-raya",
+      "title": "Piper · Raya · Kazakh (KZ)",
+      "kind": "synthesis",
+      "languages": [
+        "kk"
+      ],
+      "sizeBytes": 13315906,
+      "license": "Dataset terms reported by upstream model card: CC-BY-4.0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/kk/kk_KZ/raya/x_low/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-kk_KZ-raya-x_low-int8.tar.bz2",
+    "sha256": "8c0b252415b039a27cb38d75977fa069a63dc1de90f99d155e5c89628bd4dad2",
+    "archiveRoot": "vits-piper-kk_KZ-raya-x_low-int8",
+    "requiredFiles": [
+      "kk_KZ-raya-x_low.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "kk_KZ-raya-x_low.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-en-lessac",
+      "title": "Piper · Lessac · English (US)",
+      "kind": "synthesis",
+      "languages": [
+        "en"
+      ],
+      "sizeBytes": 20969179,
+      "license": "Dataset terms reported by upstream model card: https://www.cstr.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013/license.html; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_US/lessac/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-lessac-medium-int8.tar.bz2",
+    "sha256": "f1c6d0295cf16087b05f80fdca5b44daca5cd78e2c425d419a42ba34929805f9",
+    "archiveRoot": "vits-piper-en_US-lessac-medium-int8",
+    "requiredFiles": [
+      "en_US-lessac-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "en_US-lessac-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-en-ryan",
+      "title": "Piper · Ryan · English (US)",
+      "kind": "synthesis",
+      "languages": [
+        "en"
+      ],
+      "sizeBytes": 21083446,
+      "license": "Dataset terms reported by upstream model card: CC BY-NC-SA 4.0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_US/ryan/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-ryan-medium-int8.tar.bz2",
+    "sha256": "376eb489d42e98cb49f0e13a633e8d88580bd247ed8aacc298a733210404f771",
+    "archiveRoot": "vits-piper-en_US-ryan-medium-int8",
+    "requiredFiles": [
+      "en_US-ryan-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "en_US-ryan-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-en-alan",
+      "title": "Piper · Alan · English (GB)",
+      "kind": "synthesis",
+      "languages": [
+        "en"
+      ],
+      "sizeBytes": 21103831,
+      "license": "Dataset terms: See URL in upstream model card (not assumed MIT); Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_GB/alan/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_GB-alan-medium-int8.tar.bz2",
+    "sha256": "f0b2526c9600657141ccbbe412f6159dceedab5bab4ba4e8857d9443acb50de4",
+    "archiveRoot": "vits-piper-en_GB-alan-medium-int8",
+    "requiredFiles": [
+      "en_GB-alan-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "en_GB-alan-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-en-alba",
+      "title": "Piper · Alba · English (GB)",
+      "kind": "synthesis",
+      "languages": [
+        "en"
+      ],
+      "sizeBytes": 21104326,
+      "license": "Dataset terms reported by upstream model card: https://creativecommons.org/licenses/by/4.0/; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_GB/alba/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_GB-alba-medium-int8.tar.bz2",
+    "sha256": "f7581d123ae977f64f3032bb247d4deeac8440e881d918d36fdd36d8f1030fb7",
+    "archiveRoot": "vits-piper-en_GB-alba-medium-int8",
+    "requiredFiles": [
+      "en_GB-alba-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "en_GB-alba-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-en-cori",
+      "title": "Piper · Cori · English (GB)",
+      "kind": "synthesis",
+      "languages": [
+        "en"
+      ],
+      "sizeBytes": 20768736,
+      "license": "Dataset terms reported by upstream model card: public domain; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_GB/cori/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_GB-cori-medium-int8.tar.bz2",
+    "sha256": "169ca8aff3adb271f009a4924c99928a811dbf2b52eaca2dbb460e8c34478c93",
+    "archiveRoot": "vits-piper-en_GB-cori-medium-int8",
+    "requiredFiles": [
+      "en_GB-cori-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "en_GB-cori-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-en-jenny-dioco",
+      "title": "Piper · Jenny Dioco · English (GB)",
+      "kind": "synthesis",
+      "languages": [
+        "en"
+      ],
+      "sizeBytes": 20950036,
+      "license": "Dataset terms: See URL in upstream model card (not assumed MIT); Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_GB/jenny_dioco/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_GB-jenny_dioco-medium-int8.tar.bz2",
+    "sha256": "db7ed4edd3c1e28b1afdecd9a77f5cb44db326f687632ffd364be513ec6a11e6",
+    "archiveRoot": "vits-piper-en_GB-jenny_dioco-medium-int8",
+    "requiredFiles": [
+      "en_GB-jenny_dioco-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "en_GB-jenny_dioco-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-de-thorsten",
+      "title": "Piper · Thorsten · German (DE)",
+      "kind": "synthesis",
+      "languages": [
+        "de"
+      ],
+      "sizeBytes": 20949833,
+      "license": "Dataset terms reported by upstream model card: CC0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/de/de_DE/thorsten/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-de_DE-thorsten-medium-int8.tar.bz2",
+    "sha256": "07e240b7b9c1fc9211d5a69512f8cbe11b3286c2ed79c15c076ac6ed427fdf13",
+    "archiveRoot": "vits-piper-de_DE-thorsten-medium-int8",
+    "requiredFiles": [
+      "de_DE-thorsten-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "de_DE-thorsten-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-fr-siwis",
+      "title": "Piper · Siwis · French (FR)",
+      "kind": "synthesis",
+      "languages": [
+        "fr"
+      ],
+      "sizeBytes": 20914888,
+      "license": "Dataset terms reported by upstream model card: CC-BY 4.0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/fr/fr_FR/siwis/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fr_FR-siwis-medium-int8.tar.bz2",
+    "sha256": "3909cff9b3cfd4820c66aa13bf554315c82e34899c161f0b446ece372bc4b5ec",
+    "archiveRoot": "vits-piper-fr_FR-siwis-medium-int8",
+    "requiredFiles": [
+      "fr_FR-siwis-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "fr_FR-siwis-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-ar-kareem",
+      "title": "Piper · Kareem · Arabic (JO)",
+      "kind": "synthesis",
+      "languages": [
+        "ar"
+      ],
+      "sizeBytes": 20968771,
+      "license": "Dataset terms: See URL in upstream model card (not assumed MIT); Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/ar/ar_JO/kareem/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ar_JO-kareem-medium-int8.tar.bz2",
+    "sha256": "215910431bbe8236b77242b19d869a4eda6073e9cd424bec45b6d4a59a790d82",
+    "archiveRoot": "vits-piper-ar_JO-kareem-medium-int8",
+    "requiredFiles": [
+      "ar_JO-kareem-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "ar_JO-kareem-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-ca-upc-ona",
+      "title": "Piper · Upc Ona · Catalan (ES)",
+      "kind": "synthesis",
+      "languages": [
+        "ca"
+      ],
+      "sizeBytes": 21037706,
+      "license": "Dataset terms reported by upstream model card: CC BY-SA 3.0 ES; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/ca/ca_ES/upc_ona/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ca_ES-upc_ona-medium-int8.tar.bz2",
+    "sha256": "3df5cd549d74c9d38267dfbb68b7f919f63d4351d778733b99d4a21be5567cb4",
+    "archiveRoot": "vits-piper-ca_ES-upc_ona-medium-int8",
+    "requiredFiles": [
+      "ca_ES-upc_ona-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "ca_ES-upc_ona-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-cs-jirka",
+      "title": "Piper · Jirka · Czech (CZ)",
+      "kind": "synthesis",
+      "languages": [
+        "cs"
+      ],
+      "sizeBytes": 21002417,
+      "license": "Dataset terms reported by upstream model card: CC0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/cs/cs_CZ/jirka/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-cs_CZ-jirka-medium-int8.tar.bz2",
+    "sha256": "45377b35ce823eaac5d76a5530b48fb5ad386a4e07db6ff36aa7c417d6bd0a6d",
+    "archiveRoot": "vits-piper-cs_CZ-jirka-medium-int8",
+    "requiredFiles": [
+      "cs_CZ-jirka-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "cs_CZ-jirka-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-cy-gwryw-gogleddol",
+      "title": "Piper · Gwryw Gogleddol · Welsh (GB)",
+      "kind": "synthesis",
+      "languages": [
+        "cy"
+      ],
+      "sizeBytes": 21121166,
+      "license": "Dataset terms: See URL in upstream model card (not assumed MIT); Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/cy/cy_GB/gwryw_gogleddol/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-cy_GB-gwryw_gogleddol-medium-int8.tar.bz2",
+    "sha256": "ed2b9efc02a033c9be56572ee6cf4559ed752e6a608b98766f1b4ba0702ec8a0",
+    "archiveRoot": "vits-piper-cy_GB-gwryw_gogleddol-medium-int8",
+    "requiredFiles": [
+      "cy_GB-gwryw_gogleddol-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "cy_GB-gwryw_gogleddol-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-da-talesyntese",
+      "title": "Piper · Talesyntese · Danish (DK)",
+      "kind": "synthesis",
+      "languages": [
+        "da"
+      ],
+      "sizeBytes": 21025554,
+      "license": "Dataset terms reported by upstream model card: CC0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/da/da_DK/talesyntese/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-da_DK-talesyntese-medium-int8.tar.bz2",
+    "sha256": "83c5b433e97c86109d659d7adcfc865bdf5bc570baa1e1ce8357f4fbf7346a7e",
+    "archiveRoot": "vits-piper-da_DK-talesyntese-medium-int8",
+    "requiredFiles": [
+      "da_DK-talesyntese-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "da_DK-talesyntese-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-el-rapunzelina",
+      "title": "Piper · Rapunzelina · Greek (GR)",
+      "kind": "synthesis",
+      "languages": [
+        "el"
+      ],
+      "sizeBytes": 21090546,
+      "license": "Dataset terms reported by upstream model card: CC0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/el/el_GR/rapunzelina/low/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-el_GR-rapunzelina-low-int8.tar.bz2",
+    "sha256": "1fbab58d6380dda2a392ef531de89e8d1202d2dca804db7ebcff5be2b30c823a",
+    "archiveRoot": "vits-piper-el_GR-rapunzelina-low-int8",
+    "requiredFiles": [
+      "el_GR-rapunzelina-low.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "el_GR-rapunzelina-low.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-es-daniela",
+      "title": "Piper · Daniela · Spanish (AR)",
+      "kind": "synthesis",
+      "languages": [
+        "es"
+      ],
+      "sizeBytes": 35069782,
+      "license": "Dataset terms reported by upstream model card: Attribution-ShareAlike 4.0 International; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/es/es_AR/daniela/high/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-es_AR-daniela-high-int8.tar.bz2",
+    "sha256": "7218f0a119e4c16533ac187f71ab3019f2092f1594e43fef8392ae1f5b64abab",
+    "archiveRoot": "vits-piper-es_AR-daniela-high-int8",
+    "requiredFiles": [
+      "es_AR-daniela-high.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "es_AR-daniela-high.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-eu-antton",
+      "title": "Piper · Antton · Basque (ES)",
+      "kind": "synthesis",
+      "languages": [
+        "eu"
+      ],
+      "sizeBytes": 20969706,
+      "license": "Dataset terms reported by upstream model card: Creative Commons Attribution 4.0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/eu/eu_ES/antton/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-eu_ES-antton-medium-int8.tar.bz2",
+    "sha256": "42def23d4a0c94180e02df9d2183595e8875d1b8ebd678aedd0b909a74e2c011",
+    "archiveRoot": "vits-piper-eu_ES-antton-medium-int8",
+    "requiredFiles": [
+      "eu_ES-antton-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "eu_ES-antton-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-fa-amir",
+      "title": "Piper · Amir · Farsi (IR)",
+      "kind": "synthesis",
+      "languages": [
+        "fa"
+      ],
+      "sizeBytes": 20666906,
+      "license": "Dataset terms reported by upstream model card: CC0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/fa/fa_IR/amir/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fa_IR-amir-medium-int8.tar.bz2",
+    "sha256": "b79dbf0b6b9629a36fd541bfda83817ec12e2697557d87b918638445971eac46",
+    "archiveRoot": "vits-piper-fa_IR-amir-medium-int8",
+    "requiredFiles": [
+      "fa_IR-amir-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "fa_IR-amir-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-fi-harri",
+      "title": "Piper · Harri · Finnish (FI)",
+      "kind": "synthesis",
+      "languages": [
+        "fi"
+      ],
+      "sizeBytes": 20984753,
+      "license": "Dataset terms reported by upstream model card: CC0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/fi/fi_FI/harri/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fi_FI-harri-medium-int8.tar.bz2",
+    "sha256": "b69b4c4465787dd4b9778d16b812ed7577a4051551cd87b88e0762309499c3c5",
+    "archiveRoot": "vits-piper-fi_FI-harri-medium-int8",
+    "requiredFiles": [
+      "fi_FI-harri-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "fi_FI-harri-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-hi-pratham",
+      "title": "Piper · Pratham · Hindi (IN)",
+      "kind": "synthesis",
+      "languages": [
+        "hi"
+      ],
+      "sizeBytes": 20987965,
+      "license": "Dataset terms reported by upstream model card: http://creativecommons.org/licenses/by-nc-sa/4.0/; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/hi/hi_IN/pratham/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-hi_IN-pratham-medium-int8.tar.bz2",
+    "sha256": "20f568c56207c13b9a0d9478aec8b7d1449122e618aeebc7211f6abc942b58b7",
+    "archiveRoot": "vits-piper-hi_IN-pratham-medium-int8",
+    "requiredFiles": [
+      "hi_IN-pratham-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "hi_IN-pratham-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-hu-anna",
+      "title": "Piper · Anna · Hungarian (HU)",
+      "kind": "synthesis",
+      "languages": [
+        "hu"
+      ],
+      "sizeBytes": 21113090,
+      "license": "Dataset terms reported by upstream model card: CC0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/hu/hu_HU/anna/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-hu_HU-anna-medium-int8.tar.bz2",
+    "sha256": "23f9e9fd59ae28fe04796c84079ed1bcf474e1bd35b97c55447fcc3c4e5e42e1",
+    "archiveRoot": "vits-piper-hu_HU-anna-medium-int8",
+    "requiredFiles": [
+      "hu_HU-anna-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "hu_HU-anna-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-id-news-tts",
+      "title": "Piper · News Tts · Indonesian (ID)",
+      "kind": "synthesis",
+      "languages": [
+        "id"
+      ],
+      "sizeBytes": 21046435,
+      "license": "Dataset terms: See URL in upstream model card (not assumed MIT); Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/id/id_ID/news_tts/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-id_ID-news_tts-medium-int8.tar.bz2",
+    "sha256": "d7315f6bf6b61e75cc4397a934b3372fd7a8223bccb96ed817f7283649eebd89",
+    "archiveRoot": "vits-piper-id_ID-news_tts-medium-int8",
+    "requiredFiles": [
+      "id_ID-news_tts-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "id_ID-news_tts-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-is-bui",
+      "title": "Piper · Bui · Icelandic (IS)",
+      "kind": "synthesis",
+      "languages": [
+        "is"
+      ],
+      "sizeBytes": 20595115,
+      "license": "Dataset terms: See URL in upstream model card (not assumed MIT); Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/is/is_IS/bui/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-is_IS-bui-medium-int8.tar.bz2",
+    "sha256": "3310457efaf9efd8ddda97dee686614481cc2d84015f993289eae7b799f49eb3",
+    "archiveRoot": "vits-piper-is_IS-bui-medium-int8",
+    "requiredFiles": [
+      "is_IS-bui-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "is_IS-bui-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-it-paola",
+      "title": "Piper · Paola · Italian (IT)",
+      "kind": "synthesis",
+      "languages": [
+        "it"
+      ],
+      "sizeBytes": 21143212,
+      "license": "Dataset terms: See URL in upstream model card (not assumed MIT); Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/it/it_IT/paola/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-it_IT-paola-medium-int8.tar.bz2",
+    "sha256": "2b975ed305391c056944a4dde67ee754dd824099503a860295bb4c1d724662d8",
+    "archiveRoot": "vits-piper-it_IT-paola-medium-int8",
+    "requiredFiles": [
+      "it_IT-paola-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "it_IT-paola-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-ka-natia",
+      "title": "Piper · Natia · Georgian (GE)",
+      "kind": "synthesis",
+      "languages": [
+        "ka"
+      ],
+      "sizeBytes": 21099875,
+      "license": "Dataset terms: See LICENSE file in upstream model card (not assumed MIT); Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/ka/ka_GE/natia/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ka_GE-natia-medium-int8.tar.bz2",
+    "sha256": "b76f14656f2ced75c14bed6567665a789bac224bbdf4cf5564d1faf31667d7a1",
+    "archiveRoot": "vits-piper-ka_GE-natia-medium-int8",
+    "requiredFiles": [
+      "ka_GE-natia-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "ka_GE-natia-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-lb-marylux",
+      "title": "Piper · Marylux · Luxembourgish (LU)",
+      "kind": "synthesis",
+      "languages": [
+        "lb"
+      ],
+      "sizeBytes": 21143108,
+      "license": "Dataset terms reported by upstream model card: http://creativecommons.org/licenses/by-nc-sa/4.0/; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/lb/lb_LU/marylux/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-lb_LU-marylux-medium-int8.tar.bz2",
+    "sha256": "1fcdaf57a35a00c6db3f60f16a9baf70873f50a628ddf527b45b1d95d480ce93",
+    "archiveRoot": "vits-piper-lb_LU-marylux-medium-int8",
+    "requiredFiles": [
+      "lb_LU-marylux-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "lb_LU-marylux-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-lv-aivars",
+      "title": "Piper · Aivars · Latvian (LV)",
+      "kind": "synthesis",
+      "languages": [
+        "lv"
+      ],
+      "sizeBytes": 20990634,
+      "license": "Dataset terms reported by upstream model card: CC0 1.0 Universal; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/lv/lv_LV/aivars/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-lv_LV-aivars-medium-int8.tar.bz2",
+    "sha256": "33d6906f054406856d6ef0f89b01fdc2648f273322129a989b10ea7a04523f42",
+    "archiveRoot": "vits-piper-lv_LV-aivars-medium-int8",
+    "requiredFiles": [
+      "lv_LV-aivars-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "lv_LV-aivars-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-ml-arjun",
+      "title": "Piper · Arjun · Malayalam (IN)",
+      "kind": "synthesis",
+      "languages": [
+        "ml"
+      ],
+      "sizeBytes": 20838242,
+      "license": "Dataset terms: See URL in upstream model card (not assumed MIT); Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/ml/ml_IN/arjun/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ml_IN-arjun-medium-int8.tar.bz2",
+    "sha256": "4d0b2a58157604b589cddc54884ffd2618b097d15155b254c34bd21830659832",
+    "archiveRoot": "vits-piper-ml_IN-arjun-medium-int8",
+    "requiredFiles": [
+      "ml_IN-arjun-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "ml_IN-arjun-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-ne-chitwan",
+      "title": "Piper · Chitwan · Nepali (NP)",
+      "kind": "synthesis",
+      "languages": [
+        "ne"
+      ],
+      "sizeBytes": 21165758,
+      "license": "Dataset terms reported by upstream model card: CC0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/ne/ne_NP/chitwan/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ne_NP-chitwan-medium-int8.tar.bz2",
+    "sha256": "deb1592efb99c02d38ba34443215ae94bf67ed77ecafd2e3320acffb27ae3204",
+    "archiveRoot": "vits-piper-ne_NP-chitwan-medium-int8",
+    "requiredFiles": [
+      "ne_NP-chitwan-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "ne_NP-chitwan-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-nl-nathalie",
+      "title": "Piper · Nathalie · Dutch (BE)",
+      "kind": "synthesis",
+      "languages": [
+        "nl"
+      ],
+      "sizeBytes": 21139955,
+      "license": "Dataset terms reported by upstream model card: CC0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/nl/nl_BE/nathalie/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-nl_BE-nathalie-medium-int8.tar.bz2",
+    "sha256": "f2cdeb555eacbdd053e5d63c4d0120464161a962f9fe3bf9aac47ecc57ac90ac",
+    "archiveRoot": "vits-piper-nl_BE-nathalie-medium-int8",
+    "requiredFiles": [
+      "nl_BE-nathalie-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "nl_BE-nathalie-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-no-talesyntese",
+      "title": "Piper · Talesyntese · Norwegian (NO)",
+      "kind": "synthesis",
+      "languages": [
+        "no"
+      ],
+      "sizeBytes": 21072816,
+      "license": "Dataset terms reported by upstream model card: CC0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/no/no_NO/talesyntese/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-no_NO-talesyntese-medium-int8.tar.bz2",
+    "sha256": "de0fc89178fabf0636554af8ae131b4dfe034866458bb7daa7026ee0d0d8d2f7",
+    "archiveRoot": "vits-piper-no_NO-talesyntese-medium-int8",
+    "requiredFiles": [
+      "no_NO-talesyntese-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "no_NO-talesyntese-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-pl-bass",
+      "title": "Piper · Bass · Polish (PL)",
+      "kind": "synthesis",
+      "languages": [
+        "pl"
+      ],
+      "sizeBytes": 35321483,
+      "license": "Apache-2.0 (model card); Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/pl/pl_PL/bass/high/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-pl_PL-bass-high-int8.tar.bz2",
+    "sha256": "e6667ea284c15b90e5fd6350b8005a0a4d7c1ce1cc1ce647ee64d2650a57a12f",
+    "archiveRoot": "vits-piper-pl_PL-bass-high-int8",
+    "requiredFiles": [
+      "pl_PL-bass-high.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "pl_PL-bass-high.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-pt-cadu",
+      "title": "Piper · Cadu · Portuguese (BR)",
+      "kind": "synthesis",
+      "languages": [
+        "pt"
+      ],
+      "sizeBytes": 21135464,
+      "license": "Dataset terms reported by upstream model card: CC0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/pt/pt_BR/cadu/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-pt_BR-cadu-medium-int8.tar.bz2",
+    "sha256": "78f1caf0a74cc6cb8dedaff87affd232ee653d5b0394d4cf4d2e97ecbfa5ff3d",
+    "archiveRoot": "vits-piper-pt_BR-cadu-medium-int8",
+    "requiredFiles": [
+      "pt_BR-cadu-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "pt_BR-cadu-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-ro-mihai",
+      "title": "Piper · Mihai · Romanian (RO)",
+      "kind": "synthesis",
+      "languages": [
+        "ro"
+      ],
+      "sizeBytes": 21081899,
+      "license": "Dataset terms reported by upstream model card: CC0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/ro/ro_RO/mihai/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ro_RO-mihai-medium-int8.tar.bz2",
+    "sha256": "1f41b684fb4640d1b79f750f1581647f8737b24ff5daf8d7c5fd5ad6d1761499",
+    "archiveRoot": "vits-piper-ro_RO-mihai-medium-int8",
+    "requiredFiles": [
+      "ro_RO-mihai-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "ro_RO-mihai-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-sk-lili",
+      "title": "Piper · Lili · Slovak (SK)",
+      "kind": "synthesis",
+      "languages": [
+        "sk"
+      ],
+      "sizeBytes": 21281868,
+      "license": "Dataset terms reported by upstream model card: CC0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/sk/sk_SK/lili/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-sk_SK-lili-medium-int8.tar.bz2",
+    "sha256": "5adc2ac5af88630cf305da68ba9cfd656e4b72e7f8c7d2deb2f641ef1d740096",
+    "archiveRoot": "vits-piper-sk_SK-lili-medium-int8",
+    "requiredFiles": [
+      "sk_SK-lili-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "sk_SK-lili-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-sl-artur",
+      "title": "Piper · Artur · Slovenian (SI)",
+      "kind": "synthesis",
+      "languages": [
+        "sl"
+      ],
+      "sizeBytes": 21404286,
+      "license": "Dataset terms reported by upstream model card: https://creativecommons.org/licenses/by/4.0/; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/sl/sl_SI/artur/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-sl_SI-artur-medium-int8.tar.bz2",
+    "sha256": "073e747f6d23db2c67b62230b2fe6fd5e72ca9f89651d5329a4bdd0b43c2bd05",
+    "archiveRoot": "vits-piper-sl_SI-artur-medium-int8",
+    "requiredFiles": [
+      "sl_SI-artur-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "sl_SI-artur-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-sq-edon",
+      "title": "Piper · Edon · Albanian (AL)",
+      "kind": "synthesis",
+      "languages": [
+        "sq"
+      ],
+      "sizeBytes": 21272475,
+      "license": "Dataset terms reported by upstream model card: CC0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/sq/sq_AL/edon/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-sq_AL-edon-medium-int8.tar.bz2",
+    "sha256": "b951fc1866256dc0258abf9844fb0a3a8263615056e65ddbd6b766676816dd26",
+    "archiveRoot": "vits-piper-sq_AL-edon-medium-int8",
+    "requiredFiles": [
+      "sq_AL-edon-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "sq_AL-edon-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-sv-alma",
+      "title": "Piper · Alma · Swedish (SE)",
+      "kind": "synthesis",
+      "languages": [
+        "sv"
+      ],
+      "sizeBytes": 21017826,
+      "license": "CC-BY-4.0 (weights and NST dataset, model card); Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/sv/sv_SE/alma/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-sv_SE-alma-medium-int8.tar.bz2",
+    "sha256": "a1d0b72ffba2f49a5b02396ebf818cbccc7bb23a16d9978ff37dfb9a6321deaa",
+    "archiveRoot": "vits-piper-sv_SE-alma-medium-int8",
+    "requiredFiles": [
+      "sv_SE-alma-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "sv_SE-alma-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-sw-lanfrica",
+      "title": "Piper · Lanfrica · Swahili (CD)",
+      "kind": "synthesis",
+      "languages": [
+        "sw"
+      ],
+      "sizeBytes": 21082704,
+      "license": "Dataset terms: See URL in upstream model card (not assumed MIT); Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/sw/sw_CD/lanfrica/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-sw_CD-lanfrica-medium-int8.tar.bz2",
+    "sha256": "eee0eda5a850e21169ebd79105a914d95d4aa34cccc49b417f071f05a0e2fa45",
+    "archiveRoot": "vits-piper-sw_CD-lanfrica-medium-int8",
+    "requiredFiles": [
+      "sw_CD-lanfrica-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "sw_CD-lanfrica-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-tr-dfki",
+      "title": "Piper · Dfki · Turkish (TR)",
+      "kind": "synthesis",
+      "languages": [
+        "tr"
+      ],
+      "sizeBytes": 21135582,
+      "license": "Dataset terms reported by upstream model card: https://creativecommons.org/licenses/by-nc-sa/4.0/; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/tr/tr_TR/dfki/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-tr_TR-dfki-medium-int8.tar.bz2",
+    "sha256": "6cda7bc029b7d5549a80439c51beb4c40c42df4b4614f01a8c61deb2fc859aa2",
+    "archiveRoot": "vits-piper-tr_TR-dfki-medium-int8",
+    "requiredFiles": [
+      "tr_TR-dfki-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "tr_TR-dfki-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-ur-fasih",
+      "title": "Piper · Fasih · Urdu (PK)",
+      "kind": "synthesis",
+      "languages": [
+        "ur"
+      ],
+      "sizeBytes": 21167855,
+      "license": "MIT (model card); Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/ur/ur_PK/fasih/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ur_PK-fasih-medium-int8.tar.bz2",
+    "sha256": "5b4481d8fd03b849f9c9b7b484a51b34014ca7308c2aabd7f0f2688ed8721234",
+    "archiveRoot": "vits-piper-ur_PK-fasih-medium-int8",
+    "requiredFiles": [
+      "ur_PK-fasih-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "ur_PK-fasih-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-vi-25hours-single",
+      "title": "Piper · 25Hours Single · Vietnamese (VN)",
+      "kind": "synthesis",
+      "languages": [
+        "vi"
+      ],
+      "sizeBytes": 21222102,
+      "license": "Dataset licence unspecified in upstream model card; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/vi/vi_VN/25hours_single/low/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-vi_VN-25hours_single-low-int8.tar.bz2",
+    "sha256": "88df4b7fdff4bd441f1f1fa9f4b4d0f03b8777d69fd0d423912e3f78bba57312",
+    "archiveRoot": "vits-piper-vi_VN-25hours_single-low-int8",
+    "requiredFiles": [
+      "vi_VN-25hours_single-low.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "vi_VN-25hours_single-low.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-en-ljspeech",
+      "title": "Piper · Ljspeech · English (US)",
+      "kind": "synthesis",
+      "languages": [
+        "en"
+      ],
+      "sizeBytes": 21090429,
+      "license": "Dataset terms reported by upstream model card: public domain; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_US/ljspeech/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-ljspeech-medium-int8.tar.bz2",
+    "sha256": "24dc3bd77dd48c291e52c297878d3437c9492f245d823d7f6a06c4bbb67f4b6b",
+    "archiveRoot": "vits-piper-en_US-ljspeech-medium-int8",
+    "requiredFiles": [
+      "en_US-ljspeech-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "en_US-ljspeech-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-en-danny",
+      "title": "Piper · Danny · English (US)",
+      "kind": "synthesis",
+      "languages": [
+        "en"
+      ],
+      "sizeBytes": 21184916,
+      "license": "Dataset terms: See URL in upstream model card (not assumed MIT); Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_US/danny/low/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-danny-low-int8.tar.bz2",
+    "sha256": "002a0079a1059a97b067927c4d79ad2ad14c33d7260eeb6d78fb5b7b32986a95",
+    "archiveRoot": "vits-piper-en_US-danny-low-int8",
+    "requiredFiles": [
+      "en_US-danny-low.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "en_US-danny-low.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-en-joe",
+      "title": "Piper · Joe · English (US)",
+      "kind": "synthesis",
+      "languages": [
+        "en"
+      ],
+      "sizeBytes": 21230019,
+      "license": "Dataset terms reported by upstream model card: CC0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_US/joe/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-joe-medium-int8.tar.bz2",
+    "sha256": "644527f29eca0ada5595d7b6e4daf6388f5ac0c4870b4d42996a6687fcefeb37",
+    "archiveRoot": "vits-piper-en_US-joe-medium-int8",
+    "requiredFiles": [
+      "en_US-joe-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "en_US-joe-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-en-hfc-female",
+      "title": "Piper · Hfc Female · English (US)",
+      "kind": "synthesis",
+      "languages": [
+        "en"
+      ],
+      "sizeBytes": 21021379,
+      "license": "Dataset terms reported by upstream model card: https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_US/hfc_female/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-hfc_female-medium-int8.tar.bz2",
+    "sha256": "7c467d19054ddf84056a4887a8be75f5f3b2a5d426637b526953a5e488fec5ce",
+    "archiveRoot": "vits-piper-en_US-hfc_female-medium-int8",
+    "requiredFiles": [
+      "en_US-hfc_female-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "en_US-hfc_female-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-en-hfc-male",
+      "title": "Piper · Hfc Male · English (US)",
+      "kind": "synthesis",
+      "languages": [
+        "en"
+      ],
+      "sizeBytes": 20984819,
+      "license": "Dataset terms reported by upstream model card: https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_US/hfc_male/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-hfc_male-medium-int8.tar.bz2",
+    "sha256": "a12daed3ba978ffb403dec4afa245d6f114668b370157a022fcc47fa6ca073d8",
+    "archiveRoot": "vits-piper-en_US-hfc_male-medium-int8",
+    "requiredFiles": [
+      "en_US-hfc_male-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "en_US-hfc_male-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-es-davefx",
+      "title": "Piper · Davefx · Spanish (ES)",
+      "kind": "synthesis",
+      "languages": [
+        "es"
+      ],
+      "sizeBytes": 21171632,
+      "license": "Dataset terms reported by upstream model card: CC0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/es/es_ES/davefx/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-es_ES-davefx-medium-int8.tar.bz2",
+    "sha256": "8bb8ac1cefb727caec9bd9c6c3185c673c8b42c53bd29bb25d5a7715dac37125",
+    "archiveRoot": "vits-piper-es_ES-davefx-medium-int8",
+    "requiredFiles": [
+      "es_ES-davefx-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "es_ES-davefx-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-es-ald",
+      "title": "Piper · Ald · Spanish (MX)",
+      "kind": "synthesis",
+      "languages": [
+        "es"
+      ],
+      "sizeBytes": 21283187,
+      "license": "Dataset terms reported by upstream model card: http://unlicense.org; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/es/es_MX/ald/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-es_MX-ald-medium-int8.tar.bz2",
+    "sha256": "447e82d080719409db08e54a4b6eec2e4b6ba850b98dcaf09d3fc67bf30ff692",
+    "archiveRoot": "vits-piper-es_MX-ald-medium-int8",
+    "requiredFiles": [
+      "es_MX-ald-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "es_MX-ald-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-fr-gilles",
+      "title": "Piper · Gilles · French (FR)",
+      "kind": "synthesis",
+      "languages": [
+        "fr"
+      ],
+      "sizeBytes": 21248965,
+      "license": "Dataset terms reported by upstream model card: CC0; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/fr/fr_FR/gilles/low/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fr_FR-gilles-low-int8.tar.bz2",
+    "sha256": "92d2bfd9b6b32b9787557c466b15620e453aecc10ec521762660e034941b3c43",
+    "archiveRoot": "vits-piper-fr_FR-gilles-low-int8",
+    "requiredFiles": [
+      "fr_FR-gilles-low.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "fr_FR-gilles-low.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-fr-tom",
+      "title": "Piper · Tom · French (FR)",
+      "kind": "synthesis",
+      "languages": [
+        "fr"
+      ],
+      "sizeBytes": 21019617,
+      "license": "Dataset terms reported by upstream model card: AGPLv3; Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/fr/fr_FR/tom/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fr_FR-tom-medium-int8.tar.bz2",
+    "sha256": "b158f884eb4231b8dddd372c3dc506949630c992a8e48ca692a90323e8bb4e09",
+    "archiveRoot": "vits-piper-fr_FR-tom-medium-int8",
+    "requiredFiles": [
+      "fr_FR-tom-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "fr_FR-tom-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-de-eva-k",
+      "title": "Piper · Eva K · German (DE)",
+      "kind": "synthesis",
+      "languages": [
+        "de"
+      ],
+      "sizeBytes": 13321491,
+      "license": "Dataset terms: See URL in upstream model card (not assumed MIT); Piper source MIT; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/de/de_DE/eva_k/x_low/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-de_DE-eva_k-x_low-int8.tar.bz2",
+    "sha256": "0501123c7e184571a40690e79943f4111a57b988632f7f60a9d2344fd061e2a2",
+    "archiveRoot": "vits-piper-de_DE-eva_k-x_low-int8",
+    "requiredFiles": [
+      "de_DE-eva_k-x_low.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "de_DE-eva_k-x_low.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-en-glados",
+      "title": "GLaDOS · English · Portal voice",
+      "kind": "synthesis",
+      "languages": [
+        "en"
+      ],
+      "sizeBytes": 67208137,
+      "license": "dnhkng/GLaDOS source project MIT; separate model/dataset licence not stated by the release; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://github.com/dnhkng/GLaDOS",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-glados.tar.bz2",
+    "sha256": "fa2b82a4984468081db8cebbaa7c0b1e008492ac2b4276d7f628d6141b6a2d1c",
+    "archiveRoot": "vits-piper-en_US-glados",
+    "requiredFiles": [
+      "en_US-glados.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "en_US-glados.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-de-glados",
+      "title": "GLaDOS · German · Portal voice",
+      "kind": "synthesis",
+      "languages": [
+        "de"
+      ],
+      "sizeBytes": 20966453,
+      "license": "Model/dataset licence not declared by author; Portal game-data provenance in upstream source; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/systemofapwne/piper-de-glados/blob/f0ee29dfa468cbc69bac1408dd3887611fcb76c1/de/de_DE/glados/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-de_DE-glados-medium-int8.tar.bz2",
+    "sha256": "9f38740cc743a68fb2f756f06cd4813892abc9b293ec7589e3d4d0d394ed6bc0",
+    "archiveRoot": "vits-piper-de_DE-glados-medium-int8",
+    "requiredFiles": [
+      "de_DE-glados-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "de_DE-glados-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-de-glados-turret",
+      "title": "Portal turret · German",
+      "kind": "synthesis",
+      "languages": [
+        "de"
+      ],
+      "sizeBytes": 20949149,
+      "license": "Model/dataset licence not declared by author; Portal game-data provenance in upstream source; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/systemofapwne/piper-de-glados/blob/f0ee29dfa468cbc69bac1408dd3887611fcb76c1/de/de_DE/glados-turret/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-de_DE-glados_turret-medium-int8.tar.bz2",
+    "sha256": "2ffb416f2f09602889656d7733121fe88456c67b5a6b00ef2a15c6a59f255cd4",
+    "archiveRoot": "vits-piper-de_DE-glados_turret-medium-int8",
+    "requiredFiles": [
+      "de_DE-glados_turret-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "de_DE-glados_turret-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-es-glados",
+      "title": "GLaDOS · Spanish · Portal voice",
+      "kind": "synthesis",
+      "languages": [
+        "es"
+      ],
+      "sizeBytes": 21193827,
+      "license": "Model/dataset licence not declared by author; Portal game-data provenance in upstream source; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/csukuangfj/vits-piper-es_ES-glados-medium/blob/006383ecc39a0e1254fdd25e2bdfaf50f8d066d1/README.md",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-es_ES-glados-medium-int8.tar.bz2",
+    "sha256": "e53ca3bcce7ed004428fd14dc5b5ff17b83d2da4ffa191e2b279435ba728f740",
+    "archiveRoot": "vits-piper-es_ES-glados-medium-int8",
+    "requiredFiles": [
+      "es_ES-glados-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "es_ES-glados-medium.onnx"
   }
 ]

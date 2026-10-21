@@ -18,11 +18,18 @@ class SpeechArchiveInstallerTest {
     lateinit var directory: Path
 
     @Test
-    fun `extracts required model files and preserves its model card`() {
+    fun `extracts required model files and preserves source provenance and licensing notices`() {
         val model = speechDefinitions().first { it.asset.id == "piper-ru-irina" }
         val root = model.archiveRoot
         val archive = archive(
-            listOf("$root/voice.onnx", "$root/MODEL_CARD", "$root/unused.onnx"),
+            listOf(
+                "$root/voice.onnx",
+                "$root/MODEL_CARD",
+                "$root/README.md",
+                "$root/LICENSE.txt",
+                "$root/COPYING",
+                "$root/unused.onnx",
+            ),
         )
         val target = directory.resolve("model")
 
@@ -30,6 +37,9 @@ class SpeechArchiveInstallerTest {
 
         assertEquals("model-data", Files.readString(target.resolve("voice.onnx")))
         assertEquals("model-data", Files.readString(target.resolve("MODEL_CARD")))
+        assertEquals("model-data", Files.readString(target.resolve("README.md")))
+        assertEquals("model-data", Files.readString(target.resolve("LICENSE.txt")))
+        assertEquals("model-data", Files.readString(target.resolve("COPYING")))
         assertFalse(Files.exists(target.resolve("unused.onnx")))
     }
 
