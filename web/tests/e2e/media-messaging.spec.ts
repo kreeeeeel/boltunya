@@ -70,11 +70,18 @@ for (const dark of [false, true]) {
         const stickerButton = picker.getByRole('button', {name: '🙂', exact: true});
         await expect(stickerButton).toHaveCount(1);
         expect((await picker.boundingBox())!.height).toBeLessThan(populatedHeight);
-        const packBounds = (await selected.boundingBox())!;
-        const titleBounds = (await selected.locator('.g-text').boundingBox())!;
-        expect(
-            Math.abs(titleBounds.y + titleBounds.height / 2 - packBounds.y - packBounds.height / 2),
-        ).toBeLessThan(1);
+        await expect
+            .poll(() =>
+                selected.evaluate((element) => {
+                    const packBounds = element.getBoundingClientRect();
+                    const titleBounds = element.querySelector('.g-text')!.getBoundingClientRect();
+
+                    return Math.abs(
+                        titleBounds.y + titleBounds.height / 2 - packBounds.y - packBounds.height / 2,
+                    );
+                }),
+            )
+            .toBeLessThan(1);
         await stickerButton.hover();
         expect(
             await stickerButton.evaluate((element) => getComputedStyle(element, '::before').backgroundColor),
