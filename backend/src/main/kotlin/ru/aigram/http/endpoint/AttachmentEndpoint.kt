@@ -4,6 +4,7 @@ import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
+import org.springframework.stereotype.Component
 import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.automation.ReplyDeliveryPolicy
 import ru.aigram.diagnostics.DiagnosticLog
@@ -22,6 +23,7 @@ import java.io.IOException
 
 private const val REPLY_HISTORY_SIZE = 20
 
+@Component
 class AttachmentEndpoint @Inject constructor(
     private val json: Json,
     private val telegram: TelegramGateway,

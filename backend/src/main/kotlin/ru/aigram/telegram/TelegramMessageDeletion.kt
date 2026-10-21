@@ -3,6 +3,7 @@ package ru.aigram.telegram
 import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
 import jakarta.inject.Provider
+import org.springframework.stereotype.Component
 import ru.aigram.domain.MessageDeletionOptions
 import ru.aigram.domain.MessageDeletionResult
 import ru.aigram.domain.MessageDeletionScope
@@ -14,6 +15,7 @@ import java.util.concurrent.TimeoutException
 
 private const val MESSAGE_DELETION_TIMEOUT_SECONDS = 15L
 
+@Component
 class TelegramMessageDeletion @Inject constructor(
     private val gateway: Provider<TdLightGateway>,
     private val view: TelegramMessageView,

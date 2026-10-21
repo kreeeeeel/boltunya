@@ -7,6 +7,7 @@ import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonPrimitive
 import org.springframework.ai.chat.messages.UserMessage
+import org.springframework.stereotype.Component
 import ru.aigram.ai.ModelInference
 import ru.aigram.ai.model.ChatCompletionService
 import ru.aigram.ai.profile.ModelProfile
@@ -29,6 +30,7 @@ import ru.aigram.http.InputValidation
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.SettingsStore
 
+@Component
 class ModelProfilesEndpoint @Inject constructor(
     private val json: Json,
     private val profiles: ModelProfileStore,

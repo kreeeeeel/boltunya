@@ -1,6 +1,7 @@
 package ru.aigram.ai.research
 
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.exception.IntegrationException
 import ru.aigram.resources.ResourceCatalog
 import java.io.IOException
@@ -10,6 +11,7 @@ private const val MAX_RESPONSE_CHARACTERS = 200_000
 private const val MAX_SOURCE_CHARACTERS = 4000
 private const val MAX_TITLE_CHARACTERS = 180
 
+@Component
 class ExaResultParser @Inject constructor(
     private val resources: ResourceCatalog,
     private val pages: PublicPageReader,

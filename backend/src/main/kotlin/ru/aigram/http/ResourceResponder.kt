@@ -2,6 +2,7 @@ package ru.aigram.http
 
 import com.sun.net.httpserver.HttpExchange
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.exception.impl.MethodNotAllowedException
 import ru.aigram.exception.impl.RouteNotFoundException
 
@@ -13,6 +14,7 @@ private val CONTENT_TYPES = mapOf(
     "woff2" to "font/woff2", "woff" to "font/woff", "ico" to "image/x-icon",
 )
 
+@Component
 class ResourceResponder @Inject constructor(private val response: ResponseWriter) {
     fun respond(exchange: HttpExchange) {
         if (exchange.requestMethod != HttpMethod.GET.name) throw MethodNotAllowedException()

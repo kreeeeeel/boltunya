@@ -1,6 +1,7 @@
 package ru.aigram.ai
 
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.exception.impl.IncompleteDownloadException
 import java.io.InputStream
 import java.nio.file.Files
@@ -9,6 +10,7 @@ import java.util.stream.Stream
 
 private const val BUFFER_BYTES = 64 * 1024
 
+@Component
 class DownloadWriter @Inject constructor() {
     fun copy(input: InputStream, target: Path, total: Long, onBytes: (Long, Long) -> Unit) {
         var received = 0L

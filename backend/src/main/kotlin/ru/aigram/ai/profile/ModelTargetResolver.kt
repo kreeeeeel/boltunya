@@ -1,6 +1,7 @@
 package ru.aigram.ai.profile
 
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.ai.ModelCatalog
 import ru.aigram.configuration.ApplicationConfiguration
 import ru.aigram.domain.ChatRule
@@ -9,6 +10,7 @@ import ru.aigram.exception.impl.ModelProfileDisabledException
 import ru.aigram.storage.SettingsStore
 import java.net.URI
 
+@Component
 class ModelTargetResolver @Inject constructor(
     private val profiles: ModelProfileStore,
     private val routing: ModelRoutingStore,

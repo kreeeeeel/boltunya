@@ -5,6 +5,7 @@ import jakarta.inject.Inject
 import org.springframework.ai.chat.messages.Message
 import org.springframework.ai.chat.messages.UserMessage
 import org.springframework.ai.tokenizer.JTokkitTokenCountEstimator
+import org.springframework.stereotype.Component
 import kotlin.math.ceil
 
 private const val MESSAGE_OVERHEAD_TOKENS = 16
@@ -15,6 +16,7 @@ private val o200k by lazy { JTokkitTokenCountEstimator(EncodingType.O200K_BASE) 
 private val O200K_MODELS = listOf("gpt-4o", "gpt-4.1", "gpt-5", "gpt-oss", "o1", "o3", "o4")
 
 /** Text and media estimates reserve a safety margin; the provider's actual tokenizer remains authoritative. */
+@Component
 class PromptTokenEstimator @Inject constructor() {
     fun encoding(model: String, requested: TokenEncoding): TokenEncoding = if (requested != TokenEncoding.AUTO) {
         requested

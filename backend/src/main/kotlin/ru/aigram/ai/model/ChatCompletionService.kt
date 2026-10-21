@@ -11,6 +11,7 @@ import org.springframework.ai.ollama.api.OllamaChatOptions
 import org.springframework.ai.ollama.api.ThinkOption
 import org.springframework.ai.retry.NonTransientAiException
 import org.springframework.ai.retry.TransientAiException
+import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.reactive.function.client.WebClientException
@@ -49,6 +50,7 @@ private const val RETRY_RESPONSE_TOKENS = 512
 private const val KEEP_ALIVE = "20m"
 private const val MEMORY_CREATIVITY = 10
 
+@Component
 class ChatCompletionService @Inject constructor(
     private val model: ChatModel,
     private val policies: ModelPolicies,

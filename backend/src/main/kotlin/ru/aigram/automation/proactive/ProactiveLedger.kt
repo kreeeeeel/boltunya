@@ -2,11 +2,13 @@ package ru.aigram.automation.proactive
 
 import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
+import org.springframework.stereotype.Component
 import ru.aigram.domain.ChatMessage
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
+@Component
 class ProactiveLedger @Inject constructor(directory: Path) {
     private val file = directory.resolve("automation/initiatives.json")
     private val json = Json { ignoreUnknownKeys = true }

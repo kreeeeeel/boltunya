@@ -2,11 +2,13 @@ package ru.aigram.storage
 
 import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
+import org.springframework.stereotype.Component
 import ru.aigram.domain.ModelMeasurement
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
+@Component
 class ModelMeasurementStore @Inject constructor(directory: Path) {
     private val file = directory.resolve("model-measurements.json")
     private val json = Json { ignoreUnknownKeys = true }

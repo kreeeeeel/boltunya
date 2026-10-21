@@ -1,10 +1,12 @@
 package ru.aigram.ai
 
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 
+@Component
 class EngineProcessLocator @Inject constructor() {
     fun find(executable: Path): ProcessHandle? = ProcessHandle.allProcesses().use { processes ->
         processes.filter { process ->

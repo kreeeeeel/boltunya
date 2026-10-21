@@ -2,10 +2,12 @@ package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.domain.OutgoingMedia
 import ru.aigram.domain.OutgoingMediaKind
 import ru.aigram.exception.impl.InvalidUploadException
 
+@Component
 class TelegramMediaContent @Inject constructor() {
     fun content(media: OutgoingMedia): TdApi.InputMessageContent {
         val file = TdApi.InputFileLocal(media.path.toAbsolutePath().toString())

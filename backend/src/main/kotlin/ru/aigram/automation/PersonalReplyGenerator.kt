@@ -1,6 +1,7 @@
 package ru.aigram.automation
 
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.ai.ConversationService
 import ru.aigram.ai.ReplyImageContext
 import ru.aigram.ai.profile.ModelTargetResolver
@@ -19,6 +20,7 @@ import ru.aigram.storage.WritingStyleStore
 import ru.aigram.telegram.TelegramGateway
 import java.util.stream.Stream
 
+@Component
 class PersonalReplyGenerator @Inject constructor(
     private val settings: SettingsStore,
     private val conversation: ConversationService,

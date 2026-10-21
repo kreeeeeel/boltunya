@@ -2,9 +2,11 @@ package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 
+@Component
 class TelegramCache @Inject constructor() {
     val chats = ConcurrentHashMap<Long, TdApi.Chat>()
     val users = ConcurrentHashMap<Long, TdApi.User>()

@@ -4,6 +4,7 @@ import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
+import org.springframework.stereotype.Component
 import ru.aigram.ai.EngineManager
 import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.automation.ReplyDeliveryPolicy
@@ -26,6 +27,7 @@ private const val HISTORY_PAGE_SIZE = 100
 private const val MAX_MESSAGE_CHARACTERS = 4096
 private const val REPLY_HISTORY_SIZE = 20
 
+@Component
 class ChatEndpoint @Inject constructor(
     private val json: Json,
     private val settings: SettingsStore,

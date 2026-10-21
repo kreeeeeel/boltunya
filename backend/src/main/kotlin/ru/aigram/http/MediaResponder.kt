@@ -2,6 +2,7 @@ package ru.aigram.http
 
 import com.sun.net.httpserver.HttpExchange
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.domain.MediaFile
 import ru.aigram.exception.impl.AnimationTooLargeException
 import java.net.URLEncoder
@@ -11,6 +12,7 @@ import java.util.zip.GZIPInputStream
 
 private const val MAX_ANIMATION_BYTES = 2 * 1024 * 1024
 
+@Component
 class MediaResponder @Inject constructor() {
     fun respond(exchange: HttpExchange, media: MediaFile) {
         exchange.responseHeaders.set("Cache-Control", "private, no-store")

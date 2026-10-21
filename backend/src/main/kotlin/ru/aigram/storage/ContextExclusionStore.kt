@@ -2,6 +2,7 @@ package ru.aigram.storage
 
 import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
+import org.springframework.stereotype.Component
 import ru.aigram.domain.ChatMessage
 import ru.aigram.domain.ContextExclusionScope
 import ru.aigram.domain.ContextExclusionUpdate
@@ -14,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap
 private const val MAX_MESSAGE_OVERRIDES = 10000
 
 /** Account-scoped context policy; Telegram messages themselves are never changed or deleted. */
+@Component
 class ContextExclusionStore @Inject constructor(directory: Path) {
     private val root = directory.resolve("context-exclusions")
     private val json = Json { ignoreUnknownKeys = true }

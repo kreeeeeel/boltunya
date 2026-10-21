@@ -3,6 +3,7 @@ package ru.aigram.telegram
 import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
 import jakarta.inject.Provider
+import org.springframework.stereotype.Component
 import ru.aigram.exception.impl.InvalidMediaIdentifierException
 import ru.aigram.exception.impl.TelegramRequestRejectedException
 import java.util.concurrent.ExecutionException
@@ -11,6 +12,7 @@ import java.util.concurrent.TimeoutException
 
 private const val MESSAGE_LINK_TIMEOUT_SECONDS = 10L
 
+@Component
 class TelegramMessageLinks @Inject constructor(private val gateway: Provider<TdLightGateway>) {
     fun link(chatId: String, messageId: String): String {
         val service = gateway.get()

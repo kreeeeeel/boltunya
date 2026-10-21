@@ -2,6 +2,7 @@ package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.domain.ChatTypingUser
 import ru.aigram.domain.TypingAction
 import java.time.Clock
@@ -9,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 private const val TYPING_LIFETIME_MS = 6_000L
 
+@Component
 class TelegramTypingStore @Inject constructor(private val cache: TelegramCache, private val clock: Clock) {
     private val chats = ConcurrentHashMap<Long, MutableMap<String, ChatTypingState>>()
     private var ownerId = 0L

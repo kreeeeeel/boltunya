@@ -7,11 +7,13 @@ import org.springframework.ai.ollama.api.OllamaChatOptions
 import org.springframework.ai.ollama.api.ThinkOption
 import org.springframework.ai.openai.OpenAiChatModel
 import org.springframework.ai.openai.OpenAiChatOptions
+import org.springframework.stereotype.Component
 import ru.aigram.exception.impl.ModelCapabilityUnavailableException
 import tools.jackson.databind.json.JsonMapper
 import java.time.Duration
 
 /** Projects only parameters explicitly supported by the selected model. */
+@Component
 class ProfileChatOptions @Inject constructor() {
     private val mapper = JsonMapper.builder().build()
 

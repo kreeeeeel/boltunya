@@ -2,6 +2,7 @@ package ru.aigram.http.endpoint
 
 import jakarta.inject.Inject
 import kotlinx.serialization.json.JsonObject
+import org.springframework.stereotype.Component
 import ru.aigram.ai.research.ExaMcpSearchClient
 import ru.aigram.ai.research.SearchConnection
 import ru.aigram.exception.IntegrationException
@@ -12,6 +13,7 @@ import ru.aigram.storage.SearchCredentialStore
 
 private const val MAX_KEY_CHARACTERS = 256
 
+@Component
 class SearchEndpoint @Inject constructor(
     private val credentials: SearchCredentialStore,
     private val search: ExaMcpSearchClient,

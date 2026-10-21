@@ -1,6 +1,7 @@
 package ru.aigram.ai
 
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.automation.activity.ActivityPhase
 import ru.aigram.automation.activity.ReplyTraceScope
 import ru.aigram.exception.impl.BackgroundInferenceDeferredException
@@ -10,6 +11,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 
 private const val MAX_INDEPENDENT_INFERENCES = 4
 
+@Component
 class ModelInference @Inject constructor(private val tracing: ReplyTraceScope) {
     constructor() : this(ReplyTraceScope())
 

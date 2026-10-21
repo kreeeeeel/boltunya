@@ -3,6 +3,7 @@ package ru.aigram.ai.model
 import jakarta.inject.Inject
 import org.springframework.ai.chat.model.ChatResponse
 import org.springframework.ai.converter.ThinkingTagCleaner
+import org.springframework.stereotype.Component
 import java.time.Duration
 
 private const val EVALUATION_DURATION = "eval-duration"
@@ -11,6 +12,7 @@ private const val THINKING = "thinking"
 private const val REASONING_CONTENT = "reasoningContent"
 private val THINKING_TAGS = listOf("<think>", "<thinking>", "<reasoning>")
 
+@Component
 class ModelReplyReader @Inject constructor() {
     private val cleaner = ThinkingTagCleaner()
 

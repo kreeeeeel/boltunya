@@ -4,6 +4,7 @@ import jakarta.inject.Inject
 import org.springframework.ai.chat.messages.Message
 import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
+import org.springframework.stereotype.Component
 import ru.aigram.ai.ModelCatalog
 import ru.aigram.ai.prompt.PromptTokenEstimator
 import ru.aigram.exception.impl.ModelContextLimitException
@@ -13,6 +14,7 @@ private const val MAX_AUTOMATIC_CONTEXT = 32768
 private const val MAX_WINDOW_EXPANSIONS = 24L
 
 /** Keeps system instructions, the latest message and selected images; only older text history may be removed. */
+@Component
 class ProfileContextBudget @Inject constructor(
     private val tokens: PromptTokenEstimator,
     private val catalog: ModelCatalog = ModelCatalog(),

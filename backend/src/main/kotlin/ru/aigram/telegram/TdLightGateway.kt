@@ -44,6 +44,7 @@ import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 private const val APPLICATION_VERSION = "2.3.0"
 private const val MAX_FILE_BYTES = 100L * 1024 * 1024
@@ -71,6 +72,7 @@ class TdLightGateway @Inject constructor(
     private val links: TelegramMessageLinks,
     private val deletion: TelegramMessageDeletion,
 ) : TelegramGateway {
+    private val closed = AtomicBoolean()
     private var factory: SimpleTelegramClientFactory? = null
 
     @Volatile private var client: SimpleTelegramClient? = null
@@ -241,6 +243,9 @@ class TdLightGateway @Inject constructor(
     }
 
     override fun close() {
+        if (!closed.compareAndSet(false, true)) {
+            return
+        }
         connection.version++
         interaction.cancel()
         try {

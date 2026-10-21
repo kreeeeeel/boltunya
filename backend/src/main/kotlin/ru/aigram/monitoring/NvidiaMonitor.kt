@@ -1,12 +1,14 @@
 package ru.aigram.monitoring
 
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 private const val GPU_TIMEOUT_SECONDS = 2L
 private const val MEBIBYTE = 1024L * 1024
 
+@Component
 class NvidiaMonitor @Inject constructor() {
     private var unavailable = false
 

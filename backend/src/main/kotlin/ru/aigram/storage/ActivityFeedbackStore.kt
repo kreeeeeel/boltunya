@@ -2,6 +2,7 @@ package ru.aigram.storage
 
 import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
+import org.springframework.stereotype.Component
 import ru.aigram.domain.ActivityFeedback
 import ru.aigram.domain.ActivityFeedbackUpdate
 import java.nio.file.Files
@@ -10,6 +11,7 @@ import java.nio.file.StandardCopyOption
 import java.time.Clock
 
 /** Explicit local human feedback. No conversation, generation trace or training data is copied here. */
+@Component
 class ActivityFeedbackStore @Inject constructor(directory: Path, private val clock: Clock) {
     private val file = directory.resolve("feedback/activity.json")
     private val json = Json { ignoreUnknownKeys = true }

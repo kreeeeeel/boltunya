@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
+import org.springframework.stereotype.Component
 import ru.aigram.ai.EngineManager
 import ru.aigram.ai.ModelInference
 import ru.aigram.ai.OllamaDeviceSelector
@@ -34,6 +35,7 @@ private val REPLY_SETTINGS = setOf(
     SettingKey.IGNORE_ASSISTANT_TASKS,
 )
 
+@Component
 class SettingsEndpoint @Inject constructor(
     private val json: Json,
     private val settings: SettingsStore,

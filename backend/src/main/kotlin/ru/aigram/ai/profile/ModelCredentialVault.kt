@@ -4,6 +4,7 @@ import com.sun.jna.platform.win32.Crypt32Util
 import jakarta.inject.Inject
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import org.springframework.stereotype.Component
 import ru.aigram.exception.impl.InvalidModelProfileException
 import ru.aigram.exception.impl.ModelCredentialMissingException
 import java.nio.file.Files
@@ -12,6 +13,7 @@ import java.nio.file.StandardCopyOption
 import java.util.UUID
 
 /** Windows DPAPI binds credentials to the current OS user; metadata contains no keys. */
+@Component
 class ModelCredentialVault @Inject constructor(directory: Path) {
     private val directory = directory.resolve("models/credentials")
 

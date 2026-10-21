@@ -708,6 +708,9 @@ class ReplyCoordinator(
 
     override fun close() {
         synchronized(gate) {
+            if (closed) {
+                return
+            }
             closed = true
             cancelPending()
         }

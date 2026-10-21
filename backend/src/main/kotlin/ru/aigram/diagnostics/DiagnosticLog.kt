@@ -3,6 +3,7 @@ package ru.aigram.diagnostics
 import jakarta.inject.Inject
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import org.springframework.stereotype.Component
 import ru.aigram.exception.AppException
 import ru.aigram.exception.ErrorCode
 import ru.aigram.resources.ResourceCatalog
@@ -26,6 +27,7 @@ private val UPDATE_CODES = mapOf(
 )
 
 /** A bounded support log. Exception messages, requests, prompts and chat identifiers are never persisted. */
+@Component
 class DiagnosticLog @Inject constructor(directory: Path, private val clock: Clock, resources: ResourceCatalog) {
     private val path = directory.resolve("diagnostics/errors.json")
     private val updatePath = directory.resolve("desktop/updates/last-error.json")

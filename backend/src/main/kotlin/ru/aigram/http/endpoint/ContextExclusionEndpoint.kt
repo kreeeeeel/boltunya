@@ -4,6 +4,7 @@ import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
+import org.springframework.stereotype.Component
 import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.domain.ContextExclusionUpdate
 import ru.aigram.exception.impl.ChatNotFoundException
@@ -11,6 +12,7 @@ import ru.aigram.memory.MemoryCoordinator
 import ru.aigram.storage.ContextExclusionStore
 import ru.aigram.telegram.TelegramGateway
 
+@Component
 class ContextExclusionEndpoint @Inject constructor(
     private val json: Json,
     private val exclusions: ContextExclusionStore,

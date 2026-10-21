@@ -1,11 +1,12 @@
 package ru.aigram.application
 
-import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.http.ExitAction
 
 private const val RESPONSE_FLUSH_DELAY_MS = 300L
 
-class ProcessExit @Inject constructor() : ExitAction {
+@Component
+class ProcessExit : ExitAction {
     override fun request() {
         Thread.ofPlatform().start {
             Thread.sleep(RESPONSE_FLUSH_DELAY_MS)

@@ -1,19 +1,17 @@
 package ru.aigram.http
 
-import com.google.inject.AbstractModule
-import com.google.inject.Guice
-import com.google.inject.util.Modules
 import it.tdlight.jni.TdApi
+import org.springframework.beans.factory.support.BeanDefinitionRegistry
+import org.springframework.boot.Banner
+import org.springframework.boot.WebApplicationType
+import org.springframework.boot.builder.SpringApplicationBuilder
 import ru.aigram.ai.AiTestServices
 import ru.aigram.ai.ComputeDeviceDiscovery
-import ru.aigram.ai.ConversationService
 import ru.aigram.ai.EngineManager
-import ru.aigram.ai.OllamaRuntime
-import ru.aigram.ai.model.ChatCompletionService
 import ru.aigram.ai.research.ExaMcpSearchClient
 import ru.aigram.automation.ReplyCoordinator
+import ru.aigram.configuration.AigramApplication
 import ru.aigram.configuration.ApplicationConfiguration
-import ru.aigram.configuration.ApplicationModule
 import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.SettingsStore
@@ -36,27 +34,58 @@ class TestWebServerFactory {
         diagnostics: DiagnosticLog? = null,
         devices: ComputeDeviceDiscovery? = null,
         onQuit: () -> Unit,
-    ): LocalWebServer {
-        val overrides = object : AbstractModule() {
-            override fun configure() {
-                bind(SettingsStore::class.java).toInstance(settings)
-                bind(TelegramGateway::class.java).toInstance(telegram)
-                bind(EngineManager::class.java).toInstance(engine)
-                bind(ConversationService::class.java).toInstance(ollama.conversation)
-                bind(OllamaRuntime::class.java).toInstance(ollama.runtime)
-                bind(ChatCompletionService::class.java).toInstance(ollama.completion)
-                bind(ReplyCoordinator::class.java).toInstance(replies)
-                bind(AutomatedReplyStore::class.java).toInstance(automated)
-                bind(StorageClient::class.java).toInstance(storageClient)
-                if (search != null) bind(ExaMcpSearchClient::class.java).toInstance(search)
-                if (diagnostics != null) bind(DiagnosticLog::class.java).toInstance(diagnostics)
-                if (devices != null) bind(ComputeDeviceDiscovery::class.java).toInstance(devices)
-                bind(LocalSession::class.java).toInstance(LocalSession(token))
-                bind(ExitAction::class.java).toInstance(ExitAction(onQuit))
-            }
+    ): TestWebServer {
+        val supplied = linkedMapOf<String, Any>(
+            "settingsStore" to settings,
+            "tdLightGateway" to telegram,
+            "engineManager" to engine,
+            "conversationService" to ollama.conversation,
+            "ollamaRuntime" to ollama.runtime,
+            "chatCompletionService" to ollama.completion,
+            "replyCoordinator" to replies,
+            "automatedReplyStore" to automated,
+            "tdLightStorageClient" to storageClient,
+            "localSession" to LocalSession(token),
+            "processExit" to ExitAction(onQuit),
+        )
+        if (search != null) {
+            supplied["exaMcpSearchClient"] = search
         }
-        return Guice.createInjector(
-            Modules.override(ApplicationModule(ApplicationConfiguration(directory, false))).with(overrides),
-        ).getInstance(LocalWebServer::class.java)
+        if (diagnostics != null) {
+            supplied["diagnosticLog"] = diagnostics
+        }
+        if (devices != null) {
+            supplied["nvidiaDeviceDiscovery"] = devices
+        }
+
+        val application = SpringApplicationBuilder(AigramApplication::class.java)
+            .web(WebApplicationType.NONE)
+            .profiles("tests")
+            .registerShutdownHook(false)
+            .bannerMode(Banner.Mode.OFF)
+            .logStartupInfo(false)
+            .initializers({ context ->
+                context.beanFactory.registerSingleton(
+                    "applicationConfiguration",
+                    ApplicationConfiguration(directory, false),
+                )
+                context.addBeanFactoryPostProcessor { beanFactory ->
+                    val registry = beanFactory as BeanDefinitionRegistry
+                    // HTTP tests never start the desktop lifecycle, which owns the supplied services.
+                    if (registry.containsBeanDefinition("applicationRuntime")) {
+                        registry.getBeanDefinition("applicationRuntime").isLazyInit = true
+                    }
+
+                    supplied.entries.stream().forEach { (name, instance) ->
+                        if (registry.containsBeanDefinition(name)) {
+                            registry.removeBeanDefinition(name)
+                        }
+                        // These instances are closed by their test callers, rather than owned by Spring.
+                        beanFactory.registerSingleton(name, instance)
+                    }
+                }
+            }).run()
+
+        return TestWebServer(application)
     }
 }

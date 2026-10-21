@@ -1,6 +1,7 @@
 package ru.aigram.ai
 
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.domain.ChatMessage
 import ru.aigram.resources.ResourceCatalog
 
@@ -9,6 +10,7 @@ private const val MAX_SAMPLE_CHARACTERS = 600
 private const val MAX_STYLE_SAMPLES = 40L
 private const val MIN_STYLE_SAMPLES = 3
 
+@Component
 class PersonalStyleBuilder @Inject constructor() {
     fun build(history: List<ChatMessage>): String {
         val samples = history.asReversed().stream()

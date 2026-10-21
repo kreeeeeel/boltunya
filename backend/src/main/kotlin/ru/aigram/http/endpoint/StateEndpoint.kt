@@ -1,12 +1,14 @@
 package ru.aigram.http.endpoint
 
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.ai.EngineManager
 import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.domain.ApiState
 import ru.aigram.storage.SettingsStore
 import ru.aigram.telegram.TelegramGateway
 
+@Component
 class StateEndpoint @Inject constructor(
     private val settings: SettingsStore,
     private val telegram: TelegramGateway,

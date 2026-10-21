@@ -5,6 +5,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
+import org.springframework.stereotype.Component
 import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.automation.activity.ActivityHistoryStore
 import ru.aigram.domain.ActivityFeedback
@@ -16,6 +17,7 @@ import ru.aigram.exception.impl.MalformedPayloadException
 import ru.aigram.http.InputValidation
 import ru.aigram.telegram.TelegramGateway
 
+@Component
 class ActivityEndpoint @Inject constructor(
     private val replies: ReplyCoordinator,
     private val json: Json,

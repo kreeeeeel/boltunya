@@ -3,9 +3,11 @@ package ru.aigram.http
 import com.sun.net.httpserver.HttpExchange
 import jakarta.inject.Inject
 import kotlinx.serialization.json.JsonElement
+import org.springframework.stereotype.Component
 
 private const val HTTP_OK = 200
 
+@Component
 class ResponseWriter @Inject constructor() {
     fun json(exchange: HttpExchange, value: JsonElement, status: Int = HTTP_OK) {
         exchange.responseHeaders.set("Content-Type", "application/json; charset=utf-8")

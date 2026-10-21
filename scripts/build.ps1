@@ -33,9 +33,22 @@ try {
     & ./gradlew.bat :backend:prepareDesktop "-PappVersion=$Version" --no-daemon
     if ($LASTEXITCODE -ne 0) { throw 'Backend and web build failed' }
     $runtime=Join-Path $projectRoot 'build/runtime'
+    $runtimeModules=@('java.base','java.desktop','java.instrument','java.net.http','jdk.httpserver','jdk.crypto.ec','java.logging','java.management','jdk.management','jdk.unsupported','java.naming','java.sql','jdk.charsets')
+    $runtimeJava=Join-Path $runtime 'bin/java.exe'
+    if (Test-Path -LiteralPath $runtimeJava) {
+        $installedModules=@(& $runtimeJava --list-modules | ForEach-Object { $_.Split('@')[0] })
+        if ($LASTEXITCODE -ne 0) { throw 'Could not inspect bundled Java runtime' }
+        $missingModules=@($runtimeModules | Where-Object { $_ -notin $installedModules })
+        if ($missingModules.Count -gt 0) {
+            $runtimePath=[System.IO.Path]::GetFullPath($runtime)
+            $expectedPath=[System.IO.Path]::GetFullPath((Join-Path $projectRoot 'build/runtime'))
+            if ($runtimePath -ne $expectedPath) { throw 'Unexpected runtime directory' }
+            Remove-Item -LiteralPath $runtimePath -Recurse -Force
+        }
+    }
     if (-not (Test-Path -LiteralPath (Join-Path $runtime 'bin/java.exe'))) {
         $jdkBin=Split-Path (Get-Command java.exe).Source
-        & (Join-Path $jdkBin 'jlink.exe') --output $runtime --strip-debug --no-header-files --no-man-pages --add-modules java.base,java.desktop,java.net.http,jdk.httpserver,jdk.crypto.ec,java.logging,java.management,jdk.management,jdk.unsupported,java.naming,java.sql,jdk.charsets
+        & (Join-Path $jdkBin 'jlink.exe') --output $runtime --strip-debug --no-header-files --no-man-pages --add-modules ($runtimeModules -join ',')
         if ($LASTEXITCODE -ne 0) { throw 'Bundled Java runtime build failed' }
     }
     $unpackName="aigram-$Version-" + [guid]::NewGuid().ToString('N').Substring(0,12)

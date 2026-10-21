@@ -4,6 +4,7 @@ import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
+import org.springframework.stereotype.Component
 import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.domain.TelegramCredentials
 import ru.aigram.http.InputValidation
@@ -13,6 +14,7 @@ import ru.aigram.telegram.TelegramGateway
 
 private const val MAX_AUTH_INPUT_CHARACTERS = 256
 
+@Component
 class AuthenticationEndpoint @Inject constructor(
     private val json: Json,
     private val telegram: TelegramGateway,

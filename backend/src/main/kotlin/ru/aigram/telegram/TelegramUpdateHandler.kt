@@ -4,6 +4,7 @@ import it.tdlight.client.SimpleTelegramClientBuilder
 import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
 import jakarta.inject.Provider
+import org.springframework.stereotype.Component
 import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.automation.proactive.ProactiveCoordinator
 import ru.aigram.domain.TelegramStatus
@@ -11,6 +12,7 @@ import ru.aigram.exception.impl.TelegramRequestRejectedException
 import ru.aigram.exception.impl.TelegramUpdateFailedException
 import ru.aigram.memory.MemoryCoordinator
 
+@Component
 class TelegramUpdateHandler @Inject constructor(
     private val cache: TelegramCache,
     private val connection: TelegramConnectionState,

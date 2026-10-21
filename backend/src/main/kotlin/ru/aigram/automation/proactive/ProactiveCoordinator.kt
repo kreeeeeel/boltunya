@@ -15,6 +15,7 @@ import ru.aigram.telegram.TelegramGateway
 import java.time.Clock
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 private const val TICK_SECONDS = 30L
 
@@ -29,6 +30,7 @@ class ProactiveCoordinator(
     private val diagnostics: DiagnosticLog,
     private val generate: (ChatRule, List<ChatMessage>) -> ReplyResult,
 ) : AutoCloseable {
+    private val closed = AtomicBoolean()
     private val executor = Executors.newSingleThreadScheduledExecutor { task ->
         Thread(task, "conversation-initiative").also { it.isDaemon = true }
     }
@@ -130,6 +132,9 @@ class ProactiveCoordinator(
     }
 
     override fun close() {
+        if (!closed.compareAndSet(false, true)) {
+            return
+        }
         executor.shutdownNow()
     }
 }

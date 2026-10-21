@@ -528,12 +528,17 @@ class MemoryCoordinator @Inject constructor(
 
     override fun close() {
         synchronized(executor) {
+            if (closed) {
+                return
+            }
             closed = true
             executor.shutdown()
         }
         val finished = completion.get()
         val id = outstanding.get()
-        if (id.isNotEmpty()) queue.cancelMemory(id)
+        if (id.isNotEmpty()) {
+            queue.cancelMemory(id)
+        }
         inference.interruptBackground()
         try {
             if (finished != null && !finished.await(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {

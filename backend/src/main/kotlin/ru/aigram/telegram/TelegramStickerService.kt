@@ -3,6 +3,7 @@ package ru.aigram.telegram
 import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
 import jakarta.inject.Provider
+import org.springframework.stereotype.Component
 import ru.aigram.domain.StickerCatalog
 import ru.aigram.domain.StickerItem
 import ru.aigram.exception.impl.InvalidMediaIdentifierException
@@ -17,6 +18,7 @@ import java.util.concurrent.TimeoutException
 private const val STICKER_TIMEOUT_SECONDS = 15L
 private const val STICKER_CACHE_MS = 30_000L
 
+@Component
 class TelegramStickerService @Inject constructor(
     private val gateway: Provider<TdLightGateway>,
     private val registry: TelegramStickerRegistry,

@@ -1,6 +1,7 @@
 package ru.aigram.ai
 
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.exception.IntegrationException
 import ru.aigram.exception.impl.IncompleteModelDownloadException
 import ru.aigram.exception.impl.InvalidModelRangeException
@@ -30,6 +31,7 @@ import java.util.stream.LongStream
 
 private const val CHUNK_BYTES = 4L * 1024 * 1024
 
+@Component
 class RegistryBlobDownloader @Inject constructor(private val http: HttpClient) {
     fun download(url: URI, target: Path, digest: String, size: Long, onBytes: (Long) -> Unit) {
         if (size <= 0) {

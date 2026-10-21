@@ -1,10 +1,12 @@
 package ru.aigram.resources
 
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Stream
 
 /** UTF-8 resources are versioned with the backend; user data never becomes executable code. */
+@Component
 class ResourceCatalog @Inject constructor() {
     private val texts = ConcurrentHashMap<String, String>()
 

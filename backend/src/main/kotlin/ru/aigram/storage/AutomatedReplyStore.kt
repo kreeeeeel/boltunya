@@ -2,10 +2,12 @@ package ru.aigram.storage
 
 import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
+import org.springframework.stereotype.Component
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
+@Component
 class AutomatedReplyStore @Inject constructor(directory: Path) {
     private val file = directory.resolve("automated-replies.json")
 

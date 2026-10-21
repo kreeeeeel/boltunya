@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonPrimitive
+import org.springframework.stereotype.Component
 import ru.aigram.ai.ConversationService
 import ru.aigram.domain.ChatMessage
 import ru.aigram.domain.ChatRule
@@ -23,6 +24,7 @@ import ru.aigram.telegram.TelegramGateway
 private const val STYLE_HISTORY_SIZE = 100
 private const val MAX_MESSAGE_CHARACTERS = 4096
 
+@Component
 class PreviewEndpoint @Inject constructor(
     private val json: Json,
     private val settings: SettingsStore,

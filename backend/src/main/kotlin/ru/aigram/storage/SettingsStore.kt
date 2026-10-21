@@ -1,6 +1,7 @@
 package ru.aigram.storage
 
 import kotlinx.serialization.json.Json
+import org.springframework.stereotype.Component
 import ru.aigram.domain.AppSettings
 import ru.aigram.domain.ChatRule
 import ru.aigram.domain.CommunicationStyle
@@ -8,6 +9,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
+@Component
 class SettingsStore(private val directory: Path) {
     private val json = Json {
         prettyPrint = true

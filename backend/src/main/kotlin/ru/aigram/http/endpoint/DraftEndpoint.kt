@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonPrimitive
+import org.springframework.stereotype.Component
 import ru.aigram.ai.profile.ModelTargetResolver
 import ru.aigram.ai.profile.ModelTask
 import ru.aigram.automation.PersonalReplyGenerator
@@ -22,6 +23,7 @@ import ru.aigram.telegram.TelegramGateway
 
 private const val STYLE_HISTORY_SIZE = 100
 
+@Component
 class DraftEndpoint @Inject constructor(
     private val json: Json,
     private val settings: SettingsStore,

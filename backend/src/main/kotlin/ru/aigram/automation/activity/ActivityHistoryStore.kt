@@ -2,6 +2,7 @@ package ru.aigram.automation.activity
 
 import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
+import org.springframework.stereotype.Component
 import ru.aigram.domain.ActivityDetails
 import ru.aigram.domain.ActivityEntry
 import ru.aigram.domain.ActivityHistoryPage
@@ -32,6 +33,7 @@ private const val SECONDS_PER_DAY = 86400L
 private val ACTIVE_STATUSES = setOf("queued", "generating")
 
 /** Local, account-scoped conversation history. Diagnostics never receive its contents. */
+@Component
 class ActivityHistoryStore @Inject constructor(directory: Path, private val clock: Clock, resources: ResourceCatalog) :
     AutoCloseable {
     private val closed = AtomicBoolean()

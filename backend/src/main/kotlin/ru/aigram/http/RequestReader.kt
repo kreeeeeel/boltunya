@@ -8,12 +8,14 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import org.springframework.stereotype.Component
 import ru.aigram.exception.impl.InvalidFieldLengthException
 import ru.aigram.exception.impl.MalformedPayloadException
 import ru.aigram.exception.impl.RequestTooLargeException
 
 private const val MAX_REQUEST_BODY_BYTES = 512 * 1024
 
+@Component
 class RequestReader @Inject constructor(private val json: Json) {
     fun read(exchange: HttpExchange): JsonObject {
         val bytes = exchange.requestBody.readNBytes(MAX_REQUEST_BODY_BYTES + 1)

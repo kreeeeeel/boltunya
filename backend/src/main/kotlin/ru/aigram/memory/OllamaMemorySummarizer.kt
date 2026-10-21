@@ -5,9 +5,11 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
+import org.springframework.stereotype.Component
 import ru.aigram.ai.model.ChatCompletionService
 import ru.aigram.resources.ResourceCatalog
 
+@Component
 class OllamaMemorySummarizer @Inject constructor(
     private val completion: ChatCompletionService,
     private val resources: ResourceCatalog,

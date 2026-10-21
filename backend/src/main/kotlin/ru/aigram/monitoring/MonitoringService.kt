@@ -6,12 +6,14 @@ import oshi.software.os.OSProcess
 import java.time.Instant
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 private const val HISTORY_SAMPLES = 90
 private const val SAMPLE_INTERVAL_SECONDS = 2L
 private const val PERCENT = 100.0
 
 class MonitoringService @Inject constructor(private val gpu: NvidiaMonitor) : AutoCloseable {
+    private val closed = AtomicBoolean()
     private val system = SystemInfo()
     private val cpu = system.hardware.processor
     private val interfaces = system.hardware.getNetworkIFs(false)
@@ -85,6 +87,9 @@ class MonitoringService @Inject constructor(private val gpu: NvidiaMonitor) : Au
     }
 
     override fun close() {
+        if (!closed.compareAndSet(false, true)) {
+            return
+        }
         executor.shutdownNow()
     }
 }

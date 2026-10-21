@@ -2,12 +2,14 @@ package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.domain.MediaAttachment
 import ru.aigram.domain.StickerItem
 import ru.aigram.domain.StickerSet
 import ru.aigram.exception.impl.UnknownMediaException
 import java.util.concurrent.ConcurrentHashMap
 
+@Component
 class TelegramStickerRegistry @Inject constructor(private val files: TelegramMediaStore) {
     private var ownerId = ""
     private val stickers = ConcurrentHashMap<String, StickerItem>()

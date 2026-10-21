@@ -4,6 +4,7 @@ import it.tdlight.client.TelegramError
 import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
 import jakarta.inject.Provider
+import org.springframework.stereotype.Component
 import ru.aigram.exception.impl.TelegramRateLimitException
 import ru.aigram.exception.impl.TelegramSendFailedException
 import java.util.concurrent.ExecutionException
@@ -15,6 +16,7 @@ private const val RATE_LIMIT_ERROR = 429
 private const val DEFAULT_BACKOFF_SECONDS = 60L
 private const val MAX_BACKOFF_SECONDS = 86400L
 
+@Component
 class TelegramMessageSender @Inject constructor(private val gateway: Provider<TdLightGateway>) {
     fun send(chatId: String, text: String, replyToId: String, topicId: Int): String {
         val service = gateway.get()

@@ -2,11 +2,13 @@ package ru.aigram.storage
 
 import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
+import org.springframework.stereotype.Component
 import ru.aigram.domain.ChatMessage
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
+@Component
 class WritingStyleStore @Inject constructor(directory: Path) {
     private val file = directory.resolve("writing-style.json")
     private var samples = if (Files.exists(file)) {

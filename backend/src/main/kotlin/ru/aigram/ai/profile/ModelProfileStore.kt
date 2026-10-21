@@ -2,6 +2,7 @@ package ru.aigram.ai.profile
 
 import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
+import org.springframework.stereotype.Component
 import ru.aigram.exception.impl.InvalidModelProfileException
 import ru.aigram.exception.impl.ModelCredentialMissingException
 import ru.aigram.exception.impl.ModelProfileChangedException
@@ -16,6 +17,7 @@ import java.util.UUID
 
 private const val MAX_PROFILES = 40
 
+@Component
 class ModelProfileStore @Inject constructor(
     directory: Path,
     private val vault: ModelCredentialVault,

@@ -2,6 +2,7 @@ package ru.aigram.storage
 
 import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
+import org.springframework.stereotype.Component
 import ru.aigram.domain.ChatMessage
 import ru.aigram.exception.impl.InvalidHistoryIdentifierException
 import ru.aigram.validation.InputRule
@@ -13,6 +14,7 @@ import java.time.Clock
 private const val MESSAGE_ID_SHIFT = 20
 private const val MESSAGES_PER_BUCKET = 128
 
+@Component
 class MessageArchiveStore @Inject constructor(directory: Path, private val clock: Clock) {
     private val root = directory.resolve("history")
     private val json = Json { ignoreUnknownKeys = true }

@@ -2,11 +2,13 @@ package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.domain.MessageDeletionOptions
 import ru.aigram.domain.MessageDeletionScope
 import ru.aigram.exception.impl.InvalidHistoryIdentifierException
 import ru.aigram.exception.impl.MessageDeletionNotAllowedException
 
+@Component
 class TelegramMessageDeletionPolicy @Inject constructor() {
     fun propertiesRequest(chatId: Long, messageId: String): TdApi.GetMessageProperties {
         val id = messageId.toLongOrNull()

@@ -1,6 +1,7 @@
 package ru.aigram.ai
 
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.domain.ComputeDevice
 import ru.aigram.validation.InputRule
 import java.io.IOException
@@ -20,6 +21,7 @@ private const val MIN_DRIVER_MAJOR = 550
 private const val MIN_LEGACY_DRIVER_MAJOR = 570
 private const val QUERY_FIELDS = 5
 
+@Component
 class NvidiaDeviceDiscovery @Inject constructor(private val clock: Clock) : ComputeDeviceDiscovery {
     private var refreshedAt = Long.MIN_VALUE
     private var cached = emptyList<ComputeDevice>()

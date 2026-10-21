@@ -2,8 +2,10 @@ package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.domain.MessageEntity
 
+@Component
 class TelegramEntityMapper @Inject constructor() {
     fun map(text: TdApi.FormattedText): List<MessageEntity> = text.entities.orEmpty().mapNotNull { entity ->
         val type = entity.type

@@ -2,6 +2,7 @@ package ru.aigram.ai.prompt
 
 import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
+import org.springframework.stereotype.Component
 import ru.aigram.ai.profile.ResolvedModelTarget
 import ru.aigram.exception.impl.InvalidModelPromptException
 import java.nio.file.Files
@@ -10,6 +11,7 @@ import java.nio.file.StandardCopyOption
 
 private const val MAX_MODEL_PROMPTS = 200
 
+@Component
 class ModelPromptStore @Inject constructor(directory: Path) {
     private val file = directory.resolve("models/prompts.json")
     private val json = Json {

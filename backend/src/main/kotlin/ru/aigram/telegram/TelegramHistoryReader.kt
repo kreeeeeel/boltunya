@@ -3,6 +3,7 @@ package ru.aigram.telegram
 import it.tdlight.client.SimpleTelegramClient
 import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.domain.ChatMessage
 import ru.aigram.storage.MessageArchiveStore
 import java.util.concurrent.TimeUnit
@@ -11,6 +12,7 @@ private const val MAX_PAGE_SIZE = 100
 private const val MAX_READ_DEPTH = 20
 private const val HISTORY_TIMEOUT_SECONDS = 20L
 
+@Component
 class TelegramHistoryReader @Inject constructor(
     private val mapper: TelegramMessageView,
     private val cache: TelegramCache,

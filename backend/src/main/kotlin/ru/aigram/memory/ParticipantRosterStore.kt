@@ -2,6 +2,7 @@ package ru.aigram.memory
 
 import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
+import org.springframework.stereotype.Component
 import ru.aigram.domain.ChatMessage
 import ru.aigram.exception.impl.InvalidMemoryChatException
 import ru.aigram.exception.impl.MemoryTooLargeException
@@ -23,6 +24,7 @@ private const val MAX_USERNAME_LENGTH = 64
 private const val MAX_CONTEXT_CHARACTERS = 4000
 
 /** A deterministic index of observed group authors. It never fetches a group's member list or infers traits. */
+@Component
 class ParticipantRosterStore @Inject constructor(
     directory: Path,
     private val exclusions: ContextExclusionStore? = null,

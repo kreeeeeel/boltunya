@@ -3,11 +3,13 @@ package ru.aigram.storage
 import com.sun.jna.platform.win32.Crypt32Util
 import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
+import org.springframework.stereotype.Component
 import ru.aigram.domain.TelegramCredentials
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
+@Component
 class CredentialStore @Inject constructor(private val directory: Path) {
     private val file = directory.resolve("telegram.credentials")
 

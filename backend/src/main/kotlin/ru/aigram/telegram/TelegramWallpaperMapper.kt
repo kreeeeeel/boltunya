@@ -2,11 +2,13 @@ package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.domain.ChatWallpaper
 import java.util.Arrays
 
 private const val RGB_MASK = 0xffffff
 
+@Component
 class TelegramWallpaperMapper @Inject constructor(private val files: TelegramMediaStore) {
     fun map(chat: TdApi.ChatBackground?, default: TdApi.Background? = null): ChatWallpaper? {
         val background = chat?.background ?: default ?: return null

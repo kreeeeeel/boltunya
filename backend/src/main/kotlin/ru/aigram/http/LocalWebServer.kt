@@ -13,6 +13,7 @@ import ru.aigram.exception.impl.MalformedPayloadException
 import ru.aigram.exception.impl.RequestFailedException
 import java.net.InetSocketAddress
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
 private const val LOOPBACK_ADDRESS = "127.0.0.1"
 private const val LISTEN_BACKLOG = 64
@@ -24,6 +25,7 @@ class LocalWebServer @Inject constructor(
     private val resources: ResourceResponder,
     private val diagnostics: DiagnosticLog,
 ) : AutoCloseable {
+    private val closed = AtomicBoolean()
     private val executor = Executors.newVirtualThreadPerTaskExecutor()
     private val server = HttpServer.create(InetSocketAddress(LOOPBACK_ADDRESS, 0), LISTEN_BACKLOG)
 
@@ -75,6 +77,9 @@ class LocalWebServer @Inject constructor(
     }
 
     override fun close() {
+        if (!closed.compareAndSet(false, true)) {
+            return
+        }
         server.stop(0)
         executor.shutdownNow()
         router.close()

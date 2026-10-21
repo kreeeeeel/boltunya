@@ -8,6 +8,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
+import org.springframework.stereotype.Component
 import ru.aigram.ai.profile.ProfileModelFactory
 import ru.aigram.exception.impl.MalformedPayloadException
 import ru.aigram.exception.impl.MethodNotAllowedException
@@ -33,6 +34,7 @@ import ru.aigram.http.endpoint.StateEndpoint
 import ru.aigram.http.endpoint.UploadEndpoint
 import ru.aigram.monitoring.MonitoringService
 import ru.aigram.telegram.TelegramCacheStorage
+import java.util.concurrent.atomic.AtomicBoolean
 
 private const val RESOURCE_SEGMENT = 2
 private const val ID_SEGMENT = 3
@@ -45,6 +47,7 @@ private const val MESSAGE_ID_SEGMENT = 5
 private const val MESSAGE_ACTION_SEGMENT = 6
 private const val MEDIA_PREFIX = "/api/media/"
 
+@Component
 class ApiRouter @Inject constructor(
     private val json: Json,
     private val input: RequestReader,
@@ -74,6 +77,7 @@ class ApiRouter @Inject constructor(
     private val prompts: PromptEndpoint,
     private val deletions: MessageDeletionEndpoint,
 ) : AutoCloseable {
+    private val closed = AtomicBoolean()
     fun handle(exchange: HttpExchange) {
         val path = exchange.requestURI.path
         val method =
@@ -326,6 +330,9 @@ class ApiRouter @Inject constructor(
 
     private fun ok(): JsonObject = buildJsonObject { put("ok", true) }
     override fun close() {
+        if (!closed.compareAndSet(false, true)) {
+            return
+        }
         validation.close()
         modelClients.close()
         activity.close()

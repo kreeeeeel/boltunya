@@ -2,12 +2,14 @@ package ru.aigram.memory
 
 import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
+import org.springframework.stereotype.Component
 import ru.aigram.domain.ChatMessage
 import ru.aigram.exception.impl.MemorySourceContextLimitException
 import ru.aigram.storage.AutomatedReplyStore
 
 private const val MAX_BATCH_CHARACTERS = 7000
 
+@Component
 class MemoryBatchBuilder @Inject constructor(private val automated: AutomatedReplyStore) {
     fun select(
         messages: List<ChatMessage>,

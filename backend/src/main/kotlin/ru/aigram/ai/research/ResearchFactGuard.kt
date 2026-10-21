@@ -1,9 +1,11 @@
 package ru.aigram.ai.research
 
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.domain.ChatMessage
 import ru.aigram.resources.ResourceCatalog
 
+@Component
 class ResearchFactGuard @Inject constructor(private val resources: ResourceCatalog) {
     private val terms = ResearchTerms(resources)
     private val markdown = ResearchMarkdown()

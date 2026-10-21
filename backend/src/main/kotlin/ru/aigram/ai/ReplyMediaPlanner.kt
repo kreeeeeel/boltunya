@@ -10,10 +10,12 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.springframework.ai.chat.messages.Message
 import org.springframework.ai.chat.messages.SystemMessage
+import org.springframework.stereotype.Component
 import ru.aigram.domain.StickerItem
 import ru.aigram.exception.impl.InvalidModelReplyException
 import ru.aigram.resources.ResourceCatalog
 
+@Component
 class ReplyMediaPlanner @Inject constructor(private val resources: ResourceCatalog) {
     fun schema(stickers: List<StickerItem>): JsonObject = buildJsonObject {
         put("type", "object")

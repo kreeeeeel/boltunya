@@ -2,6 +2,7 @@ package ru.aigram.memory
 
 import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
+import org.springframework.stereotype.Component
 import ru.aigram.exception.impl.InvalidMemoryChatException
 import ru.aigram.exception.impl.MemoryConflictException
 import ru.aigram.exception.impl.MemoryNotReadyException
@@ -21,6 +22,7 @@ private const val MAX_NOTES_CHARACTERS = 16000
 private const val MAX_SUMMARY_CHARACTERS = 6000
 private const val MAX_DOCUMENT_BYTES = 256L * 1024
 
+@Component
 class MemoryStore @Inject constructor(directory: Path, private val resources: ResourceCatalog) {
     private val root = directory.resolve("memory")
     private val json = Json {

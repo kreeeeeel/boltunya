@@ -3,6 +3,7 @@ package ru.aigram.telegram
 import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
 import jakarta.inject.Provider
+import org.springframework.stereotype.Component
 import ru.aigram.domain.OutgoingMedia
 import ru.aigram.exception.impl.TelegramSendFailedException
 import java.util.concurrent.ExecutionException
@@ -11,6 +12,7 @@ import java.util.concurrent.TimeoutException
 
 private const val MEDIA_SEND_TIMEOUT_SECONDS = 60L
 
+@Component
 class TelegramMediaSender @Inject constructor(
     private val gateway: Provider<TdLightGateway>,
     private val content: TelegramMediaContent,

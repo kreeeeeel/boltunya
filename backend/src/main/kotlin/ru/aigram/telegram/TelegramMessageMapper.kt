@@ -2,10 +2,12 @@ package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.domain.ChatMessage
 import ru.aigram.domain.MediaAttachment
 import java.util.stream.IntStream
 
+@Component
 class TelegramMessageMapper @Inject constructor(
     private val files: TelegramMediaStore,
     private val entities: TelegramEntityMapper = TelegramEntityMapper(),

@@ -4,6 +4,7 @@ import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
+import org.springframework.stereotype.Component
 import ru.aigram.domain.MessageDeletionOptions
 import ru.aigram.domain.MessageDeletionRequest
 import ru.aigram.domain.MessageDeletionResult
@@ -13,6 +14,7 @@ import ru.aigram.exception.impl.TelegramNotConnectedException
 import ru.aigram.telegram.TelegramGateway
 import ru.aigram.telegram.TelegramMessageDeletionPolicy
 
+@Component
 class MessageDeletionEndpoint @Inject constructor(
     private val json: Json,
     private val telegram: TelegramGateway,

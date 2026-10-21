@@ -1,6 +1,7 @@
 package ru.aigram.ai
 
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.domain.ComputeDevice
 import ru.aigram.domain.ComputeDeviceStatus
 import ru.aigram.exception.impl.InvalidOllamaDeviceException
@@ -10,6 +11,7 @@ import ru.aigram.validation.InputRule
 private const val AUTOMATIC_DEVICE = "auto"
 private const val CPU_DEVICE = "cpu"
 
+@Component
 class OllamaDeviceSelector @Inject constructor(
     private val settings: SettingsStore,
     private val discovery: ComputeDeviceDiscovery,

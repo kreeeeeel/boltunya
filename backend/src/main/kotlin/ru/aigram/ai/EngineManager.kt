@@ -25,6 +25,7 @@ import java.net.http.HttpResponse
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import java.util.zip.ZipInputStream
 
@@ -44,6 +45,7 @@ class EngineManager @Inject constructor(
     private val diagnostics: DiagnosticLog? = null,
     private val devices: OllamaDeviceSelector? = null,
 ) : AutoCloseable {
+    private val closed = AtomicBoolean()
     private val executor = Executors.newSingleThreadExecutor()
     private val warmupVersion = AtomicLong()
 
@@ -294,6 +296,9 @@ class EngineManager @Inject constructor(
     }
 
     override fun close() {
+        if (!closed.compareAndSet(false, true)) {
+            return
+        }
         cancelDownload()
         executor.shutdownNow()
         ollama.releaseModels()

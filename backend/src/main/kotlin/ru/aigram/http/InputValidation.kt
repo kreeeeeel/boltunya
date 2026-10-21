@@ -2,6 +2,7 @@ package ru.aigram.http
 
 import jakarta.inject.Inject
 import jakarta.validation.Validation
+import org.springframework.stereotype.Component
 import ru.aigram.ai.ModelCatalog
 import ru.aigram.ai.profile.ModelTargetResolver
 import ru.aigram.ai.profile.ModelTask
@@ -9,11 +10,14 @@ import ru.aigram.domain.ChatRule
 import ru.aigram.exception.impl.ModelNotReadyForAutomationException
 import ru.aigram.exception.impl.UnknownModelException
 import ru.aigram.exception.impl.ValidationFailedException
+import java.util.concurrent.atomic.AtomicBoolean
 
+@Component
 class InputValidation @Inject constructor(
     private val models: ModelCatalog,
     private val targets: ModelTargetResolver? = null,
 ) : AutoCloseable {
+    private val closed = AtomicBoolean()
     private val factory = Validation.buildDefaultValidatorFactory()
     private val validator = factory.validator
 
@@ -41,6 +45,9 @@ class InputValidation @Inject constructor(
     }
 
     override fun close() {
+        if (!closed.compareAndSet(false, true)) {
+            return
+        }
         factory.close()
     }
 }

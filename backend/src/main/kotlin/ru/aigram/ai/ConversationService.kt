@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonObject
 import org.springframework.ai.chat.messages.Message
 import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.content.Media
+import org.springframework.stereotype.Component
 import ru.aigram.ai.model.ChatCompletionService
 import ru.aigram.ai.profile.ModelTask
 import ru.aigram.ai.research.InternetResearcher
@@ -26,6 +27,7 @@ import ru.aigram.resources.ResourceCatalog
 
 private const val MEMORY_PLANNER_CHARACTERS = 6000
 
+@Component
 class ConversationService @Inject constructor(
     private val completion: ChatCompletionService,
     private val prompts: PromptBuilder,

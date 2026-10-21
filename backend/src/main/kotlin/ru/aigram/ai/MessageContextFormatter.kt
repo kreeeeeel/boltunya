@@ -4,12 +4,14 @@ import jakarta.inject.Inject
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import org.springframework.stereotype.Component
 import ru.aigram.domain.ChatMessage
 import java.time.Instant
 
 private const val MAX_AUTHOR_CHARACTERS = 128
 private const val MAX_QUOTE_CHARACTERS = 600
 
+@Component
 class MessageContextFormatter @Inject constructor() {
     fun content(message: ChatMessage, textLimit: Int): String = buildJsonObject {
         val username = message.senderUsername.removePrefix("@").take(MAX_AUTHOR_CHARACTERS)

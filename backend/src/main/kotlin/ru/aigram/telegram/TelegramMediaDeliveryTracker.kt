@@ -2,6 +2,7 @@ package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.exception.impl.TelegramSendFailedException
 import java.time.Clock
 import java.time.Duration
@@ -13,6 +14,7 @@ private const val RECEIPT_LIFETIME_MS = 5L * 60 * 1000
 private const val MAX_EARLY_RECEIPTS = 1000
 
 /** Keeps album files alive until TDLib confirms delivery; early updates may precede the send response. */
+@Component
 class TelegramMediaDeliveryTracker @Inject constructor(private val clock: Clock) {
     private val receipts = ConcurrentHashMap<Triple<String, Long, Long>, MediaDeliveryReceipt>()
 

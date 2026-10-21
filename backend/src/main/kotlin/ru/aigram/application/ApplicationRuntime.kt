@@ -1,6 +1,7 @@
 package ru.aigram.application
 
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.ai.EngineManager
 import ru.aigram.ai.profile.ModelTargetResolver
 import ru.aigram.automation.ReplyCoordinator
@@ -20,6 +21,7 @@ import java.nio.file.Files
 import java.nio.file.StandardOpenOption
 import java.util.concurrent.atomic.AtomicBoolean
 
+@Component
 class ApplicationRuntime @Inject constructor(
     private val configuration: ApplicationConfiguration,
     private val server: LocalWebServer,
@@ -41,6 +43,7 @@ class ApplicationRuntime @Inject constructor(
 
     fun start(): Boolean {
         Files.createDirectories(directory)
+
         val channel = FileChannel.open(
             directory.resolve("app.lock"),
             StandardOpenOption.CREATE,
@@ -48,32 +51,45 @@ class ApplicationRuntime @Inject constructor(
         )
         lockChannel = channel
         lock = channel.tryLock()
-        if (lock == null) return false
+        if (lock == null) {
+            return false
+        }
+
         Files.writeString(directory.resolve("launch.url"), server.start())
         monitor.start()
         engine.start()
+
         try {
             val warmModel = targets.startupWarmModel()
-            if (warmModel != null) engine.warm(warmModel)
+            if (warmModel != null) {
+                engine.warm(warmModel)
+            }
         } catch (exception: Exception) {
             diagnostics.record(DiagnosticSource.ENGINE, exception)
             System.err.println("Startup warmup skipped: ${exception.javaClass.simpleName}")
         }
+
         memory.start()
         prefetch.start()
         initiatives.start()
         Thread.ofVirtual().start {
             try {
-                if (credentials.exists()) telegram.restore()
+                if (credentials.exists()) {
+                    telegram.restore()
+                }
             } catch (exception: Exception) {
                 System.err.println("Session restore failed: ${exception.javaClass.simpleName}")
             }
         }
+
         return true
     }
 
     override fun close() {
-        if (!closed.compareAndSet(false, true)) return
+        if (!closed.compareAndSet(false, true)) {
+            return
+        }
+
         listOf(initiatives, memory, prefetch, replies, server, engine, monitor, telegram).stream().forEach { service ->
             try {
                 service.close()
@@ -83,7 +99,10 @@ class ApplicationRuntime @Inject constructor(
                 )
             }
         }
-        if (lock != null) Files.deleteIfExists(directory.resolve("launch.url"))
+        if (lock != null) {
+            Files.deleteIfExists(directory.resolve("launch.url"))
+        }
+
         lock?.release()
         lockChannel?.close()
     }

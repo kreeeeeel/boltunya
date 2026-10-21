@@ -5,6 +5,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
 import org.springframework.ai.chat.messages.SystemMessage
+import org.springframework.stereotype.Component
 import ru.aigram.ai.ModelCatalog
 import ru.aigram.ai.PromptBuilder
 import ru.aigram.ai.model.ModelPolicies
@@ -24,6 +25,7 @@ import ru.aigram.http.InputValidation
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.SettingsStore
 
+@Component
 class PromptEndpoint @Inject constructor(
     private val json: Json,
     private val preferences: ModelPromptStore,

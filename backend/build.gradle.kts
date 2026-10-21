@@ -1,6 +1,8 @@
 plugins {
-    kotlin("jvm") version "2.2.21"
-    kotlin("plugin.serialization") version "2.2.21"
+    kotlin("jvm") version "2.3.21"
+    kotlin("plugin.serialization") version "2.3.21"
+    kotlin("plugin.spring") version "2.3.21"
+    id("org.springframework.boot") version "4.1.1"
     application
     id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
 }
@@ -14,9 +16,13 @@ repositories {
 }
 
 dependencies {
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:4.1.1"))
+    implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation(kotlin("reflect"))
+    implementation("jakarta.inject:jakarta.inject-api:2.0.1")
     implementation("org.springframework.ai:spring-ai-ollama:2.0.1")
     implementation("org.springframework.ai:spring-ai-openai:2.0.1")
-    implementation("com.google.inject:guice:7.0.0")
     implementation("com.github.oshi:oshi-core:7.7.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     implementation("org.jsoup:jsoup:1.23.2")
@@ -27,12 +33,18 @@ dependencies {
     implementation("it.tdlight:tdlight-java")
     runtimeOnly("it.tdlight:tdlight-natives:4.0.594:windows_amd64")
     implementation("net.java.dev.jna:jna-platform:5.18.1")
-    implementation("org.hibernate.validator:hibernate-validator:8.0.3.Final")
-    implementation("org.glassfish:jakarta.el:4.0.2")
-    runtimeOnly("org.slf4j:slf4j-simple:2.0.17")
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.13.4")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+tasks.bootJar {
+    enabled = false
+}
+
+tasks.jar {
+    enabled = true
+    archiveClassifier.set("")
 }
 
 kotlin {

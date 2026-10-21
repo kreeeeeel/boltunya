@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 private const val MAX_PENDING_DOWNLOADS = 64
 
@@ -13,6 +14,7 @@ class MediaPrefetcher @Inject constructor(
     private val files: TelegramMediaStore,
     private val policy: MediaDownloadPolicy,
 ) : AutoCloseable {
+    private val closed = AtomicBoolean()
     private val pending = ConcurrentLinkedQueue<ChatMessage>()
     private val queued = ConcurrentHashMap.newKeySet<Int>()
     private val executor = Executors.newSingleThreadScheduledExecutor {
@@ -48,6 +50,9 @@ class MediaPrefetcher @Inject constructor(
     }
 
     override fun close() {
+        if (!closed.compareAndSet(false, true)) {
+            return
+        }
         cancelPending()
         executor.shutdownNow()
     }

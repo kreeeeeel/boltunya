@@ -3,6 +3,7 @@ package ru.aigram.telegram
 import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
 import jakarta.inject.Provider
+import org.springframework.stereotype.Component
 import ru.aigram.domain.ChatGallery
 import ru.aigram.exception.impl.InvalidMediaIdentifierException
 import ru.aigram.exception.impl.MediaUnavailableException
@@ -16,6 +17,7 @@ import java.util.stream.Collectors
 private const val GALLERY_PAGE_SIZE = 60
 private const val GALLERY_TIMEOUT_SECONDS = 20L
 
+@Component
 class TelegramGalleryService @Inject constructor(
     private val gateway: Provider<TdLightGateway>,
     private val view: TelegramMessageView,

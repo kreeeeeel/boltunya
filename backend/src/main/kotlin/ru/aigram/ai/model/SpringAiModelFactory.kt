@@ -7,10 +7,12 @@ import org.springframework.ai.ollama.api.OllamaApi
 import org.springframework.core.retry.RetryPolicy
 import org.springframework.core.retry.RetryTemplate
 import org.springframework.http.client.JdkClientHttpRequestFactory
+import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
 import java.net.http.HttpClient
 import java.time.Duration
 
+@Component
 class SpringAiModelFactory @Inject constructor() {
     fun create(baseUrl: String, connectTimeoutSeconds: Int = 3): ChatModel {
         val http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(connectTimeoutSeconds.toLong())).build()

@@ -3,11 +3,13 @@ package ru.aigram.telegram
 import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
 import jakarta.inject.Provider
+import org.springframework.stereotype.Component
 import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.domain.ChatMessage
 import ru.aigram.memory.MemoryCoordinator
 import ru.aigram.storage.MessageArchiveStore
 
+@Component
 class TelegramHistoryTracker @Inject constructor(
     private val archive: MessageArchiveStore,
     private val cache: TelegramCache,

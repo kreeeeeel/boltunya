@@ -1,9 +1,11 @@
 package ru.aigram.media
 
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.domain.OutgoingMedia
 import ru.aigram.domain.OutgoingMediaKind
 import ru.aigram.domain.UploadedFile
+import ru.aigram.domain.media.StoredUpload
 import ru.aigram.exception.impl.InvalidUploadException
 import ru.aigram.exception.impl.MediaTooLargeException
 import ru.aigram.exception.impl.UploadLimitReachedException
@@ -25,11 +27,16 @@ private const val MAX_PENDING_UPLOADS = 20
 private const val MAX_PENDING_BYTES = 500L * 1024 * 1024
 private const val UPLOAD_LIFETIME_MS = 60L * 60 * 1000
 private const val UPLOAD_DIRECTORY_DEPTH = 2
+private const val MAX_FILES_PER_MESSAGE = 10
+private const val MAX_CAPTION_CHARACTERS = 1024
+private const val MAX_FILE_NAME_CHARACTERS = 200
 private val PHOTO_MIME_TYPES = setOf("image/jpeg", "image/png", "image/webp")
 private val VIDEO_MIME_TYPES = setOf("video/mp4", "video/webm")
 private val MIME_TYPES = PHOTO_MIME_TYPES + VIDEO_MIME_TYPES + setOf("image/gif", "application/octet-stream")
 private val FORBIDDEN_FILE_CHARACTERS = "\\/:*?\"<>|".chars().toArray().toSet()
+private val RESERVED_FILE_NAMES = setOf("CON", "PRN", "AUX", "NUL")
 
+@Component
 class UploadStore @Inject constructor(directory: Path, private val clock: Clock) {
     private val root = directory.resolve("uploads")
     private val entries = linkedMapOf<String, StoredUpload>()
@@ -43,26 +50,36 @@ class UploadStore @Inject constructor(directory: Path, private val clock: Clock)
         expectedLength: Long,
     ): UploadedFile {
         cleanup()
-        if (ownerId.isBlank()) throw InvalidUploadException()
-        if (expectedLength > MAX_UPLOAD_BYTES) throw MediaTooLargeException()
-        val pendingBytes = entries.values.sumOf { it.file.size }
+        if (ownerId.isBlank()) {
+            throw InvalidUploadException()
+        }
+        if (expectedLength > MAX_UPLOAD_BYTES) {
+            throw MediaTooLargeException()
+        }
+
+        val pendingBytes = entries.values.stream().mapToLong { it.file.size }.sum()
         if (entries.size >= MAX_PENDING_UPLOADS || pendingBytes >= MAX_PENDING_BYTES ||
             expectedLength > MAX_PENDING_BYTES - pendingBytes
         ) {
             throw UploadLimitReachedException()
         }
+
         val fileName = safeFileName(name)
         val type = mimeType.substringBefore(';').lowercase().takeIf { it in MIME_TYPES } ?: "application/octet-stream"
         val id = UUID.randomUUID().toString()
         Files.createDirectories(root)
-        val directory = Files.createDirectory(root.resolve(id))
-        val path = directory.resolve(fileName)
+        val uploadDirectory = Files.createDirectory(root.resolve(id))
+        val path = uploadDirectory.resolve(fileName)
         var completed = false
+
         try {
             val size = UploadInputStream(input, minOf(MAX_UPLOAD_BYTES, MAX_PENDING_BYTES - pendingBytes)).use {
                 Files.copy(it, path)
             }
-            if (size == 0L || expectedLength >= 0 && size != expectedLength) throw InvalidUploadException()
+            if (size == 0L || expectedLength >= 0 && size != expectedLength) {
+                throw InvalidUploadException()
+            }
+
             val file = UploadedFile(id, fileName, type, size)
             entries[id] = StoredUpload(ownerId, file, path, clock.millis())
             completed = true
@@ -70,7 +87,7 @@ class UploadStore @Inject constructor(directory: Path, private val clock: Clock)
         } finally {
             if (!completed) {
                 Files.deleteIfExists(path)
-                Files.deleteIfExists(directory)
+                Files.deleteIfExists(uploadDirectory)
             }
         }
     }
@@ -84,62 +101,76 @@ class UploadStore @Inject constructor(directory: Path, private val clock: Clock)
             } else {
                 String(Character.toChars(code))
             }
-        }.collect(Collectors.joining()).trim().trimEnd('.').take(200).ifBlank { "file" }
+        }.collect(Collectors.joining()).trim().trimEnd('.').take(MAX_FILE_NAME_CHARACTERS).ifBlank { "file" }
+
         val stem = name.substringBefore('.').trimEnd(' ', '.').uppercase(Locale.ROOT)
-        if (stem in setOf("CON", "PRN", "AUX", "NUL") ||
+        if (stem in RESERVED_FILE_NAMES ||
             stem.length == 4 && (stem.startsWith("COM") || stem.startsWith("LPT")) && stem[3] in '1'..'9'
         ) {
             throw InvalidUploadException()
         }
+
         return name
     }
 
     @Synchronized
     fun media(ownerId: String, id: String, kind: OutgoingMediaKind, caption: String): OutgoingMedia {
         cleanup()
-        val record = entries[id]?.takeIf { it.ownerId == ownerId } ?: throw UploadNotFoundException()
+        val record = ownedRecord(ownerId, id)
         return resolve(record, kind, caption)
     }
 
     @Synchronized
     fun begin(ownerId: String, ids: List<String>, kind: OutgoingMediaKind, caption: String): List<OutgoingMedia> {
-        if (ids.size !in 1..10 || ids.distinct().size != ids.size ||
-            caption.length > 1024
+        if (ids.size !in 1..MAX_FILES_PER_MESSAGE || ids.stream().distinct().count() != ids.size.toLong() ||
+            caption.length > MAX_CAPTION_CHARACTERS
         ) {
             throw InvalidUploadException()
         }
+
         cleanup()
         val records = ids.stream().map { id ->
-            val record = entries[id]?.takeIf { it.ownerId == ownerId } ?: throw UploadNotFoundException()
-            if (record.inUse || record.discardRequested) throw InvalidUploadException()
+            val record = ownedRecord(ownerId, id)
+            if (record.inUse || record.discardRequested) {
+                throw InvalidUploadException()
+            }
+
             record
         }.toList()
+
         val media = IntStream.range(0, records.size).mapToObj {
-            resolve(records[it], kind, if (it == 0) caption else "")
+            val currentCaption = if (it == 0) {
+                caption
+            } else {
+                ""
+            }
+            resolve(records[it], kind, currentCaption)
         }.toList()
+
         records.stream().forEach { entries[it.file.id] = it.copy(inUse = true) }
         return media
     }
 
     @Synchronized
     fun release(ownerId: String, ids: List<String>, success: Boolean) {
-        val records = ids.distinct().stream().map { entries[it] }.filter {
+        val records = ids.stream().distinct().map { entries[it] }.filter {
             it != null && it.ownerId == ownerId &&
                 it.inUse
         }
             .map { it as StoredUpload }.toList()
+
         records.stream().forEach {
             entries[it.file.id] =
                 it.copy(inUse = false, discardRequested = it.discardRequested || success)
         }
-        val failures = mutableListOf<IOException>()
-        records.stream().filter { success || it.discardRequested }.forEach {
-            try {
-                remove(ownerId, it.file.id)
-            } catch (exception: IOException) {
-                failures.add(exception)
-            }
-        }
+
+        val failures = records.stream()
+            .filter { success || it.discardRequested }
+            .map(::discardFailure)
+            .filter { it != null }
+            .map { it as IOException }
+            .toList()
+
         if (failures.isNotEmpty()) {
             val exception = failures.first()
             failures.stream().skip(1).forEach(exception::addSuppressed)
@@ -148,7 +179,10 @@ class UploadStore @Inject constructor(directory: Path, private val clock: Clock)
     }
 
     private fun resolve(record: StoredUpload, kind: OutgoingMediaKind, caption: String): OutgoingMedia {
-        if (!Files.isRegularFile(record.path, LinkOption.NOFOLLOW_LINKS)) throw UploadNotFoundException()
+        if (!Files.isRegularFile(record.path, LinkOption.NOFOLLOW_LINKS)) {
+            throw UploadNotFoundException()
+        }
+
         val resolved = if (kind == OutgoingMediaKind.MEDIA) {
             when (record.file.mimeType) {
                 in PHOTO_MIME_TYPES -> OutgoingMediaKind.PHOTO
@@ -158,6 +192,7 @@ class UploadStore @Inject constructor(directory: Path, private val clock: Clock)
         } else {
             kind
         }
+
         when (resolved) {
             OutgoingMediaKind.MEDIA -> throw InvalidUploadException()
             OutgoingMediaKind.PHOTO -> {
@@ -165,29 +200,57 @@ class UploadStore @Inject constructor(directory: Path, private val clock: Clock)
                     throw InvalidUploadException()
                 }
             }
-            OutgoingMediaKind.VIDEO -> if (record.file.mimeType !in VIDEO_MIME_TYPES) throw InvalidUploadException()
+            OutgoingMediaKind.VIDEO -> {
+                if (record.file.mimeType !in VIDEO_MIME_TYPES) {
+                    throw InvalidUploadException()
+                }
+            }
             OutgoingMediaKind.DOCUMENT -> Unit
         }
+
         return OutgoingMedia(record.path, resolved, caption)
     }
 
     @Synchronized
     fun remove(ownerId: String, id: String) {
-        val record = entries[id]?.takeIf { it.ownerId == ownerId } ?: return
+        val record = entries[id]
+        if (record == null || record.ownerId != ownerId) {
+            return
+        }
         if (record.inUse) {
             entries[id] = record.copy(discardRequested = true)
             return
         }
+
         Files.deleteIfExists(record.path)
         Files.deleteIfExists(record.path.parent)
         entries.remove(id)
     }
 
+    private fun ownedRecord(ownerId: String, id: String): StoredUpload {
+        val record = entries[id]
+        if (record == null || record.ownerId != ownerId) {
+            throw UploadNotFoundException()
+        }
+
+        return record
+    }
+
+    private fun discardFailure(record: StoredUpload): IOException? = try {
+        remove(record.ownerId, record.file.id)
+        null
+    } catch (exception: IOException) {
+        exception
+    }
+
     private fun cleanup() {
         val before = clock.millis() - UPLOAD_LIFETIME_MS
-        entries.values.toList().stream().filter { !it.inUse && (it.discardRequested || it.createdAt < before) }
-            .forEach { remove(it.ownerId, it.file.id) }
-        val tracked = entries.values.stream().map { it.path }.toList().toSet()
+        val expired = entries.values.stream()
+            .filter { !it.inUse && (it.discardRequested || it.createdAt < before) }
+            .toList()
+        expired.stream().forEach { remove(it.ownerId, it.file.id) }
+
+        val tracked = entries.values.stream().map { it.path }.collect(Collectors.toSet())
         if (Files.isDirectory(root)) {
             Files.walk(root, UPLOAD_DIRECTORY_DEPTH).use { paths ->
                 paths.filter { Files.isRegularFile(it, LinkOption.NOFOLLOW_LINKS) }

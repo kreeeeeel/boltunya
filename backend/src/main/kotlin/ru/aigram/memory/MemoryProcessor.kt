@@ -1,6 +1,7 @@
 package ru.aigram.memory
 
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.storage.ContextExclusionStore
 import ru.aigram.telegram.TelegramGateway
 import java.time.Clock
@@ -8,6 +9,7 @@ import java.time.Clock
 private const val HISTORY_PAGE_MESSAGES = 100
 private const val MESSAGE_SETTLE_SECONDS = 10
 
+@Component
 class MemoryProcessor @Inject constructor(
     private val telegram: TelegramGateway,
     private val store: MemoryStore,

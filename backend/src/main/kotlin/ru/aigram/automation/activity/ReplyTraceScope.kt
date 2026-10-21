@@ -1,7 +1,9 @@
 package ru.aigram.automation.activity
 
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 
+@Component
 class ReplyTraceScope @Inject constructor() {
     private val current = ThreadLocal<ReplyTrace>()
 

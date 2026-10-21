@@ -2,8 +2,10 @@ package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.domain.CacheStatistics
 
+@Component
 class TelegramCacheStorage @Inject constructor(
     private val client: StorageClient,
     private val media: TelegramMediaStore,

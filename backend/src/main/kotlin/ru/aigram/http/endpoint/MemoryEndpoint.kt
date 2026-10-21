@@ -4,6 +4,7 @@ import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
+import org.springframework.stereotype.Component
 import ru.aigram.exception.impl.ChatNotFoundException
 import ru.aigram.exception.impl.MalformedPayloadException
 import ru.aigram.exception.impl.MemoryNotReadyException
@@ -16,6 +17,7 @@ import ru.aigram.memory.MemoryRefreshRequest
 import ru.aigram.memory.MemoryStore
 import ru.aigram.telegram.TelegramGateway
 
+@Component
 class MemoryEndpoint @Inject constructor(
     private val memory: MemoryCoordinator,
     private val store: MemoryStore,

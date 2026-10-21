@@ -3,6 +3,7 @@ package ru.aigram.ai
 import jakarta.inject.Inject
 import org.springframework.ai.content.Media
 import org.springframework.core.io.ByteArrayResource
+import org.springframework.stereotype.Component
 import org.springframework.util.MimeTypeUtils
 import ru.aigram.ai.profile.ModelTargetResolver
 import ru.aigram.ai.profile.ModelTask
@@ -20,6 +21,7 @@ private const val MAX_VISION_IMAGES = 10
 private val VISION_MIME_TYPES = setOf("image/jpeg", "image/png", "image/webp")
 
 /** Explicit per-chat consent is checked before downloading or supplying a photograph to a model. */
+@Component
 class ReplyImageContext @Inject constructor(
     private val telegram: TelegramGateway,
     private val targets: ModelTargetResolver,

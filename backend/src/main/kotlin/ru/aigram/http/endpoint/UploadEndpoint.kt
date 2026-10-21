@@ -2,6 +2,7 @@ package ru.aigram.http.endpoint
 
 import com.sun.net.httpserver.HttpExchange
 import jakarta.inject.Inject
+import org.springframework.stereotype.Component
 import ru.aigram.domain.UploadedFile
 import ru.aigram.exception.impl.InvalidUploadException
 import ru.aigram.exception.impl.TelegramNotConnectedException
@@ -11,6 +12,7 @@ import java.net.URLDecoder
 
 private const val MAX_UPLOAD_NAME_HEADER = 2000
 
+@Component
 class UploadEndpoint @Inject constructor(private val uploads: UploadStore, private val telegram: TelegramGateway) {
     fun create(exchange: HttpExchange): UploadedFile {
         val status = telegram.status()
