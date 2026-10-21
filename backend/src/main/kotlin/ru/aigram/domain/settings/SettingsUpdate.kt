@@ -1,6 +1,8 @@
 package ru.aigram.domain.settings
 
 import jakarta.validation.Valid
+import jakarta.validation.constraints.DecimalMax
+import jakarta.validation.constraints.DecimalMin
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Size
@@ -27,6 +29,12 @@ data class SettingsUpdate(
     val replyIntervalSeconds: Int? = null,
     val showTyping: Boolean? = null,
     val formatReplies: Boolean? = null,
+    val voiceInputEnabled: Boolean? = null,
+    val voiceReplyMode: VoiceReplyMode? = null,
+    @field:Min(0) @field:Max(100) val voiceReplyProbability: Int? = null,
+    @field:Size(max = 80) val voiceRecognitionModel: String? = null,
+    @field:Size(max = 80) val voiceSynthesisModel: String? = null,
+    @field:DecimalMin("0.5") @field:DecimalMax("2.0") val voiceSpeechRate: Double? = null,
     val replyProcessingMode: ReplyProcessingMode? = null,
     val ignoreAssistantTasks: Boolean? = null,
     val memoryEnabled: Boolean? = null,

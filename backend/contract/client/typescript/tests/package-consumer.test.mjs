@@ -69,13 +69,13 @@ after(() => {
     rmSync(consumer, { recursive: true, force: true });
 });
 
-test("the installed tarball exposes all 76 operations in eight API groups and compiles typed imports", () => {
+test("the installed tarball exposes all 84 operations in nine API groups and compiles typed imports", () => {
     const apis = Object.values(sdk).filter(
         (value) =>
             typeof value === "function" &&
             value.prototype instanceof sdk.BaseAPI,
     );
-    assert.equal(apis.length, 8);
+    assert.equal(apis.length, 9);
     const operationCount = apis.reduce(
         (count, api) =>
             count +
@@ -84,7 +84,7 @@ test("the installed tarball exposes all 76 operations in eight API groups and co
             ).length,
         0,
     );
-    assert.equal(operationCount, 76);
+    assert.equal(operationCount, 84);
     assert.equal(typeof sdk.ModelsApi.prototype.restartEngine, "function");
     copyFileSync(
         join(directory, "tests/consumer/consumer.ts"),
@@ -103,6 +103,72 @@ test("the installed tarball exposes all 76 operations in eight API groups and co
         ],
         { cwd: consumer, stdio: "pipe" },
     );
+});
+
+test("the installed speech client preserves queue bodies and binary voice previews", async () => {
+    const voiceId = "eeb14bb8-daf0-48f5-8d6c-bbf272c97a3e";
+    const bytes = new Uint8Array([79, 103, 103, 83, 0, 255]);
+    const requests = [];
+    const api = new sdk.SpeechApi(new sdk.Configuration({
+        basePath: "http://127.0.0.1:9000",
+        credentials: "include",
+        fetchApi: async (url, init) => {
+            requests.push({url, init});
+            if (url.includes("/audio/")) {
+                return new Response(bytes, {headers: {"Content-Type": "audio/ogg"}});
+            }
+            if (url.endsWith("/api/speech")) {
+                return Response.json({assets: [], downloads: []});
+            }
+            if (url.endsWith("/drafts")) {
+                return Response.json({id: "synthetic-job", status: "queued"});
+            }
+            return Response.json({ok: true});
+        },
+    }));
+    assert.deepEqual(await api.speechState(), {assets: [], downloads: []});
+    await api.installSpeechAsset({assetId: "whisper-tiny"});
+    await api.cancelSpeechAsset({assetId: "whisper-tiny"});
+    const voiceDraftRequest = {chatId: "-1009007199254740993555", text: "Exact spoken text."};
+    assert.equal((await api.enqueueVoiceDraft({voiceDraftRequest})).status, "queued");
+    const audio = await api.speechAudio({voiceId});
+    assert.deepEqual(new Uint8Array(await audio.arrayBuffer()), bytes);
+    const voiceSendRequest = {voiceId, replyToId: "9007199254740993999", topicId: 8};
+    await api.sendVoiceDraft({chatId: voiceDraftRequest.chatId, voiceSendRequest});
+    assert.deepEqual(requests.map(({init}) => init.method), ["GET", "POST", "DELETE", "POST", "GET", "POST"]);
+    assert.ok(requests.every(({init}) => init.credentials === "include"));
+    assert.equal(requests[1].url, "http://127.0.0.1:9000/api/speech/assets/whisper-tiny/install");
+    assert.equal(requests[2].url, requests[1].url);
+    assert.deepEqual(JSON.parse(requests[3].init.body), voiceDraftRequest);
+    assert.equal(requests[4].url, `http://127.0.0.1:9000/api/speech/audio/${voiceId}`);
+    assert.equal(requests[5].url, `http://127.0.0.1:9000/api/chats/${voiceDraftRequest.chatId}/voice`);
+    assert.deepEqual(JSON.parse(requests[5].init.body), voiceSendRequest);
+});
+
+test("speech settings preview and model import preserve explicit choices and opaque upload identifiers", async () => {
+    const requests = [];
+    const speech = new sdk.SpeechApi(new sdk.Configuration({
+        basePath: "http://127.0.0.1:9000",
+        fetchApi: async (url, init) => {
+            requests.push({url, init});
+            return Response.json(url.endsWith("/preview") ? {id: "sample", status: "queued"} : {assets: [], downloads: []});
+        },
+    }));
+    const speechPreviewRequest = {text: "Exact test text.", modelId: "piper-en-amy", speed: 1.5};
+    const speechModelImportRequest = {
+        uploadId: "3889a1bc-c28a-4f6f-a34a-9626a37b130a",
+        title: "My local voice",
+        language: "ru",
+        license: "User supplied terms",
+    };
+    assert.equal((await speech.previewSpeech({speechPreviewRequest})).status, "queued");
+    assert.deepEqual(await speech.importSpeechModel({speechModelImportRequest}), {assets: [], downloads: []});
+    assert.deepEqual(requests.map(({url}) => url), [
+        "http://127.0.0.1:9000/api/speech/preview",
+        "http://127.0.0.1:9000/api/speech/models/import",
+    ]);
+    assert.deepEqual(JSON.parse(requests[0].init.body), speechPreviewRequest);
+    assert.deepEqual(JSON.parse(requests[1].init.body), speechModelImportRequest);
 });
 
 test("message edits keep exact text, UTF-16 ranges and opaque entity references in the installed SDK", async () => {

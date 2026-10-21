@@ -5,6 +5,8 @@ Reply:
         - durationMs
         - tokensPerSecond
     properties:
+        voice:
+            $ref: ../speech/GeneratedVoice.yaml#/GeneratedVoice
         text:
             type: string
         durationMs:

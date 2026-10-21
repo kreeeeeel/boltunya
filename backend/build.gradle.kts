@@ -12,6 +12,11 @@ version = providers.gradleProperty("appVersion").getOrElse("2.6.0")
 
 repositories {
     mavenCentral()
+    maven("https://jitpack.io") {
+        content {
+            includeGroup("com.github.k2-fsa.sherpa-onnx")
+        }
+    }
     maven("https://mvn.mchv.eu/repository/mchv/")
 }
 
@@ -29,6 +34,15 @@ dependencies {
     implementation("org.jsoup:jsoup:1.23.2")
     implementation("org.commonmark:commonmark:0.30.0")
     implementation("org.commonmark:commonmark-ext-autolink:0.30.0")
+    implementation("org.apache.commons:commons-compress:1.28.0")
+    implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx-jvm:v1.13.8")
+    implementation("org.bytedeco:javacv:1.5.14") {
+        isTransitive = false
+    }
+    implementation("org.bytedeco:javacpp:1.5.14")
+    implementation("org.bytedeco:ffmpeg:8.1.2-1.5.14")
+    runtimeOnly("org.bytedeco:javacpp:1.5.14:windows-x86_64")
+    runtimeOnly("org.bytedeco:ffmpeg:8.1.2-1.5.14:windows-x86_64")
     implementation("io.modelcontextprotocol.sdk:mcp:2.1.0")
     implementation(platform("it.tdlight:tdlight-java-bom:3.5.7+td.1.8.68"))
     implementation("it.tdlight:tdlight-java")
@@ -60,7 +74,12 @@ application {
 
 tasks.test {
     useJUnitPlatform()
-    val liveFlags = listOf("TIHO_LIVE_AI", "TIHO_LIVE_INTERNET", "TIHO_LIVE_MEMORY")
+    systemProperty("aigram.speech.verification", providers.gradleProperty("speechVerificationDir").getOrElse(""))
+    systemProperty(
+        "org.bytedeco.javacpp.cachedir",
+        rootProject.layout.buildDirectory.dir("speech-verification/codec/native-cache").get().asFile.absolutePath,
+    )
+    val liveFlags = listOf("TIHO_LIVE_AI", "TIHO_LIVE_INTERNET", "TIHO_LIVE_MEMORY", "AIGRAM_LIVE_SPEECH")
     (liveFlags + listOf("TIHO_TEST_MODELS", "TIHO_TEST_CASES", "TIHO_TEST_OLLAMA_URL")).forEach { key ->
         inputs.property(key, providers.environmentVariable(key).orElse(""))
     }
@@ -72,6 +91,9 @@ tasks.test {
 tasks.processResources {
     from("../web/out") {
         into("web")
+    }
+    from("../docs/speech/licenses") {
+        into("third-party/speech")
     }
 }
 

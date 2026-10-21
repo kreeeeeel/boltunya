@@ -3,6 +3,8 @@ package ru.aigram.domain.events
 enum class ActivityPhase(val value: String) {
     QUEUED("queued"),
     CONTEXT("context"),
+    TRANSCRIBING("transcribing"),
+    SYNTHESIZING("synthesizing"),
     MEMORY("memory"),
     WAITING_RESOURCE("waiting-resource"),
     RESEARCH("research"),

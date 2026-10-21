@@ -1,0 +1,30 @@
+SpeechAsset:
+    type: object
+    required: [id, title, kind, languages, sizeBytes, license, sourceUrl, installed, dependencies]
+    properties:
+        id:
+            type: string
+        title:
+            type: string
+        kind:
+            $ref: ./SpeechAssetKind.yaml#/SpeechAssetKind
+        languages:
+            type: array
+            items:
+                type: string
+        sizeBytes:
+            type: integer
+            format: int64
+            minimum: 1
+        license:
+            type: string
+        sourceUrl:
+            type: string
+        installed:
+            type: boolean
+        userProvided:
+            type: boolean
+        dependencies:
+            type: array
+            items:
+                type: string

@@ -8,6 +8,9 @@ import {
     type MessageEditOptions,
     type MessageEditRequest,
     SettingsApi,
+    SpeechApi,
+    type SpeechState,
+    type GeneratedVoice,
     type Reply,
 } from "@aigram/api-client";
 
@@ -20,6 +23,37 @@ const configuration = new Configuration(settings);
 const chats = new ChatsApi(configuration);
 const system = new SystemApi(configuration);
 const models = new ModelsApi(configuration);
+const speech = new SpeechApi(configuration);
+
+export async function voiceState(): Promise<SpeechState> {
+    return speech.speechState();
+}
+
+export async function readVoice(voice: GeneratedVoice): Promise<Blob> {
+    return speech.speechAudio({voiceId: voice.id});
+}
+
+export async function queueVoice(): Promise<string> {
+    await new SettingsApi(configuration).settings({settingsUpdate: {
+        voiceInputEnabled: false,
+        voiceReplyMode: "mirror",
+        voiceReplyProbability: 25,
+        voiceSpeechRate: 1.2,
+    }});
+    const job = await models.enqueuePreviewJob({previewJobRequest: {chatId: "42", output: "voice"}});
+    await speech.enqueueVoiceDraft({voiceDraftRequest: {chatId: "42", text: "Exact spoken text."}});
+    return job.id;
+}
+
+export async function checkVoice(): Promise<string> {
+    const job = await speech.previewSpeech({speechPreviewRequest: {
+        text: "A real local preview.", modelId: "piper-en-amy", speed: 1.2,
+    }});
+    await speech.importSpeechModel({speechModelImportRequest: {
+        uploadId: "3889a1bc-c28a-4f6f-a34a-9626a37b130a", title: "My voice", language: "en",
+    }});
+    return job.id;
+}
 
 type EngineModel = Awaited<
     ReturnType<SystemApi["state"]>

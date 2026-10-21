@@ -1,6 +1,24 @@
 SettingsUpdate:
     type: object
     properties:
+        voiceReplyMode:
+            $ref: ../speech/VoiceReplyMode.yaml#/VoiceReplyMode
+        voiceInputEnabled:
+            type: boolean
+        voiceReplyProbability:
+            type: integer
+            minimum: 0
+            maximum: 100
+        voiceRecognitionModel:
+            type: string
+            maxLength: 80
+        voiceSynthesisModel:
+            type: string
+            maxLength: 80
+        voiceSpeechRate:
+            type: number
+            minimum: 0.5
+            maximum: 2
         paused:
             type: boolean
         defaultModel:

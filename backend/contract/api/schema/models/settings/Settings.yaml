@@ -7,6 +7,29 @@ Settings:
         - defaultModelProfileId
         - deliveryMode
     properties:
+        voiceReplyMode:
+            $ref: ../speech/VoiceReplyMode.yaml#/VoiceReplyMode
+        voiceInputEnabled:
+            type: boolean
+            default: false
+        voiceReplyProbability:
+            type: integer
+            minimum: 0
+            maximum: 100
+            default: 50
+        voiceRecognitionModel:
+            type: string
+            maxLength: 80
+            default: whisper-tiny
+        voiceSynthesisModel:
+            type: string
+            maxLength: 80
+            default: piper-ru-irina
+        voiceSpeechRate:
+            type: number
+            minimum: 0.5
+            maximum: 2
+            default: 1
         paused:
             type: boolean
         defaultModel:

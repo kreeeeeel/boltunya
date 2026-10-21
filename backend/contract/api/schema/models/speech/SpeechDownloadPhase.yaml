@@ -1,0 +1,3 @@
+SpeechDownloadPhase:
+    type: string
+    enum: [queued, downloading, extracting, ready, cancelled, error]

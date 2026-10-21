@@ -11,6 +11,7 @@ import ru.aigram.automation.proactive.ProactiveCoordinator
 import ru.aigram.automation.proactive.ProactiveLedger
 import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.resources.ResourceCatalog
+import ru.aigram.speech.reply.VoiceDraftStore
 import ru.aigram.storage.ActivityFeedbackStore
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.ContextExclusionStore
@@ -32,8 +33,10 @@ class QueueConfiguration {
         delivery: ReplyDeliveryPolicy,
         exclusions: ContextExclusionStore,
         history: ActivityHistoryStore,
+        voices: VoiceDraftStore,
     ): ReplyCoordinator = ReplyCoordinator(
         settings, telegram, automated, tracing, diagnostics, feedback, delivery, exclusions, history,
+        voices = voices,
         generate = generator::reply,
     )
 

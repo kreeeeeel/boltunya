@@ -11,11 +11,13 @@ import ru.aigram.contract.dto.GroupRepliesMode as ContractGroupRepliesMode
 import ru.aigram.contract.dto.MemoryCollectionScope as ContractMemoryCollectionScope
 import ru.aigram.contract.dto.ReplyProcessingMode as ContractReplyProcessingMode
 import ru.aigram.contract.dto.SettingsUpdate as ContractSettingsUpdate
+import ru.aigram.contract.dto.VoiceReplyMode as ContractVoiceReplyMode
 import ru.aigram.domain.chat.DeliveryMode as DomainDeliveryMode
 import ru.aigram.domain.chat.GroupReplyMode as DomainGroupReplyMode
 import ru.aigram.domain.chat.WritingStyle as DomainWritingStyle
 import ru.aigram.domain.memory.MemoryCollectionScope as DomainMemoryCollectionScope
 import ru.aigram.domain.settings.ReplyProcessingMode as DomainReplyProcessingMode
+import ru.aigram.domain.settings.VoiceReplyMode as DomainVoiceReplyMode
 
 fun AppSettings.toContract(): Settings = Settings(
     paused = paused,
@@ -29,6 +31,12 @@ fun AppSettings.toContract(): Settings = Settings(
     replyIntervalSeconds = replyIntervalSeconds,
     showTyping = showTyping,
     formatReplies = formatReplies,
+    voiceInputEnabled = voiceInputEnabled,
+    voiceReplyMode = ContractVoiceReplyMode.valueOf(voiceReplyMode.name),
+    voiceReplyProbability = voiceReplyProbability,
+    voiceRecognitionModel = voiceRecognitionModel,
+    voiceSynthesisModel = voiceSynthesisModel,
+    voiceSpeechRate = voiceSpeechRate.toBigDecimal(),
     replyProcessingMode = ContractReplyProcessingMode.valueOf(replyProcessingMode.name),
     ignoreAssistantTasks = ignoreAssistantTasks,
     memoryEnabled = memoryEnabled,
@@ -61,6 +69,12 @@ fun ContractSettingsUpdate.toDomain(): SettingsUpdate = SettingsUpdate(
     replyIntervalSeconds = replyIntervalSeconds,
     showTyping = showTyping,
     formatReplies = formatReplies,
+    voiceInputEnabled = voiceInputEnabled,
+    voiceReplyMode = voiceReplyMode?.let { DomainVoiceReplyMode.valueOf(it.name) },
+    voiceReplyProbability = voiceReplyProbability,
+    voiceRecognitionModel = voiceRecognitionModel,
+    voiceSynthesisModel = voiceSynthesisModel,
+    voiceSpeechRate = voiceSpeechRate?.toDouble(),
     replyProcessingMode = replyProcessingMode?.let { DomainReplyProcessingMode.valueOf(it.name) },
     ignoreAssistantTasks = ignoreAssistantTasks,
     memoryEnabled = memoryEnabled,

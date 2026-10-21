@@ -1,0 +1,3 @@
+DraftOutput:
+    type: string
+    enum: [text, voice]

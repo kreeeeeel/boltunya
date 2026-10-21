@@ -1,0 +1,16 @@
+SpeechPreviewRequest:
+    type: object
+    required: [text, modelId, speed]
+    properties:
+        text:
+            type: string
+            minLength: 1
+            maxLength: 4096
+        modelId:
+            type: string
+            minLength: 1
+            maxLength: 80
+        speed:
+            type: number
+            minimum: 0.5
+            maximum: 2

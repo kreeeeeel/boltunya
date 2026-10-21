@@ -1,0 +1,24 @@
+GeneratedVoice:
+    type: object
+    required: [id, url, mimeType, duration, waveform]
+    properties:
+        id:
+            type: string
+            minLength: 36
+            maxLength: 36
+        url:
+            type: string
+            description: Authenticated same-origin preview URL, scoped to the current Telegram account.
+        mimeType:
+            type: string
+        duration:
+            type: integer
+            minimum: 1
+            maximum: 600
+        waveform:
+            type: array
+            maxItems: 63
+            items:
+                type: integer
+                minimum: 0
+                maximum: 255

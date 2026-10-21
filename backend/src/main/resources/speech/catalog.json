@@ -1,0 +1,124 @@
+[
+  {
+    "asset": {
+      "id": "sherpa-runtime",
+      "title": "sherpa-onnx 1.13.8 · Windows x64 CPU",
+      "kind": "runtime",
+      "languages": [],
+      "sizeBytes": 8277046,
+      "license": "sherpa-onnx Apache-2.0; ONNX Runtime MIT; bundled eSpeak NG GPL-3.0-or-later (upstream sources linked in docs)",
+      "sourceUrl": "https://github.com/k2-fsa/sherpa-onnx/tree/v1.13.8",
+      "dependencies": []
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.8/sherpa-onnx-native-lib-win-x64-1.13.8.jar",
+    "sha256": "33fbdbd5410e9ba9bdda94aa164ec8f7825bb49246420d8ce9bdd88219d97039",
+    "archiveRoot": "",
+    "requiredFiles": [
+      "native.jar"
+    ],
+    "modelFile": ""
+  },
+  {
+    "asset": {
+      "id": "whisper-tiny",
+      "title": "Whisper tiny · multilingual int8",
+      "kind": "recognition",
+      "languages": [
+        "ru",
+        "en",
+        "uk",
+        "kk"
+      ],
+      "sizeBytes": 116204861,
+      "license": "MIT · OpenAI Whisper",
+      "sourceUrl": "https://github.com/openai/whisper",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.tar.bz2",
+    "sha256": "c46116994e539aa165266d96b325252728429c12535eb9d8b6a2b10f129e66b1",
+    "archiveRoot": "sherpa-onnx-whisper-tiny",
+    "requiredFiles": [
+      "tiny-encoder.int8.onnx",
+      "tiny-decoder.int8.onnx",
+      "tiny-tokens.txt"
+    ],
+    "modelFile": ""
+  },
+  {
+    "asset": {
+      "id": "piper-ru-irina",
+      "title": "Piper · Ирина · Russian",
+      "kind": "synthesis",
+      "languages": [
+        "ru"
+      ],
+      "sizeBytes": 21149417,
+      "license": "Piper repository MIT; voice dataset licence unspecified in upstream model card; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/main/ru/ru_RU/irina/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ru_RU-irina-medium-int8.tar.bz2",
+    "sha256": "b0000a509f7551a80742eed5c43b8eb03f469cb9f0a42f6feee96ce0da0ebab8",
+    "archiveRoot": "vits-piper-ru_RU-irina-medium-int8",
+    "requiredFiles": [
+      "ru_RU-irina-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "ru_RU-irina-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-ru-ruslan",
+      "title": "Piper · Руслан · Russian",
+      "kind": "synthesis",
+      "languages": [
+        "ru"
+      ],
+      "sizeBytes": 21127907,
+      "license": "Piper repository MIT; voice dataset CC-BY-NC-SA-4.0 (noncommercial); eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/main/ru/ru_RU/ruslan/medium/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ru_RU-ruslan-medium-int8.tar.bz2",
+    "sha256": "93b9f8c7b34c1420bdc253a0ce5ab1cb6b6be2e8fa26c1f3b36c6189233c3e7e",
+    "archiveRoot": "vits-piper-ru_RU-ruslan-medium-int8",
+    "requiredFiles": [
+      "ru_RU-ruslan-medium.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "ru_RU-ruslan-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "piper-en-amy",
+      "title": "Piper · Amy · English",
+      "kind": "synthesis",
+      "languages": [
+        "en"
+      ],
+      "sizeBytes": 21099246,
+      "license": "Piper repository MIT; voice dataset licence linked in upstream Mimic3 model card; eSpeak NG phonemizer/data GPL-3.0-or-later",
+      "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/amy/low/MODEL_CARD",
+      "dependencies": [
+        "sherpa-runtime"
+      ]
+    },
+    "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low-int8.tar.bz2",
+    "sha256": "93070ac9fadf512e56c46bdd0c5d2ce96b424fdc4e683d560167410bd2c4df7d",
+    "archiveRoot": "vits-piper-en_US-amy-low-int8",
+    "requiredFiles": [
+      "en_US-amy-low.onnx",
+      "tokens.txt",
+      "espeak-ng-data"
+    ],
+    "modelFile": "en_US-amy-low.onnx"
+  }
+]

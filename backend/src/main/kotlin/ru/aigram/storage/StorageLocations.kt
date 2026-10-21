@@ -42,6 +42,7 @@ class StorageLocations(
             listOf(
                 directory("application", root),
                 directory("memory", root.resolve("memory")),
+                directory("speech", root.resolve("speech")),
                 directory("telegram-cache", root.resolve("telegram")),
                 runtime?.let { directory("ollama-runtime", it) } ?: external("ollama-runtime"),
                 models?.let { directory("ollama-models", it, labels.getValue("models-note")) }

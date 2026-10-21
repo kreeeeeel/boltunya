@@ -1,0 +1,18 @@
+SpeechDownload:
+    type: object
+    required: [assetId, phase, downloadedBytes, totalBytes, error]
+    properties:
+        assetId:
+            type: string
+        phase:
+            $ref: ./SpeechDownloadPhase.yaml#/SpeechDownloadPhase
+        downloadedBytes:
+            type: integer
+            format: int64
+            minimum: 0
+        totalBytes:
+            type: integer
+            format: int64
+            minimum: 0
+        error:
+            type: string

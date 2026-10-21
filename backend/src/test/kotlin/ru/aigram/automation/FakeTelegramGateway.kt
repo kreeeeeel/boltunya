@@ -4,6 +4,7 @@ import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.chat.ChatSummary
 import ru.aigram.domain.chat.MessageEntity
+import ru.aigram.domain.speech.OutgoingVoiceNote
 import ru.aigram.domain.telegram.TelegramCredentials
 import ru.aigram.domain.telegram.TelegramStatus
 import ru.aigram.telegram.TelegramGateway
@@ -16,6 +17,10 @@ class FakeTelegramGateway : TelegramGateway {
     val topicIds = CopyOnWriteArrayList<Int>()
     val entities = CopyOnWriteArrayList<List<MessageEntity>>()
     val sentAutomated = CopyOnWriteArrayList<Boolean>()
+    val sentVoices = CopyOnWriteArrayList<OutgoingVoiceNote>()
+    val voiceAutomated = CopyOnWriteArrayList<Boolean>()
+    val voiceReplyIds = CopyOnWriteArrayList<String>()
+    val voiceTopicIds = CopyOnWriteArrayList<Int>()
     val typing = CopyOnWriteArrayList<Boolean>()
     val sendTimes = CopyOnWriteArrayList<Long>()
     var nextSendError: RuntimeException? = null
@@ -54,6 +59,26 @@ class FakeTelegramGateway : TelegramGateway {
     }
     override fun typing(chatId: String, active: Boolean) {
         typing.add(active)
+    }
+    override fun sendVoice(
+        chatId: String,
+        voice: OutgoingVoiceNote,
+        replyToId: String,
+        topicId: Int,
+        automated: Boolean,
+    ): String {
+        beforeSend()
+        val failure = nextSendError
+        nextSendError = null
+        if (failure != null) {
+            throw failure
+        }
+        sentVoices.add(voice)
+        voiceAutomated.add(automated)
+        voiceReplyIds.add(replyToId)
+        voiceTopicIds.add(topicId)
+        sendTimes.add(System.nanoTime())
+        return "voice-${sentVoices.size}"
     }
     override fun logout() = Unit
     override fun close() = Unit

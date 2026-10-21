@@ -4,16 +4,18 @@ import ru.aigram.contract.dto.PreviewJob
 import ru.aigram.contract.dto.PreviewJobStatus
 import ru.aigram.contract.dto.Reply
 import ru.aigram.transformer.chat.toContract
+import ru.aigram.transformer.speech.toContract
 import ru.aigram.domain.ai.PreviewJob as DomainPreviewJob
 import ru.aigram.domain.ai.ReplyResult as DomainReplyResult
 
 fun DomainReplyResult.toContract(): Reply = Reply(
-    text,
-    durationMs,
-    tokensPerSecond.toBigDecimal(),
-    model,
-    stickerId,
-    entities.stream().map { it.toContract() }.toList(),
+    text = text,
+    durationMs = durationMs,
+    tokensPerSecond = tokensPerSecond.toBigDecimal(),
+    model = model,
+    stickerId = stickerId,
+    entities = entities.stream().map { it.toContract() }.toList(),
+    voice = voice?.toContract(),
 )
 
 fun DomainPreviewJob.toContract(): PreviewJob = PreviewJob(

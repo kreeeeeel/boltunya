@@ -1,6 +1,8 @@
 package ru.aigram.domain.settings
 
 import jakarta.validation.Valid
+import jakarta.validation.constraints.DecimalMax
+import jakarta.validation.constraints.DecimalMin
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Size
@@ -29,6 +31,12 @@ data class AppSettings(
     val replyIntervalSeconds: Int = 3,
     val showTyping: Boolean = true,
     val formatReplies: Boolean = false,
+    val voiceInputEnabled: Boolean = false,
+    val voiceReplyMode: VoiceReplyMode = VoiceReplyMode.TEXT,
+    @field:Min(0) @field:Max(100) val voiceReplyProbability: Int = 50,
+    @field:Size(max = 80) val voiceRecognitionModel: String = "whisper-tiny",
+    @field:Size(max = 80) val voiceSynthesisModel: String = "piper-ru-irina",
+    @field:DecimalMin("0.5") @field:DecimalMax("2.0") val voiceSpeechRate: Double = 1.0,
     val replyProcessingMode: ReplyProcessingMode = ReplyProcessingMode.REPLACE,
     val ignoreAssistantTasks: Boolean = true,
     val memoryEnabled: Boolean = true,

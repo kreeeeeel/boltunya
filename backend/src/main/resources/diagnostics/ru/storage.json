@@ -1,6 +1,7 @@
 {
   "application": "Данные приложения",
   "memory": "Память диалогов",
+  "speech": "Речевые модели и движок",
   "telegram-cache": "Файлы Telegram",
   "ollama-runtime": "Движок Ollama",
   "ollama-models": "Модели Ollama",

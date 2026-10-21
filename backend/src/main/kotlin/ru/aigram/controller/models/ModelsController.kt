@@ -26,6 +26,7 @@ import ru.aigram.contract.dto.PreviewJobRequest
 import ru.aigram.contract.dto.PromptBudgetReport
 import ru.aigram.contract.dto.PromptBudgetRequest
 import ru.aigram.contract.dto.Reply
+import ru.aigram.domain.speech.DraftOutput
 import ru.aigram.transformer.chat.toDomain
 import ru.aigram.transformer.models.toContract
 import ru.aigram.transformer.models.toDomain
@@ -90,6 +91,7 @@ class ModelsController(
                 previewJobRequest.chatId,
                 previewJobRequest.rule?.toDomain(),
                 previewJobRequest.messageId.orEmpty(),
+                previewJobRequest.output?.let { DraftOutput.valueOf(it.name) } ?: DraftOutput.TEXT,
             ).toContract(),
         )
 

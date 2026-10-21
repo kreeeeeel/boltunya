@@ -1,0 +1,11 @@
+VoiceDraftRequest:
+    type: object
+    required: [chatId, text]
+    properties:
+        chatId:
+            type: string
+            minLength: 1
+        text:
+            type: string
+            minLength: 1
+            maxLength: 4096

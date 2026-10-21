@@ -35,7 +35,9 @@ import ru.aigram.exception.impl.ChatNotFoundException
 import ru.aigram.exception.impl.MemoryUpdateFailedException
 import ru.aigram.exception.impl.ReplyCancelledException
 import ru.aigram.exception.impl.ReplyDeliveryFailedException
+import ru.aigram.exception.impl.SpeechDraftUnavailableException
 import ru.aigram.exception.impl.TelegramRateLimitException
+import ru.aigram.speech.reply.VoiceDraftStore
 import ru.aigram.storage.ActivityFeedbackStore
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.ContextExclusionStore
@@ -70,6 +72,7 @@ class ReplyCoordinator(
     private val delivery: ReplyDeliveryPolicy = ReplyDeliveryPolicy(settings),
     private val exclusions: ContextExclusionStore? = null,
     private val history: ActivityHistoryStore? = null,
+    private val voices: VoiceDraftStore? = null,
     private val generate: (ChatRule, List<ChatMessage>) -> ReplyResult,
 ) : AutoCloseable,
     MemoryWorkQueue {
@@ -205,18 +208,31 @@ class ReplyCoordinator(
     }
 
     fun enqueueDraft(chatId: String, model: String, action: () -> ReplyResult): PreviewJob = synchronized(gate) {
-        if (closed || pending.size >= MAX_PENDING_JOBS) {
+        if (closed) {
             throw ReplyCancelledException()
         }
+
         val chat = telegram.chats().stream().filter { it.id == chatId }.findFirst().orElse(null)
         if (chat == null) {
             throw ChatNotFoundException()
+        }
+        enqueueDraft(chat, model, action)
+    }
+
+    fun enqueueToolDraft(title: String, model: String, trigger: String, action: () -> ReplyResult): PreviewJob =
+        synchronized(gate) {
+            enqueueDraft(ChatSummary("", title, trigger, 0, 0, ChatRule()), model, action)
+        }
+
+    private fun enqueueDraft(chat: ChatSummary, model: String, action: () -> ReplyResult): PreviewJob {
+        if (closed || pending.size >= MAX_PENDING_JOBS) {
+            throw ReplyCancelledException()
         }
         val id = UUID.randomUUID().toString()
         val trace = log.add(
             ActivityEntry(
                 id,
-                chatId,
+                chat.id,
                 chat.title,
                 ActivityStatus.QUEUED.value,
                 model,
@@ -228,7 +244,7 @@ class ReplyCoordinator(
         )
         pending[id] = ReplyJob(
             id,
-            ChatMessage(id, chatId, chat.preview, false, chat.date),
+            ChatMessage(id, chat.id, chat.preview, false, chat.date),
             trace,
             System.nanoTime(),
             0,
@@ -236,7 +252,7 @@ class ReplyCoordinator(
             action,
             telegram.status().userId,
         )
-        PreviewJob(id, ActivityStatus.QUEUED.value)
+        return PreviewJob(id, ActivityStatus.QUEUED.value)
     }
 
     fun hasWork(chatId: String): Boolean = synchronized(gate) {
@@ -350,6 +366,7 @@ class ReplyCoordinator(
         val photo = rule.analyzePhotos && message.kind == "photo" &&
             message.media?.mimeType in setOf("image/jpeg", "image/png", "image/webp")
         val suitable = !message.deleted && !message.outgoing && (message.text.isNotBlank() || photo) &&
+            (message.kind != "voice" || preferences.voiceInputEnabled) &&
             !preferences.paused && rule.enabled && groupAllowed(message, rule) &&
             exclusions?.forInference(account, listOf(message))?.isEmpty() != true &&
             (!preferences.ignoreAssistantTasks || !tasks.ignores(message.text))
@@ -615,7 +632,25 @@ class ReplyCoordinator(
                     ) {
                         throw ReplyCancelledException()
                     }
-                    if (result.text.isNotBlank()) {
+                    if (result.voice != null) {
+                        val store = voices
+                        if (store == null) {
+                            throw SpeechDraftUnavailableException()
+                        }
+                        val sentId = store.send(
+                            message.chatId,
+                            result.voice.id,
+                            delivery.replyTo(rule, message.id),
+                            topicId,
+                            automated = true,
+                        )
+                        automated?.record(message.chatId, sentId)
+                        synchronized(gate) {
+                            nextReplyAt =
+                                System.nanoTime() +
+                                TimeUnit.SECONDS.toNanos(settings.get().replyIntervalSeconds.toLong())
+                        }
+                    } else if (result.text.isNotBlank()) {
                         val sentId = telegram.send(
                             message.chatId,
                             result.text,
@@ -631,7 +666,7 @@ class ReplyCoordinator(
                         }
                         automated?.record(message.chatId, sentId)
                     }
-                    if (result.stickerId.isNotEmpty()) {
+                    if (result.stickerId.isNotEmpty() && result.voice == null) {
                         val sentId = telegram.sendSticker(
                             message.chatId,
                             result.stickerId,

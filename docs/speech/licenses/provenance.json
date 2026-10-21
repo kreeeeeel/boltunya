@@ -1,0 +1,208 @@
+[
+  {
+    "file": "Apache-2.0.txt",
+    "url": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "sizeBytes": 11358
+  },
+  {
+    "file": "JavaCV-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/bytedeco/javacv/1.5.14/LICENSE.txt",
+    "sha256": "bd5f6b1276fd448f016115dcd4a39ee6f5e3ce32441a0cccdb9e6370e9df5434",
+    "sizeBytes": 31556
+  },
+  {
+    "file": "JavaCPP-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/bytedeco/javacpp/1.5.14/LICENSE.txt",
+    "sha256": "bd5f6b1276fd448f016115dcd4a39ee6f5e3ce32441a0cccdb9e6370e9df5434",
+    "sizeBytes": 31556
+  },
+  {
+    "file": "JavaCPP-Presets-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/bytedeco/javacpp-presets/1.5.14/LICENSE.txt",
+    "sha256": "bd5f6b1276fd448f016115dcd4a39ee6f5e3ce32441a0cccdb9e6370e9df5434",
+    "sizeBytes": 31556
+  },
+  {
+    "file": "FFmpeg-LICENSE.md",
+    "url": "https://raw.githubusercontent.com/FFmpeg/FFmpeg/n8.1.2/LICENSE.md",
+    "sha256": "2e1d16c72fd74e12063776371da757322f8b77589386532f4fd8634bde7de1af",
+    "sizeBytes": 4346
+  },
+  {
+    "file": "FFmpeg-LGPL-3.0.txt",
+    "url": "https://raw.githubusercontent.com/FFmpeg/FFmpeg/n8.1.2/COPYING.LGPLv3",
+    "sha256": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768",
+    "sizeBytes": 7651
+  },
+  {
+    "file": "GPL-3.0.txt",
+    "url": "https://raw.githubusercontent.com/FFmpeg/FFmpeg/n8.1.2/COPYING.GPLv3",
+    "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+    "sizeBytes": 35147
+  },
+  {
+    "file": "Opus-COPYING.txt",
+    "url": "https://raw.githubusercontent.com/xiph/opus/v1.3.1/COPYING",
+    "sha256": "8338ce8d922bb4416ce3dd1e5680173332435e3f0755007ac7801ccd674fe682",
+    "sizeBytes": 1928
+  },
+  {
+    "file": "sherpa-onnx-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/k2-fsa/sherpa-onnx/v1.13.8/LICENSE",
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "sizeBytes": 11358
+  },
+  {
+    "file": "ONNX-Runtime-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.28.2/LICENSE",
+    "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
+    "sizeBytes": 1073
+  },
+  {
+    "file": "ONNX-Runtime-ThirdPartyNotices.txt",
+    "url": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.28.2/ThirdPartyNotices.txt",
+    "sha256": "0e07b95f3a8d6230037707c5c4a2b554d12c4cb67369669ac255635528ffcee2",
+    "sizeBytes": 325054
+  },
+  {
+    "file": "eSpeak-NG-COPYING.txt",
+    "url": "https://raw.githubusercontent.com/csukuangfj/espeak-ng/ed530aa113046142eb5115cf2fc9157854d0ffe1/COPYING",
+    "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+    "sizeBytes": 35147
+  },
+  {
+    "file": "Whisper-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/openai/whisper/main/LICENSE",
+    "sha256": "b5d65a59060e68c4ff940e1eddfa6f94b2d68fdf58ed7f4dd57721c997e35e9d",
+    "sizeBytes": 1063
+  },
+  {
+    "file": "Piper-Irina-MODEL_CARD.md",
+    "url": "https://huggingface.co/rhasspy/piper-voices/raw/2f8dbe0/ru/ru_RU/irina/medium/MODEL_CARD",
+    "sha256": "f4fc2deb0e8c6219f29202b8dd06c9638c5ffd50ad5c6b2c90cf1aa59d507593",
+    "sizeBytes": 271
+  },
+  {
+    "file": "Piper-Ruslan-MODEL_CARD.md",
+    "url": "https://huggingface.co/rhasspy/piper-voices/raw/2f8dbe0/ru/ru_RU/ruslan/medium/MODEL_CARD",
+    "sha256": "28f5c0381c1234eb17bfd77e77f893b008948c29bc351fb811abd2d6a69e7662",
+    "sizeBytes": 313
+  },
+  {
+    "file": "Piper-Amy-MODEL_CARD.md",
+    "url": "https://huggingface.co/rhasspy/piper-voices/raw/2f8dbe0/en/en_US/amy/low/MODEL_CARD",
+    "sha256": "71b07ded301a96346096a71d8f0d64cbb5f49d5d51004dce28bbb7504e3f65f0",
+    "sizeBytes": 273
+  },
+  {
+    "file": "CC-BY-NC-SA-4.0.txt",
+    "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode.txt",
+    "sha256": "e66c269d4819aaab34b49ef5220c4ddab6756f21bb5180761a4eb8561f2b7bbd",
+    "sizeBytes": 20850
+  },
+  {
+    "file": "FFmpeg-zlib-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/madler/zlib/v1.3.2/LICENSE",
+    "sha256": "e32ff4e00d9d94930537635291da39e7e612703334bf6fde8c7f1686fe8a45a2",
+    "sizeBytes": 1002
+  },
+  {
+    "file": "FFmpeg-Speex-COPYING.txt",
+    "url": "https://raw.githubusercontent.com/xiph/speex/Speex-1.2.1/COPYING",
+    "sha256": "2654a4264b2bfe298dedc508748d140111840c315cc8eb646a3a68c13fa75b01",
+    "sizeBytes": 1773
+  },
+  {
+    "file": "FFmpeg-OpenSSL-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/openssl/openssl/openssl-3.5.7/LICENSE.txt",
+    "sha256": "7d5450cb2d142651b8afa315b5f238efc805dad827d91ba367d8516bc9d49e7a",
+    "sizeBytes": 10175
+  },
+  {
+    "file": "FFmpeg-OpenH264-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/cisco/openh264/v2.6.0/LICENSE",
+    "sha256": "dd5c1c9668512530fa5a96e4c29ac4033d70a7eeb0eed7a42fddb6dd794ebdbb",
+    "sizeBytes": 1295
+  },
+  {
+    "file": "FFmpeg-libvpx-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/webmproject/libvpx/v1.16.0/LICENSE",
+    "sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615",
+    "sizeBytes": 1537
+  },
+  {
+    "file": "FFmpeg-libvpx-PATENTS.txt",
+    "url": "https://raw.githubusercontent.com/webmproject/libvpx/v1.16.0/PATENTS",
+    "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c",
+    "sizeBytes": 1436
+  },
+  {
+    "file": "FFmpeg-FreeType-FTL.txt",
+    "url": "https://raw.githubusercontent.com/freetype/freetype/VER-2-14-3/docs/FTL.TXT",
+    "sha256": "5a5ee54c5001bbad1cdc1a57cc3dd4c42199b2da09d39c7ee41fab002d02967f",
+    "sizeBytes": 6743
+  },
+  {
+    "file": "FFmpeg-HarfBuzz-COPYING.txt",
+    "url": "https://raw.githubusercontent.com/harfbuzz/harfbuzz/14.3.0/COPYING",
+    "sha256": "ba8f810f2455c2f08e2d56bb49b72f37fcf68f1f4fade38977cfd7372050ad64",
+    "sizeBytes": 1971
+  },
+  {
+    "file": "FFmpeg-SRT-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/Haivision/srt/v1.5.6/LICENSE",
+    "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+    "sizeBytes": 16726
+  },
+  {
+    "file": "FFmpeg-libwebp-COPYING.txt",
+    "url": "https://raw.githubusercontent.com/webmproject/libwebp/v1.6.0/COPYING",
+    "sha256": "5aec868f669e384a22372a4e8a1a6cd7d44c64cd451f960ca69cc170d1e13acf",
+    "sizeBytes": 1496
+  },
+  {
+    "file": "FFmpeg-libwebp-PATENTS.txt",
+    "url": "https://raw.githubusercontent.com/webmproject/libwebp/v1.6.0/PATENTS",
+    "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c",
+    "sizeBytes": 1436
+  },
+  {
+    "file": "FFmpeg-zimg-COPYING.txt",
+    "url": "https://raw.githubusercontent.com/sekrit-twc/zimg/release-3.0.6/COPYING",
+    "sha256": "7637386b5f81e8a719ca336233149005e5fa28b5e6054ea7b67de49355b0ad40",
+    "sizeBytes": 484
+  },
+  {
+    "file": "FFmpeg-SVT-AV1-LICENSE.txt",
+    "url": "https://gitlab.com/AOMediaCodec/SVT-AV1/-/raw/v4.2.0/LICENSE.md",
+    "sha256": "0acc2fcb27472bdc9aaf8b71f37055bbdac4f54671b7d922f241bd7fcd0dd3e6",
+    "sizeBytes": 1709
+  },
+  {
+    "file": "FFmpeg-libxml2-COPYING.txt",
+    "url": "https://raw.githubusercontent.com/GNOME/libxml2/v2.9.12/Copyright",
+    "sha256": "c5c63674f8a83c4d2e385d96d1c670a03cb871ba2927755467017317878574bd",
+    "sizeBytes": 1289
+  },
+  {
+    "file": "FFmpeg-libaom-LICENSE.txt",
+    "url": "https://aomedia.googlesource.com/aom/+/refs/tags/v3.14.1/LICENSE?format=TEXT",
+    "encoding": "base64",
+    "sha256": "4764a286d8b2faeaf42f4418e7d7a28d58fc8fd4d00a3d0a7f44b0a4099de7f2",
+    "sizeBytes": 1316
+  },
+  {
+    "file": "FFmpeg-libaom-PATENTS.txt",
+    "url": "https://aomedia.googlesource.com/aom/+/refs/tags/v3.14.1/PATENTS?format=TEXT",
+    "encoding": "base64",
+    "sha256": "661fb8e504744e95587b556b94a58343448300606a41bea8c7a9b97125696e61",
+    "sizeBytes": 5701
+  },
+  {
+    "file": "FFmpeg-LAME-COPYING.txt",
+    "url": "https://svn.code.sf.net/p/lame/svn/tags/RELEASE__3_100/lame/COPYING",
+    "sha256": "bfe4a52dc4645385f356a8e83cc54216a293e3b6f1cb4f79f5fc0277abf937fd",
+    "sizeBytes": 25284
+  }
+]

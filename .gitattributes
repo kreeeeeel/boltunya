@@ -9,3 +9,8 @@ gradlew text eol=lf
 *.webp binary
 *.ttf binary
 *.woff2 binary
+# Preserve upstream notices exactly as recorded in the provenance manifest.
+docs/speech/licenses/* -text
+docs/speech/licenses/README.md text eol=lf
+docs/speech/licenses/manifest.json text eol=lf
+docs/speech/licenses/provenance.json text eol=lf

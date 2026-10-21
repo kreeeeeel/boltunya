@@ -13,6 +13,7 @@ import ru.aigram.domain.settings.SettingsUpdate
 import ru.aigram.exception.impl.DuplicateStyleIdentifierException
 import ru.aigram.exception.impl.InvalidSettingTypeException
 import ru.aigram.memory.MemoryCoordinator
+import ru.aigram.speech.reply.VoiceSettingsValidator
 import ru.aigram.storage.SettingsStore
 import ru.aigram.validation.InputValidation
 
@@ -26,9 +27,11 @@ class SettingsComponent(
     private val devices: OllamaDeviceSelector,
     private val targets: ModelTargetResolver,
     private val memory: MemoryCoordinator,
+    private val voiceSettings: VoiceSettingsValidator,
 ) {
     fun update(update: SettingsUpdate): AppSettings {
         validation.validate(update)
+        voiceSettings.validate(update)
         if (update.ollamaDevice != null) {
             devices.validate(update.ollamaDevice)
         }
@@ -61,6 +64,12 @@ class SettingsComponent(
                 replyIntervalSeconds = update.replyIntervalSeconds ?: it.replyIntervalSeconds,
                 showTyping = update.showTyping ?: it.showTyping,
                 formatReplies = update.formatReplies ?: it.formatReplies,
+                voiceInputEnabled = update.voiceInputEnabled ?: it.voiceInputEnabled,
+                voiceReplyMode = update.voiceReplyMode ?: it.voiceReplyMode,
+                voiceReplyProbability = update.voiceReplyProbability ?: it.voiceReplyProbability,
+                voiceRecognitionModel = update.voiceRecognitionModel ?: it.voiceRecognitionModel,
+                voiceSynthesisModel = update.voiceSynthesisModel ?: it.voiceSynthesisModel,
+                voiceSpeechRate = update.voiceSpeechRate ?: it.voiceSpeechRate,
                 replyProcessingMode = update.replyProcessingMode ?: it.replyProcessingMode,
                 ignoreAssistantTasks = update.ignoreAssistantTasks ?: it.ignoreAssistantTasks,
                 groupReplies = update.groupReplies ?: it.groupReplies,
@@ -103,5 +112,9 @@ class SettingsComponent(
             before.customStyles != after.customStyles || before.groupReplies != after.groupReplies ||
             before.deliveryMode != after.deliveryMode || before.ignoreAssistantTasks != after.ignoreAssistantTasks ||
             before.formatReplies != after.formatReplies ||
-            before.replyProcessingMode != after.replyProcessingMode
+            before.replyProcessingMode != after.replyProcessingMode ||
+            before.voiceInputEnabled != after.voiceInputEnabled || before.voiceReplyMode != after.voiceReplyMode ||
+            before.voiceReplyProbability != after.voiceReplyProbability ||
+            before.voiceRecognitionModel != after.voiceRecognitionModel ||
+            before.voiceSynthesisModel != after.voiceSynthesisModel || before.voiceSpeechRate != after.voiceSpeechRate
 }

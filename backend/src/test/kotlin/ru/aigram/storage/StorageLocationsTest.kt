@@ -48,4 +48,28 @@ class StorageLocationsTest {
             assertTrue(locations.all { it.note.isNotBlank() })
         }
     }
+
+    @Test
+    fun `reports only the current profile speech folder and does not create missing directories`() {
+        val service = StorageLocations(
+            ApplicationConfiguration(directory, false),
+            OllamaInstallation(directory, emptyMap()),
+            ResourceCatalog(),
+            emptyMap(),
+            directory.resolve("external user profile"),
+        )
+        val missing = service.report().locations.single { it.id == "speech" }
+        assertEquals(directory.resolve("speech").toAbsolutePath().normalize().toString(), missing.path)
+        assertEquals("directory", missing.kind)
+        assertFalse(missing.available)
+        assertFalse(missing.openable)
+        assertFalse(Files.exists(directory.resolve("speech")))
+
+        Files.createDirectories(directory.resolve("speech/installed-model"))
+        val installed = service.report().locations.single { it.id == "speech" }
+        assertEquals(missing.path, installed.path)
+        assertTrue(installed.available)
+        assertTrue(installed.openable)
+        assertTrue(installed.label.isNotBlank())
+    }
 }

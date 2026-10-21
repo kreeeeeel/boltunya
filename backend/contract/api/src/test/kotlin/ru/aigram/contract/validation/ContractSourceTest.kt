@@ -19,7 +19,32 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-private val FEATURE_TAGS = setOf("chats", "telegram", "media", "memory", "activity", "models", "settings", "system")
+private val FEATURE_TAGS =
+    setOf("chats", "telegram", "media", "memory", "activity", "models", "settings", "system", "speech")
+private val SPEECH_MODELS = setOf(
+    "VoiceReplyMode", "DraftOutput", "GeneratedVoice", "SpeechAsset", "SpeechAssetKind",
+    "SpeechDownload", "SpeechDownloadPhase", "SpeechState", "VoiceDraftRequest", "VoiceSendRequest",
+    "SpeechPreviewRequest", "SpeechModelImportRequest",
+)
+private val SPEECH_PATHS = setOf(
+    "/api/speech",
+    "/api/speech/preview",
+    "/api/speech/models/import",
+    "/api/speech/assets/{assetId}/install",
+    "/api/speech/drafts",
+    "/api/speech/audio/{voiceId}",
+    "/api/chats/{chatId}/voice",
+)
+private val SPEECH_OPERATIONS = setOf(
+    "GET /api/speech",
+    "POST /api/speech/preview",
+    "POST /api/speech/models/import",
+    "POST /api/speech/assets/{assetId}/install",
+    "DELETE /api/speech/assets/{assetId}/install",
+    "POST /api/speech/drafts",
+    "GET /api/speech/audio/{voiceId}",
+    "POST /api/chats/{chatId}/voice",
+)
 private val REQUEST_MODELS = setOf(
     "ChatRuleInput",
     "ModelProfileOptionsInput",
@@ -51,16 +76,20 @@ class ContractSourceTest {
         val extras = fixture("extracted-models.json")
         val audit = ContractWireAudit(document)
         val actual = audit.snapshot(
-            expected.getValue("schemas").jsonObject.keys + REQUEST_MODELS + MESSAGE_EDIT_MODELS + IDLE_MESSAGE_MODELS,
+            expected.getValue("schemas").jsonObject.keys + REQUEST_MODELS + MESSAGE_EDIT_MODELS + IDLE_MESSAGE_MODELS +
+                SPEECH_MODELS,
         )
         assertEquals(expected.getValue("root"), actual.getValue("root"), "Root metadata or session security changed")
-        assertEquals(setOf("/api/engine/restart", MESSAGE_EDIT_PATH), additions.getValue("paths").jsonObject.keys)
         assertEquals(
-            setOf("POST /api/engine/restart", "GET $MESSAGE_EDIT_PATH", "PUT $MESSAGE_EDIT_PATH"),
+            setOf("/api/engine/restart", MESSAGE_EDIT_PATH) + SPEECH_PATHS,
+            additions.getValue("paths").jsonObject.keys,
+        )
+        assertEquals(
+            setOf("POST /api/engine/restart", "GET $MESSAGE_EDIT_PATH", "PUT $MESSAGE_EDIT_PATH") + SPEECH_OPERATIONS,
             additions.getValue("operations").jsonObject.keys,
         )
         assertEquals(
-            REQUEST_MODELS + MESSAGE_EDIT_MODELS + IDLE_MESSAGE_MODELS,
+            REQUEST_MODELS + MESSAGE_EDIT_MODELS + IDLE_MESSAGE_MODELS + SPEECH_MODELS,
             additions.getValue("schemas").jsonObject.keys,
         )
         listOf("paths", "operations", "schemas").stream().forEach { group ->
@@ -77,17 +106,17 @@ class ContractSourceTest {
                 assertEquals(corrected, hash, "Wire semantics changed for $group: $name")
             }
         }
-        assertEquals(61, document.getValue("paths").jsonObject.size)
-        assertEquals(76, audit.operations().size)
+        assertEquals(68, document.getValue("paths").jsonObject.size)
+        assertEquals(84, audit.operations().size)
         assertEquals(
             expected.getValue("schemas").jsonObject.keys + extras.keys + REQUEST_MODELS + MESSAGE_EDIT_MODELS +
-                IDLE_MESSAGE_MODELS,
+                IDLE_MESSAGE_MODELS + SPEECH_MODELS,
             document.getValue("components").jsonObject.getValue("schemas").jsonObject.keys,
         )
-        assertEquals(122, document.getValue("components").jsonObject.getValue("schemas").jsonObject.size)
+        assertEquals(134, document.getValue("components").jsonObject.getValue("schemas").jsonObject.size)
         assertFalse(Files.exists(Path.of("../api.yaml")), "The old duplicate contract must not remain")
         Files.walk(Path.of("schema")).use { files ->
-            assertEquals(131L, files.filter { Files.isRegularFile(it) && it.toString().endsWith(".yaml") }.count())
+            assertEquals(144L, files.filter { Files.isRegularFile(it) && it.toString().endsWith(".yaml") }.count())
         }
     }
 

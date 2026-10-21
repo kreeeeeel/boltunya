@@ -23,6 +23,7 @@ import ru.aigram.telegram.TelegramMessageLinks
 import ru.aigram.telegram.TelegramMessageSender
 import ru.aigram.telegram.TelegramStickerService
 import ru.aigram.telegram.TelegramUpdateHandler
+import ru.aigram.telegram.TelegramVoiceSender
 import java.nio.file.Path
 
 @Configuration(proxyBeanMethods = false)
@@ -66,8 +67,9 @@ class TelegramConfiguration {
         links: TelegramMessageLinks,
         deletion: TelegramMessageDeletion,
         editing: TelegramMessageEditing,
+        voiceSender: TelegramVoiceSender,
     ): TdLightGateway = TdLightGateway(
         directory, settings, credentials, interaction, media, chats, history, cache, connection, updates,
-        loader, sender, prefetch, mediaSender, stickers, galleries, links, deletion, editing,
+        loader, sender, prefetch, mediaSender, stickers, galleries, links, deletion, editing, voiceSender,
     )
 }

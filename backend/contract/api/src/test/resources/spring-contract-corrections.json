@@ -1,581 +1,612 @@
 {
-    "reason": "Reviewed corrections preserve existing runtime defaults, strict PATCH null handling and complete response types, with explicitly fingerprinted input-only models and additive restart/upload support.",
-    "changes": [
-        {
-            "model": "Activity",
-            "property": "date",
-            "attribute": "format",
-            "before": null,
-            "after": "int64"
-        },
-        {
-            "model": "Activity",
-            "property": "durationMs",
-            "attribute": "format",
-            "before": null,
-            "after": "int64"
-        },
-        {
-            "model": "Reply",
-            "property": "durationMs",
-            "attribute": "format",
-            "before": null,
-            "after": "int64"
-        },
-        {
-            "model": "Chat",
-            "property": "date",
-            "attribute": "format",
-            "before": null,
-            "after": "int64"
-        },
-        {
-            "model": "Message",
-            "property": "date",
-            "attribute": "format",
-            "before": null,
-            "after": "int64"
-        },
-        {
-            "model": "MetricSample",
-            "property": "timestamp",
-            "attribute": "format",
-            "before": null,
-            "after": "int64"
-        },
-        {
-            "model": "MetricSample",
-            "property": "memoryUsedBytes",
-            "attribute": "format",
-            "before": null,
-            "after": "int64"
-        },
-        {
-            "model": "MetricSample",
-            "property": "memoryTotalBytes",
-            "attribute": "format",
-            "before": null,
-            "after": "int64"
-        },
-        {
-            "model": "MetricSample",
-            "property": "appMemoryBytes",
-            "attribute": "format",
-            "before": null,
-            "after": "int64"
-        },
-        {
-            "model": "MetricSample",
-            "property": "backendMemoryBytes",
-            "attribute": "format",
-            "before": null,
-            "after": "int64"
-        },
-        {
-            "model": "MetricSample",
-            "property": "ollamaMemoryBytes",
-            "attribute": "format",
-            "before": null,
-            "after": "int64"
-        },
-        {
-            "model": "MetricSample",
-            "property": "networkReceiveBytesPerSecond",
-            "attribute": "format",
-            "before": null,
-            "after": "int64"
-        },
-        {
-            "model": "MetricSample",
-            "property": "networkSendBytesPerSecond",
-            "attribute": "format",
-            "before": null,
-            "after": "int64"
-        },
-        {
-            "model": "ContextExclusionUpdate",
-            "reason": "Missing values retain existing server defaults: scope=message, excluded=true"
-        },
-        {
-            "model": "MetricSample",
-            "property": "gpuMemoryUsedBytes",
-            "attribute": "format",
-            "before": null,
-            "after": "int64"
-        },
-        {
-            "model": "MetricSample",
-            "property": "gpuMemoryTotalBytes",
-            "attribute": "format",
-            "before": null,
-            "after": "int64"
-        },
-        {
-            "model": "Error",
-            "property": "code",
-            "reason": "Document the stable error code already returned by the local API."
-        },
-        {
-            "model": "Engine",
-            "property": "canRestart",
-            "reason": "Expose optional app-managed restart availability. The runtime defaults to false; the schema does not prescribe a default."
-        },
-        {
-            "path": "/api/engine/restart",
-            "method": "post",
-            "operationId": "restartEngine",
-            "reason": "Add the approved app-managed Ollama restart operation without stopping externally managed processes."
-        },
-        {
-            "path": "/api/uploads",
-            "method": "post",
-            "property": "requestBody.content.*/*",
-            "reason": "Preserve existing binary upload acceptance for WebP, GIF and other MIME types through the typed MVC transport."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "enabled",
-            "attribute": "default",
-            "after": false,
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "style",
-            "attribute": "default",
-            "after": "friendly",
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "model",
-            "attribute": "default",
-            "after": "qwen3:1.7b",
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "instructions",
-            "attribute": "default",
-            "after": "",
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "contextMessages",
-            "attribute": "default",
-            "after": 20,
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "maxTokens",
-            "attribute": "default",
-            "after": 128,
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "delaySeconds",
-            "attribute": "default",
-            "after": 0,
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "creativity",
-            "attribute": "default",
-            "after": 60,
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "emoji",
-            "attribute": "default",
-            "after": true,
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "internetAccess",
-            "attribute": "default",
-            "after": true,
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "matchMyStyle",
-            "attribute": "default",
-            "after": true,
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "styleId",
-            "attribute": "default",
-            "after": "",
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "groupReplies",
-            "attribute": "default",
-            "after": "inherit",
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "useMemory",
-            "attribute": "default",
-            "after": true,
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "sourceLinks",
-            "attribute": "default",
-            "after": "requested",
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "useDefaultModel",
-            "attribute": "default",
-            "after": true,
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "modelProfileId",
-            "attribute": "default",
-            "after": "",
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "deliveryMode",
-            "attribute": "default",
-            "after": "inherit",
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "analyzePhotos",
-            "attribute": "default",
-            "after": false,
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "aiStickers",
-            "attribute": "default",
-            "after": false,
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "proactiveMode",
-            "attribute": "default",
-            "after": "inherit",
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "model": "ChatRuleInput",
-            "property": "proactiveIntervalMinutes",
-            "attribute": "default",
-            "after": 0,
-            "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
-        },
-        {
-            "models": [
-                "AppearanceSettingsInput",
-                "ChatRuleInput",
-                "ModelCapabilitiesInput",
-                "ModelProfileOptionsInput",
-                "ModelPromptSettingsInput"
-            ],
-            "attribute": "requestModels",
-            "reason": "Separate partial/defaulted requests from complete responses. Only request references change; response requiredness remains unchanged."
-        },
-        {
-            "model": "ModelProfileUpdate",
-            "property": "required",
-            "after": [
-                "name",
-                "provider",
-                "baseUrl",
-                "model"
-            ],
-            "reason": "Profile input preserves optional preset=custom, enabled=true, empty options/capabilities defaults and clearApiKey=false."
-        },
-        {
-            "model": "ModelProfileOptionsInput",
-            "attribute": "defaults",
-            "reason": "Use exact domain sampling, token, reasoning and timeout defaults; explicitly nullable sampling values remain nullable."
-        },
-        {
-            "model": "ModelCapabilitiesInput",
-            "attribute": "defaults",
-            "reason": "Use exact domain capability defaults without making complete response capabilities optional."
-        },
-        {
-            "model": "ModelProfileUpdate",
-            "property": "apiKey.nullable",
-            "after": true,
-            "reason": "Explicit null, omission or empty input keeps the saved credential; only clearApiKey removes it. The key remains write-only."
-        },
-        {
-            "model": "ModelPromptSettingsInput",
-            "property": "tokenEncoding.default",
-            "after": "auto",
-            "reason": "Preserve automatic token encoding for a model-only prompt preference request and nullable contextWindow overrides."
-        },
-        {
-            "model": "AppearanceSettingsInput",
-            "property": "tokens.default",
-            "after": {},
-            "reason": "An omitted theme token map remains empty; mode=system and css empty preserve existing domain defaults."
-        },
-        {
-            "models": [
-                "CommunicationStyle",
-                "ChatGroupReplies",
-                "DeliveryMode",
-                "ProactiveMode",
-                "TokenEncoding",
-                "ModelPreset"
-            ],
-            "attribute": "default",
-            "reason": "Defaults reside on named enum definitions because the pinned generator resolves referenced enum schemas rather than sibling defaults; response requiredness is unchanged."
-        },
-        {
-            "operations": [
-                "PUT /api/chats/{chatId}/rule",
-                "PUT /api/appearance",
-                "PUT /api/model-prompts"
-            ],
-            "attribute": "x-codegen-request-body-name",
-            "reason": "Keep the established SDK request argument names while introducing distinct typed input schemas."
-        },
-        {
-            "path": "/api/uploads",
-            "method": "post",
-            "attribute": "x-spring-consumes-any",
-            "after": true,
-            "reason": "The Spring interface retains the canonical wildcard upload MIME annotation even when the generator drops wildcard alternatives beside explicit MIME types."
-        },
-        {
-            "model": "ActivityHistorySettingsInput",
-            "property": "retentionDays/maxStorageMb",
-            "attribute": "default",
-            "after": 0,
-            "reason": "A distinct request type preserves the domain unlimited-retention/unlimited-size defaults while the complete history settings schema remains required."
-        },
-        {
-            "path": "/api/activity/history/settings",
-            "method": "put",
-            "attribute": "x-codegen-request-body-name",
-            "after": "activityHistorySettings",
-            "reason": "Keep the established SDK request argument name after splitting the defaulted input type."
-        },
-        {
-            "model": "SendMediaRequest",
-            "property": "caption.default",
-            "after": "",
-            "reason": "Preserve the domain empty-caption default; uploadIds and media kind remain required as before."
-        },
-        {
-            "models": [
-                "ModelProfileUpdate.options",
-                "ModelProfileUpdate.capabilities",
-                "AppearanceSettingsInput.tokens"
-            ],
-            "attribute": "x-kotlin-empty-default",
-            "after": true,
-            "reason": "Preserve canonical default:{} as nonnullable Kotlin constructor/map defaults when the pinned generator omits object defaults from template metadata. The marker is audited to allow only these explicitly empty nonnullable defaults."
-        },
-        {
-            "model": "ContextExclusionScope",
-            "property": "default",
-            "after": "message",
-            "reason": "Retain the existing ContextExclusionUpdate scope default on the named enum definition so the pinned Kotlin generator emits a nonnullable MESSAGE constructor default. Fully expanded request wire semantics are unchanged."
-        },
-        {
-            "model": "Message",
-            "property": "editedAt",
-            "reason": "Optional Unix-second edit timestamp defaults to zero; all other original fields and requirements are unchanged."
-        },
-        {
-            "path": "/api/chats/{chatId}/messages/{messageId}/edit",
-            "methods": [
-                "get",
-                "put"
-            ],
-            "reason": "Add fresh revision-protected lossless Telegram editing with opaque original entity references and explicit new formatting marks."
-        },
-        {
-            "before": null,
-            "attribute": "optional-property",
-            "model": "Settings",
-            "property": "formatReplies",
-            "after": "boolean default false; SettingsUpdate has no default"
-        },
-        {
-            "before": null,
-            "attribute": "optional-property",
-            "model": "Reply",
-            "property": "entities",
-            "after": "MessageEntity array, UTF-16, maximum 100; same input on Text and captionEntities on SendMediaRequest"
-        },
-        {
-            "before": null,
-            "attribute": "optional-property",
-            "model": "ChatRule",
-            "property": "proactiveMessageMode",
-            "after": "named ai/text enum, default ai, also on ChatRuleInput"
-        },
-        {
-            "before": null,
-            "attribute": "optional-property",
-            "model": "ChatRule",
-            "property": "proactiveText",
-            "after": "literal string default empty, maximum 4096, also on ChatRuleInput"
-        },
-        {
-            "attribute": "optional-property",
-            "before": null,
-            "model": "Settings",
-            "property": "replyProcessingMode",
-            "after": "replace/finish/each queue policy; PATCH omission has no default"
-        },
-        {
-            "attribute": "optional-property",
-            "before": null,
-            "model": "ChatRule",
-            "property": "replyInterruptionMode",
-            "after": "inherit/replace/finish/each override, default inherit, also on ChatRuleInput"
-        }
-    ],
-    "paths": {},
+  "reason": "Reviewed corrections preserve existing runtime defaults, strict PATCH null handling and complete response types, with explicitly fingerprinted input-only models and additive restart/upload support.",
+  "changes": [
+    {
+      "model": "Activity",
+      "property": "date",
+      "attribute": "format",
+      "before": null,
+      "after": "int64"
+    },
+    {
+      "model": "Activity",
+      "property": "durationMs",
+      "attribute": "format",
+      "before": null,
+      "after": "int64"
+    },
+    {
+      "model": "Reply",
+      "property": "durationMs",
+      "attribute": "format",
+      "before": null,
+      "after": "int64"
+    },
+    {
+      "model": "Chat",
+      "property": "date",
+      "attribute": "format",
+      "before": null,
+      "after": "int64"
+    },
+    {
+      "model": "Message",
+      "property": "date",
+      "attribute": "format",
+      "before": null,
+      "after": "int64"
+    },
+    {
+      "model": "MetricSample",
+      "property": "timestamp",
+      "attribute": "format",
+      "before": null,
+      "after": "int64"
+    },
+    {
+      "model": "MetricSample",
+      "property": "memoryUsedBytes",
+      "attribute": "format",
+      "before": null,
+      "after": "int64"
+    },
+    {
+      "model": "MetricSample",
+      "property": "memoryTotalBytes",
+      "attribute": "format",
+      "before": null,
+      "after": "int64"
+    },
+    {
+      "model": "MetricSample",
+      "property": "appMemoryBytes",
+      "attribute": "format",
+      "before": null,
+      "after": "int64"
+    },
+    {
+      "model": "MetricSample",
+      "property": "backendMemoryBytes",
+      "attribute": "format",
+      "before": null,
+      "after": "int64"
+    },
+    {
+      "model": "MetricSample",
+      "property": "ollamaMemoryBytes",
+      "attribute": "format",
+      "before": null,
+      "after": "int64"
+    },
+    {
+      "model": "MetricSample",
+      "property": "networkReceiveBytesPerSecond",
+      "attribute": "format",
+      "before": null,
+      "after": "int64"
+    },
+    {
+      "model": "MetricSample",
+      "property": "networkSendBytesPerSecond",
+      "attribute": "format",
+      "before": null,
+      "after": "int64"
+    },
+    {
+      "model": "ContextExclusionUpdate",
+      "reason": "Missing values retain existing server defaults: scope=message, excluded=true"
+    },
+    {
+      "model": "MetricSample",
+      "property": "gpuMemoryUsedBytes",
+      "attribute": "format",
+      "before": null,
+      "after": "int64"
+    },
+    {
+      "model": "MetricSample",
+      "property": "gpuMemoryTotalBytes",
+      "attribute": "format",
+      "before": null,
+      "after": "int64"
+    },
+    {
+      "model": "Error",
+      "property": "code",
+      "reason": "Document the stable error code already returned by the local API."
+    },
+    {
+      "model": "Engine",
+      "property": "canRestart",
+      "reason": "Expose optional app-managed restart availability. The runtime defaults to false; the schema does not prescribe a default."
+    },
+    {
+      "path": "/api/engine/restart",
+      "method": "post",
+      "operationId": "restartEngine",
+      "reason": "Add the approved app-managed Ollama restart operation without stopping externally managed processes."
+    },
+    {
+      "path": "/api/uploads",
+      "method": "post",
+      "property": "requestBody.content.*/*",
+      "reason": "Preserve existing binary upload acceptance for WebP, GIF and other MIME types through the typed MVC transport."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "enabled",
+      "attribute": "default",
+      "after": false,
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "style",
+      "attribute": "default",
+      "after": "friendly",
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "model",
+      "attribute": "default",
+      "after": "qwen3:1.7b",
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "instructions",
+      "attribute": "default",
+      "after": "",
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "contextMessages",
+      "attribute": "default",
+      "after": 20,
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "maxTokens",
+      "attribute": "default",
+      "after": 128,
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "delaySeconds",
+      "attribute": "default",
+      "after": 0,
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "creativity",
+      "attribute": "default",
+      "after": 60,
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "emoji",
+      "attribute": "default",
+      "after": true,
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "internetAccess",
+      "attribute": "default",
+      "after": true,
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "matchMyStyle",
+      "attribute": "default",
+      "after": true,
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "styleId",
+      "attribute": "default",
+      "after": "",
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "groupReplies",
+      "attribute": "default",
+      "after": "inherit",
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "useMemory",
+      "attribute": "default",
+      "after": true,
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "sourceLinks",
+      "attribute": "default",
+      "after": "requested",
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "useDefaultModel",
+      "attribute": "default",
+      "after": true,
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "modelProfileId",
+      "attribute": "default",
+      "after": "",
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "deliveryMode",
+      "attribute": "default",
+      "after": "inherit",
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "analyzePhotos",
+      "attribute": "default",
+      "after": false,
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "aiStickers",
+      "attribute": "default",
+      "after": false,
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "proactiveMode",
+      "attribute": "default",
+      "after": "inherit",
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "model": "ChatRuleInput",
+      "property": "proactiveIntervalMinutes",
+      "attribute": "default",
+      "after": 0,
+      "reason": "The distinct request type preserves the existing ChatRule domain constructor default while the complete response type retains required fields."
+    },
+    {
+      "models": [
+        "AppearanceSettingsInput",
+        "ChatRuleInput",
+        "ModelCapabilitiesInput",
+        "ModelProfileOptionsInput",
+        "ModelPromptSettingsInput"
+      ],
+      "attribute": "requestModels",
+      "reason": "Separate partial/defaulted requests from complete responses. Only request references change; response requiredness remains unchanged."
+    },
+    {
+      "model": "ModelProfileUpdate",
+      "property": "required",
+      "after": [
+        "name",
+        "provider",
+        "baseUrl",
+        "model"
+      ],
+      "reason": "Profile input preserves optional preset=custom, enabled=true, empty options/capabilities defaults and clearApiKey=false."
+    },
+    {
+      "model": "ModelProfileOptionsInput",
+      "attribute": "defaults",
+      "reason": "Use exact domain sampling, token, reasoning and timeout defaults; explicitly nullable sampling values remain nullable."
+    },
+    {
+      "model": "ModelCapabilitiesInput",
+      "attribute": "defaults",
+      "reason": "Use exact domain capability defaults without making complete response capabilities optional."
+    },
+    {
+      "model": "ModelProfileUpdate",
+      "property": "apiKey.nullable",
+      "after": true,
+      "reason": "Explicit null, omission or empty input keeps the saved credential; only clearApiKey removes it. The key remains write-only."
+    },
+    {
+      "model": "ModelPromptSettingsInput",
+      "property": "tokenEncoding.default",
+      "after": "auto",
+      "reason": "Preserve automatic token encoding for a model-only prompt preference request and nullable contextWindow overrides."
+    },
+    {
+      "model": "AppearanceSettingsInput",
+      "property": "tokens.default",
+      "after": {},
+      "reason": "An omitted theme token map remains empty; mode=system and css empty preserve existing domain defaults."
+    },
+    {
+      "models": [
+        "CommunicationStyle",
+        "ChatGroupReplies",
+        "DeliveryMode",
+        "ProactiveMode",
+        "TokenEncoding",
+        "ModelPreset"
+      ],
+      "attribute": "default",
+      "reason": "Defaults reside on named enum definitions because the pinned generator resolves referenced enum schemas rather than sibling defaults; response requiredness is unchanged."
+    },
+    {
+      "operations": [
+        "PUT /api/chats/{chatId}/rule",
+        "PUT /api/appearance",
+        "PUT /api/model-prompts"
+      ],
+      "attribute": "x-codegen-request-body-name",
+      "reason": "Keep the established SDK request argument names while introducing distinct typed input schemas."
+    },
+    {
+      "path": "/api/uploads",
+      "method": "post",
+      "attribute": "x-spring-consumes-any",
+      "after": true,
+      "reason": "The Spring interface retains the canonical wildcard upload MIME annotation even when the generator drops wildcard alternatives beside explicit MIME types."
+    },
+    {
+      "model": "ActivityHistorySettingsInput",
+      "property": "retentionDays/maxStorageMb",
+      "attribute": "default",
+      "after": 0,
+      "reason": "A distinct request type preserves the domain unlimited-retention/unlimited-size defaults while the complete history settings schema remains required."
+    },
+    {
+      "path": "/api/activity/history/settings",
+      "method": "put",
+      "attribute": "x-codegen-request-body-name",
+      "after": "activityHistorySettings",
+      "reason": "Keep the established SDK request argument name after splitting the defaulted input type."
+    },
+    {
+      "model": "SendMediaRequest",
+      "property": "caption.default",
+      "after": "",
+      "reason": "Preserve the domain empty-caption default; uploadIds and media kind remain required as before."
+    },
+    {
+      "models": [
+        "ModelProfileUpdate.options",
+        "ModelProfileUpdate.capabilities",
+        "AppearanceSettingsInput.tokens"
+      ],
+      "attribute": "x-kotlin-empty-default",
+      "after": true,
+      "reason": "Preserve canonical default:{} as nonnullable Kotlin constructor/map defaults when the pinned generator omits object defaults from template metadata. The marker is audited to allow only these explicitly empty nonnullable defaults."
+    },
+    {
+      "model": "ContextExclusionScope",
+      "property": "default",
+      "after": "message",
+      "reason": "Retain the existing ContextExclusionUpdate scope default on the named enum definition so the pinned Kotlin generator emits a nonnullable MESSAGE constructor default. Fully expanded request wire semantics are unchanged."
+    },
+    {
+      "model": "Message",
+      "property": "editedAt",
+      "reason": "Optional Unix-second edit timestamp defaults to zero; all other original fields and requirements are unchanged."
+    },
+    {
+      "path": "/api/chats/{chatId}/messages/{messageId}/edit",
+      "methods": [
+        "get",
+        "put"
+      ],
+      "reason": "Add fresh revision-protected lossless Telegram editing with opaque original entity references and explicit new formatting marks."
+    },
+    {
+      "before": null,
+      "attribute": "optional-property",
+      "model": "Settings",
+      "property": "formatReplies",
+      "after": "boolean default false; SettingsUpdate has no default"
+    },
+    {
+      "before": null,
+      "attribute": "optional-property",
+      "model": "Reply",
+      "property": "entities",
+      "after": "MessageEntity array, UTF-16, maximum 100; same input on Text and captionEntities on SendMediaRequest"
+    },
+    {
+      "before": null,
+      "attribute": "optional-property",
+      "model": "ChatRule",
+      "property": "proactiveMessageMode",
+      "after": "named ai/text enum, default ai, also on ChatRuleInput"
+    },
+    {
+      "before": null,
+      "attribute": "optional-property",
+      "model": "ChatRule",
+      "property": "proactiveText",
+      "after": "literal string default empty, maximum 4096, also on ChatRuleInput"
+    },
+    {
+      "attribute": "optional-property",
+      "before": null,
+      "model": "Settings",
+      "property": "replyProcessingMode",
+      "after": "replace/finish/each queue policy; PATCH omission has no default"
+    },
+    {
+      "attribute": "optional-property",
+      "before": null,
+      "model": "ChatRule",
+      "property": "replyInterruptionMode",
+      "after": "inherit/replace/finish/each override, default inherit, also on ChatRuleInput"
+    },
+    {
+      "feature": "speech",
+      "compatibility": "Optional local voice settings, reply audio metadata and manual draft output preserve existing text defaults and strict PATCH absence semantics. New authenticated speech routes only accept curated asset IDs or owner-scoped draft IDs."
+    }
+  ],
+  "paths": {},
+  "operations": {
+    "GET /api/state": "9277b19249bf31d0981751b5e2d376d0c67733db2126481b304a7ca99af67fe1",
+    "POST /api/telegram/connect": "f54221a800fa7bcafa0cd05aca431371d62513d5a6fe87582050cfa966f9291f",
+    "POST /api/telegram/submit": "5a41a66b7dea0a0ba7a11b9bb7d56f0e3dccbed36850139d49ba9df862d3b5d4",
+    "POST /api/telegram/logout": "ffed244966b19049d612013ff5a8942c164fb2c829d077c3d2866ab11149f27d",
+    "GET /api/chats/{chatId}/messages": "616e327bf6d644aaab077c5e55666fc0e571416e543cb1962860df50002cadcc",
+    "POST /api/chats/{chatId}/messages": "2dc4f1a125871324a444c889c13991da11cc12b0de94bec7b96e9611c7eee736",
+    "PUT /api/chats/{chatId}/rule": "a4e9c265e8bcb00290ce2b05b3ef82bccfa75c9bac072d0326528dbff7c15854",
+    "PATCH /api/settings": "bd05daef530175aa396c20cb8fc05b4dccc509bd54bdf8ac036421cb50b415d8",
+    "POST /api/preview": "9c927618e2a4e55dee788263e8dac23c5d5912b7e5020d9348328956c90df2b5",
+    "POST /api/engine/install": "761825042fc769c8c984a78254ab99fe929149685db5c920ed09317ce72fdf5d",
+    "POST /api/engine/start": "d0faa73bd93ed02312e65c38010a9b1dca189cf52b5f73c58c83b36f0286264d",
+    "POST /api/models/pull": "f16311eccbadca85d9d70994073bb2ffffedb530d48f08f963b0bf130f4b44f6",
+    "POST /api/quit": "13210dac58eb90e18278a9969a5d760d4cbafa2028db6af956caa22b9a33d2f3",
+    "GET /api/media/{fileId}": "ccc4114ed4734e1bfc6607b09892a215d3a21484cb58b75495a8a75bc9a26f8e",
+    "POST /api/telegram/restore": "55f37fc92e3c6801a0e4609a6f9ac153613e559caf06b47f197966b328d580b9",
+    "GET /api/metrics": "d76e5bda433886e328a08ace2e270d42673a92355b037c73aa5fb2bf7a202bdc",
+    "GET /api/chats/{chatId}/deleted": "09b5dc30265ea51cbf49397ebe3b1c88a70a2555fdcb067c20efb4b21bd69836",
+    "GET /api/search/connection": "124aa773fa6bbe7c18253198bd54cecc0669203011745e03aa3a8336e309f903",
+    "POST /api/search/connection": "d393161d6eec987eba36d9085bd20d8de4045ff2f8d3de8f0ace7b7486ebdba8",
+    "DELETE /api/search/connection": "194251b5a1f16ec5106144da69ffd5f66340cc110b92d5b463aec25c35e70699",
+    "POST /api/search/check": "9bb42653fbf4c9ee09557369baf495b8da6a98f97146b36f9ca709b63a2aff6d",
+    "POST /api/models/cancel": "94644b4bd0dafef176148a2bde4d1120fe9a5c166bfde28e39e33de9a65ee879",
+    "DELETE /api/activity": "6a36c288654a8200cf0a0f6700c3ca37aee367eed7eff41e12d424f223daf286",
+    "PATCH /api/activity/queue": "f6056300716c35ed0c0c121067e6b0fe4c83a08d1b5f4c6b89ecdf61686cd947",
+    "GET /api/activity/{id}": "10402c2a8eb6e8f636e0b4d87eb6acf544322249f6eb7ca3e5c29686e6d7e3e2",
+    "POST /api/activity/{id}/cancel": "734aac4cedffe5d3f1b85dea879a15883dc1e9dca06b5957d73603dc397e3246",
+    "POST /api/activity/{id}/priority": "aeb3972409cf69f35e6f52fb491495d847a24f0568ab1c92497aadf677a86091",
+    "GET /api/diagnostics/errors": "2f42305a2c35559e08fdf0839b03e8c808d90a5bc63a909b9cd8b95e186b74b9",
+    "DELETE /api/diagnostics/errors": "5ad64eb62056357d028300b80f185c929d478f6868323dc1fc2f924b658a784d",
+    "GET /api/storage/locations": "010baa385faad9b3f32112ea66ae675f19f663072248a11b4b737cb0497bb421",
+    "PUT /api/activity/{id}/feedback": "83828bee7a8c0d31ba9aae3e5070047df5fec73858e2795bd2dcaac16d73b210",
+    "DELETE /api/activity/{id}/feedback": "eaa12f549d1029dc9c803d182b05df3986dcdfee5f5c903f89fc0c111a3cf55a",
+    "GET /api/engine/devices": "8e0595f4c2a4a0a666c9c5625638fd0bf80259950fc5ce232d66dead0cc20e25",
+    "GET /api/model-profiles": "7d88fcb5b27a38a0f8bc791e6d214371ee887b3a437bffcfe69095a4af9c4e8b",
+    "POST /api/model-profiles": "a73168b49fadd067829e6bfc61c8507bc8116257e0b0e6d662c1621c36905cd0",
+    "PUT /api/model-profiles/{id}": "05a7ad9e1bbf16e4a099ba10ed29dd6ee3dbc6e75c2656b211284c7cdc56dcf4",
+    "DELETE /api/model-profiles/{id}": "233b9afc0edd43724a378de29f52e67cdf20bf3b7b4a01413c1cb6f487631f6c",
+    "POST /api/model-profiles/{id}/test": "69aa769f0c66160c0574bb928253591649c5df871d2f20a9ce8186580b1124a2",
+    "GET /api/model-routing": "fac88650159f870e21ac90f66f1cdc0e6afe8a577cc54459b3011995af4ca1b0",
+    "PUT /api/model-routing": "fe8663f12e11af95e3844a5e7329756e2fba8514b7759f34c1ce5b6d0485abf1",
+    "GET /api/appearance": "60957cb76b855714095ed7b167b03dcee7083f599007f6fc38f2d24d5b9af766",
+    "PUT /api/appearance": "8a49574cb638329ca0e4346ee0ded35ca5bc6188df6b919acc8289f89165134c",
+    "POST /api/uploads": "c0e0aedbd068ff3a64e0d97fb4be40425451aa5c11d4ceb7d6a53d834cc1fef7",
+    "DELETE /api/uploads/{id}": "8f191984843058bd20bff5d77e4eb6e19362a10aec83be8fbabba6d0627b9af8",
+    "GET /api/stickers": "a1b0fc9be9864b10145e7d0f98ec984c82fc0d94c5d7238b85d010c9fd9ac6ef",
+    "GET /api/stickers/sets/{id}": "c53fccbaeace9aef2949ee855bc625847f2ea5bd8496cd8ef9d6b7142f0dc2ff",
+    "POST /api/preview/jobs": "245529e83caf8d6f5e94f26ae89fdfef06f50240e9236349e3a5c5030b90bfa0",
+    "GET /api/preview/jobs/{id}": "4e147f94e20b3fdcf8066e452280c2bc3ec149709cdfbccf0c55de1777eec312",
+    "GET /api/chats/{chatId}/messages/{messageId}/link": "3edde7bce314a80919cd0485901aa24cf3bcfbcfe3d132d24b4ea80b98957878",
+    "PUT /api/chats/{chatId}/messages/{messageId}/context": "1dc9bc2414e1facc2dde34f8db1df137e872f1e5c26598e057621de1d5b60716",
+    "DELETE /api/chats/{chatId}/context-exclusions": "ae1602b1aae9f69480f14c2989e1940c24ff40b2360d721e04581ac45bf8b664",
+    "GET /api/chats/{chatId}/gallery": "38891a558c5e38911cf379ede80d6d9c7d900dfa798afea64ebcc67f96435760",
+    "POST /api/chats/{chatId}/attachments": "b42425590c507216368618c743c912f9162740b82d8481cb158a412567d3b2eb",
+    "POST /api/chats/{chatId}/stickers": "c17ed81de7c4b678c9ed850ee14b1c303a263936677a73d086c692e5a560ad7d",
+    "GET /api/activity/history": "7493e8e30da88664ce32512e9fea5fd83230ce2256db23a30c505adc54f0e432",
+    "GET /api/chats/{chatId}/messages/{messageId}/deletion": "29dc07f49c4d5a6c0d0257a57a5e9384ac6fbd02466d9d85e2d2cf957950b080",
+    "DELETE /api/chats/{chatId}/messages/{messageId}": "de12b30ca147c44fd7f9b2e736578a26831e39a43d644798faf14d9a86a23028",
+    "GET /api/model-prompts": "edd50e856269f05e103eba84096318fc965a9f406a6f94fdd18fd3395ded899e",
+    "PUT /api/model-prompts": "7f10d0e708523dd82ca59a9ce5f6b53c821b1e65acc1fd0d91a2888af53c053b",
+    "POST /api/prompts/budget": "969ead412616cb846cc2aa885a70f39193b454429d96eeb2d69f5b349ae04baa",
+    "PUT /api/activity/history/settings": "279abcef8015ff8e4497a71e43eed8849165cbd8d55be44563db40f86a824aa6"
+  },
+  "schemas": {
+    "Chat": "6c2e319c46c323712f33b3a3d440c5d0de01100d857626ef2ed7807a80da4d7c",
+    "Message": "f1337eb151ac3d7f1374bd6c34f0fc63d17e13eed1d69bea588076f0a23c8f50",
+    "Activity": "d563cf3739360ccaa756911d48b5d079159672a4a66260f3d5b4ed0823807d85",
+    "Error": "bbce6ad737e6cc0b480393f6d89e967c6a66fb154106d1918130454a7310f5a7",
+    "Reply": "d192e25bd8143b3117e9d7ade1d47cc871fc6bd67e3d828b9bef0f84fa89c107",
+    "State": "413dede0a6dbb1d15ec565bacb20916c67c1d76dd1003d38b0256ff2ba6a3bb1",
+    "MetricSample": "daff2a68bfd28783eea2e9cc95b7b00fb3e98496ef1e1347f259e53f9e6723b5",
+    "ActivityDetails": "5129ad36a0dd989af590ad2b16d19da4572a94046dc4f7230486b76fd01d44ed",
+    "PreviewJob": "dda403988daab922cb5e640d72f99566d6102dce6880e9f3a2a6b5e62e850969",
+    "ChatGallery": "cbb2257437da309f338601e0021b985875fea497cd30f140d2e062224abcadf1",
+    "ContextExclusionUpdate": "bd2bdbb99ada98eaa39b7db75fab8abd32fe62678c2c3a03184caa143f13e6ce",
+    "ActivityHistoryPage": "50df819509facfbdf0cb207d39330bf88481d5819261728223e8d175f3dc3765",
+    "Engine": "9f2021c8ca0d0fe4c4306131ef98722b80c9b4fa0bd1cb4d5b58310f36178493",
+    "ChatRule": "4d6d76ec76d2c42efe529664e7ec76d46e97331930d5b986c3b616f7a9691d7e",
+    "Settings": "72cba936f983efe2813fbc8d511a7310cba7755ac2ebc09e2b41a57bea5986fc",
+    "Preview": "ae3da04f5d98ece9b378cacea31520d21a50e47ec045f7eb2c8c0dec0d28c194",
+    "ModelProfile": "1f853294ca55c82a21cf1f90b4287b6d55874261ed2c3f117c36f425e2ec8849",
+    "ModelProfileUpdate": "87aac3215b82676440802443f6c2900898944fad518ddcb0d65606c4fdb7c397",
+    "ModelProfileReport": "63b19de723856617a4ceaa436ce6a48d33cfecafdc48a70d9428efc6b0b81c2a",
+    "DeliveryMode": "39ef10084fe427bdfc4bd4061a1914c1a7da7c5dd1bebac0b2c6142f13e46b1a",
+    "PreviewJobRequest": "5500959d2255d8207689d4c0555acb2bbddff232e7c7a1d160b576c6e70443aa",
+    "ModelPromptSettings": "481950c771b9cb107fe90cfa674104e6036b9f56cc514f0a9f26b8c019750c6c",
+    "ModelPromptReport": "dd405531086aa2b7b2027954919557aee79e898171f3bb25c31d2cfcdb79cab0",
+    "PromptBudgetRequest": "e66ee8b66f8e2896d9062bf71ec85a948a72faa5684145a828c4207245a06243",
+    "PromptBudgetReport": "6395c5fc1f0264f274059e52eceb08e8f1189a66a137db759985639018d66d84",
+    "ProactiveMode": "541035f11125ef1456ecc7966a86de038252f08b7ec2ddadaeaeed57ff6291e3",
+    "SendMediaRequest": "a4cacdc71e93edc2711e0b4665704e9e3b1f0fbe87bd0b6ad97c015bc2dc9dfd",
+    "SettingsUpdate": "5d3d2c03c324f6327eef16a3af01c3960b8057375f9d12863f106d4d5f21bd87",
+    "Text": "bbbfc081fd856615ca09fecb297e0d0556e0dc7f62c0ca25227360d79fa6778e"
+  },
+  "additions": {
+    "paths": {
+      "/api/engine/restart": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "/api/chats/{chatId}/messages/{messageId}/edit": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "/api/speech": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "/api/speech/assets/{assetId}/install": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "/api/speech/drafts": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "/api/speech/audio/{voiceId}": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "/api/chats/{chatId}/voice": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "/api/speech/preview": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "/api/speech/models/import": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
     "operations": {
-        "GET /api/state": "fee43bbe60417e6a4a4da057697ce0e618e0b14baddf75dc0b681ead5ea84249",
-        "POST /api/telegram/connect": "f54221a800fa7bcafa0cd05aca431371d62513d5a6fe87582050cfa966f9291f",
-        "POST /api/telegram/submit": "5a41a66b7dea0a0ba7a11b9bb7d56f0e3dccbed36850139d49ba9df862d3b5d4",
-        "POST /api/telegram/logout": "ffed244966b19049d612013ff5a8942c164fb2c829d077c3d2866ab11149f27d",
-        "GET /api/chats/{chatId}/messages": "616e327bf6d644aaab077c5e55666fc0e571416e543cb1962860df50002cadcc",
-        "POST /api/chats/{chatId}/messages": "2dc4f1a125871324a444c889c13991da11cc12b0de94bec7b96e9611c7eee736",
-        "PUT /api/chats/{chatId}/rule": "a4e9c265e8bcb00290ce2b05b3ef82bccfa75c9bac072d0326528dbff7c15854",
-        "PATCH /api/settings": "352ce96ef428d73599805199333651697db9c8cd3de1270ce48bdd52c1a1d5a3",
-        "POST /api/preview": "931ed0e046708582fbfab504eabcd2b335f462f1dd6db7d675faf536c52c6a46",
-        "POST /api/engine/install": "761825042fc769c8c984a78254ab99fe929149685db5c920ed09317ce72fdf5d",
-        "POST /api/engine/start": "d0faa73bd93ed02312e65c38010a9b1dca189cf52b5f73c58c83b36f0286264d",
-        "POST /api/models/pull": "f16311eccbadca85d9d70994073bb2ffffedb530d48f08f963b0bf130f4b44f6",
-        "POST /api/quit": "13210dac58eb90e18278a9969a5d760d4cbafa2028db6af956caa22b9a33d2f3",
-        "GET /api/media/{fileId}": "ccc4114ed4734e1bfc6607b09892a215d3a21484cb58b75495a8a75bc9a26f8e",
-        "POST /api/telegram/restore": "55f37fc92e3c6801a0e4609a6f9ac153613e559caf06b47f197966b328d580b9",
-        "GET /api/metrics": "d76e5bda433886e328a08ace2e270d42673a92355b037c73aa5fb2bf7a202bdc",
-        "GET /api/chats/{chatId}/deleted": "09b5dc30265ea51cbf49397ebe3b1c88a70a2555fdcb067c20efb4b21bd69836",
-        "GET /api/search/connection": "124aa773fa6bbe7c18253198bd54cecc0669203011745e03aa3a8336e309f903",
-        "POST /api/search/connection": "d393161d6eec987eba36d9085bd20d8de4045ff2f8d3de8f0ace7b7486ebdba8",
-        "DELETE /api/search/connection": "194251b5a1f16ec5106144da69ffd5f66340cc110b92d5b463aec25c35e70699",
-        "POST /api/search/check": "9bb42653fbf4c9ee09557369baf495b8da6a98f97146b36f9ca709b63a2aff6d",
-        "POST /api/models/cancel": "94644b4bd0dafef176148a2bde4d1120fe9a5c166bfde28e39e33de9a65ee879",
-        "DELETE /api/activity": "6a36c288654a8200cf0a0f6700c3ca37aee367eed7eff41e12d424f223daf286",
-        "PATCH /api/activity/queue": "f6056300716c35ed0c0c121067e6b0fe4c83a08d1b5f4c6b89ecdf61686cd947",
-        "GET /api/activity/{id}": "10402c2a8eb6e8f636e0b4d87eb6acf544322249f6eb7ca3e5c29686e6d7e3e2",
-        "POST /api/activity/{id}/cancel": "734aac4cedffe5d3f1b85dea879a15883dc1e9dca06b5957d73603dc397e3246",
-        "POST /api/activity/{id}/priority": "aeb3972409cf69f35e6f52fb491495d847a24f0568ab1c92497aadf677a86091",
-        "GET /api/diagnostics/errors": "2f42305a2c35559e08fdf0839b03e8c808d90a5bc63a909b9cd8b95e186b74b9",
-        "DELETE /api/diagnostics/errors": "5ad64eb62056357d028300b80f185c929d478f6868323dc1fc2f924b658a784d",
-        "GET /api/storage/locations": "010baa385faad9b3f32112ea66ae675f19f663072248a11b4b737cb0497bb421",
-        "PUT /api/activity/{id}/feedback": "83828bee7a8c0d31ba9aae3e5070047df5fec73858e2795bd2dcaac16d73b210",
-        "DELETE /api/activity/{id}/feedback": "eaa12f549d1029dc9c803d182b05df3986dcdfee5f5c903f89fc0c111a3cf55a",
-        "GET /api/engine/devices": "8e0595f4c2a4a0a666c9c5625638fd0bf80259950fc5ce232d66dead0cc20e25",
-        "GET /api/model-profiles": "7d88fcb5b27a38a0f8bc791e6d214371ee887b3a437bffcfe69095a4af9c4e8b",
-        "POST /api/model-profiles": "a73168b49fadd067829e6bfc61c8507bc8116257e0b0e6d662c1621c36905cd0",
-        "PUT /api/model-profiles/{id}": "05a7ad9e1bbf16e4a099ba10ed29dd6ee3dbc6e75c2656b211284c7cdc56dcf4",
-        "DELETE /api/model-profiles/{id}": "233b9afc0edd43724a378de29f52e67cdf20bf3b7b4a01413c1cb6f487631f6c",
-        "POST /api/model-profiles/{id}/test": "69aa769f0c66160c0574bb928253591649c5df871d2f20a9ce8186580b1124a2",
-        "GET /api/model-routing": "fac88650159f870e21ac90f66f1cdc0e6afe8a577cc54459b3011995af4ca1b0",
-        "PUT /api/model-routing": "fe8663f12e11af95e3844a5e7329756e2fba8514b7759f34c1ce5b6d0485abf1",
-        "GET /api/appearance": "60957cb76b855714095ed7b167b03dcee7083f599007f6fc38f2d24d5b9af766",
-        "PUT /api/appearance": "8a49574cb638329ca0e4346ee0ded35ca5bc6188df6b919acc8289f89165134c",
-        "POST /api/uploads": "c0e0aedbd068ff3a64e0d97fb4be40425451aa5c11d4ceb7d6a53d834cc1fef7",
-        "DELETE /api/uploads/{id}": "8f191984843058bd20bff5d77e4eb6e19362a10aec83be8fbabba6d0627b9af8",
-        "GET /api/stickers": "a1b0fc9be9864b10145e7d0f98ec984c82fc0d94c5d7238b85d010c9fd9ac6ef",
-        "GET /api/stickers/sets/{id}": "c53fccbaeace9aef2949ee855bc625847f2ea5bd8496cd8ef9d6b7142f0dc2ff",
-        "POST /api/preview/jobs": "b83cc327d533cc7cb40d0600c59cd23afa8f319687f6203efbaee3343b665d34",
-        "GET /api/preview/jobs/{id}": "f8c11e32c04645f66d9674d768c661b1fdbf73b152d73805595a2a88be845050",
-        "GET /api/chats/{chatId}/messages/{messageId}/link": "3edde7bce314a80919cd0485901aa24cf3bcfbcfe3d132d24b4ea80b98957878",
-        "PUT /api/chats/{chatId}/messages/{messageId}/context": "1dc9bc2414e1facc2dde34f8db1df137e872f1e5c26598e057621de1d5b60716",
-        "DELETE /api/chats/{chatId}/context-exclusions": "ae1602b1aae9f69480f14c2989e1940c24ff40b2360d721e04581ac45bf8b664",
-        "GET /api/chats/{chatId}/gallery": "38891a558c5e38911cf379ede80d6d9c7d900dfa798afea64ebcc67f96435760",
-        "POST /api/chats/{chatId}/attachments": "b42425590c507216368618c743c912f9162740b82d8481cb158a412567d3b2eb",
-        "POST /api/chats/{chatId}/stickers": "c17ed81de7c4b678c9ed850ee14b1c303a263936677a73d086c692e5a560ad7d",
-        "GET /api/activity/history": "7493e8e30da88664ce32512e9fea5fd83230ce2256db23a30c505adc54f0e432",
-        "GET /api/chats/{chatId}/messages/{messageId}/deletion": "29dc07f49c4d5a6c0d0257a57a5e9384ac6fbd02466d9d85e2d2cf957950b080",
-        "DELETE /api/chats/{chatId}/messages/{messageId}": "de12b30ca147c44fd7f9b2e736578a26831e39a43d644798faf14d9a86a23028",
-        "GET /api/model-prompts": "edd50e856269f05e103eba84096318fc965a9f406a6f94fdd18fd3395ded899e",
-        "PUT /api/model-prompts": "7f10d0e708523dd82ca59a9ce5f6b53c821b1e65acc1fd0d91a2888af53c053b",
-        "POST /api/prompts/budget": "969ead412616cb846cc2aa885a70f39193b454429d96eeb2d69f5b349ae04baa",
-        "PUT /api/activity/history/settings": "279abcef8015ff8e4497a71e43eed8849165cbd8d55be44563db40f86a824aa6"
+      "POST /api/engine/restart": "32fbefbdd9a356a2043a287cb814386864865556f13bd939ff270b2cd055a56a",
+      "GET /api/chats/{chatId}/messages/{messageId}/edit": "5e9d193cb0267038341910a4f4e375fe16e0d0974c991b51fc536759664291c5",
+      "PUT /api/chats/{chatId}/messages/{messageId}/edit": "3b189403bf5bcf848ba3ca3da587bc6cf2ecd25840c588b30eb67e41abd001da",
+      "GET /api/speech": "0be11e5f16ae20a28db2068527a731e2692ffe9d72b8586eb598b92152725b0f",
+      "POST /api/speech/assets/{assetId}/install": "4c8699e71c71b3e6f9d21e11acd6d149018d8535858e6c0364ededc68f96061f",
+      "DELETE /api/speech/assets/{assetId}/install": "fc5adf0d7c5d556e68a153136515b76b9f46e82a344586378a59e6cec130fc7d",
+      "POST /api/speech/drafts": "76db2a0f8c105ebce59d515a610ae34d20d078de3c2c85a3b441bc3b1695a48f",
+      "GET /api/speech/audio/{voiceId}": "9d7ae803708ba7258d3c82d4bb08f167f4ac63eb1029853ecf7a313bcb5eef89",
+      "POST /api/chats/{chatId}/voice": "2fd894499dcea06807a1716cf8643c4f6cbe690026c51dd32b974fbedba02f1f",
+      "POST /api/speech/preview": "43dfc014682cc5b41e891f981251e63cbac52bda7face910353d999b3d7757d8",
+      "POST /api/speech/models/import": "5a2c0b0d69edaabb19465a25047452a3f4c035bfe5b3a19c9b2f7059a71c3447"
     },
     "schemas": {
-        "Chat": "6c2e319c46c323712f33b3a3d440c5d0de01100d857626ef2ed7807a80da4d7c",
-        "Message": "f1337eb151ac3d7f1374bd6c34f0fc63d17e13eed1d69bea588076f0a23c8f50",
-        "Activity": "d563cf3739360ccaa756911d48b5d079159672a4a66260f3d5b4ed0823807d85",
-        "Error": "bbce6ad737e6cc0b480393f6d89e967c6a66fb154106d1918130454a7310f5a7",
-        "Reply": "105e7b77b20c08b066ed7c63050d20ac44d8733a8c8dc2ba97a5a8f9c6ed12c8",
-        "State": "ba878a88c839be61588710cd394a7a0c9d5fcced07787e9bd6c7caed15492de5",
-        "MetricSample": "daff2a68bfd28783eea2e9cc95b7b00fb3e98496ef1e1347f259e53f9e6723b5",
-        "ActivityDetails": "5129ad36a0dd989af590ad2b16d19da4572a94046dc4f7230486b76fd01d44ed",
-        "PreviewJob": "ef0b55245e7eddfd7f9322ced44ebacb9288fef786e3b5d00fc34ce8093cc15d",
-        "ChatGallery": "cbb2257437da309f338601e0021b985875fea497cd30f140d2e062224abcadf1",
-        "ContextExclusionUpdate": "bd2bdbb99ada98eaa39b7db75fab8abd32fe62678c2c3a03184caa143f13e6ce",
-        "ActivityHistoryPage": "50df819509facfbdf0cb207d39330bf88481d5819261728223e8d175f3dc3765",
-        "Engine": "9f2021c8ca0d0fe4c4306131ef98722b80c9b4fa0bd1cb4d5b58310f36178493",
-        "ChatRule": "4d6d76ec76d2c42efe529664e7ec76d46e97331930d5b986c3b616f7a9691d7e",
-        "Settings": "e7e8d6a1a41a7d1d31aefb9f0f26c6afc835e984ea476669ab513fda411af568",
-        "Preview": "ae3da04f5d98ece9b378cacea31520d21a50e47ec045f7eb2c8c0dec0d28c194",
-        "ModelProfile": "1f853294ca55c82a21cf1f90b4287b6d55874261ed2c3f117c36f425e2ec8849",
-        "ModelProfileUpdate": "87aac3215b82676440802443f6c2900898944fad518ddcb0d65606c4fdb7c397",
-        "ModelProfileReport": "63b19de723856617a4ceaa436ce6a48d33cfecafdc48a70d9428efc6b0b81c2a",
-        "DeliveryMode": "39ef10084fe427bdfc4bd4061a1914c1a7da7c5dd1bebac0b2c6142f13e46b1a",
-        "PreviewJobRequest": "f613c21f2c060f242f1bb882308020ba9d490b07d0d5de6bf57ffd2ef7383d26",
-        "ModelPromptSettings": "481950c771b9cb107fe90cfa674104e6036b9f56cc514f0a9f26b8c019750c6c",
-        "ModelPromptReport": "dd405531086aa2b7b2027954919557aee79e898171f3bb25c31d2cfcdb79cab0",
-        "PromptBudgetRequest": "e66ee8b66f8e2896d9062bf71ec85a948a72faa5684145a828c4207245a06243",
-        "PromptBudgetReport": "6395c5fc1f0264f274059e52eceb08e8f1189a66a137db759985639018d66d84",
-        "ProactiveMode": "541035f11125ef1456ecc7966a86de038252f08b7ec2ddadaeaeed57ff6291e3",
-        "SendMediaRequest": "a4cacdc71e93edc2711e0b4665704e9e3b1f0fbe87bd0b6ad97c015bc2dc9dfd",
-        "SettingsUpdate": "486db3a74014d643f56d116710aceffadcd27ab1e7f2bd33a7811dedaf4cbede",
-        "Text": "bbbfc081fd856615ca09fecb297e0d0556e0dc7f62c0ca25227360d79fa6778e"
-    },
-    "additions": {
-        "paths": {
-            "/api/engine/restart": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
-            "/api/chats/{chatId}/messages/{messageId}/edit": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
-        },
-        "operations": {
-            "POST /api/engine/restart": "32fbefbdd9a356a2043a287cb814386864865556f13bd939ff270b2cd055a56a",
-            "GET /api/chats/{chatId}/messages/{messageId}/edit": "5e9d193cb0267038341910a4f4e375fe16e0d0974c991b51fc536759664291c5",
-            "PUT /api/chats/{chatId}/messages/{messageId}/edit": "3b189403bf5bcf848ba3ca3da587bc6cf2ecd25840c588b30eb67e41abd001da"
-        },
-        "schemas": {
-            "ChatRuleInput": "f392061b4fd076c0bc06ec14edc3e9e00e371c2e1a09081552578439fb8ca409",
-            "ModelProfileOptionsInput": "c67edd41e6c61380580b9826e822d21c3c87ed538f5ff25615a1dfdfa68dc23c",
-            "ModelCapabilitiesInput": "e7b326ba312e8f9b3a6a6adcd14380722da78d08d6db5a3c6c0766cf96759e86",
-            "ModelPromptSettingsInput": "481950c771b9cb107fe90cfa674104e6036b9f56cc514f0a9f26b8c019750c6c",
-            "AppearanceSettingsInput": "be735b50d13438a65021323a908baf9cc78332ef702d639eff6804c96c0d97af",
-            "ActivityHistorySettingsInput": "ded29e7ec2cdaacc126ea59e08ce59663af5dc8d5e97f7132be8b513eb8767d9",
-            "MessageEditKind": "4f553604f024efe69328cfe8927ab93b0c7c3f94ad1044aef6d0ea9463d4c40e",
-            "MessageEditEntityKind": "a662861d4f82c49ff0a3216ed8c6d7736206eb49f559b3853f752820efbb9486",
-            "MessageEditEntity": "0f58b82649d5b50c6194782582405600189b32160783d454632960066f395ef8",
-            "MessageEditOptions": "5b416ede65660905eca1841e14c6862ecc11c55549e442c739e40d1640cfb18e",
-            "MessageEditRequest": "62baf61393547fe41bdd921afb3dc8aec9e92ff65ec845f6faef33be7fd6a965",
-            "ProactiveMessageMode": "453a734b031b7de45be7c2b7fdfe683962f03431ff2380e0659b4761bf0dd013",
-            "ReplyProcessingMode": "50cf2e011454c771a9aa1e81e80b45bedb67ce73983ee474d5e2e398cf5d8c71",
-            "ReplyInterruptionMode": "60308edbbb59d0bb75451677ebb319ba39de0538c64206a79bfe7bde499e3803"
-        }
+      "ChatRuleInput": "f392061b4fd076c0bc06ec14edc3e9e00e371c2e1a09081552578439fb8ca409",
+      "ModelProfileOptionsInput": "c67edd41e6c61380580b9826e822d21c3c87ed538f5ff25615a1dfdfa68dc23c",
+      "ModelCapabilitiesInput": "e7b326ba312e8f9b3a6a6adcd14380722da78d08d6db5a3c6c0766cf96759e86",
+      "ModelPromptSettingsInput": "481950c771b9cb107fe90cfa674104e6036b9f56cc514f0a9f26b8c019750c6c",
+      "AppearanceSettingsInput": "be735b50d13438a65021323a908baf9cc78332ef702d639eff6804c96c0d97af",
+      "ActivityHistorySettingsInput": "ded29e7ec2cdaacc126ea59e08ce59663af5dc8d5e97f7132be8b513eb8767d9",
+      "MessageEditKind": "4f553604f024efe69328cfe8927ab93b0c7c3f94ad1044aef6d0ea9463d4c40e",
+      "MessageEditEntityKind": "a662861d4f82c49ff0a3216ed8c6d7736206eb49f559b3853f752820efbb9486",
+      "MessageEditEntity": "0f58b82649d5b50c6194782582405600189b32160783d454632960066f395ef8",
+      "MessageEditOptions": "5b416ede65660905eca1841e14c6862ecc11c55549e442c739e40d1640cfb18e",
+      "MessageEditRequest": "62baf61393547fe41bdd921afb3dc8aec9e92ff65ec845f6faef33be7fd6a965",
+      "ProactiveMessageMode": "453a734b031b7de45be7c2b7fdfe683962f03431ff2380e0659b4761bf0dd013",
+      "ReplyProcessingMode": "50cf2e011454c771a9aa1e81e80b45bedb67ce73983ee474d5e2e398cf5d8c71",
+      "ReplyInterruptionMode": "60308edbbb59d0bb75451677ebb319ba39de0538c64206a79bfe7bde499e3803",
+      "VoiceReplyMode": "79bc38df2eedf35cab8482cf40d4d6737b612c92fd318b53701af060492fdd64",
+      "DraftOutput": "444ef45ad026ea1cae0fc20f3a3fd0c25aaf4ee8e5b15b2f6ff98a2bfc8b4550",
+      "GeneratedVoice": "901b955d2f236277367f28c303e7646d44af6343c58348548338de357d0ffa28",
+      "SpeechAsset": "ba8950e5e38731abbd416f3cfd8975d4c3d4a644448608540d84ccf7a7dbf28d",
+      "SpeechAssetKind": "4c869742174376dc5a51c4b779c72cd24bfeb14880809204d1a64bf011651eb6",
+      "SpeechDownload": "a4b0617e74cd0d2cec560666344f35e73813fd1348cb1c46f1966852ccf530e2",
+      "SpeechDownloadPhase": "efec4f2ac43b9d1448a67cf937bd4cbe8ffbd4ac8d8df147c9b4a672a7b85620",
+      "SpeechState": "f0b9b7db7fef849f5ac962c6b32a66edf70d57e9f25542186b0382ca44a57d64",
+      "VoiceDraftRequest": "837e3ead90e9a6d9239dfbe73dfd21b75e0ff6d9a92ccc962d76f00e4bd83254",
+      "VoiceSendRequest": "4f5ce02b987a746d4688fd43ae61ddf44b54df243d650d18c97fe09328e24e9c",
+      "SpeechPreviewRequest": "c4159ee7614bb05ae3d0aede4ec8722c4ab0ec21ee664b5ad33ce5fab59fbbd4",
+      "SpeechModelImportRequest": "52709af0a97b4ffaa246c0121b3ceae1236bac34f34f59b9d3c93e4a3557b209"
     }
+  }
 }

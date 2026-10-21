@@ -3,6 +3,8 @@ PreviewJobRequest:
     required:
         - chatId
     properties:
+        output:
+            $ref: ../speech/DraftOutput.yaml#/DraftOutput
         chatId:
             type: string
             minLength: 1

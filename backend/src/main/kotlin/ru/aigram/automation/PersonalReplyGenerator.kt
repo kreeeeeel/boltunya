@@ -8,9 +8,13 @@ import ru.aigram.domain.ai.ReplyResult
 import ru.aigram.domain.ai.profile.ModelTask
 import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.speech.DraftOutput
 import ru.aigram.exception.impl.ChatUnavailableException
 import ru.aigram.memory.MemoryCoordinator
 import ru.aigram.resources.ResourceCatalog
+import ru.aigram.speech.reply.SpeechInputContext
+import ru.aigram.speech.reply.VoiceReplyPolicy
+import ru.aigram.speech.reply.VoiceReplyService
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.ContextExclusionStore
 import ru.aigram.storage.SettingsStore
@@ -32,32 +36,71 @@ class PersonalReplyGenerator(
     private val telegram: TelegramGateway,
     private val exclusions: ContextExclusionStore,
     private val resources: ResourceCatalog,
+    private val speechInput: SpeechInputContext,
+    private val voicePolicy: VoiceReplyPolicy,
+    private val voices: VoiceReplyService,
 ) {
-    fun reply(rule: ChatRule, history: List<ChatMessage>): ReplyResult = generate(rule, history, true)
+    fun reply(rule: ChatRule, history: List<ChatMessage>): ReplyResult =
+        render(rule, history, true, voicePolicy.wantsVoice(settings.get(), history.lastOrNull()?.kind.orEmpty()))
 
-    fun draft(rule: ChatRule, history: List<ChatMessage>): ReplyResult =
-        generate(rule.copy(aiStickers = false), history, false)
+    fun draft(rule: ChatRule, history: List<ChatMessage>, output: DraftOutput = DraftOutput.TEXT): ReplyResult =
+        render(rule.copy(aiStickers = false), history, false, output == DraftOutput.VOICE)
 
-    fun initiate(rule: ChatRule, history: List<ChatMessage>): ReplyResult =
-        generate(rule.copy(aiStickers = false, internetAccess = false), history, true, initiative = true)
+    fun initiate(rule: ChatRule, history: List<ChatMessage>): ReplyResult = render(
+        rule.copy(aiStickers = false, internetAccess = false),
+        history,
+        true,
+        voicePolicy.wantsVoice(settings.get(), history.lastOrNull()?.kind.orEmpty()),
+        initiative = true,
+    )
+
+    private fun render(
+        rule: ChatRule,
+        history: List<ChatMessage>,
+        forAutomation: Boolean,
+        voiceOutput: Boolean,
+        initiative: Boolean = false,
+    ): ReplyResult {
+        val preferences = settings.get()
+        val owner = telegram.status().userId
+        if (voiceOutput) {
+            voices.ensureReady(preferences)
+        }
+        val result =
+            generate(
+                rule.copy(aiStickers = rule.aiStickers && !voiceOutput),
+                history,
+                forAutomation,
+                initiative,
+                voiceOutput,
+            )
+        return if (voiceOutput) {
+            voices.compose(result, history.last().chatId, owner, preferences)
+        } else {
+            result
+        }
+    }
 
     private fun generate(
         rule: ChatRule,
         history: List<ChatMessage>,
         forAutomation: Boolean,
         initiative: Boolean = false,
+        voiceOutput: Boolean = false,
     ): ReplyResult {
         val resolved = settings.resolve(rule)
         val preferences = settings.get()
         val owner = telegram.status().userId
-        val context = exclusions.forInference(
-            owner,
-            history.map {
-                it.copy(
-                    automated =
-                    it.automated || automated.contains(it.chatId, it.id),
-                )
-            },
+        val context = speechInput.prepare(
+            exclusions.forInference(
+                owner,
+                history.map {
+                    it.copy(
+                        automated =
+                        it.automated || automated.contains(it.chatId, it.id),
+                    )
+                },
+            ),
         )
         val attachments = images.build(resolved, context)
         if (attachments.isEmpty()) {
@@ -80,7 +123,13 @@ class PersonalReplyGenerator(
         return conversation.reply(
             resolved,
             context,
-            preferences.globalPrompt + if (initiative) {
+            preferences.globalPrompt + (
+                if (voiceOutput) {
+                    "\n\n" + resources.prompt("ru/conversation/voice-output")
+                } else {
+                    ""
+                }
+                ) + if (initiative) {
                 "\n\n" + resources.prompt("ru/conversation/initiative")
             } else {
                 ""
@@ -100,7 +149,7 @@ class PersonalReplyGenerator(
             attachments,
             task,
             stickers,
-            formatReplies = preferences.formatReplies,
+            formatReplies = preferences.formatReplies && !voiceOutput,
         )
     }
 }

@@ -23,6 +23,7 @@ import ru.aigram.domain.media.MediaFile
 import ru.aigram.domain.media.OutgoingMedia
 import ru.aigram.domain.media.StickerCatalog
 import ru.aigram.domain.media.StickerItem
+import ru.aigram.domain.speech.OutgoingVoiceNote
 import ru.aigram.domain.telegram.TelegramCredentials
 import ru.aigram.domain.telegram.TelegramStatus
 import ru.aigram.exception.IntegrationException
@@ -74,6 +75,7 @@ class TdLightGateway(
     private val links: TelegramMessageLinks,
     private val deletion: TelegramMessageDeletion,
     private val editing: TelegramMessageEditing,
+    private val voiceSender: TelegramVoiceSender,
 ) : TelegramGateway {
     private val closed = AtomicBoolean()
     private var factory: SimpleTelegramClientFactory? = null
@@ -112,6 +114,13 @@ class TdLightGateway(
     override fun sendMedia(chatId: String, media: List<OutgoingMedia>, replyToId: String, topicId: Int): List<String> =
         mediaSender.send(chatId, media, replyToId, topicId)
     override fun stickers(): StickerCatalog = stickerService.catalog()
+    override fun sendVoice(
+        chatId: String,
+        voice: OutgoingVoiceNote,
+        replyToId: String,
+        topicId: Int,
+        automated: Boolean,
+    ): String = voiceSender.send(chatId, voice, replyToId, topicId, automated)
     override fun stickerSet(id: String): List<StickerItem> = stickerService.set(id)
     override fun gallery(chatId: String, around: String): ChatGallery = galleries.gallery(chatId, around)
     override fun messageLink(chatId: String, messageId: String): String = links.link(chatId, messageId)

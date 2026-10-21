@@ -13,6 +13,7 @@ import ru.aigram.domain.media.MediaFile
 import ru.aigram.domain.media.OutgoingMedia
 import ru.aigram.domain.media.StickerCatalog
 import ru.aigram.domain.media.StickerItem
+import ru.aigram.domain.speech.OutgoingVoiceNote
 import ru.aigram.domain.telegram.TelegramCredentials
 import ru.aigram.domain.telegram.TelegramStatus
 import ru.aigram.exception.impl.MediaUnavailableException
@@ -53,6 +54,13 @@ interface TelegramGateway : AutoCloseable {
     fun sendSticker(
         chatId: String,
         stickerId: String,
+        replyToId: String = "",
+        topicId: Int = 0,
+        automated: Boolean = false,
+    ): String = throw MediaUnavailableException()
+    fun sendVoice(
+        chatId: String,
+        voice: OutgoingVoiceNote,
         replyToId: String = "",
         topicId: Int = 0,
         automated: Boolean = false,

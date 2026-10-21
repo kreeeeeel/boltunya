@@ -1,0 +1,12 @@
+SpeechState:
+    type: object
+    required: [assets, downloads]
+    properties:
+        assets:
+            type: array
+            items:
+                $ref: ./SpeechAsset.yaml#/SpeechAsset
+        downloads:
+            type: array
+            items:
+                $ref: ./SpeechDownload.yaml#/SpeechDownload

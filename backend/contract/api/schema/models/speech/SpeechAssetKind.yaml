@@ -1,0 +1,3 @@
+SpeechAssetKind:
+    type: string
+    enum: [runtime, recognition, synthesis]

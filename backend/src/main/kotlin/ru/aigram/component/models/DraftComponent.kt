@@ -8,6 +8,7 @@ import ru.aigram.automation.activity.ReplyTraceScope
 import ru.aigram.domain.ai.PreviewJob
 import ru.aigram.domain.ai.profile.ModelTask
 import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.speech.DraftOutput
 import ru.aigram.exception.impl.ChatUnavailableException
 import ru.aigram.exception.impl.InvalidHistoryIdentifierException
 import ru.aigram.storage.ContextExclusionStore
@@ -28,7 +29,12 @@ class DraftComponent(
     private val exclusions: ContextExclusionStore,
     private val tracing: ReplyTraceScope,
 ) {
-    fun enqueue(chatId: String, submitted: ChatRule?, messageId: String): PreviewJob {
+    fun enqueue(
+        chatId: String,
+        submitted: ChatRule?,
+        messageId: String,
+        output: DraftOutput = DraftOutput.TEXT,
+    ): PreviewJob {
         val rule = settings.resolve(submitted ?: settings.rule(chatId))
         validation.validate(rule)
         validation.target(rule)
@@ -64,7 +70,7 @@ class DraftComponent(
                 throw ChatUnavailableException()
             }
             tracing.current()?.updateTrigger(source.text)
-            generator.draft(rule, history)
+            generator.draft(rule, history, output)
         }
     }
 

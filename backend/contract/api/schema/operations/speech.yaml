@@ -1,0 +1,252 @@
+speechPreview:
+    post:
+        operationId: previewSpeech
+        tags: [speech]
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/speech/SpeechPreviewRequest.yaml#/SpeechPreviewRequest
+        responses:
+            '200':
+                description: Queued speech preview, without Telegram delivery
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/models/PreviewJob.yaml#/PreviewJob
+            '400':
+                description: Invalid request
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Local authentication required
+            '409':
+                description: Speech model unavailable
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+speechModelImport:
+    post:
+        operationId: importSpeechModel
+        tags: [speech]
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/speech/SpeechModelImportRequest.yaml#/SpeechModelImportRequest
+        responses:
+            '200':
+                description: Imported compatible VITS model
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/speech/SpeechState.yaml#/SpeechState
+            '400':
+                description: Invalid archive or metadata
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Local authentication required
+            '409':
+                description: Account changed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+speech:
+    get:
+        operationId: speechState
+        tags: [speech]
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/speech/SpeechState.yaml#/SpeechState
+            '400':
+                description: Invalid request
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Local authentication required
+            '409':
+                description: Speech model unavailable or Telegram account changed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+speechAssetInstall:
+    post:
+        operationId: installSpeechAsset
+        tags: [speech]
+        parameters:
+            - name: assetId
+              in: path
+              required: true
+              schema:
+                  type: string
+                  minLength: 1
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Invalid request
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Local authentication required
+            '409':
+                description: Speech model unavailable or Telegram account changed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+    delete:
+        operationId: cancelSpeechAsset
+        tags: [speech]
+        parameters:
+            - name: assetId
+              in: path
+              required: true
+              schema:
+                  type: string
+                  minLength: 1
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Invalid request
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Local authentication required
+            '409':
+                description: Speech model unavailable or Telegram account changed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+speechDrafts:
+    post:
+        operationId: enqueueVoiceDraft
+        tags: [speech]
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/speech/VoiceDraftRequest.yaml#/VoiceDraftRequest
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/models/PreviewJob.yaml#/PreviewJob
+            '400':
+                description: Invalid request
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Local authentication required
+            '409':
+                description: Speech model unavailable or Telegram account changed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+speechAudio:
+    get:
+        operationId: speechAudio
+        tags: [speech]
+        parameters:
+            - name: voiceId
+              in: path
+              required: true
+              schema:
+                  type: string
+                  minLength: 1
+        responses:
+            '200':
+                description: Success
+                content:
+                    audio/ogg:
+                        schema:
+                            type: string
+                            format: binary
+            '400':
+                description: Invalid request
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Local authentication required
+            '409':
+                description: Speech model unavailable or Telegram account changed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+chatVoice:
+    post:
+        operationId: sendVoiceDraft
+        tags: [speech]
+        parameters:
+            - name: chatId
+              in: path
+              required: true
+              schema:
+                  type: string
+                  minLength: 1
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/speech/VoiceSendRequest.yaml#/VoiceSendRequest
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Invalid request
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Local authentication required
+            '409':
+                description: Speech model unavailable or Telegram account changed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error

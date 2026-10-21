@@ -3,6 +3,20 @@ info:
     title: Aigram local API
     version: 2.4.0
 paths:
+    /api/speech/preview:
+        $ref: ./operations/speech.yaml#/speechPreview
+    /api/speech/models/import:
+        $ref: ./operations/speech.yaml#/speechModelImport
+    /api/speech:
+        $ref: ./operations/speech.yaml#/speech
+    /api/speech/assets/{assetId}/install:
+        $ref: ./operations/speech.yaml#/speechAssetInstall
+    /api/speech/drafts:
+        $ref: ./operations/speech.yaml#/speechDrafts
+    /api/speech/audio/{voiceId}:
+        $ref: ./operations/speech.yaml#/speechAudio
+    /api/chats/{chatId}/voice:
+        $ref: ./operations/speech.yaml#/chatVoice
     /api/state:
         $ref: ./operations/system.yaml#/state
     /api/telegram/connect:
@@ -127,6 +141,30 @@ paths:
         $ref: ./operations/chats.yaml#/chatsByChatIdMessagesByMessageIdEdit
 components:
     schemas:
+        VoiceReplyMode:
+            $ref: ./models/speech/VoiceReplyMode.yaml#/VoiceReplyMode
+        DraftOutput:
+            $ref: ./models/speech/DraftOutput.yaml#/DraftOutput
+        SpeechAssetKind:
+            $ref: ./models/speech/SpeechAssetKind.yaml#/SpeechAssetKind
+        SpeechDownloadPhase:
+            $ref: ./models/speech/SpeechDownloadPhase.yaml#/SpeechDownloadPhase
+        SpeechAsset:
+            $ref: ./models/speech/SpeechAsset.yaml#/SpeechAsset
+        SpeechDownload:
+            $ref: ./models/speech/SpeechDownload.yaml#/SpeechDownload
+        SpeechState:
+            $ref: ./models/speech/SpeechState.yaml#/SpeechState
+        SpeechPreviewRequest:
+            $ref: ./models/speech/SpeechPreviewRequest.yaml#/SpeechPreviewRequest
+        SpeechModelImportRequest:
+            $ref: ./models/speech/SpeechModelImportRequest.yaml#/SpeechModelImportRequest
+        GeneratedVoice:
+            $ref: ./models/speech/GeneratedVoice.yaml#/GeneratedVoice
+        VoiceDraftRequest:
+            $ref: ./models/speech/VoiceDraftRequest.yaml#/VoiceDraftRequest
+        VoiceSendRequest:
+            $ref: ./models/speech/VoiceSendRequest.yaml#/VoiceSendRequest
         ChatRule:
             $ref: ./models/chats/ChatRule.yaml#/ChatRule
         Settings:

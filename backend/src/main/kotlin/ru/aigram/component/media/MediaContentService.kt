@@ -22,8 +22,10 @@ private val COMPRESSED_MEDIA_TYPES = setOf("application/x-tgsticker", "applicati
 
 @Service
 class MediaContentService(private val telegram: TelegramGateway) {
-    fun respond(fileId: Int, request: HttpServletRequest): ResponseEntity<Resource> {
-        val media = telegram.media(fileId)
+    fun respond(fileId: Int, request: HttpServletRequest): ResponseEntity<Resource> =
+        respond(telegram.media(fileId), request)
+
+    fun respond(media: MediaFile, request: HttpServletRequest): ResponseEntity<Resource> {
         if (media.mimeType in COMPRESSED_MEDIA_TYPES) {
             return animation(media)
         }
