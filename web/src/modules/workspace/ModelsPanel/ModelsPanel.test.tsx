@@ -37,6 +37,29 @@ vi.mock('@/shared/api/client', async (original) => ({
 }));
 vi.mock('@/modules/settings/PromptBudgetNotice/PromptBudgetNotice', () => ({PromptBudgetNotice: () => null}));
 
+it('places the compact restart before the installed status in one online action group', async () => {
+    render(
+        <NextIntlClientProvider locale="ru" messages={ru}>
+            <ThemeProvider>
+                <ModelsPanel
+                    engine={{...workspaceState.engine, canRestart: true}}
+                    defaultModel="qwen3:1.7b"
+                    onRefresh={vi.fn()}
+                />
+            </ThemeProvider>
+        </NextIntlClientProvider>,
+    );
+    const button = screen.getByRole('button', {name: ru.restartEngine});
+    const group = button.closest('[data-qa="engine-online-actions"]');
+    const status = group?.querySelector('[data-qa="engine-installed"]');
+    expect(group).not.toBeNull();
+    expect(status).toHaveTextContent(ru.installed);
+    expect(status?.parentElement).toBe(group);
+    expect(group?.firstElementChild).toBe(button);
+    expect(button).toHaveClass('g-button_size_m');
+    await waitFor(() => expect(mocks.modelProfiles).toHaveBeenCalled());
+});
+
 it('renders an Ollama warmup failure as an icon title and description block', async () => {
     const engine = {...workspaceState.engine, error: 'Не удалось загрузить модель в память.'};
     render(

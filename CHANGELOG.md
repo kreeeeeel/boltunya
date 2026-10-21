@@ -26,6 +26,7 @@ Release versions are assigned by Windows CI. Each GitHub release includes the fi
 - Kept partial chat rules, nested model options, appearance and prompt settings compatible with their previous defaults. Explicit invalid nulls and scalar coercions are rejected at the HTTP boundary.
 - Prevented a completed manual draft error from duplicating its local notice or reviving an older automatic-reply failure after polling.
 - Restored complete optional N-API/WASM dependency metadata for clean npm installation after removing the old transport. Existing resolved package versions remain unchanged.
+- Aligned the compact Ollama restart button to the left of the installed badge with matching height and corners, added space above engine errors and matched the loading placeholder to the final layout.
 
 ### Removed
 
@@ -38,6 +39,7 @@ Release versions are assigned by Windows CI. Each GitHub release includes the fi
 - Packaged and launched local Aigram 2.6.31 with bundled Java. Native window/tray/startup, updater recovery/profile migration and media checks passed. The packaged JAR contains nine MVC controllers and no legacy HTTP/injection classes or Guice/JSR-330 libraries. Packaged desktop modules, update helper and backend JAR match the checked artifacts.
 - The actual profile restored Telegram authorization automatically; saved settings and manual memory notes were preserved. Release publication still requires the green Windows workflow and published EXE/SDK checksum verification.
 - A clean isolated installation passed with the CI resolver, npm 11.19.0; npm 11.6.2 compatibility and byte-stable lockfile regeneration were also verified.
+- The final Ollama layout passed 11 component tests and five focused browser scenarios, including both themes, 640 px windows, equal control heights, error spacing and stable installation progress sizing.
 - No database migration, model download or real Telegram send is required for these tests.
 
 ## 2026-10-21 — Generated contract and HTTP clients

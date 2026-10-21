@@ -213,19 +213,51 @@ for (const dark of [false, true]) {
         await expect(restart).toBeEnabled();
         for (const width of [1440, 640]) {
             await page.setViewportSize({width, height: 900});
+            await card.scrollIntoViewIfNeeded();
             await expect(restart).toBeInViewport();
             const geometry = await restart.evaluate((button) => {
                 const bounds = button.getBoundingClientRect();
                 const parent = button.closest('[data-qa="engine-card"]')!.getBoundingClientRect();
                 const label = button.querySelector('.g-button__text')!.getBoundingClientRect();
+                const status = button.parentElement!.querySelector('[data-qa="engine-installed"]')!;
+                const statusBounds = status.getBoundingClientRect();
+                const actions = button.parentElement!.getBoundingClientRect();
+                const notice = button.closest('[data-qa="workspace-view"]')!.querySelector('[role="alert"]')!;
                 return {
                     buttonFits: bounds.left >= parent.left && bounds.right <= parent.right,
                     textFits: label.left >= bounds.left && label.right <= bounds.right,
                     clipped: button.scrollWidth > button.clientWidth + 1,
                     pageOverflow: document.documentElement.scrollWidth > window.innerWidth,
+                    restartFirst: bounds.right <= statusBounds.left,
+                    sameRow: Math.abs(bounds.top - statusBounds.top) <= 1,
+                    sameHeight: Math.abs(bounds.height - statusBounds.height) <= 1,
+                    compactHeight: Math.abs(bounds.height - 28) <= 1 && Math.abs(actions.height - 28) <= 1,
+                    sameRadius:
+                        getComputedStyle(button, '::before').borderRadius ===
+                        getComputedStyle(status).borderRadius,
+                    naturalWidth:
+                        Math.abs(
+                            actions.width -
+                                bounds.width -
+                                statusBounds.width -
+                                parseFloat(getComputedStyle(button.parentElement!).columnGap),
+                        ) <= 1,
+                    noticeGap: Math.round(notice.getBoundingClientRect().top - parent.bottom),
                 };
             });
-            expect(geometry).toEqual({buttonFits: true, textFits: true, clipped: false, pageOverflow: false});
+            expect(geometry).toEqual({
+                buttonFits: true,
+                textFits: true,
+                clipped: false,
+                pageOverflow: false,
+                restartFirst: true,
+                sameRow: true,
+                sameHeight: true,
+                compactHeight: true,
+                sameRadius: true,
+                naturalWidth: true,
+                noticeGap: 14,
+            });
             await page.screenshot({
                 path: `../docs/resources/engine-restart-${width === 640 ? 'compact-' : ''}${theme}.png`,
                 animations: 'disabled',

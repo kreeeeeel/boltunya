@@ -56,10 +56,26 @@
     min-width: min(176px, 100%);
 }
 
-.engineActionsRestart {
-    flex: 0 1 224px;
-    width: 224px;
-    min-width: min(224px, 100%);
+.engineActionsOnline {
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    width: auto;
+    min-width: 0;
+}
+
+.engineRestart {
+    --g-button-border-radius: var(--g-border-radius-m);
+
+    flex-shrink: 0;
+}
+
+.engineInstalled {
+    flex-shrink: 0;
+    border-radius: var(--g-border-radius-m);
+}
+
+.engineNotice {
+    margin-top: 14px;
 }
 
 .engineAction {

@@ -93,13 +93,13 @@ export function ModelsPanel({
                                 </Flex>
                             </Flex>
                             <Flex
-                                className={`${styles.engineActions} ${styles.engineActionsRestart}`}
-                                direction="column"
+                                className={`${styles.engineActions} ${styles.engineActionsOnline}`}
+                                direction="row"
                                 gap={2}
                                 alignItems="center"
                             >
-                                <Skeleton width={100} height={28} />
-                                <Skeleton width="100%" height={36} />
+                                <Skeleton width={180} height={28} />
+                                <Skeleton width={124} height={28} />
                             </Flex>
                         </Flex>
                     </Box>
@@ -220,12 +220,27 @@ export function ModelsPanel({
                             </Flex>
                         </Flex>
                         <Flex
-                            className={`${styles.engineActions} ${engine.online ? styles.engineActionsRestart : ''}`}
-                            direction="column"
+                            className={`${styles.engineActions} ${engine.online ? styles.engineActionsOnline : ''}`}
+                            direction={engine.online ? 'row' : 'column'}
+                            qa={engine.online ? 'engine-online-actions' : undefined}
                             gap={2}
                             justifyContent="flex-end"
                             alignItems="center"
                         >
+                            {engine.online && (
+                                <Button
+                                    className={styles.engineRestart}
+                                    size="m"
+                                    view="outlined"
+                                    loading={busy === 'restart'}
+                                    disabled={!engine.canRestart || !!busy || !!engine.downloading}
+                                    title={!engine.canRestart ? t('engineRestartExternal') : undefined}
+                                    onClick={() => void action('restart', () => api.models.restartEngine())}
+                                >
+                                    <Icon data={ArrowRotateRight} size={16} />
+                                    {t('restartEngine')}
+                                </Button>
+                            )}
                             {installingEngine ? (
                                 <DownloadButton
                                     engine={engine}
@@ -233,7 +248,13 @@ export function ModelsPanel({
                                     onCancel={() => void cancelDownload()}
                                 />
                             ) : engine.online ? (
-                                <Label theme="success" size="m" icon={<Icon data={Check} size={16} />}>
+                                <Label
+                                    className={styles.engineInstalled}
+                                    qa="engine-installed"
+                                    theme="success"
+                                    size="m"
+                                    icon={<Icon data={Check} size={16} />}
+                                >
                                     {t('installed')}
                                 </Label>
                             ) : engineInstalled ? (
@@ -261,25 +282,15 @@ export function ModelsPanel({
                                     {t('installEngine')}
                                 </Button>
                             )}
-                            {engine.online && (
-                                <Button
-                                    className={styles.engineAction}
-                                    size="l"
-                                    view="outlined"
-                                    loading={busy === 'restart'}
-                                    disabled={!engine.canRestart || !!busy || !!engine.downloading}
-                                    title={!engine.canRestart ? t('engineRestartExternal') : undefined}
-                                    onClick={() => void action('restart', () => api.models.restartEngine())}
-                                >
-                                    <Icon data={ArrowRotateRight} size={16} />
-                                    {t('restartEngine')}
-                                </Button>
-                            )}
                         </Flex>
                     </Flex>
                 </Box>
                 {(error || engine.error) && (
-                    <StatusNotice title={t('engineErrorTitle')} description={error || engine.error} />
+                    <StatusNotice
+                        className={styles.engineNotice}
+                        title={t('engineErrorTitle')}
+                        description={error || engine.error}
+                    />
                 )}
                 <PromptBudgetNotice
                     warningsOnly

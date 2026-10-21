@@ -508,6 +508,7 @@ test('model placeholders follow the engine search and card grid layout', async (
     const engineBounds = await page.locator('[data-qa="engine-card"]').boundingBox();
     expect(Math.abs(engineBounds!.x - skeleton!.x)).toBeLessThanOrEqual(1);
     expect(Math.abs(engineBounds!.width - skeleton!.width)).toBeLessThanOrEqual(1);
+    expect(Math.abs(engineBounds!.height - skeleton!.height)).toBeLessThanOrEqual(2);
     const actual = await page.locator('[data-qa="model-card"]').evaluateAll((elements) =>
         elements.slice(0, 3).map((element) => {
             const rect = element.getBoundingClientRect();
