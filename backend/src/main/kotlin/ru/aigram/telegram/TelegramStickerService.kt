@@ -22,6 +22,7 @@ class TelegramStickerService(
     private val gateway: ObjectProvider<TdLightGateway>,
     private val registry: TelegramStickerRegistry,
     private val clock: Clock,
+    private val automatedSends: TelegramAutomatedSendRegistry,
 ) {
     private var cached: StickerCatalog? = null
     private var ownerId = ""
@@ -83,7 +84,13 @@ class TelegramStickerService(
     }
 
     @Synchronized
-    fun send(chatId: String, stickerId: String, replyToId: String = "", topicId: Int = 0): String {
+    fun send(
+        chatId: String,
+        stickerId: String,
+        replyToId: String = "",
+        topicId: Int = 0,
+        automated: Boolean = false,
+    ): String {
         val service = activate()
         val input = TdApi.SendMessage().apply {
             this.chatId = service.parseChatId(chatId)
@@ -105,8 +112,28 @@ class TelegramStickerService(
             }
             inputMessageContent = registry.content(stickerId)
         }
+        val client = service.readyClient()
+        val send = if (automated) {
+            automatedSends.begin(input.chatId)
+        } else {
+            null
+        }
+        if (send != null) {
+            input.options = TdApi.MessageSendOptions().apply { sendingId = send.sendingId }
+        }
         return request {
-            service.readyClient().sendMessage(input, true).get(STICKER_TIMEOUT_SECONDS, TimeUnit.SECONDS).id.toString()
+            try {
+                val message = client.sendMessage(input, true).get(STICKER_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                if (send != null) {
+                    automatedSends.completed(send, message)
+                }
+                message.id.toString()
+            } catch (exception: ExecutionException) {
+                if (send != null) {
+                    automatedSends.rejected(send)
+                }
+                throw exception
+            }
         }
     }
 

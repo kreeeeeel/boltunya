@@ -1,0 +1,7 @@
+ReplyProcessingMode:
+    type: string
+    enum:
+        - replace
+        - finish
+        - each
+    description: Restart on new messages, finish the active reply and coalesce the next task, or reply to each message in order.

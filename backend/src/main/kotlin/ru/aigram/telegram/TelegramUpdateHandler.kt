@@ -24,7 +24,12 @@ class TelegramUpdateHandler(
     private val typing: TelegramTypingStore,
     private val delivery: TelegramMediaDeliveryTracker,
     private val initiatives: ObjectProvider<ProactiveCoordinator>,
+    private val automatedSends: TelegramAutomatedSendRegistry,
 ) {
+    internal fun clearAutomatedSends() {
+        automatedSends.clear()
+    }
+
     fun register(builder: SimpleTelegramClientBuilder, version: Long) {
         builder.addDefaultExceptionHandler {
             if (connection.version != version) {
@@ -133,7 +138,8 @@ class TelegramUpdateHandler(
         builder.addUpdateHandler(TdApi.UpdateNewMessage::class.java) { update ->
             if (connection.version == version) {
                 typing.clear(update.message.chatId, update.message.senderId)
-                val mapped = messages.map(update.message)
+                val owned = automatedSends.pending(update.message) || automatedSends.known(update.message)
+                val mapped = messages.map(update.message).copy(automated = owned)
                 val message = try {
                     history.record(mapped)
                 } catch (exception: Exception) {
@@ -174,14 +180,16 @@ class TelegramUpdateHandler(
         }
         builder.addUpdateHandler(TdApi.UpdateMessageSendSucceeded::class.java) {
             if (connection.version == version) {
+                val owned = automatedSends.succeeded(it.oldMessageId, it.message)
                 delivery.succeeded(cache.ownId.toString(), it.message.chatId, it.oldMessageId, it.message.id)
-                history.record(messages.map(it.message))
+                history.record(messages.map(it.message).copy(automated = owned))
             }
         }
         builder.addUpdateHandler(TdApi.UpdateMessageSendFailed::class.java) {
             if (connection.version ==
                 version
             ) {
+                automatedSends.failed(it.message.chatId, it.oldMessageId)
                 delivery.failed(cache.ownId.toString(), it.message.chatId, it.oldMessageId)
             }
         }

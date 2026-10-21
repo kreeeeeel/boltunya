@@ -7,6 +7,7 @@ import ru.aigram.domain.media.StickerCatalog
 import ru.aigram.domain.media.StickerItem
 import ru.aigram.domain.media.StickerSet
 import ru.aigram.domain.media.UploadedFile
+import ru.aigram.transformer.chat.toDomain
 import java.util.UUID
 import ru.aigram.contract.dto.MediaAttachment as ContractMediaAttachment
 import ru.aigram.contract.dto.SendMediaRequest as ContractSendMediaRequest
@@ -65,4 +66,5 @@ fun ContractSendMediaRequest.toDomain(): SendMediaRequest = SendMediaRequest(
     uploadIds = uploadIds.stream().map(UUID::toString).toList(),
     kind = OutgoingMediaKind.valueOf(kind.name),
     caption = caption,
+    captionEntities = captionEntities.orEmpty().stream().map { it.toDomain() }.toList(),
 )

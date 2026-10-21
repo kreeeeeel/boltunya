@@ -40,6 +40,8 @@ class SettingsWireValidationTest {
                         """{"replyDelaySeconds":4}""",
                         """{"globalPrompt":"hello"}""",
                         """{"customStyles":[]}""",
+                        """{"formatReplies":true}""",
+                        """{"replyProcessingMode":"each"}""",
                     ).stream().forEach { assertEquals(200, update(it), it) }
                     listOf(
                         """{"paused":"true"}""",
@@ -48,9 +50,19 @@ class SettingsWireValidationTest {
                         """{"replyDelaySeconds":"4"}""",
                         """{"globalPrompt":{}}""",
                         """{"customStyles":{}}""",
+                        """{"formatReplies":"true"}""",
+                        """{"formatReplies":null}""",
+                        """{"formatReplies":1}""",
+                        """{"replyProcessingMode":"inherit"}""",
+                        """{"replyProcessingMode":true}""",
+                        """{"replyProcessingMode":null}""",
                     ).stream().forEach { assertEquals(400, update(it), it) }
                     assertEquals(4, settings.get().replyDelaySeconds)
                     assertEquals("hello", settings.get().globalPrompt)
+                    assertEquals(true, settings.get().formatReplies)
+                    assertEquals(200, update("""{"formatReplies":false}"""))
+                    assertEquals(false, settings.get().formatReplies)
+                    assertEquals("EACH", settings.get().replyProcessingMode.name)
                 }
             }
         }

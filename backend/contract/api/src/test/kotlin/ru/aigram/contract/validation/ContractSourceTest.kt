@@ -36,6 +36,7 @@ private val MESSAGE_EDIT_MODELS = setOf(
     "MessageEditRequest",
 )
 private const val MESSAGE_EDIT_PATH = "/api/chats/{chatId}/messages/{messageId}/edit"
+private val IDLE_MESSAGE_MODELS = setOf("ProactiveMessageMode", "ReplyInterruptionMode", "ReplyProcessingMode")
 
 class ContractSourceTest {
     @TempDir
@@ -49,14 +50,19 @@ class ContractSourceTest {
         val additions = corrections.getValue("additions").jsonObject
         val extras = fixture("extracted-models.json")
         val audit = ContractWireAudit(document)
-        val actual = audit.snapshot(expected.getValue("schemas").jsonObject.keys + REQUEST_MODELS + MESSAGE_EDIT_MODELS)
+        val actual = audit.snapshot(
+            expected.getValue("schemas").jsonObject.keys + REQUEST_MODELS + MESSAGE_EDIT_MODELS + IDLE_MESSAGE_MODELS,
+        )
         assertEquals(expected.getValue("root"), actual.getValue("root"), "Root metadata or session security changed")
         assertEquals(setOf("/api/engine/restart", MESSAGE_EDIT_PATH), additions.getValue("paths").jsonObject.keys)
         assertEquals(
             setOf("POST /api/engine/restart", "GET $MESSAGE_EDIT_PATH", "PUT $MESSAGE_EDIT_PATH"),
             additions.getValue("operations").jsonObject.keys,
         )
-        assertEquals(REQUEST_MODELS + MESSAGE_EDIT_MODELS, additions.getValue("schemas").jsonObject.keys)
+        assertEquals(
+            REQUEST_MODELS + MESSAGE_EDIT_MODELS + IDLE_MESSAGE_MODELS,
+            additions.getValue("schemas").jsonObject.keys,
+        )
         listOf("paths", "operations", "schemas").stream().forEach { group ->
             val old = expected.getValue(group).jsonObject
             val current = actual.getValue(group).jsonObject
@@ -74,14 +80,40 @@ class ContractSourceTest {
         assertEquals(61, document.getValue("paths").jsonObject.size)
         assertEquals(76, audit.operations().size)
         assertEquals(
-            expected.getValue("schemas").jsonObject.keys + extras.keys + REQUEST_MODELS + MESSAGE_EDIT_MODELS,
+            expected.getValue("schemas").jsonObject.keys + extras.keys + REQUEST_MODELS + MESSAGE_EDIT_MODELS +
+                IDLE_MESSAGE_MODELS,
             document.getValue("components").jsonObject.getValue("schemas").jsonObject.keys,
         )
-        assertEquals(119, document.getValue("components").jsonObject.getValue("schemas").jsonObject.size)
+        assertEquals(122, document.getValue("components").jsonObject.getValue("schemas").jsonObject.size)
         assertFalse(Files.exists(Path.of("../api.yaml")), "The old duplicate contract must not remain")
         Files.walk(Path.of("schema")).use { files ->
-            assertEquals(128L, files.filter { Files.isRegularFile(it) && it.toString().endsWith(".yaml") }.count())
+            assertEquals(131L, files.filter { Files.isRegularFile(it) && it.toString().endsWith(".yaml") }.count())
         }
+    }
+
+    @Test
+    fun `optional reply entities formatting and literal idle messages retain safe defaults`() {
+        val schemas = ContractSource(Path.of("schema")).load().getValue("components").jsonObject
+            .getValue("schemas").jsonObject
+        val settings = schemas.getValue("Settings").jsonObject.getValue("properties").jsonObject
+        val update = schemas.getValue("SettingsUpdate").jsonObject.getValue("properties").jsonObject
+        assertEquals(JsonPrimitive(false), settings.getValue("formatReplies").jsonObject["default"])
+        assertFalse(update.getValue("formatReplies").jsonObject.containsKey("default"))
+        assertFalse(update.getValue("replyProcessingMode").jsonObject.containsKey("default"))
+        listOf("Reply" to "entities", "Text" to "entities", "SendMediaRequest" to "captionEntities")
+            .stream().forEach { (name, property) ->
+                val model = schemas.getValue(name).jsonObject
+                val entity = model.getValue("properties").jsonObject.getValue(property).jsonObject
+                assertEquals(JsonPrimitive(100), entity["maxItems"])
+                assertFalse(model["required"]?.jsonArray?.contains(JsonPrimitive(property)) == true)
+            }
+        val rule = schemas.getValue("ChatRuleInput").jsonObject.getValue("properties").jsonObject
+        assertEquals(JsonPrimitive("ai"), rule.getValue("proactiveMessageMode").jsonObject["default"])
+        assertEquals(JsonPrimitive(4096), rule.getValue("proactiveText").jsonObject["maxLength"])
+        assertEquals(
+            JsonArray(listOf(JsonPrimitive("ai"), JsonPrimitive("text"))),
+            schemas.getValue("ProactiveMessageMode").jsonObject["enum"],
+        )
     }
 
     @Test

@@ -4,6 +4,8 @@ ChatRuleInput:
         enabled:
             type: boolean
             default: false
+        replyInterruptionMode:
+            $ref: ./ReplyInterruptionMode.yaml#/ReplyInterruptionMode
         style:
             $ref: ./CommunicationStyle.yaml#/CommunicationStyle
         model:
@@ -21,6 +23,12 @@ ChatRuleInput:
         delaySeconds:
             type: integer
             default: 0
+        proactiveMessageMode:
+            $ref: ./ProactiveMessageMode.yaml#/ProactiveMessageMode
+        proactiveText:
+            type: string
+            maxLength: 4096
+            default: ''
         creativity:
             type: integer
             default: 60

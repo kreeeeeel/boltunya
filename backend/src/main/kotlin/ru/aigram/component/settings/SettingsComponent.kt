@@ -60,6 +60,8 @@ class SettingsComponent(
                 replyDelaySeconds = update.replyDelaySeconds ?: it.replyDelaySeconds,
                 replyIntervalSeconds = update.replyIntervalSeconds ?: it.replyIntervalSeconds,
                 showTyping = update.showTyping ?: it.showTyping,
+                formatReplies = update.formatReplies ?: it.formatReplies,
+                replyProcessingMode = update.replyProcessingMode ?: it.replyProcessingMode,
                 ignoreAssistantTasks = update.ignoreAssistantTasks ?: it.ignoreAssistantTasks,
                 groupReplies = update.groupReplies ?: it.groupReplies,
                 memoryEnabled = update.memoryEnabled ?: it.memoryEnabled,
@@ -99,5 +101,7 @@ class SettingsComponent(
         before.paused != after.paused || before.defaultModel != after.defaultModel ||
             before.defaultModelProfileId != after.defaultModelProfileId || before.globalPrompt != after.globalPrompt ||
             before.customStyles != after.customStyles || before.groupReplies != after.groupReplies ||
-            before.deliveryMode != after.deliveryMode || before.ignoreAssistantTasks != after.ignoreAssistantTasks
+            before.deliveryMode != after.deliveryMode || before.ignoreAssistantTasks != after.ignoreAssistantTasks ||
+            before.formatReplies != after.formatReplies ||
+            before.replyProcessingMode != after.replyProcessingMode
 }

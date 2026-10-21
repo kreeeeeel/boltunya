@@ -6,6 +6,7 @@ import ru.aigram.contract.dto.WritingStyle
 import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.memory.MemoryCollectionScope
 import ru.aigram.domain.settings.AppSettings
+import ru.aigram.domain.settings.ReplyProcessingMode
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -23,6 +24,8 @@ class SettingsTransformerTest {
         assertNull(mapped.launchAtLogin)
         assertNull(mapped.memoryCollectionScope)
         assertNull(mapped.customStyles)
+        assertNull(mapped.formatReplies)
+        assertNull(mapped.replyProcessingMode)
     }
 
     @Test
@@ -30,6 +33,8 @@ class SettingsTransformerTest {
         val value = AppSettings(
             paused = false,
             maxParallelTasks = 3,
+            formatReplies = true,
+            replyProcessingMode = ReplyProcessingMode.EACH,
             memoryCollectionScope = MemoryCollectionScope.ALL_ALLOWED,
             rules = mapOf("-1009007199254740993" to ChatRule(enabled = true, model = "qwen3:1.7b")),
         )
@@ -38,6 +43,8 @@ class SettingsTransformerTest {
 
         assertFalse(mapped.paused)
         assertEquals(3, mapped.maxParallelTasks)
+        assertTrue(mapped.formatReplies == true)
+        assertEquals("each", mapped.replyProcessingMode?.value)
         assertEquals("all-allowed", mapped.memoryCollectionScope?.value)
         assertEquals("qwen3:1.7b", mapped.rules[value.rules.keys.single()]?.model)
         assertTrue(mapped.rules[value.rules.keys.single()]?.enabled == true)

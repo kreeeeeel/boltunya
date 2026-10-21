@@ -18,3 +18,10 @@ Reply:
         stickerId:
             type: string
             default: ''
+        entities:
+            type: array
+            maxItems: 100
+            default: []
+            items:
+                $ref: ../chats/MessageEntity.yaml#/MessageEntity
+            description: Formatting of the final plain text, using UTF-16 offsets and lengths.

@@ -3,6 +3,7 @@ package ru.aigram.automation
 import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.chat.ChatSummary
+import ru.aigram.domain.chat.MessageEntity
 import ru.aigram.domain.telegram.TelegramCredentials
 import ru.aigram.domain.telegram.TelegramStatus
 import ru.aigram.telegram.TelegramGateway
@@ -13,6 +14,8 @@ class FakeTelegramGateway : TelegramGateway {
     val sent = CopyOnWriteArrayList<String>()
     val replyIds = CopyOnWriteArrayList<String>()
     val topicIds = CopyOnWriteArrayList<Int>()
+    val entities = CopyOnWriteArrayList<List<MessageEntity>>()
+    val sentAutomated = CopyOnWriteArrayList<Boolean>()
     val typing = CopyOnWriteArrayList<Boolean>()
     val sendTimes = CopyOnWriteArrayList<Long>()
     var nextSendError: RuntimeException? = null
@@ -27,7 +30,14 @@ class FakeTelegramGateway : TelegramGateway {
     override fun chats(): List<ChatSummary> = chatSummaries
     override fun history(chatId: String, limit: Int, before: Long): List<ChatMessage> =
         messages.filter { it.chatId == chatId }.takeLast(limit)
-    override fun send(chatId: String, text: String, replyToId: String, topicId: Int): String {
+    override fun send(
+        chatId: String,
+        text: String,
+        replyToId: String,
+        topicId: Int,
+        entities: List<MessageEntity>,
+        automated: Boolean,
+    ): String {
         beforeSend()
         val failure = nextSendError
         nextSendError = null
@@ -37,6 +47,8 @@ class FakeTelegramGateway : TelegramGateway {
         sent.add(text)
         replyIds.add(replyToId)
         topicIds.add(topicId)
+        this.entities.add(entities)
+        sentAutomated.add(automated)
         sendTimes.add(System.nanoTime())
         return "sent-${sent.size}"
     }

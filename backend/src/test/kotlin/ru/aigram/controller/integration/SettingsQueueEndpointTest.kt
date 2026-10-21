@@ -62,6 +62,13 @@ class SettingsQueueEndpointTest {
                         assertEquals(200, patch("""{"instructions":"Changed chat 43"}""", "/api/chats/43/rule", "PUT"))
                         assertEquals("queued", replies.activities().single { it.kind.name == "MEMORY" }.status)
                         assertEquals("cancelled", replies.activities().single { it.kind.name == "DRAFT" }.status)
+                        val unformatted = replies.enqueueDraft("43", "gemma3:4b") {
+                            ReplyResult("unformatted draft", 0, 0.0)
+                        }
+                        assertEquals(200, patch("""{"formatReplies":true}"""))
+                        assertEquals(true, settings.get().formatReplies)
+                        assertEquals("queued", replies.activities().single { it.kind.name == "MEMORY" }.status)
+                        assertEquals("cancelled", replies.activities().single { it.id == unformatted.id }.status)
                     }
             }
         }

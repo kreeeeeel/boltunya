@@ -54,6 +54,7 @@ class PromptBuilder(
         images: Map<String, List<Media>> = emptyMap(),
         inputTarget: ResolvedModelTarget? = null,
         reservedOutputTokens: Int = rule.maxTokens,
+        formatReplies: Boolean = false,
     ): List<Message> {
         val style = CommunicationStyle.entries.firstOrNull { it.key == rule.style } ?: CommunicationStyle.FRIENDLY
         val tone = if (style == CommunicationStyle.CUSTOM && rule.resolvedStyleInstructions.isNotBlank()) {
@@ -96,7 +97,15 @@ class PromptBuilder(
                 "time" to time,
                 "date" to date,
             ),
-        ) + "\n" + resources.prompt("ru/conversation/authors")
+        ) + "\n" + resources.prompt("ru/conversation/authors") + "\n" +
+            resources.prompt("ru/conversation/mentions") + "\n" +
+            resources.prompt("ru/conversation/output") + "\n" + resources.prompt(
+                if (formatReplies) {
+                    "ru/conversation/formatting-on"
+                } else {
+                    "ru/conversation/formatting-off"
+                },
+            )
         fun researchContent(data: String): String = resources.prompt(
             "ru/research/context",
             mapOf(

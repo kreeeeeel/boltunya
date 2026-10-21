@@ -355,6 +355,12 @@ components:
             $ref: ./models/activity/QueuePauseRequest.yaml#/QueuePauseRequest
         ChatRuleInput:
             $ref: ./models/chats/ChatRuleInput.yaml#/ChatRuleInput
+        ProactiveMessageMode:
+            $ref: ./models/chats/ProactiveMessageMode.yaml#/ProactiveMessageMode
+        ReplyInterruptionMode:
+            $ref: ./models/chats/ReplyInterruptionMode.yaml#/ReplyInterruptionMode
+        ReplyProcessingMode:
+            $ref: ./models/settings/ReplyProcessingMode.yaml#/ReplyProcessingMode
         ModelProfileOptionsInput:
             $ref: ./models/models/ModelProfileOptionsInput.yaml#/ModelProfileOptionsInput
         ModelCapabilitiesInput:

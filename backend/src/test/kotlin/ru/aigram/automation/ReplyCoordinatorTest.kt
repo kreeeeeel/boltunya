@@ -6,6 +6,7 @@ import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.domain.ai.ReplyResult
 import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.MessageEntity
 import ru.aigram.domain.chat.WritingStyle
 import ru.aigram.exception.impl.InvalidModelReplyException
 import ru.aigram.exception.impl.TelegramRateLimitException
@@ -73,6 +74,21 @@ class ReplyCoordinatorTest {
             coordinator.onMessage(gateway.messages[0])
             await { gateway.sent.isNotEmpty() }
             assertEquals(listOf("Здравствуйте!"), gateway.sent.toList())
+        }
+    }
+
+    @Test
+    fun `dispatches formatted response entities with the same text and reply context`() {
+        val gateway = FakeTelegramGateway()
+        val entities = listOf(MessageEntity(0, 6, "bold"))
+        ReplyCoordinator(enabledSettings(), gateway) { _, _ ->
+            ReplyResult("Готово 😀", 0, 0.0, entities = entities)
+        }.use { coordinator ->
+            coordinator.onMessage(gateway.messages[0])
+            await { gateway.sent.isNotEmpty() }
+            assertEquals(listOf("Готово 😀"), gateway.sent.toList())
+            assertEquals(listOf(entities), gateway.entities.toList())
+            assertEquals(listOf(gateway.messages[0].id), gateway.replyIds.toList())
         }
     }
 

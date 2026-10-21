@@ -8,6 +8,7 @@ import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.chat.ChatSummary
 import ru.aigram.domain.chat.GroupReplyMode
+import ru.aigram.domain.chat.ProactiveMessageMode
 import ru.aigram.domain.chat.ProactiveMode
 import ru.aigram.domain.events.diagnostics.DiagnosticSource
 import ru.aigram.resources.ResourceCatalog
@@ -75,8 +76,8 @@ class ProactiveCoordinator(
             return
         }
         val now = clock.instant().epochSecond
-        val eligible = telegram.chats().filter { eligible(it, settings.rule(it.id)) }
-        observations.keys.retainAll(eligible.map { it.id }.toSet())
+        val eligible = telegram.chats().stream().filter { eligible(it, settings.rule(it.id)) }.toList()
+        observations.keys.retainAll(eligible.stream().map { it.id }.toList())
         eligible.stream().anyMatch { chat ->
             val previous = observations[chat.id]
             if (previous == null || previous.messageId != chat.lastMessageId) {
@@ -90,7 +91,8 @@ class ProactiveCoordinator(
 
     private fun enqueue(chat: ChatSummary, observation: ProactiveObservation, now: Long, account: String): Boolean {
         val rule = settings.rule(chat.id)
-        val minutes = rule.proactiveIntervalMinutes.takeIf { it > 0 } ?: settings.get().proactiveIntervalMinutes
+        val minutes = interval(rule)
+        val capturedGroupMode = groupMode(rule)
         val previous = ledger.get(account, chat.id)
         if (previous?.awaitingResponse == true || replies.hasWork(chat.id) || replies.hasInitiative() ||
             now - maxOf(observation.since, previous?.attemptedAt ?: 0) < TimeUnit.MINUTES.toSeconds(minutes.toLong())
@@ -98,15 +100,25 @@ class ProactiveCoordinator(
             return false
         }
         val reservation = ledger.reserve(account, chat.id, chat.lastMessageId, now)
+        val allowed = {
+            val currentRule = settings.rule(chat.id)
+            telegram.status().userId == account && !settings.get().paused && !replies.queue().paused &&
+                currentRule == rule && interval(currentRule) == minutes &&
+                groupMode(currentRule) == capturedGroupMode &&
+                telegram.chats().stream().anyMatch {
+                    it.id == chat.id && it.lastMessageId == chat.lastMessageId && eligible(it, currentRule)
+                } && ledger.get(account, chat.id)?.lastIncomingId == reservation.lastIncomingId
+        }
         val task = ProactiveTask(
-            allowed = {
-                telegram.status().userId == account && !settings.get().paused &&
-                    telegram.chats().any {
-                        it.id == chat.id && it.lastMessageId == chat.lastMessageId && eligible(it, settings.rule(it.id))
-                    } && ledger.get(account, chat.id)?.lastIncomingId == reservation.lastIncomingId
+            allowed = allowed,
+            generate = { currentRule, history ->
+                if (rule.proactiveMessageMode == ProactiveMessageMode.TEXT) {
+                    ReplyResult(rule.proactiveText, 0, 0.0)
+                } else {
+                    generate(currentRule, history)
+                }
             },
-            generate = generate,
-            prepareDelivery = { ledger.prepareDelivery(account, chat.id, reservation) },
+            prepareDelivery = { allowed() && ledger.prepareDelivery(account, chat.id, reservation) },
             trigger = resources.text("activity/ru/initiative.txt"),
         )
         return replies.enqueueInitiative(chat, account, task)
@@ -116,22 +128,26 @@ class ProactiveCoordinator(
         val enabled = when (rule.proactiveMode) {
             ProactiveMode.ENABLED -> true
             ProactiveMode.DISABLED -> false
-            ProactiveMode.INHERIT -> settings.get().proactiveEnabled
+            ProactiveMode.INHERIT -> rule.enabled && settings.get().proactiveEnabled
         }
-        val groupMode = if (rule.groupReplies ==
-            GroupReplyMode.INHERIT
-        ) {
-            settings.get().groupReplies
-        } else {
-            rule.groupReplies
-        }
-        return enabled && rule.enabled && chat.id != owner && chat.joined != false && chat.kind != "channel" &&
-            chat.lastMessageId.isNotEmpty() && chat.lastMessageOutgoing && chat.unread == 0 &&
+        val groupMode = groupMode(rule)
+        return enabled && chat.id != owner && chat.joined != false && chat.kind != "channel" &&
+            (rule.proactiveMessageMode != ProactiveMessageMode.TEXT || rule.proactiveText.isNotBlank()) &&
+            chat.lastMessageId.isNotEmpty() && chat.unread == 0 &&
             chat.typingUsers.isEmpty() &&
             (
                 chat.kind == "private" || groupMode == GroupReplyMode.ALL ||
                     groupMode == GroupReplyMode.MENTIONS && rule.proactiveMode == ProactiveMode.ENABLED
                 )
+    }
+
+    private fun interval(rule: ChatRule): Int =
+        rule.proactiveIntervalMinutes.takeIf { it > 0 } ?: settings.get().proactiveIntervalMinutes
+
+    private fun groupMode(rule: ChatRule): GroupReplyMode = if (rule.groupReplies == GroupReplyMode.INHERIT) {
+        settings.get().groupReplies
+    } else {
+        rule.groupReplies
     }
 
     override fun close() {

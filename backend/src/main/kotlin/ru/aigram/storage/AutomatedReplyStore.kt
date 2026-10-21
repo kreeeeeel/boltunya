@@ -21,6 +21,9 @@ class AutomatedReplyStore(directory: Path) {
 
     @Synchronized
     fun record(chatId: String, messageId: String) {
+        if (contains(chatId, messageId)) {
+            return
+        }
         val next = (ids + "$chatId:$messageId").toList()
         Files.createDirectories(file.parent)
         val temporary = file.resolveSibling("automated-replies.tmp")

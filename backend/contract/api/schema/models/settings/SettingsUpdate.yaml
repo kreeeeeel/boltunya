@@ -18,6 +18,12 @@ SettingsUpdate:
             maximum: 120
         showTyping:
             type: boolean
+        formatReplies:
+            type: boolean
+            description: Enable or disable formatting for subsequent AI replies without changing manual plain text.
+        replyProcessingMode:
+            $ref: ./ReplyProcessingMode.yaml#/ReplyProcessingMode
+            description: Apply a reply queue policy without changing other preferences; omission preserves the saved policy.
         closeToTray:
             type: boolean
         launchAtLogin:

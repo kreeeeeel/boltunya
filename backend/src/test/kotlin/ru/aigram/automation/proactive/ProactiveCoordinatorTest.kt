@@ -9,6 +9,7 @@ import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.chat.ChatSummary
 import ru.aigram.domain.chat.GroupReplyMode
+import ru.aigram.domain.chat.ProactiveMessageMode
 import ru.aigram.domain.chat.ProactiveMode
 import ru.aigram.domain.events.ActivityKind
 import ru.aigram.memory.AdvancingClock
@@ -284,6 +285,170 @@ class ProactiveCoordinatorTest {
                 coordinator.tick()
                 await { replies.activities().any { it.status == "error" } }
                 assertTrue(gateway.delegate.sent.isEmpty())
+            }
+        }
+    }
+
+    @Test
+    fun `explicit fixed text works without auto replies after a read incoming message and waits for a real response`() {
+        val settings = enabledSettings()
+        val text = "  Синтетическое сообщение 👋\nБез изменения пробелов.  "
+        settings.saveRule(
+            "42",
+            ChatRule(
+                enabled = false,
+                proactiveMode = ProactiveMode.ENABLED,
+                proactiveMessageMode = ProactiveMessageMode.TEXT,
+                proactiveText = text,
+            ),
+        )
+        val gateway = gateway()
+        val incoming = ChatMessage("11", "42", "Read incoming", false, 2)
+        gateway.delegate.messages = gateway.delegate.messages + incoming
+        gateway.summaries = listOf(gateway.summaries.single().copy(lastMessageId = "11", lastMessageOutgoing = false))
+        val ordinaryCalls = AtomicInteger()
+        val initiativeCalls = AtomicInteger()
+        ReplyCoordinator(settings, gateway) { _, _ ->
+            ordinaryCalls.incrementAndGet()
+            ReplyResult("unexpected automatic reply", 1, 1.0)
+        }.use { replies ->
+            coordinator(settings, gateway, replies) { _, _ ->
+                initiativeCalls.incrementAndGet()
+                ReplyResult("unexpected model invocation", 1, 1.0)
+            }.use { coordinator ->
+                replies.onMessage(incoming)
+                coordinator.tick()
+                clock.advance(Duration.ofMinutes(5))
+                coordinator.tick()
+                await { gateway.delegate.sent.size == 1 && !replies.hasInitiative() }
+                assertEquals(text, gateway.delegate.sent.single())
+                assertEquals(listOf("11"), gateway.delegate.replyIds.toList())
+                assertEquals(0, ordinaryCalls.get())
+                assertEquals(0, initiativeCalls.get())
+                assertTrue(ProactiveLedger(directory).get("100", "42")?.awaitingResponse == true)
+
+                clock.advance(Duration.ofDays(1))
+                coordinator.tick()
+                assertEquals(1, gateway.delegate.sent.size)
+                val nextIncoming = incoming.copy(id = "12", text = "Real response")
+                coordinator.observe(nextIncoming)
+                gateway.delegate.messages = gateway.delegate.messages + nextIncoming
+                gateway.summaries = listOf(gateway.summaries.single().copy(lastMessageId = "12"))
+                coordinator.tick()
+                clock.advance(Duration.ofMinutes(5))
+                coordinator.tick()
+                await { gateway.delegate.sent.size == 2 && !replies.hasInitiative() }
+                assertEquals(listOf(text, text), gateway.delegate.sent.toList())
+                assertEquals(0, initiativeCalls.get())
+            }
+            coordinator(settings, gateway, replies, ProactiveLedger(directory)) { _, _ ->
+                error("model must not run after restart")
+            }.use { restarted ->
+                restarted.tick()
+                clock.advance(Duration.ofDays(1))
+                restarted.tick()
+                assertEquals(2, gateway.delegate.sent.size)
+            }
+        }
+    }
+
+    @Test
+    fun `inherited initiatives require auto replies but explicit AI can run independently`() {
+        val settings = enabledSettings()
+        settings.update { it.copy(proactiveEnabled = true) }
+        settings.saveRule("42", ChatRule(enabled = false))
+        val gateway = gateway()
+        val calls = AtomicInteger()
+        ReplyCoordinator(settings, gateway) { _, _ -> error("ordinary reply must remain disabled") }.use { replies ->
+            coordinator(settings, gateway, replies) { _, _ ->
+                calls.incrementAndGet()
+                ReplyResult("AI initiative", 1, 1.0)
+            }.use { coordinator ->
+                coordinator.tick()
+                clock.advance(Duration.ofDays(1))
+                coordinator.tick()
+                assertTrue(replies.activities().isEmpty())
+
+                settings.saveRule("42", settings.rule("42").copy(proactiveMode = ProactiveMode.ENABLED))
+                coordinator.tick()
+                clock.advance(Duration.ofMinutes(5))
+                coordinator.tick()
+                await { gateway.delegate.sent.size == 1 }
+                assertEquals("AI initiative", gateway.delegate.sent.single())
+                assertEquals(1, calls.get())
+            }
+        }
+    }
+
+    @Test
+    fun `queued fixed text is cancelled when mode or text changes before dispatch`() {
+        val settings = enabledSettings()
+        settings.update { it.copy(replyDelaySeconds = 1) }
+        settings.saveRule(
+            "42",
+            ChatRule(
+                enabled = false,
+                proactiveMode = ProactiveMode.ENABLED,
+                proactiveMessageMode = ProactiveMessageMode.TEXT,
+                proactiveText = "Old text",
+            ),
+        )
+        val gateway = gateway()
+        ReplyCoordinator(settings, gateway) { _, _ -> error("ordinary") }.use { replies ->
+            coordinator(settings, gateway, replies) { _, _ -> error("fixed text must bypass the model") }
+                .use { coordinator ->
+                    coordinator.tick()
+                    clock.advance(Duration.ofMinutes(5))
+                    coordinator.tick()
+                    assertEquals(1, replies.queue().queued)
+                    settings.saveRule(
+                        "42",
+                        settings.rule("42").copy(
+                            proactiveMessageMode = ProactiveMessageMode.AI,
+                            proactiveText = "New text",
+                        ),
+                    )
+                    await { replies.activities().any { it.status == "cancelled" } && !replies.hasInitiative() }
+                    assertTrue(gateway.delegate.sent.isEmpty())
+                    assertFalse(ProactiveLedger(directory).get("100", "42")?.awaitingResponse == true)
+
+                    settings.saveRule(
+                        "42",
+                        settings.rule("42").copy(proactiveMessageMode = ProactiveMessageMode.TEXT),
+                    )
+                    clock.advance(Duration.ofMinutes(5))
+                    coordinator.tick()
+                    await { gateway.delegate.sent.size == 1 }
+                    assertEquals("New text", gateway.delegate.sent.single())
+                }
+        }
+    }
+
+    @Test
+    fun `owner change cancels a queued initiative without consuming the delivery checkpoint`() {
+        val settings = enabledSettings()
+        settings.update { it.copy(proactiveEnabled = true, replyDelaySeconds = 1) }
+        val gateway = gateway()
+        val calls = AtomicInteger()
+        ReplyCoordinator(settings, gateway) { _, _ -> error("ordinary") }.use { replies ->
+            coordinator(settings, gateway, replies) { _, _ ->
+                calls.incrementAndGet()
+                ReplyResult("Must not send", 1, 1.0)
+            }.use { coordinator ->
+                coordinator.tick()
+                clock.advance(Duration.ofMinutes(5))
+                coordinator.tick()
+                assertEquals(1, replies.queue().queued)
+                val jobId = replies.activities().single().id
+                gateway.owner = "200"
+                assertTrue(replies.activities().isEmpty(), "another account must not see the previous account events")
+                await { !replies.hasInitiative() }
+                assertTrue(gateway.delegate.sent.isEmpty())
+                assertEquals(0, calls.get())
+                assertFalse(ProactiveLedger(directory).get("100", "42")?.awaitingResponse == true)
+                gateway.owner = "100"
+                assertEquals(jobId, replies.activities().single().id)
+                assertEquals("cancelled", replies.activities().single().status)
             }
         }
     }

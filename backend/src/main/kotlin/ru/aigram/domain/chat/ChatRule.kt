@@ -11,8 +11,11 @@ import ru.aigram.validation.InputRule
 @Serializable
 data class ChatRule(
     val enabled: Boolean = false,
+    val replyInterruptionMode: ReplyInterruptionMode = ReplyInterruptionMode.INHERIT,
     val proactiveMode: ProactiveMode = ProactiveMode.INHERIT,
     @field:Min(0) @field:Max(43200) val proactiveIntervalMinutes: Int = 0,
+    val proactiveMessageMode: ProactiveMessageMode = ProactiveMessageMode.AI,
+    @field:Size(max = 4096) val proactiveText: String = "",
     val groupReplies: GroupReplyMode = GroupReplyMode.INHERIT,
     @field:InputFormat(InputRule.COMMUNICATION_STYLE)
     val style: String = "friendly",

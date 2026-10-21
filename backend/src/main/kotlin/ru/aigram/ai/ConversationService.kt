@@ -38,6 +38,8 @@ class ConversationService(
     private val resources: ResourceCatalog,
     private val tracing: ReplyTraceScope = ReplyTraceScope(),
     private val mediaPlanner: ReplyMediaPlanner = ReplyMediaPlanner(resources),
+    private val output: ConversationOutputDecoder = ConversationOutputDecoder(),
+    private val formatting: ReplyTextFormatter = ReplyTextFormatter(),
 ) {
     fun reply(
         rule: ChatRule,
@@ -48,7 +50,8 @@ class ConversationService(
         images: Map<String, List<Media>> = emptyMap(),
         task: ModelTask = ModelTask.REPLY,
         stickers: List<StickerItem> = emptyList(),
-    ): ReplyResult = replyNow(rule, history, globalPrompt, styleHistory, memory, images, task, stickers)
+        formatReplies: Boolean = false,
+    ): ReplyResult = replyNow(rule, history, globalPrompt, styleHistory, memory, images, task, stickers, formatReplies)
 
     private fun replyNow(
         rule: ChatRule,
@@ -59,6 +62,7 @@ class ConversationService(
         images: Map<String, List<Media>>,
         task: ModelTask,
         stickers: List<StickerItem>,
+        formatReplies: Boolean = false,
     ): ReplyResult {
         val started = System.nanoTime()
         val memoryFacts = if (memory.isEmpty()) {
@@ -107,7 +111,16 @@ class ConversationService(
         val inputTarget = completion.promptTarget(rule, task)
         val reservedTokens = completion.reservedTokens(inputTarget, rule.maxTokens)
         val baseMessages = prompts.build(
-            rule, history, modelPrompt, research, styleHistory, memory, images, inputTarget, reservedTokens,
+            rule,
+            history,
+            modelPrompt,
+            research,
+            styleHistory,
+            memory,
+            images,
+            inputTarget,
+            reservedTokens,
+            formatReplies,
         )
         val messages = if (stickers.isEmpty()) {
             baseMessages
@@ -119,10 +132,13 @@ class ConversationService(
         } else {
             mediaPlanner.schema(stickers)
         }
-        fun read(text: String) = if (stickers.isEmpty()) {
-            ModelReplyPlan(text)
-        } else {
-            mediaPlanner.read(text, stickers)
+        fun read(text: String): ModelReplyPlan {
+            val plan = if (stickers.isEmpty()) {
+                ModelReplyPlan(text)
+            } else {
+                mediaPlanner.read(text, stickers)
+            }
+            return plan.copy(text = output.decode(plan.text))
         }
         tracing.phase(ActivityPhase.REPLY)
         var response = generate(messages, replySchema)
@@ -140,6 +156,7 @@ class ConversationService(
                 images,
                 inputTarget,
                 reservedTokens,
+                formatReplies,
             )
             val precision = resources.prompt(
                 "ru/research/retry-precision",
@@ -171,12 +188,14 @@ class ConversationService(
             throw InvalidModelReplyException()
         }
         text = links.format(text, rule, history, research)
+        val formatted = formatting.format(text, formatReplies)
         return ReplyResult(
-            text,
+            formatted.text,
             (System.nanoTime() - started) / 1_000_000,
             response.tokensPerSecond,
             completion.modelName(rule, task),
             plan.stickerId,
+            formatted.entities,
         )
     }
 }

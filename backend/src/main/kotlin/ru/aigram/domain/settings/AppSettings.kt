@@ -28,6 +28,8 @@ data class AppSettings(
     @field:Max(120)
     val replyIntervalSeconds: Int = 3,
     val showTyping: Boolean = true,
+    val formatReplies: Boolean = false,
+    val replyProcessingMode: ReplyProcessingMode = ReplyProcessingMode.REPLACE,
     val ignoreAssistantTasks: Boolean = true,
     val memoryEnabled: Boolean = true,
     val memoryCollectionScope: MemoryCollectionScope = MemoryCollectionScope.AI_ENABLED,

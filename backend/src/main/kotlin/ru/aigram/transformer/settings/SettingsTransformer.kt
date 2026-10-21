@@ -9,11 +9,13 @@ import java.util.stream.Collectors
 import ru.aigram.contract.dto.DefaultDeliveryMode as ContractDefaultDeliveryMode
 import ru.aigram.contract.dto.GroupRepliesMode as ContractGroupRepliesMode
 import ru.aigram.contract.dto.MemoryCollectionScope as ContractMemoryCollectionScope
+import ru.aigram.contract.dto.ReplyProcessingMode as ContractReplyProcessingMode
 import ru.aigram.contract.dto.SettingsUpdate as ContractSettingsUpdate
 import ru.aigram.domain.chat.DeliveryMode as DomainDeliveryMode
 import ru.aigram.domain.chat.GroupReplyMode as DomainGroupReplyMode
 import ru.aigram.domain.chat.WritingStyle as DomainWritingStyle
 import ru.aigram.domain.memory.MemoryCollectionScope as DomainMemoryCollectionScope
+import ru.aigram.domain.settings.ReplyProcessingMode as DomainReplyProcessingMode
 
 fun AppSettings.toContract(): Settings = Settings(
     paused = paused,
@@ -26,6 +28,8 @@ fun AppSettings.toContract(): Settings = Settings(
     replyDelaySeconds = replyDelaySeconds,
     replyIntervalSeconds = replyIntervalSeconds,
     showTyping = showTyping,
+    formatReplies = formatReplies,
+    replyProcessingMode = ContractReplyProcessingMode.valueOf(replyProcessingMode.name),
     ignoreAssistantTasks = ignoreAssistantTasks,
     memoryEnabled = memoryEnabled,
     memoryCollectionScope = ContractMemoryCollectionScope.valueOf(memoryCollectionScope.name),
@@ -56,6 +60,8 @@ fun ContractSettingsUpdate.toDomain(): SettingsUpdate = SettingsUpdate(
     replyDelaySeconds = replyDelaySeconds,
     replyIntervalSeconds = replyIntervalSeconds,
     showTyping = showTyping,
+    formatReplies = formatReplies,
+    replyProcessingMode = replyProcessingMode?.let { DomainReplyProcessingMode.valueOf(it.name) },
     ignoreAssistantTasks = ignoreAssistantTasks,
     memoryEnabled = memoryEnabled,
     memoryCollectionScope = memoryCollectionScope?.let { DomainMemoryCollectionScope.valueOf(it.name) },

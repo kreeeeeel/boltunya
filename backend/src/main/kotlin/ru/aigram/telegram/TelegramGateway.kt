@@ -7,6 +7,7 @@ import ru.aigram.domain.chat.MessageDeletionResult
 import ru.aigram.domain.chat.MessageDeletionScope
 import ru.aigram.domain.chat.MessageEditOptions
 import ru.aigram.domain.chat.MessageEditRequest
+import ru.aigram.domain.chat.MessageEntity
 import ru.aigram.domain.media.ChatGallery
 import ru.aigram.domain.media.MediaFile
 import ru.aigram.domain.media.OutgoingMedia
@@ -25,7 +26,14 @@ interface TelegramGateway : AutoCloseable {
     fun submit(value: String)
     fun chats(): List<ChatSummary>
     fun history(chatId: String, limit: Int = 60, before: Long = 0): List<ChatMessage>
-    fun send(chatId: String, text: String, replyToId: String = "", topicId: Int = 0): String
+    fun send(
+        chatId: String,
+        text: String,
+        replyToId: String = "",
+        topicId: Int = 0,
+        entities: List<MessageEntity> = emptyList(),
+        automated: Boolean = false,
+    ): String
     fun typing(chatId: String, active: Boolean)
     fun media(fileId: Int): MediaFile = throw MediaUnavailableException()
     fun sendMedia(chatId: String, media: List<OutgoingMedia>, replyToId: String = "", topicId: Int = 0): List<String> =
@@ -42,7 +50,12 @@ interface TelegramGateway : AutoCloseable {
         throw MessageEditNotAllowedException()
     fun editMessage(chatId: String, messageId: String, request: MessageEditRequest): ChatMessage =
         throw MessageEditNotAllowedException()
-    fun sendSticker(chatId: String, stickerId: String, replyToId: String = "", topicId: Int = 0): String =
-        throw MediaUnavailableException()
+    fun sendSticker(
+        chatId: String,
+        stickerId: String,
+        replyToId: String = "",
+        topicId: Int = 0,
+        automated: Boolean = false,
+    ): String = throw MediaUnavailableException()
     fun logout()
 }

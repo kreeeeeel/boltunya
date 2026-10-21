@@ -4,6 +4,7 @@ import it.tdlight.client.TelegramError
 import it.tdlight.jni.TdApi
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.stereotype.Component
+import ru.aigram.domain.chat.MessageEntity
 import ru.aigram.exception.impl.TelegramRateLimitException
 import ru.aigram.exception.impl.TelegramSendFailedException
 import java.util.concurrent.ExecutionException
@@ -16,8 +17,20 @@ private const val DEFAULT_BACKOFF_SECONDS = 60L
 private const val MAX_BACKOFF_SECONDS = 86400L
 
 @Component
-class TelegramMessageSender(private val gateway: ObjectProvider<TdLightGateway>) {
-    fun send(chatId: String, text: String, replyToId: String, topicId: Int): String {
+class TelegramMessageSender(
+    private val gateway: ObjectProvider<TdLightGateway>,
+    private val entities: TelegramOutgoingEntities,
+    private val automatedSends: TelegramAutomatedSendRegistry,
+) {
+    fun send(
+        chatId: String,
+        text: String,
+        replyToId: String,
+        topicId: Int,
+        entities: List<MessageEntity> = emptyList(),
+        automated: Boolean = false,
+    ): String {
+        val formatted = this.entities.format(text, entities)
         val service = gateway.getObject()
         val request = TdApi.SendMessage().apply {
             this.chatId = service.parseChatId(chatId)
@@ -27,16 +40,32 @@ class TelegramMessageSender(private val gateway: ObjectProvider<TdLightGateway>)
             if (topicId != 0) {
                 this.topicId = TdApi.MessageTopicForum(topicId)
             }
-            inputMessageContent = TdApi.InputMessageText().apply { this.text = TdApi.FormattedText(text, emptyArray()) }
+            inputMessageContent = TdApi.InputMessageText().apply { this.text = formatted }
+        }
+        val client = service.readyClient()
+        val send = if (automated) {
+            automatedSends.begin(request.chatId)
+        } else {
+            null
+        }
+        if (send != null) {
+            request.options = TdApi.MessageSendOptions().apply { sendingId = send.sendingId }
         }
         try {
-            return service.readyClient().sendMessage(
+            val message = client.sendMessage(
                 request,
                 true,
-            ).get(SEND_TIMEOUT_SECONDS, TimeUnit.SECONDS).id.toString()
+            ).get(SEND_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            if (send != null) {
+                automatedSends.completed(send, message)
+            }
+            return message.id.toString()
         } catch (
             exception: ExecutionException,
         ) {
+            if (send != null) {
+                automatedSends.rejected(send)
+            }
             val error = exception.cause
             if (error is TelegramError && error.errorCode == RATE_LIMIT_ERROR) {
                 val seconds = floodWait(error.message.orEmpty()) ?: DEFAULT_BACKOFF_SECONDS

@@ -11,6 +11,7 @@ import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.domain.ai.ReplyResult
 import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.DeliveryMode
+import ru.aigram.domain.chat.MessageEntity
 import ru.aigram.storage.SettingsStore
 import java.net.URI
 import java.net.http.HttpClient
@@ -92,16 +93,27 @@ class AttachmentEndpointTest {
                     )
                     gateway.delegate.ownerId = "100"
                     assertEquals(
+                        400,
+                        request(
+                            "/api/chats/42/attachments",
+                            "POST",
+                            """{"uploadIds":["$id"],"kind":"document","caption":"Caption","captionEntities":[{"offset":0,"length":99,"type":"bold"}]}""",
+                        ).statusCode(),
+                    )
+                    assertEquals(emptyList(), gateway.sent)
+                    assertEquals(
                         200,
                         request(
                             "/api/chats/42/attachments",
                             "POST",
-                            """{"uploadIds":["$id","$second"],"kind":"document","caption":"Caption"}""",
+                            """{"uploadIds":["$id","$second"],"kind":"document","caption":"Caption","captionEntities":[{"offset":0,"length":7,"type":"spoiler"}]}""",
                         ).statusCode(),
                     )
                     assertEquals("123", gateway.replyTo)
                     assertEquals(9, gateway.topic)
                     assertEquals(listOf("Caption", ""), gateway.sent.stream().map { it.caption }.toList())
+                    assertEquals(listOf(MessageEntity(0, 7, "spoiler")), gateway.sent.first().captionEntities)
+                    assertEquals(emptyList(), gateway.sent.last().captionEntities)
                     assertFalse(gateway.sent.stream().anyMatch { Files.exists(it.path) })
                     settings.update { it.copy(deliveryMode = DeliveryMode.SEND) }
                     assertEquals(200, request("/api/chats/42/stickers", "POST", """{"stickerId":"7"}""").statusCode())

@@ -2,8 +2,10 @@ package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
 import org.junit.jupiter.api.Test
+import ru.aigram.domain.chat.MessageEntity
 import ru.aigram.domain.media.OutgoingMedia
 import ru.aigram.domain.media.OutgoingMediaKind
+import ru.aigram.exception.impl.InvalidMessageEntitiesException
 import ru.aigram.exception.impl.InvalidUploadException
 import java.nio.file.Path
 import kotlin.test.assertEquals
@@ -12,7 +14,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class TelegramMediaContentTest {
-    private val builder = TelegramMediaContent()
+    private val builder = TelegramMediaContent(TelegramOutgoingEntities())
 
     @Test
     fun `maps photos videos and original documents to current TDLib input shapes`() {
@@ -38,6 +40,30 @@ class TelegramMediaContentTest {
         assertEquals(2, album.inputMessageContents.size)
         assertEquals(42L, album.chatId)
         assertEquals(123L, assertIs<TdApi.InputMessageReplyToMessage>(album.replyTo).messageId)
+    }
+
+    @Test
+    fun `preserves exact formatted captions for photos videos documents and albums`() {
+        val caption = "  😀 code  "
+        val entities = listOf(MessageEntity(caption.indexOf("code"), 4, "bold"))
+        val files = listOf(OutgoingMediaKind.PHOTO, OutgoingMediaKind.VIDEO, OutgoingMediaKind.DOCUMENT)
+        files.stream().forEach { kind ->
+            val value = builder.content(media(kind).copy(caption = caption, captionEntities = entities))
+            val formatted = when (value) {
+                is TdApi.InputMessagePhoto -> value.caption
+                is TdApi.InputMessageVideo -> value.caption
+                is TdApi.InputMessageDocument -> value.caption
+                else -> throw AssertionError("Expected caption media")
+            }
+            assertEquals(caption, formatted.text)
+            assertEquals(caption.indexOf("code"), formatted.entities.single().offset)
+            assertIs<TdApi.TextEntityTypeBold>(formatted.entities.single().type)
+        }
+        assertFailsWith<InvalidMessageEntitiesException> {
+            builder.content(
+                media(OutgoingMediaKind.PHOTO).copy(captionEntities = listOf(MessageEntity(0, 1, "unknown"))),
+            )
+        }
     }
 
     @Test

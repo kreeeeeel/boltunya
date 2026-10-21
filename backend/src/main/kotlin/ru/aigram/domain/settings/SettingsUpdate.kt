@@ -26,6 +26,8 @@ data class SettingsUpdate(
     @field:Min(0) @field:Max(120)
     val replyIntervalSeconds: Int? = null,
     val showTyping: Boolean? = null,
+    val formatReplies: Boolean? = null,
+    val replyProcessingMode: ReplyProcessingMode? = null,
     val ignoreAssistantTasks: Boolean? = null,
     val memoryEnabled: Boolean? = null,
     val memoryCollectionScope: MemoryCollectionScope? = null,

@@ -56,7 +56,14 @@ class MessageEditingTestGateway(private val delegate: MemoryTelegramGateway = Me
         )
     }
 
-    override fun send(chatId: String, text: String, replyToId: String, topicId: Int): String {
+    override fun send(
+        chatId: String,
+        text: String,
+        replyToId: String,
+        topicId: Int,
+        entities: List<ru.aigram.domain.chat.MessageEntity>,
+        automated: Boolean,
+    ): String {
         sends++
         error("Editing must never send a new Telegram message")
     }

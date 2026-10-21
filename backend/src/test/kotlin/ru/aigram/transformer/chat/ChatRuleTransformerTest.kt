@@ -7,12 +7,16 @@ import ru.aigram.contract.dto.SourceLinksMode
 import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.chat.DeliveryMode
 import ru.aigram.domain.chat.GroupReplyMode
+import ru.aigram.domain.chat.ProactiveMessageMode
 import ru.aigram.domain.chat.ProactiveMode
+import ru.aigram.domain.chat.ReplyInterruptionMode
 import ru.aigram.domain.chat.SourceLinks
 import java.util.Arrays
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import ru.aigram.contract.dto.ProactiveMessageMode as ContractProactiveMessageMode
 import ru.aigram.contract.dto.ProactiveMode as ContractProactiveMode
+import ru.aigram.contract.dto.ReplyInterruptionMode as ContractReplyInterruptionMode
 
 class ChatRuleTransformerTest {
 
@@ -20,8 +24,11 @@ class ChatRuleTransformerTest {
     fun `retains every editable chat rule field across the generated contract`() {
         val rule = ChatRule(
             enabled = true,
+            replyInterruptionMode = ReplyInterruptionMode.EACH,
             proactiveMode = ProactiveMode.ENABLED,
             proactiveIntervalMinutes = 123,
+            proactiveMessageMode = ProactiveMessageMode.TEXT,
+            proactiveText = "Как дела?",
             groupReplies = GroupReplyMode.MENTIONS,
             style = "rough",
             styleId = "preset-1",
@@ -46,6 +53,7 @@ class ChatRuleTransformerTest {
         val response = rule.toContract()
         val input = ChatRuleInput(
             enabled = response.enabled,
+            replyInterruptionMode = ContractReplyInterruptionMode.EACH,
             style = response.style,
             model = response.model,
             instructions = response.instructions,
@@ -67,6 +75,8 @@ class ChatRuleTransformerTest {
             aiStickers = response.aiStickers,
             proactiveMode = ContractProactiveMode.ENABLED,
             proactiveIntervalMinutes = 123,
+            proactiveMessageMode = ContractProactiveMessageMode.TEXT,
+            proactiveText = "Как дела?",
         )
 
         assertEquals(rule, input.toDomain())

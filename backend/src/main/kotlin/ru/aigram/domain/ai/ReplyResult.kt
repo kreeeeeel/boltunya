@@ -1,6 +1,7 @@
 package ru.aigram.domain.ai
 
 import kotlinx.serialization.Serializable
+import ru.aigram.domain.chat.MessageEntity
 
 @Serializable
 data class ReplyResult(
@@ -9,4 +10,5 @@ data class ReplyResult(
     val tokensPerSecond: Double,
     val model: String = "",
     val stickerId: String = "",
+    val entities: List<MessageEntity> = emptyList(),
 )

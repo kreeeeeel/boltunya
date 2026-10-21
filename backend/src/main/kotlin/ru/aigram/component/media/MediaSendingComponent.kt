@@ -14,6 +14,7 @@ import ru.aigram.exception.impl.InvalidFieldLengthException
 import ru.aigram.media.UploadStore
 import ru.aigram.storage.SettingsStore
 import ru.aigram.telegram.TelegramGateway
+import ru.aigram.telegram.TelegramOutgoingEntities
 import ru.aigram.validation.InputValidation
 import java.io.IOException
 
@@ -29,10 +30,12 @@ class MediaSendingComponent(
     private val uploads: UploadStore,
     private val validation: InputValidation,
     private val diagnostics: DiagnosticLog,
+    private val outgoingEntities: TelegramOutgoingEntities,
 ) {
     fun send(chatId: String, request: SendMediaRequest) {
         ensureChat(chatId)
         validation.validate(request)
+        outgoingEntities.format(request.caption, request.captionEntities)
         val owner = telegram.status().userId
         val files = uploads.begin(owner, request.uploadIds, request.kind, request.caption)
         var success = false
@@ -41,7 +44,13 @@ class MediaSendingComponent(
             val source = telegram.history(chatId, REPLY_HISTORY_SIZE).lastOrNull { !it.outgoing && !it.deleted }
             telegram.sendMedia(
                 chatId,
-                files,
+                files.stream().map { file ->
+                    if (file.caption.isNotEmpty() && file.caption == request.caption) {
+                        file.copy(captionEntities = request.captionEntities)
+                    } else {
+                        file
+                    }
+                }.toList(),
                 delivery.replyTo(settings.rule(chatId), source?.id.orEmpty()),
                 source?.topicId ?: 0,
             )

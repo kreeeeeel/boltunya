@@ -17,6 +17,7 @@ import ru.aigram.domain.chat.MessageDeletionResult
 import ru.aigram.domain.chat.MessageDeletionScope
 import ru.aigram.domain.chat.MessageEditOptions
 import ru.aigram.domain.chat.MessageEditRequest
+import ru.aigram.domain.chat.MessageEntity
 import ru.aigram.domain.media.ChatGallery
 import ru.aigram.domain.media.MediaFile
 import ru.aigram.domain.media.OutgoingMedia
@@ -122,8 +123,13 @@ class TdLightGateway(
         editing.options(chatId, messageId)
     override fun editMessage(chatId: String, messageId: String, request: MessageEditRequest): ChatMessage =
         editing.edit(chatId, messageId, request)
-    override fun sendSticker(chatId: String, stickerId: String, replyToId: String, topicId: Int): String =
-        stickerService.send(chatId, stickerId, replyToId, topicId)
+    override fun sendSticker(
+        chatId: String,
+        stickerId: String,
+        replyToId: String,
+        topicId: Int,
+        automated: Boolean,
+    ): String = stickerService.send(chatId, stickerId, replyToId, topicId, automated)
 
     @Synchronized
     override fun connect(credentials: TelegramCredentials) {
@@ -138,6 +144,7 @@ class TdLightGateway(
         }
         connection.status = TelegramStatus(state = "connecting")
         val version = ++connection.version
+        updates.clearAutomatedSends()
         try {
             Init.init()
             Log.setLogMessageHandler(0, Slf4JLogMessageHandler())
@@ -220,8 +227,14 @@ class TdLightGateway(
     override fun chats(): List<ChatSummary> = directoryView.list()
     override fun history(chatId: String, limit: Int, before: Long): List<ChatMessage> =
         historyReader.read(readyClient(), parseChatId(chatId), limit, before)
-    override fun send(chatId: String, text: String, replyToId: String, topicId: Int): String =
-        sender.send(chatId, text, replyToId, topicId)
+    override fun send(
+        chatId: String,
+        text: String,
+        replyToId: String,
+        topicId: Int,
+        entities: List<MessageEntity>,
+        automated: Boolean,
+    ): String = sender.send(chatId, text, replyToId, topicId, entities, automated)
     override fun typing(chatId: String, active: Boolean) {
         sender.typing(chatId, active)
     }
@@ -246,6 +259,7 @@ class TdLightGateway(
     override fun logout() {
         prefetch.cancelPending()
         connection.version++
+        updates.clearAutomatedSends()
         settingsStore.update { it.copy(paused = true) }
         interaction.cancel()
         if (connection.status.state == "ready") {
@@ -265,6 +279,7 @@ class TdLightGateway(
             return
         }
         connection.version++
+        updates.clearAutomatedSends()
         interaction.cancel()
         try {
             client?.closeAsync()?.get(15, TimeUnit.SECONDS)

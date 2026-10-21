@@ -7,6 +7,8 @@ import {
     type Ok,
     type MessageEditOptions,
     type MessageEditRequest,
+    SettingsApi,
+    type Reply,
 } from "@aigram/api-client";
 
 const settings: ConfigurationParameters = {
@@ -42,8 +44,28 @@ export async function readHistory(): Promise<string[]> {
 export async function sendText() {
     return chats.send({
         chatId: "-1009007199254740993555",
-        text: { text: "Hello" },
+        text: { text: "Hello", entities: [{ offset: 0, length: 5, type: "bold" }] },
     });
+}
+
+export async function configureFormattedIdleMessage(): Promise<Ok> {
+    const preferences = new SettingsApi(configuration);
+    await preferences.settings({ settingsUpdate: { formatReplies: true, replyProcessingMode: "each" } });
+    return chats.rule({
+        chatId: "42",
+        chatRule: {
+            enabled: false,
+            replyInterruptionMode: "finish",
+            proactiveMode: "enabled",
+            proactiveMessageMode: "text",
+            proactiveText: "How are you?",
+            proactiveIntervalMinutes: 60,
+        },
+    });
+}
+
+export function formattedReply(reply: Reply): string[] {
+    return (reply.entities ?? []).map((entity) => entity.type);
 }
 
 export async function readState() {

@@ -412,19 +412,61 @@
                 "put"
             ],
             "reason": "Add fresh revision-protected lossless Telegram editing with opaque original entity references and explicit new formatting marks."
+        },
+        {
+            "before": null,
+            "attribute": "optional-property",
+            "model": "Settings",
+            "property": "formatReplies",
+            "after": "boolean default false; SettingsUpdate has no default"
+        },
+        {
+            "before": null,
+            "attribute": "optional-property",
+            "model": "Reply",
+            "property": "entities",
+            "after": "MessageEntity array, UTF-16, maximum 100; same input on Text and captionEntities on SendMediaRequest"
+        },
+        {
+            "before": null,
+            "attribute": "optional-property",
+            "model": "ChatRule",
+            "property": "proactiveMessageMode",
+            "after": "named ai/text enum, default ai, also on ChatRuleInput"
+        },
+        {
+            "before": null,
+            "attribute": "optional-property",
+            "model": "ChatRule",
+            "property": "proactiveText",
+            "after": "literal string default empty, maximum 4096, also on ChatRuleInput"
+        },
+        {
+            "attribute": "optional-property",
+            "before": null,
+            "model": "Settings",
+            "property": "replyProcessingMode",
+            "after": "replace/finish/each queue policy; PATCH omission has no default"
+        },
+        {
+            "attribute": "optional-property",
+            "before": null,
+            "model": "ChatRule",
+            "property": "replyInterruptionMode",
+            "after": "inherit/replace/finish/each override, default inherit, also on ChatRuleInput"
         }
     ],
     "paths": {},
     "operations": {
-        "GET /api/state": "d4876fc38416818ba02a4af69eb395d5fa4c72394a3f130c42ef31f88a379130",
+        "GET /api/state": "fee43bbe60417e6a4a4da057697ce0e618e0b14baddf75dc0b681ead5ea84249",
         "POST /api/telegram/connect": "f54221a800fa7bcafa0cd05aca431371d62513d5a6fe87582050cfa966f9291f",
         "POST /api/telegram/submit": "5a41a66b7dea0a0ba7a11b9bb7d56f0e3dccbed36850139d49ba9df862d3b5d4",
         "POST /api/telegram/logout": "ffed244966b19049d612013ff5a8942c164fb2c829d077c3d2866ab11149f27d",
         "GET /api/chats/{chatId}/messages": "616e327bf6d644aaab077c5e55666fc0e571416e543cb1962860df50002cadcc",
-        "POST /api/chats/{chatId}/messages": "0ce6c8e47eb5fb00bfada3ffd64775c4e2527f680d73be75e5d59fef8018a13c",
-        "PUT /api/chats/{chatId}/rule": "6546e3a961b508352f7faaea81539ea65373d3a60e62b576bdb4e8840a55af81",
-        "PATCH /api/settings": "005052274c8f2e820e18a1317ace04f87c29056cc3750597b0392dee071b47a3",
-        "POST /api/preview": "d88312483c17dca2b16198535386b4ed70ea9069dcc2b95881b325412f85c114",
+        "POST /api/chats/{chatId}/messages": "2dc4f1a125871324a444c889c13991da11cc12b0de94bec7b96e9611c7eee736",
+        "PUT /api/chats/{chatId}/rule": "a4e9c265e8bcb00290ce2b05b3ef82bccfa75c9bac072d0326528dbff7c15854",
+        "PATCH /api/settings": "352ce96ef428d73599805199333651697db9c8cd3de1270ce48bdd52c1a1d5a3",
+        "POST /api/preview": "931ed0e046708582fbfab504eabcd2b335f462f1dd6db7d675faf536c52c6a46",
         "POST /api/engine/install": "761825042fc769c8c984a78254ab99fe929149685db5c920ed09317ce72fdf5d",
         "POST /api/engine/start": "d0faa73bd93ed02312e65c38010a9b1dca189cf52b5f73c58c83b36f0286264d",
         "POST /api/models/pull": "f16311eccbadca85d9d70994073bb2ffffedb530d48f08f963b0bf130f4b44f6",
@@ -462,50 +504,52 @@
         "DELETE /api/uploads/{id}": "8f191984843058bd20bff5d77e4eb6e19362a10aec83be8fbabba6d0627b9af8",
         "GET /api/stickers": "a1b0fc9be9864b10145e7d0f98ec984c82fc0d94c5d7238b85d010c9fd9ac6ef",
         "GET /api/stickers/sets/{id}": "c53fccbaeace9aef2949ee855bc625847f2ea5bd8496cd8ef9d6b7142f0dc2ff",
-        "POST /api/preview/jobs": "66a8a74b3a667aa4096df1392dfa292fb0ce01f32a07d76e032fe8fc9240a86b",
-        "GET /api/preview/jobs/{id}": "4c2693a7678aa03389751190f3c98f87aee29f640ce7a3774380dd548c115b53",
+        "POST /api/preview/jobs": "b83cc327d533cc7cb40d0600c59cd23afa8f319687f6203efbaee3343b665d34",
+        "GET /api/preview/jobs/{id}": "f8c11e32c04645f66d9674d768c661b1fdbf73b152d73805595a2a88be845050",
         "GET /api/chats/{chatId}/messages/{messageId}/link": "3edde7bce314a80919cd0485901aa24cf3bcfbcfe3d132d24b4ea80b98957878",
         "PUT /api/chats/{chatId}/messages/{messageId}/context": "1dc9bc2414e1facc2dde34f8db1df137e872f1e5c26598e057621de1d5b60716",
         "DELETE /api/chats/{chatId}/context-exclusions": "ae1602b1aae9f69480f14c2989e1940c24ff40b2360d721e04581ac45bf8b664",
         "GET /api/chats/{chatId}/gallery": "38891a558c5e38911cf379ede80d6d9c7d900dfa798afea64ebcc67f96435760",
-        "POST /api/chats/{chatId}/attachments": "11737941868658e4acba705e693916db4da38bd6f7a5fb5e7050dd28f5503041",
+        "POST /api/chats/{chatId}/attachments": "b42425590c507216368618c743c912f9162740b82d8481cb158a412567d3b2eb",
         "POST /api/chats/{chatId}/stickers": "c17ed81de7c4b678c9ed850ee14b1c303a263936677a73d086c692e5a560ad7d",
         "GET /api/activity/history": "7493e8e30da88664ce32512e9fea5fd83230ce2256db23a30c505adc54f0e432",
         "GET /api/chats/{chatId}/messages/{messageId}/deletion": "29dc07f49c4d5a6c0d0257a57a5e9384ac6fbd02466d9d85e2d2cf957950b080",
         "DELETE /api/chats/{chatId}/messages/{messageId}": "de12b30ca147c44fd7f9b2e736578a26831e39a43d644798faf14d9a86a23028",
         "GET /api/model-prompts": "edd50e856269f05e103eba84096318fc965a9f406a6f94fdd18fd3395ded899e",
         "PUT /api/model-prompts": "7f10d0e708523dd82ca59a9ce5f6b53c821b1e65acc1fd0d91a2888af53c053b",
-        "POST /api/prompts/budget": "f27a1c081f61ec9f961f471cb40c470f6e0656d6231257e808287d3a667117d9",
+        "POST /api/prompts/budget": "969ead412616cb846cc2aa885a70f39193b454429d96eeb2d69f5b349ae04baa",
         "PUT /api/activity/history/settings": "279abcef8015ff8e4497a71e43eed8849165cbd8d55be44563db40f86a824aa6"
     },
     "schemas": {
-        "Chat": "1f843b50e0bc1293df0191a90212d483c2bb765adbb389aa3781dcb7a14c7d50",
+        "Chat": "6c2e319c46c323712f33b3a3d440c5d0de01100d857626ef2ed7807a80da4d7c",
         "Message": "f1337eb151ac3d7f1374bd6c34f0fc63d17e13eed1d69bea588076f0a23c8f50",
         "Activity": "d563cf3739360ccaa756911d48b5d079159672a4a66260f3d5b4ed0823807d85",
         "Error": "bbce6ad737e6cc0b480393f6d89e967c6a66fb154106d1918130454a7310f5a7",
-        "Reply": "4d46267c9f85b25e55e73819427e662e205da9b81af5229cb30f692a68d8bb2e",
-        "State": "7662926203ca2eff4d6b3b261f89fe8847502c2ad9659b8df6c2042548bf3c31",
+        "Reply": "105e7b77b20c08b066ed7c63050d20ac44d8733a8c8dc2ba97a5a8f9c6ed12c8",
+        "State": "ba878a88c839be61588710cd394a7a0c9d5fcced07787e9bd6c7caed15492de5",
         "MetricSample": "daff2a68bfd28783eea2e9cc95b7b00fb3e98496ef1e1347f259e53f9e6723b5",
         "ActivityDetails": "5129ad36a0dd989af590ad2b16d19da4572a94046dc4f7230486b76fd01d44ed",
-        "PreviewJob": "9e3883f3c41036751c7e1871c0dd7b461fb8d290535b76340c9de65cc7b9d90c",
+        "PreviewJob": "ef0b55245e7eddfd7f9322ced44ebacb9288fef786e3b5d00fc34ce8093cc15d",
         "ChatGallery": "cbb2257437da309f338601e0021b985875fea497cd30f140d2e062224abcadf1",
         "ContextExclusionUpdate": "bd2bdbb99ada98eaa39b7db75fab8abd32fe62678c2c3a03184caa143f13e6ce",
         "ActivityHistoryPage": "50df819509facfbdf0cb207d39330bf88481d5819261728223e8d175f3dc3765",
         "Engine": "9f2021c8ca0d0fe4c4306131ef98722b80c9b4fa0bd1cb4d5b58310f36178493",
-        "ChatRule": "3fcbd779c298a05840d0ad80b11912839ce666d7ffb085ab0705a1aa24e16f33",
-        "Settings": "bb83ac4ead601a617999bd49ec30403ab2229e0c93d83d8eccdb92092179391f",
-        "Preview": "4830916d9f715ac7ac3907579411906a7ffc4044fead5344e566c80446fd519e",
+        "ChatRule": "4d6d76ec76d2c42efe529664e7ec76d46e97331930d5b986c3b616f7a9691d7e",
+        "Settings": "e7e8d6a1a41a7d1d31aefb9f0f26c6afc835e984ea476669ab513fda411af568",
+        "Preview": "ae3da04f5d98ece9b378cacea31520d21a50e47ec045f7eb2c8c0dec0d28c194",
         "ModelProfile": "1f853294ca55c82a21cf1f90b4287b6d55874261ed2c3f117c36f425e2ec8849",
         "ModelProfileUpdate": "87aac3215b82676440802443f6c2900898944fad518ddcb0d65606c4fdb7c397",
         "ModelProfileReport": "63b19de723856617a4ceaa436ce6a48d33cfecafdc48a70d9428efc6b0b81c2a",
         "DeliveryMode": "39ef10084fe427bdfc4bd4061a1914c1a7da7c5dd1bebac0b2c6142f13e46b1a",
-        "PreviewJobRequest": "1449e52a581c37a6eafe3d4de1f565489643dec2683caa0bd5bffe5db57d97eb",
+        "PreviewJobRequest": "f613c21f2c060f242f1bb882308020ba9d490b07d0d5de6bf57ffd2ef7383d26",
         "ModelPromptSettings": "481950c771b9cb107fe90cfa674104e6036b9f56cc514f0a9f26b8c019750c6c",
         "ModelPromptReport": "dd405531086aa2b7b2027954919557aee79e898171f3bb25c31d2cfcdb79cab0",
-        "PromptBudgetRequest": "c54cd62bbaab53ce9fb64b82119d3524d2f71742872bf19f02030ff60cc14793",
+        "PromptBudgetRequest": "e66ee8b66f8e2896d9062bf71ec85a948a72faa5684145a828c4207245a06243",
         "PromptBudgetReport": "6395c5fc1f0264f274059e52eceb08e8f1189a66a137db759985639018d66d84",
         "ProactiveMode": "541035f11125ef1456ecc7966a86de038252f08b7ec2ddadaeaeed57ff6291e3",
-        "SendMediaRequest": "c9b53cc3d0592a13b2bebeb69e2085365952fa5289a0d64c67a9bd52173b3632"
+        "SendMediaRequest": "a4cacdc71e93edc2711e0b4665704e9e3b1f0fbe87bd0b6ad97c015bc2dc9dfd",
+        "SettingsUpdate": "486db3a74014d643f56d116710aceffadcd27ab1e7f2bd33a7811dedaf4cbede",
+        "Text": "bbbfc081fd856615ca09fecb297e0d0556e0dc7f62c0ca25227360d79fa6778e"
     },
     "additions": {
         "paths": {
@@ -518,7 +562,7 @@
             "PUT /api/chats/{chatId}/messages/{messageId}/edit": "3b189403bf5bcf848ba3ca3da587bc6cf2ecd25840c588b30eb67e41abd001da"
         },
         "schemas": {
-            "ChatRuleInput": "3633a87fc4327c38f4ae8ee93c5002b7d69a3706f886d7370390c0e69476f818",
+            "ChatRuleInput": "f392061b4fd076c0bc06ec14edc3e9e00e371c2e1a09081552578439fb8ca409",
             "ModelProfileOptionsInput": "c67edd41e6c61380580b9826e822d21c3c87ed538f5ff25615a1dfdfa68dc23c",
             "ModelCapabilitiesInput": "e7b326ba312e8f9b3a6a6adcd14380722da78d08d6db5a3c6c0766cf96759e86",
             "ModelPromptSettingsInput": "481950c771b9cb107fe90cfa674104e6036b9f56cc514f0a9f26b8c019750c6c",
@@ -528,7 +572,10 @@
             "MessageEditEntityKind": "a662861d4f82c49ff0a3216ed8c6d7736206eb49f559b3853f752820efbb9486",
             "MessageEditEntity": "0f58b82649d5b50c6194782582405600189b32160783d454632960066f395ef8",
             "MessageEditOptions": "5b416ede65660905eca1841e14c6862ecc11c55549e442c739e40d1640cfb18e",
-            "MessageEditRequest": "62baf61393547fe41bdd921afb3dc8aec9e92ff65ec845f6faef33be7fd6a965"
+            "MessageEditRequest": "62baf61393547fe41bdd921afb3dc8aec9e92ff65ec845f6faef33be7fd6a965",
+            "ProactiveMessageMode": "453a734b031b7de45be7c2b7fdfe683962f03431ff2380e0659b4761bf0dd013",
+            "ReplyProcessingMode": "50cf2e011454c771a9aa1e81e80b45bedb67ce73983ee474d5e2e398cf5d8c71",
+            "ReplyInterruptionMode": "60308edbbb59d0bb75451677ebb319ba39de0538c64206a79bfe7bde499e3803"
         }
     }
 }

@@ -2,8 +2,6 @@ package ru.aigram.transformer.chat
 
 import ru.aigram.contract.dto.Message
 import ru.aigram.domain.chat.ChatMessage
-import ru.aigram.domain.chat.MessageEntity
-import ru.aigram.contract.dto.MessageEntity as ContractMessageEntity
 import ru.aigram.transformer.media.toContract as toMediaContract
 
 fun ChatMessage.toContract(): Message = Message(
@@ -31,12 +29,4 @@ fun ChatMessage.toContract(): Message = Message(
     senderUsername = senderUsername,
     mediaAlbumId = mediaAlbumId,
     editedAt = editedAt,
-)
-
-private fun MessageEntity.toContract(): ContractMessageEntity = ContractMessageEntity(
-    offset = offset,
-    length = length,
-    type = type,
-    url = url,
-    language = language,
 )

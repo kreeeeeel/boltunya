@@ -5,3 +5,10 @@ Text:
     properties:
         text:
             type: string
+        entities:
+            type: array
+            maxItems: 100
+            default: []
+            items:
+                $ref: ./MessageEntity.yaml#/MessageEntity
+            description: Optional supported formatting ranges in UTF-16 code units. Omitted for literal plain text.

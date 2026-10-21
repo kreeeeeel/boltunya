@@ -7,10 +7,10 @@ import ru.aigram.domain.media.OutgoingMediaKind
 import ru.aigram.exception.impl.InvalidUploadException
 
 @Component
-class TelegramMediaContent {
+class TelegramMediaContent(private val entities: TelegramOutgoingEntities) {
     fun content(media: OutgoingMedia): TdApi.InputMessageContent {
         val file = TdApi.InputFileLocal(media.path.toAbsolutePath().toString())
-        val caption = TdApi.FormattedText(media.caption, emptyArray())
+        val caption = entities.format(media.caption, media.captionEntities)
         return when (media.kind) {
             OutgoingMediaKind.MEDIA -> throw InvalidUploadException()
             OutgoingMediaKind.PHOTO -> TdApi.InputMessagePhoto().apply {

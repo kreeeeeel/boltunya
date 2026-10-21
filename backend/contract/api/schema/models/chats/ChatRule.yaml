@@ -17,6 +17,8 @@ ChatRule:
     properties:
         enabled:
             type: boolean
+        replyInterruptionMode:
+            $ref: ./ReplyInterruptionMode.yaml#/ReplyInterruptionMode
         style:
             $ref: ./CommunicationStyle.yaml#/CommunicationStyle
         model:
@@ -72,3 +74,9 @@ ChatRule:
             minimum: 0
             maximum: 43200
             description: 'Default: 0.'
+        proactiveMessageMode:
+            $ref: ./ProactiveMessageMode.yaml#/ProactiveMessageMode
+        proactiveText:
+            type: string
+            maxLength: 4096
+            default: ''

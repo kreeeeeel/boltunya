@@ -31,6 +31,14 @@ Settings:
         showTyping:
             type: boolean
             default: true
+        formatReplies:
+            type: boolean
+            default: false
+            description: Enable Markdown formatting instructions and Telegram entities for generated replies.
+        replyProcessingMode:
+            allOf:
+                - $ref: ./ReplyProcessingMode.yaml#/ReplyProcessingMode
+            default: replace
         closeToTray:
             type: boolean
             default: true

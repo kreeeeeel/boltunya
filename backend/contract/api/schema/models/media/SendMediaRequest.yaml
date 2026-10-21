@@ -17,3 +17,10 @@ SendMediaRequest:
             type: string
             maxLength: 1024
             default: ''
+        captionEntities:
+            type: array
+            maxItems: 100
+            default: []
+            items:
+                $ref: ../chats/MessageEntity.yaml#/MessageEntity
+            description: Formatting of the first media caption, using UTF-16 offsets and lengths.

@@ -11,6 +11,7 @@ import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.chat.CommunicationStyle
 import ru.aigram.domain.memory.MemoryContext
+import ru.aigram.domain.memory.ParticipantIdentity
 import ru.aigram.resources.ResourceCatalog
 import java.time.Clock
 import java.time.Instant
@@ -21,6 +22,65 @@ import kotlin.test.assertTrue
 
 class PromptBuilderTest {
     private val builder = PromptBuilder()
+
+    @Test
+    fun `participant relevance policy is mandatory in chat research and both formatting modes`() {
+        val resources = ResourceCatalog()
+        val policy = resources.prompt("ru/conversation/mentions")
+        listOf(false, true).stream().forEach { formatted ->
+            listOf(ResearchContext(), ResearchContext("search", "Verified facts")).stream().forEach { research ->
+                val system = builder.build(
+                    ChatRule(style = "rough"),
+                    listOf(ChatMessage("1", "42", "Как встреча?", false, 1)),
+                    research = research,
+                    formatReplies = formatted,
+                ).first().text.orEmpty()
+                assertTrue(system.contains(policy))
+                assertTrue(system.indexOf("Выбранный стиль диалога:") > system.indexOf(policy))
+                assertTrue(
+                    system.contains(
+                        resources.prompt(
+                            if (formatted) {
+                                "ru/conversation/formatting-on"
+                            } else {
+                                "ru/conversation/formatting-off"
+                            },
+                        ),
+                    ),
+                )
+                assertTrue(policy.contains("явная просьба назвать или упомянуть"))
+                assertTrue(policy.contains("Неизвестное имя, адресата или связь между людьми не выдумывай"))
+            }
+        }
+    }
+
+    @Test
+    fun `known participants stay factual data and owner examples never become required names in the selected style`() {
+        val owner = listOf(
+            "Никандра Синтетическая прислала старый отчёт",
+            "Квирино Тестовый уехал в отпуск",
+            "ага, раньше обсуждали @synthetic_nikandra",
+        ).stream().map { text -> ChatMessage(text, "42", text, true, 1) }.toList()
+        val prompt = builder.build(
+            ChatRule(style = "business"),
+            listOf(ChatMessage("latest", "42", "Как встреча?", false, 2, senderName = "Current Contact")),
+            styleHistory = owner,
+            memory = MemoryContext(
+                summary = "Встреча в 18:30. Никандра присылала отчёт в прошлом месяце.",
+                participants = listOf(ParticipantIdentity("user:300", "Квирино Тестовый", "synthetic_quirino")),
+            ),
+        )
+        val system = prompt.first().text.orEmpty()
+        val selected = system.substringAfter("Выбранный стиль диалога:")
+        assertTrue(system.contains("Квирино Тестовый"))
+        assertTrue(system.contains("synthetic_quirino"))
+        assertTrue(system.contains("а не список людей, которых нужно упомянуть"))
+        assertTrue(system.contains("Само присутствие человека в памяти или старой переписке"))
+        assertFalse(selected.contains("Никандра"))
+        assertFalse(selected.contains("Квирино"))
+        assertFalse(selected.contains("synthetic_nikandra"))
+        assertEquals("Как встреча?", messageText(prompt.last()))
+    }
 
     @Test
     fun `each selected tone is an explicit final instruction block after factual memory`() {

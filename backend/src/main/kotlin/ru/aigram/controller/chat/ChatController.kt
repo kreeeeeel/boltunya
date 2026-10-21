@@ -95,7 +95,7 @@ class ChatController(
     }
 
     override fun send(chatId: String, text: Text): ResponseEntity<Ok> {
-        communication.send(chatId, text.text)
+        communication.send(chatId, text.text, text.entities.orEmpty().stream().map { it.toDomain() }.toList())
         return ResponseEntity.ok(Ok(true))
     }
 

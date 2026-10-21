@@ -1,0 +1,7 @@
+ProactiveMessageMode:
+    type: string
+    enum:
+        - ai
+        - text
+    default: ai
+    description: Generate an idle follow-up with AI or send the configured literal text.

@@ -9,6 +9,7 @@ import ru.aigram.automation.FakeTelegramGateway
 import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.domain.ai.ReplyResult
 import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.MessageEntity
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.SettingsStore
 import java.net.URI
@@ -63,6 +64,31 @@ class ChatMessagesTest {
                     assertEquals(listOf("Ручной ответ"), gateway.sent)
                     assertEquals(listOf("10"), gateway.replyIds)
                     assertEquals(listOf(77), gateway.topicIds)
+                    val formatted = HttpRequest.newBuilder(endpoint).header("Cookie", "tiho=session")
+                        .POST(
+                            HttpRequest.BodyPublishers.ofString(
+                                """{"text":" 😀 hello ","entities":[{"offset":4,"length":5,"type":"bold"}]}""",
+                            ),
+                        ).build()
+                    assertEquals(200, http.send(formatted, HttpResponse.BodyHandlers.ofString()).statusCode())
+                    assertEquals(" 😀 hello ", gateway.sent.last())
+                    assertEquals(listOf(MessageEntity(4, 5, "bold")), gateway.entities.last())
+
+                    listOf(
+                        """{"offset":2,"length":1,"type":"bold"}""",
+                        """{"offset":0,"length":100,"type":"spoiler"}""",
+                        """{"offset":0,"length":1,"type":"customemoji"}""",
+                        """{"offset":4,"length":5,"type":"texturl","url":"javascript:alert(1)"}""",
+                    ).stream().forEach { entity ->
+                        val invalid = HttpRequest.newBuilder(endpoint).header("Cookie", "tiho=session")
+                            .POST(
+                                HttpRequest.BodyPublishers.ofString(
+                                    """{"text":" 😀 hello ","entities":[$entity]}""",
+                                ),
+                            ).build()
+                        assertEquals(400, http.send(invalid, HttpResponse.BodyHandlers.ofString()).statusCode())
+                    }
+                    assertEquals(2, gateway.sent.size)
                 }
             }
         }

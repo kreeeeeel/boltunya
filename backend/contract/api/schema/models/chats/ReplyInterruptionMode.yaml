@@ -1,0 +1,9 @@
+ReplyInterruptionMode:
+    type: string
+    enum:
+        - inherit
+        - replace
+        - finish
+        - each
+    default: inherit
+    description: Inherit or override the global automatic reply queue policy for this chat.

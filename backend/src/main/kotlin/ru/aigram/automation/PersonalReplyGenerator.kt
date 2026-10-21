@@ -48,6 +48,7 @@ class PersonalReplyGenerator(
         initiative: Boolean = false,
     ): ReplyResult {
         val resolved = settings.resolve(rule)
+        val preferences = settings.get()
         val owner = telegram.status().userId
         val context = exclusions.forInference(
             owner,
@@ -79,7 +80,7 @@ class PersonalReplyGenerator(
         return conversation.reply(
             resolved,
             context,
-            settings.get().globalPrompt + if (initiative) {
+            preferences.globalPrompt + if (initiative) {
                 "\n\n" + resources.prompt("ru/conversation/initiative")
             } else {
                 ""
@@ -99,6 +100,7 @@ class PersonalReplyGenerator(
             attachments,
             task,
             stickers,
+            formatReplies = preferences.formatReplies,
         )
     }
 }

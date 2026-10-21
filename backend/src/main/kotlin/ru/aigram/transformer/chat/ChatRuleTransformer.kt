@@ -6,15 +6,20 @@ import ru.aigram.contract.dto.SourceLinksMode
 import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.chat.DeliveryMode
 import ru.aigram.domain.chat.GroupReplyMode
+import ru.aigram.domain.chat.ProactiveMessageMode
 import ru.aigram.domain.chat.ProactiveMode
+import ru.aigram.domain.chat.ReplyInterruptionMode
 import ru.aigram.domain.chat.SourceLinks
 import ru.aigram.contract.dto.ChatRule as ContractChatRule
 import ru.aigram.contract.dto.CommunicationStyle as ContractCommunicationStyle
 import ru.aigram.contract.dto.DeliveryMode as ContractDeliveryMode
+import ru.aigram.contract.dto.ProactiveMessageMode as ContractProactiveMessageMode
 import ru.aigram.contract.dto.ProactiveMode as ContractProactiveMode
+import ru.aigram.contract.dto.ReplyInterruptionMode as ContractReplyInterruptionMode
 
 fun ChatRule.toContract(): ContractChatRule = ContractChatRule(
     enabled = enabled,
+    replyInterruptionMode = ContractReplyInterruptionMode.valueOf(replyInterruptionMode.name),
     style = ContractCommunicationStyle.forValue(style),
     model = model,
     instructions = instructions,
@@ -36,10 +41,13 @@ fun ChatRule.toContract(): ContractChatRule = ContractChatRule(
     useDefaultModel = useDefaultModel,
     proactiveMode = ContractProactiveMode.valueOf(proactiveMode.name),
     proactiveIntervalMinutes = proactiveIntervalMinutes,
+    proactiveMessageMode = ContractProactiveMessageMode.valueOf(proactiveMessageMode.name),
+    proactiveText = proactiveText,
 )
 
 fun ChatRuleInput.toDomain(): ChatRule = ChatRule(
     enabled = enabled,
+    replyInterruptionMode = ReplyInterruptionMode.valueOf(replyInterruptionMode.name),
     style = style.value,
     model = model,
     instructions = instructions,
@@ -61,4 +69,6 @@ fun ChatRuleInput.toDomain(): ChatRule = ChatRule(
     useDefaultModel = useDefaultModel,
     proactiveMode = ProactiveMode.valueOf(proactiveMode.name),
     proactiveIntervalMinutes = proactiveIntervalMinutes,
+    proactiveMessageMode = ProactiveMessageMode.valueOf(proactiveMessageMode.name),
+    proactiveText = proactiveText,
 )

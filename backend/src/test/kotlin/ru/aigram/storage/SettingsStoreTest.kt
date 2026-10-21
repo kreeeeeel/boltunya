@@ -3,6 +3,8 @@ package ru.aigram.storage
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.ReplyInterruptionMode
+import ru.aigram.domain.settings.ReplyProcessingMode
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.test.assertEquals
@@ -12,6 +14,38 @@ import kotlin.test.assertTrue
 class SettingsStoreTest {
     @TempDir
     lateinit var directory: Path
+
+    @Test
+    fun `reply policy defaults remain compatible and both queue modes persist independently per chat`() {
+        Files.writeString(directory.resolve("settings.json"), """{"globalPrompt":"Owner"}""")
+        val settings = SettingsStore(directory)
+        assertEquals(ReplyProcessingMode.REPLACE, settings.get().replyProcessingMode)
+        assertEquals(ReplyInterruptionMode.INHERIT, settings.rule("42").replyInterruptionMode)
+
+        settings.update { it.copy(replyProcessingMode = ReplyProcessingMode.FINISH) }
+        settings.saveRule("42", ChatRule(replyInterruptionMode = ReplyInterruptionMode.EACH))
+        val restored = SettingsStore(directory)
+        assertEquals(ReplyProcessingMode.FINISH, restored.get().replyProcessingMode)
+        assertEquals(ReplyInterruptionMode.EACH, restored.rule("42").replyInterruptionMode)
+        assertFalse(restored.rule("42").enabled)
+        assertEquals("Owner", restored.get().globalPrompt)
+    }
+
+    @Test
+    fun `reply formatting is opt in and persists without changing owner instructions`() {
+        Files.writeString(directory.resolve("settings.json"), """{"globalPrompt":"Synthetic owner instructions"}""")
+        val settings = SettingsStore(directory)
+
+        assertFalse(settings.get().formatReplies)
+
+        settings.update { it.copy(formatReplies = true) }
+        val restored = SettingsStore(directory)
+
+        assertTrue(restored.get().formatReplies)
+        assertEquals("Synthetic owner instructions", restored.get().globalPrompt)
+        restored.update { it.copy(formatReplies = false) }
+        assertFalse(SettingsStore(directory).get().formatReplies)
+    }
 
     @Test
     fun `persists named styles and resolves their instructions without modifying chat rules`() {

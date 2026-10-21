@@ -338,6 +338,48 @@ test("HTTP failures expose the original response without retries", async () => {
     assert.equal(requests, 1);
 });
 
+test("formatting and idle follow-up fields survive the installed SDK HTTP transport", async () => {
+    const requests = [];
+    const configuration = new sdk.Configuration({
+        basePath: "http://127.0.0.1:9000",
+        fetchApi: async (url, init) => {
+            requests.push({ url, body: JSON.parse(init.body) });
+            return Response.json({ ok: true, formatReplies: true });
+        },
+    });
+    await new sdk.SettingsApi(configuration).settings({
+        settingsUpdate: { formatReplies: true, replyProcessingMode: "each" },
+    });
+    const chats = new sdk.ChatsApi(configuration);
+    await chats.rule({
+        chatId: "42",
+        chatRule: {
+            enabled: false,
+            replyInterruptionMode: "finish",
+            proactiveMode: "enabled",
+            proactiveMessageMode: "text",
+            proactiveText: "  How are you? 😀  ",
+            proactiveIntervalMinutes: 90,
+        },
+    });
+    const entities = [{ offset: 3, length: 5, type: "spoiler" }];
+    await chats.send({ chatId: "42", text: { text: "😀 hello", entities } });
+    await chats.sendAttachments({
+        chatId: "42",
+        sendMediaRequest: {
+            uploadIds: ["synthetic"], kind: "photo",
+            caption: "😀 hello", captionEntities: entities,
+        },
+    });
+    assert.deepEqual(requests[0].body, { formatReplies: true, replyProcessingMode: "each" });
+    assert.equal(requests[1].body.replyInterruptionMode, "finish");
+    assert.equal(requests[1].body.proactiveMessageMode, "text");
+    assert.equal(requests[1].body.proactiveText, "  How are you? 😀  ");
+    assert.equal(requests[1].body.enabled, false);
+    assert.deepEqual(requests[2].body.entities, entities);
+    assert.deepEqual(requests[3].body.captionEntities, entities);
+});
+
 test("network failures preserve their cause and do not retry", async () => {
     let requests = 0;
     const cause = new Error("Synthetic connection failure");

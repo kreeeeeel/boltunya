@@ -13,6 +13,8 @@ import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.chat.ChatSummary
 import ru.aigram.domain.chat.GroupReplyMode
+import ru.aigram.domain.chat.ProactiveMode
+import ru.aigram.domain.chat.ReplyInterruptionMode
 import ru.aigram.domain.events.ActivityDetails
 import ru.aigram.domain.events.ActivityEntry
 import ru.aigram.domain.events.ActivityFeedback
@@ -23,6 +25,7 @@ import ru.aigram.domain.events.ActivityPhase
 import ru.aigram.domain.events.ActivityStatus
 import ru.aigram.domain.events.ReplyQueueState
 import ru.aigram.domain.events.diagnostics.DiagnosticSource
+import ru.aigram.domain.settings.ReplyProcessingMode
 import ru.aigram.exception.AppException
 import ru.aigram.exception.impl.ActivityDeliveryStartedException
 import ru.aigram.exception.impl.ActivityFeedbackUnavailableException
@@ -335,35 +338,54 @@ class ReplyCoordinator(
         if (closed) {
             return@synchronized
         }
-        typing.cancel(message.chatId)
-        latest[message.chatId] = message.id
-        ArrayList(pending.values).stream().filter { it.message.chatId == message.chatId && it.memory == null }.forEach {
-            pending.remove(it.id)
-            cancelJob(it)
+        if (message.outgoing && message.automated) {
+            return@synchronized
         }
-        ArrayList(active.values).stream().filter {
-            it.message.chatId == message.chatId && it.memory == null
-        }.forEach(::cancelJob)
         val preferences = settings.get()
         val rule = settings.rule(message.chatId)
-        if (exclusions?.forInference(telegram.status().userId, listOf(message))?.isEmpty() == true) {
-            return@synchronized
+        val account = telegram.status().userId
+        val mode = processingMode(rule)
+        val finishCurrent = !message.outgoing && !message.deleted && !preferences.paused && rule.enabled &&
+            mode != ReplyProcessingMode.REPLACE
+        val photo = rule.analyzePhotos && message.kind == "photo" &&
+            message.media?.mimeType in setOf("image/jpeg", "image/png", "image/webp")
+        val suitable = !message.deleted && !message.outgoing && (message.text.isNotBlank() || photo) &&
+            !preferences.paused && rule.enabled && groupAllowed(message, rule) &&
+            exclusions?.forInference(account, listOf(message))?.isEmpty() != true &&
+            (!preferences.ignoreAssistantTasks || !tasks.ignores(message.text))
+        val chat = if (suitable) {
+            telegram.chats().stream().filter { it.id == message.chatId }.findFirst().orElse(null)
+        } else {
+            null
         }
-        val photo =
-            rule.analyzePhotos && message.kind == "photo" &&
-                message.media?.mimeType in setOf("image/jpeg", "image/png", "image/webp")
-        if (message.deleted || message.outgoing || message.text.isBlank() && !photo || preferences.paused ||
-            !rule.enabled || !groupAllowed(message, rule)
-        ) {
-            return@synchronized
+        val retainPending = finishCurrent && (mode == ReplyProcessingMode.EACH || chat == null)
+        latest[message.chatId] = message.id
+        ArrayList(pending.values).stream().filter { it.message.chatId == message.chatId && it.memory == null }
+            .filter {
+                !ordinaryReply(it) || !retainPending ||
+                    it.processingMode != mode || it.accountId != account
+            }
+            .forEach {
+                pending.remove(it.id)
+                cancelJob(it)
+            }
+        ArrayList(active.values).stream().filter {
+            it.message.chatId == message.chatId && it.memory == null
+        }.filter { job ->
+            !ordinaryReply(job) || !finishCurrent || job.processingMode != mode || job.accountId != account
+        }.forEach(::cancelJob)
+        val retainedActive = active.values.stream().anyMatch {
+            it.message.chatId == message.chatId && ordinaryReply(it) && !it.cancelled.get()
         }
-        if (preferences.ignoreAssistantTasks && tasks.ignores(message.text)) {
-            return@synchronized
+        if (!retainedActive) {
+            typing.cancel(message.chatId)
         }
-        val chat = telegram.chats().stream().filter { it.id == message.chatId }.findFirst().orElse(null)
 
         if (chat == null) {
             return@synchronized
+        }
+        if (pending.size >= MAX_PENDING_JOBS) {
+            throw ReplyCancelledException()
         }
 
         val delay = (rule.delaySeconds + preferences.replyDelaySeconds) * 1000L + MESSAGE_DEBOUNCE_MS
@@ -387,6 +409,8 @@ class ReplyCoordinator(
             System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(delay),
             System.currentTimeMillis() + delay,
             ++order,
+            accountId = account,
+            processingMode = mode,
         )
     }
 
@@ -452,8 +476,21 @@ class ReplyCoordinator(
             it.memory == null &&
                 (it.draft != null || !settings.get().paused)
         }
+        val firstReplies = pending.values.stream().filter(::ordinaryReply).collect(
+            Collectors.toMap({ it.message.chatId }, { it }, { first, second ->
+                if (jobOrder.compare(first, second) <= 0) {
+                    first
+                } else {
+                    second
+                }
+            }),
+        )
         val jobs = pending.values.stream().filter { job ->
-            System.nanoTime() >= job.readyAt && when {
+            (
+                !ordinaryReply(job) || firstReplies[job.message.chatId] === job && active.values.stream().noneMatch {
+                    ordinaryReply(it) && it.message.chatId == job.message.chatId
+                }
+                ) && System.nanoTime() >= job.readyAt && when {
                 job.memory != null -> (job.memory.explicit || job.priority || job.memory.canStart()) &&
                     (job.memory.explicit || job.priority || !foregroundPending)
                 job.draft != null -> true
@@ -481,7 +518,15 @@ class ReplyCoordinator(
         val rule = settings.rule(message.chatId)
         val resolvedRule = settings.resolve(rule)
         val generationEpoch = epoch.get()
-        fun canReply(): Boolean = allowed(message, rule) && (job.proactive?.allowed?.invoke() ?: true)
+        fun canReply(): Boolean = telegram.status().userId == job.accountId &&
+            (!ordinaryReply(job) || job.processingMode == processingMode(rule)) &&
+            allowed(
+                message,
+                rule,
+                job.proactive != null,
+                ordinaryReply(job) && job.processingMode != ReplyProcessingMode.REPLACE,
+            ) &&
+            (job.proactive?.allowed?.invoke() ?: true)
         var indicator: java.util.concurrent.ScheduledFuture<*>? = null
         try {
             if (job.cancelled.get() || !canReply()) {
@@ -496,6 +541,14 @@ class ReplyCoordinator(
                     }
             }
             tracing.capture(job.trace) {
+                val anchorId = message.id.toLongOrNull()
+                val before = if (job.processingMode != ReplyProcessingMode.REPLACE && anchorId != null &&
+                    anchorId > 0 && anchorId < Long.MAX_VALUE
+                ) {
+                    anchorId + 1
+                } else {
+                    0
+                }
                 val history = telegram.history(
                     message.chatId,
                     maxOf(
@@ -510,8 +563,20 @@ class ReplyCoordinator(
                             rule.contextMessages
                         },
                     ),
+                    before,
                 )
-                val context = if (job.proactive != null || history.stream().anyMatch { it.id == message.id }) {
+                val context = if (ordinaryReply(job) && job.processingMode != ReplyProcessingMode.REPLACE) {
+                    val bounded = history.stream().filter { item ->
+                        if (anchorId != null && anchorId > 0) {
+                            val id = item.id.toLongOrNull()
+                            id != null && id > 0 && id <= anchorId
+                        } else {
+                            item.date < message.date || item.id == message.id
+                        }
+                    }.toList()
+                    val anchor = bounded.stream().filter { it.id == message.id }.findFirst().orElse(message)
+                    bounded.stream().filter { it.id != message.id }.toList() + anchor
+                } else if (job.proactive != null || history.stream().anyMatch { it.id == message.id }) {
                     history
                 } else {
                     history + message
@@ -556,6 +621,8 @@ class ReplyCoordinator(
                             result.text,
                             delivery.replyTo(rule, message.id),
                             topicId,
+                            result.entities,
+                            automated = true,
                         )
                         synchronized(gate) {
                             nextReplyAt =
@@ -570,6 +637,7 @@ class ReplyCoordinator(
                             result.stickerId,
                             delivery.replyTo(rule, message.id),
                             topicId,
+                            automated = true,
                         )
                         automated?.record(message.chatId, sentId)
                         synchronized(gate) {
@@ -749,7 +817,7 @@ class ReplyCoordinator(
         }
         job.cancel()
         job.trace.finish(ActivityStatus.CANCELLED, ReplyCancelledException().message)
-        if (job.memory == null) {
+        if (job.memory == null && job.thread != null) {
             typing.cancel(job.message.chatId)
         }
         if (job.thread ==
@@ -761,9 +829,23 @@ class ReplyCoordinator(
         }
     }
 
-    private fun allowed(message: ChatMessage, rule: ChatRule): Boolean =
-        !closed && !settings.get().paused && rule.enabled &&
-            latest[message.chatId] == message.id && groupAllowed(message, rule)
+    private fun allowed(
+        message: ChatMessage,
+        rule: ChatRule,
+        initiative: Boolean = false,
+        finishCurrent: Boolean = false,
+    ): Boolean = !closed && !settings.get().paused &&
+        (rule.enabled || initiative && rule.proactiveMode == ProactiveMode.ENABLED) &&
+        (finishCurrent || latest[message.chatId] == message.id) && groupAllowed(message, rule)
+
+    private fun ordinaryReply(job: ReplyJob): Boolean = job.memory == null && job.draft == null && job.proactive == null
+
+    private fun processingMode(rule: ChatRule): ReplyProcessingMode = when (rule.replyInterruptionMode) {
+        ReplyInterruptionMode.INHERIT -> settings.get().replyProcessingMode
+        ReplyInterruptionMode.REPLACE -> ReplyProcessingMode.REPLACE
+        ReplyInterruptionMode.FINISH -> ReplyProcessingMode.FINISH
+        ReplyInterruptionMode.EACH -> ReplyProcessingMode.EACH
+    }
 
     private fun groupAllowed(message: ChatMessage, rule: ChatRule): Boolean {
         if (!message.group) {
@@ -815,7 +897,12 @@ class ReplyCoordinator(
     }
 
     fun onDeleted(chatId: String, ids: Set<String>) = synchronized(gate) {
-        if (latest[chatId] !in ids) {
+        if (latest[chatId] !in ids && pending.values.stream().noneMatch {
+                it.message.chatId == chatId && it.message.id in ids
+            } && active.values.stream().noneMatch {
+                it.message.chatId == chatId && it.message.id in ids
+            }
+        ) {
             return@synchronized
         }
         latest.remove(chatId)

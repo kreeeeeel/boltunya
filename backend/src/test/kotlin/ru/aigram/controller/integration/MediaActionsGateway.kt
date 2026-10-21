@@ -1,5 +1,6 @@
 package ru.aigram.controller.integration
 
+import ru.aigram.domain.chat.MessageEntity
 import ru.aigram.domain.media.OutgoingMedia
 import ru.aigram.domain.media.StickerCatalog
 import ru.aigram.memory.MemoryTelegramGateway
@@ -11,8 +12,17 @@ class MediaActionsGateway(val delegate: MemoryTelegramGateway = MemoryTelegramGa
     var topic = 0
     var stickerId = ""
     val textSent = mutableListOf<String>()
-    override fun send(chatId: String, text: String, replyToId: String, topicId: Int): String {
+    val textEntities = mutableListOf<List<MessageEntity>>()
+    override fun send(
+        chatId: String,
+        text: String,
+        replyToId: String,
+        topicId: Int,
+        entities: List<MessageEntity>,
+        automated: Boolean,
+    ): String {
         textSent.add(text)
+        textEntities.add(entities)
         return "sent-text"
     }
     override fun sendMedia(chatId: String, media: List<OutgoingMedia>, replyToId: String, topicId: Int): List<String> {
@@ -22,7 +32,13 @@ class MediaActionsGateway(val delegate: MemoryTelegramGateway = MemoryTelegramGa
         return listOf("sent-media")
     }
     override fun stickers(): StickerCatalog = StickerCatalog(emptyList(), emptyList(), emptyList())
-    override fun sendSticker(chatId: String, stickerId: String, replyToId: String, topicId: Int): String {
+    override fun sendSticker(
+        chatId: String,
+        stickerId: String,
+        replyToId: String,
+        topicId: Int,
+        automated: Boolean,
+    ): String {
         this.stickerId = stickerId
         replyTo = replyToId
         topic = topicId
