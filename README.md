@@ -29,7 +29,7 @@ Aigram is a Windows desktop application for reading Telegram conversations and m
 - **Current information, naturally phrased.** Keyless search, Open-Meteo weather, dated news and official exchange rates. Short follow-ups retain the previous topic. Replies are instructed to preserve significant digits and dates while matching your style; links are limited to retrieved sources and follow your preferences.
 - **A memory bank you control.** Shared owner facts and habits, per-chat summaries, editable notes, incremental background collection and manual deep rebuilds with progress, queue state and cancellation.
 - **One controllable queue.** Automatic replies, manual drafts and memory collection share a queue. Keep processing sequential or allow up to four concurrent tasks, with resource guidance, cancellation and priorities. Delivery to each conversation remains ordered. Group automation starts disabled.
-- **A visible reply queue.** Pause dispatch, prioritize or stop tasks, inspect prompts, streamed thinking, responses and token/timing metrics, and rate completed replies with an optional comment. [Queue and trace details](docs/activity/en.md).
+- **A visible reply queue.** Pause dispatch, prioritize or stop tasks, inspect prompts, streamed thinking, responses and token/timing metrics, and rate completed replies with an optional comment. Full traces persist locally and load in pages across restarts. [Queue and trace details](docs/activity/en.md).
 - **Built-in troubleshooting.** The Errors page groups failures into cards with a timestamp, occurrence count, explanation and recovery steps. Detail dialogs show safe technical metadata, without copying conversation text or credentials into the error log.
 - **A proper desktop shell.** A draggable title bar, maximize within the Windows work area, compact tray menu, optional startup in the tray, and separate startup/resume preferences. Resource charts show application and system activity.
 - **A settings center.** Grouped sidebar navigation, saved model connections, task routing, memory, owner instructions, local storage and a recoverable appearance editor with scoped custom CSS. English, Russian, Kazakh and Ukrainian; light/dark themes and bundled Noto Sans typography.
@@ -43,6 +43,7 @@ The chat list uses two-line previews and a small AI badge on enabled conversatio
   <tr><td><img src="docs/resources/memory-formatted.png" alt="Formatted memory bank"></td><td><img src="docs/resources/storage-locations.png" alt="Storage locations with Explorer actions"></td></tr>
   <tr><td><img src="docs/resources/settings-center.png" alt="Unified settings navigation"></td><td><img src="docs/resources/model-connections.png" alt="Configurable model connections"></td></tr>
   <tr><td><img src="docs/resources/appearance-editor.png" alt="Workspace theme editor"></td><td><img src="docs/resources/parallel-tasks.png" alt="Shared inference queue limits"></td></tr>
+  <tr><td><img src="docs/resources/history-dark.png" alt="Persistent event history"></td><td><img src="docs/resources/settings-language-light.png" alt="Language selection with native names"></td></tr>
 </table>
 
 ## Get started
@@ -68,11 +69,13 @@ Use the profile menu to open the settings center or sign out. Language, appearan
 
 Local inference runs through Ollama. Configuring and selecting an API connection sends the context required for that task to the endpoint you choose; this can include conversation messages, memory and explicitly enabled images. Provider requests can incur charges. API keys are protected with Windows DPAPI, bound to their saved endpoint and never returned to the web interface. Telegram connectivity uses TDLib. When web search is enabled, external services receive a short generated query; weather services receive a city. The application does not send entire conversations or Telegram credentials to search providers. Exa MCP is an **optional** fallback with your own key; the default search path needs no key.
 
-The persistent profile is `%LOCALAPPDATA%\Tiho` (the legacy directory is kept to preserve existing sessions):
+The persistent profile is `%LOCALAPPDATA%\Aigram`, including the Electron profile under `desktop/browser`. On a normal launch, the application safely copies an existing Tiho profile and its selected Electron profile, verifies the copy and switches directories atomically. The original folders remain as a recovery backup; new writes use Aigram. Migration waits until the old application is closed and is deferred during an active legacy update handoff. Explicit data-directory environment overrides retain their existing behavior. See [profile migration](docs/storage/en.md#profile-migration).
 
 | Location | Purpose |
 | --- | --- |
 | `settings.json` | Preferences, conversation rules and instructions |
+| `models/prompts.json` | Per-model instructions, local working context and token estimate preferences |
+| `activity/` | Account-scoped event archive, trace details and storage policy |
 | `models/profiles.json`, `models/credentials/` | Model connection metadata and DPAPI-protected secrets |
 | `appearance.json` | Theme tokens and validated workspace CSS |
 | `context-exclusions/` | Account-scoped AI context exclusions |
@@ -85,6 +88,7 @@ The persistent profile is `%LOCALAPPDATA%\Tiho` (the legacy directory is kept to
 | `diagnostics/` | Bounded technical error history |
 | `feedback/activity.json` | Local response ratings and optional comments |
 | `desktop/updates/` | Verified update downloads and installer state |
+| `desktop/browser/` | Electron preferences, browser storage and cache |
 
 Native Ollama model weights usually live in `%USERPROFILE%\.ollama\models`, or the location set by `OLLAMA_MODELS`. A separate service or container can use a different directory. The application's storage panel distinguishes these cases instead of inventing a local path for a remote service.
 
@@ -108,6 +112,8 @@ Full exit stops the application-managed Ollama process. An independently managed
 The Kotlin package is `ru.aigram`. Prompts, literal language vocabularies, errors and model metadata live in backend resources. The OpenAPI contract is `backend/contract/api.yaml`; `openapi-typescript` generates the frontend types. The local API uses a private loopback session and Host/Origin checks. The renderer has no Node.js access.
 
 Spring AI's Ollama and OpenAI adapters provide typed requests, structured responses, separate thinking output and inference statistics. Saved connections and optional task routes choose the model for replies, memory, research and vision. Local tasks share a resource gate, while independent endpoints can run concurrently within the queue limit. `ConversationService` coordinates search and final replies; `ChatCompletionService` owns inference, and `OllamaRuntime` owns local model management. Spring AI `ChatMemory` builds the recent conversation window; the Markdown memory bank retains long-term summaries and owner facts. Guice wires these services without starting a Spring Boot application. See [AI architecture](docs/ai/en.md).
+
+Prompt settings show the selected model’s working context, reserved output budget and estimated space remaining for history. Independent instructions can be saved per model and connection. Oversized mandatory context fails explicitly without silently losing the latest question. [Token budgets and model prompts](docs/ai/prompts-en.md).
 
 Conversations follow the global model selection by default; an explicit per-chat override remains available. Speed measurements persist across restarts and run automatically when you select an unmeasured installed model. Downloads use an inline progress button with cancellation.
 

@@ -6,7 +6,7 @@ The container is Google Guice 7.0.0 with `jakarta.inject`. `Main` creates the la
 
 `@Provides` handles external configuration, HTTP clients and callback integrations. A deferred `Provider<ReplyCoordinator>` in the Telegram gateway breaks the cycle between receiving updates and sending replies. Services never request the container themselves. `requireExplicitBindings()` detects missing registrations during container creation.
 
-`PersonalReplyGenerator` prepares personal conversation context. `ApplicationRuntime` owns service startup and shutdown. The `%LOCALAPPDATA%/Tiho` directory remains compatible with existing Telegram sessions; its name is unrelated to the Kotlin package.
+`PersonalReplyGenerator` prepares personal conversation context. `ApplicationRuntime` owns service startup and shutdown. The default `%LOCALAPPDATA%/Aigram` profile is independent of the Kotlin package; desktop startup migrates existing sessions from Tiho without deleting the original.
 
 Run `gradlew.bat :backend:check`. `ApplicationModuleTest` resolves the complete graph and checks shared instances without authenticating with Telegram or sending messages.
 

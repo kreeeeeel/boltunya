@@ -18,7 +18,7 @@ Each Kotlin class has its own file. Prompts, literal language vocabularies, erro
 
 ## State and delivery
 
-`%LOCALAPPDATA%/Tiho` is retained for existing sessions. Settings are atomically replaced; credentials use Windows DPAPI. TDLib owns its session database. Existing automated message IDs drive local AI badges and exclusion from personal writing examples.
+`%LOCALAPPDATA%/Aigram` is the persistent profile; desktop startup safely migrates existing sessions from Tiho. Settings are atomically replaced; credentials use Windows DPAPI. TDLib owns its session database. Existing automated message IDs drive local AI badges and exclusion from personal writing examples.
 
 Ordinary launches pause the queue. Startup resumes it only when explicitly enabled in saved settings. Groups default to disabled and support global/per-chat mention/all overrides. Outgoing messages reply to the source message and forum topic. Local media rendering includes photos, video, audio and stickers; model context includes text/captions, not visual or speech recognition.
 

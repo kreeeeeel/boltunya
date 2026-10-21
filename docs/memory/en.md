@@ -8,7 +8,7 @@ This follows the distinction between factual and procedural memory described in 
 
 ## Files
 
-Under the application's existing `%LOCALAPPDATA%/Tiho` data directory:
+Under the application's existing `%LOCALAPPDATA%/Aigram` data directory:
 
 ```text
 memory/
@@ -28,7 +28,7 @@ Factual generated sections carry a version marker. Legacy automatic summaries ma
 
 ## Scheduling and processing
 
-The worker starts 30 seconds after startup and waits for authentication. Initial profile sources are up to eight most recent private chats active within 90 days with memory permitted, alongside AI-enabled chats and manual requests. A new real outgoing message can add another private chat. All histories are not scanned indiscriminately; completed, unchanged chats are skipped. Only chats actually present in Telegram’s main or archive list are eligible, not arbitrary cached TDLib chat objects.
+The worker starts 30 seconds after startup and waits for authentication. Automatic and global collection use only chats whose AI rule is enabled and permits memory. Receiving or sending a message in another chat does not enroll it. An explicit single-chat collection is a one-time request: it may finish that history even while AI is disabled, but does not subscribe to subsequent messages. Completed, unchanged chats are skipped. Only chats actually present in Telegram’s main or archive list are eligible, not arbitrary cached TDLib objects.
 
 An initial pass reads the newest messages so useful memory becomes available quickly. A separate backfill cursor then moves toward the beginning of the chat. Each pass fetches up to 100 messages and selects a bounded input chunk. Messages outside that chunk remain behind the cursor and are included later. One chunk from one chat is processed every 15 seconds, plus generation time. Chats rotate, and checkpoints resume after restarting.
 
@@ -36,19 +36,21 @@ Incoming and outgoing messages mark a chat dirty. Once backfill is complete, upd
 
 New-message updates default to **6 hours**. Settings provide a separate memory toggle and interval selection; the API supports 1–168 hours. Incomplete backfill continues between these updates. Fresh-message scheduling has its own timestamp, so repeated historical chunks cannot postpone it forever.
 
-Replies, drafts and model warmup take priority. They interrupt background inference without advancing its checkpoint. Messages newer than 10 seconds are deferred so automated outgoing IDs can settle. Memory runs independently of the autoreply pause and has its own switch.
+Replies, drafts and memory use the shared queue. Adding a new job does not cancel a running collection. A local resource deferral returns the same memory event to its queued state, preserving its ID and checkpoint. Memory chunks remain sequential to safely merge the shared owner profile. Messages newer than 10 seconds are deferred so automated outgoing IDs can settle. Memory has its own enable switch.
 
-The installed global default model is used; no model downloads are initiated. When Ollama or that model is unavailable, memory waits. Failed updates use a retry delay and expose their status in the memory dialog.
+Memory uses its configured task route, or the global default model and connection when no separate route is selected. It does not download models. Local collection waits when Ollama or the selected model is unavailable. Failed updates use a retry delay and expose their status in settings and Events.
 
 Only `speaker=owner` sources reach the profile model: contact messages and known AI replies are removed beforehand. Generated message IDs are no longer truncated after 5000 entries and survive logout. Older replies whose IDs were already lost cannot be reliably identified. Quotes and jokes must not become facts; the profile remains a probabilistic model summary. Manual notes take precedence. Both generated memories are saved before advancing the chat checkpoint; failures or edit conflicts leave the batch for retry. Previously completed histories are reread once after upgrading to build the profile.
 
+An unfinished explicit request for a disabled chat does not restart automatically with the application. Start it explicitly again to continue from its saved cursor.
+
 ## UI and context
 
-- Profile → **Memory** edits global notes and shows the tracked-chat count.
-- The book button in a conversation header opens its notes, generated summary, progress count, status and file path.
-- **Update memory** refreshes that chat's recent history. The global action checks changed chats already in use.
-- **Rebuild summary** clears only generated content and checkpoints for that chat, preserves notes and restarts deep processing.
-- **Use chat memory** disables that chat’s prompt context and further collection. The existing owner profile remains available across conversations.
+- **Settings → Memory** edits global notes and shows the tracked-chat count.
+- Conversation settings open chat memory, generated summaries and collection progress.
+- **Update memory** refreshes the selected chat; global collection checks AI-enabled chats that permit memory.
+- **Rebuild summary** preserves manual notes and restarts deep processing.
+- **Use chat memory** controls that chat’s prompt context and collection; the existing shared owner profile remains available.
 
 Global notes, the owner profile, chat notes and the current summary supplement recent history for autoreplies and drafts. They are encoded as reference JSON data rather than executable instructions. Fresh messages and explicit owner settings take precedence. Known automated messages are distinguished from actual owner statements; group sources include sender IDs so equal display names do not merge people.
 
@@ -70,9 +72,9 @@ Tests cover a 700-message history, resumed checkpoints, large deltas, scheduling
 
 The “Collect context” button in communication settings opens a separate dialog. “New messages” preserves the summary and adds history after its checkpoint. “Entire available history” resets the chat’s generated summary and cursors while preserving manual notes. Status and processed-message count show batch progress; an unknown total is not represented as a fabricated percentage.
 
-A manual run sends `POST /api/memory/{chatId}` with `immediate: true` and the chosen `rebuild` value. It wakes the existing sequential worker and prioritizes the selected chat without waiting for the hourly interval. Full rebuild retains priority until backfill finishes. Replies and drafts still interrupt background inference. Disabled memory must be enabled explicitly; the dialog explains where. Closing the dialog does not cancel collection.
+A manual run sends `POST /api/memory/{chatId}` with `immediate: true` and the chosen `rebuild` value. It queues that conversation without waiting for the hourly interval. It does not cancel another chat’s running collection or reply. Disabled memory must be enabled explicitly. Closing the dialog does not cancel collection.
 
-Profile menu → **Collect global context** runs the same process for selected owner-profile sources and chats already in use. It does not walk every account chat. “New messages” preserves existing memory. “Entire available history” clears the generated owner profile and selected chat summaries while preserving manual notes, then restarts sequential backfill. A full run uses `POST /api/memory/refresh` with `{"rebuild":true,"immediate":true}`. One batch runs at a time; replies retain priority.
+**Settings → Memory → Collect global context** runs the same process only for AI-enabled conversations that permit memory. “New messages” preserves existing memory. “Entire available history” clears generated owner facts and eligible chat summaries while preserving manual notes. A full run uses `POST /api/memory/refresh` with `{"rebuild":true,"immediate":true}`. One memory batch runs at a time in the shared queue.
 
 Private headers show the first active Telegram username and omit the line when absent. Group headers use cached participant counts from Telegram updates without per-chat network requests. Unknown counts display “Group”. The `Chat` API exposes `username` and nullable `memberCount`.
 

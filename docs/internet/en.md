@@ -28,7 +28,7 @@ Link requests support Russian, English, Kazakh and Ukrainian. “Without links�
 
 Profile → **Settings** → **Web search** → **Optional: Exa fallback search** shows Exa status and whether a key exists. **Get an Exa key** opens the [Exa dashboard](https://dashboard.exa.ai/api-keys). Enter a key and select **Save key**. It applies immediately, independently of other settings; the field clears after saving. **Remove key** disables the optional Exa fallback. Primary free search remains available.
 
-`%LOCALAPPDATA%/Tiho/search.credentials` stores the key encrypted with Windows DPAPI. Exa receives it only in the `x-api-key` header. It is excluded from `settings.json`, API responses and logs. **Test connection** performs one fixed public resource-defined query and does not use conversation content.
+`%LOCALAPPDATA%/Aigram/search.credentials` stores the key encrypted with Windows DPAPI. Exa receives it only in the `x-api-key` header. It is excluded from `settings.json`, API responses and logs. **Test connection** performs one fixed public resource-defined query and does not use conversation content.
 
 The local model processes conversation history on the computer. Search receives a generated query capped at 180 characters; weather receives a city. Full conversations and Telegram credentials are not sent to these services. Existing checks block recognized phone numbers and email addresses. Public-page retrieval retains local-address and redirect protection.
 

@@ -1,6 +1,6 @@
 # Settings center
 
-Open the profile menu and choose **Settings**, or use a shortcut to a specific section. The left navigation groups application behavior, replies, models, memory, appearance and local data. Section changes preserve unsaved edits. Save actions remain at the bottom of the center and do not close it.
+Open the profile menu and choose **Settings**. The fixed Aigram header stays visible while the icon navigation scrolls. Sections group application behavior, replies, models, memory, appearance and local data. Section changes preserve unsaved edits. Save actions remain at the bottom of the center and do not close it.
 
 ## Model connections
 
@@ -12,7 +12,9 @@ Enabled connections appear alongside local models on the models page and in conv
 
 ## Appearance
 
-The base theme follows the system or uses a fixed light/dark mode. Eight optional color tokens customize the palette. Colors use hex notation, including an optional alpha channel. An empty field retains the base color.
+The base theme follows the system or uses a fixed light/dark mode. Eight optional color tokens customize the palette through a color picker or a hex field, including an optional alpha channel. The chat example updates immediately; Preview applies the draft to the workspace. An empty field retains the base color.
+
+Language cards use native language names and SVG flags. The radio control on the right marks the current choice. Scrollbars appear on region hover or keyboard focus without changing content width.
 
 Custom CSS is parsed and scoped to the application workspace. For example:
 
