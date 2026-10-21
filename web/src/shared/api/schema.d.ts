@@ -1028,6 +1028,9 @@ export interface components {
             analyzePhotos: boolean;
             /** @default false */
             aiStickers: boolean;
+            proactiveMode?: components["schemas"]["ProactiveMode"];
+            /** @description Default: 0. */
+            proactiveIntervalMinutes?: number;
         };
         Settings: {
             paused: boolean;
@@ -1075,6 +1078,11 @@ export interface components {
             deliveryMode: "reply" | "send";
             /** @default 1 */
             maxParallelTasks: number;
+            memoryCollectionScope?: components["schemas"]["MemoryCollectionScope"];
+            /** @description Default: false. */
+            proactiveEnabled?: boolean;
+            /** @description Default: 60. */
+            proactiveIntervalMinutes?: number;
         };
         Chat: {
             id: string;
@@ -1159,6 +1167,8 @@ export interface components {
                 durationMs: number;
                 tokensPerSecond: number;
             } | null;
+            /** @description Default: false. */
+            supportsVision?: boolean;
         };
         Engine: {
             /**
@@ -1216,7 +1226,7 @@ export interface components {
              */
             feedbackRating: "good" | "bad" | null;
             /** @enum {string} */
-            kind?: "reply" | "draft" | "memory";
+            kind?: "reply" | "draft" | "memory" | "initiative";
         };
         Error: {
             message: string;
@@ -1274,6 +1284,11 @@ export interface components {
             /** @enum {string} */
             deliveryMode?: "reply" | "send";
             maxParallelTasks?: number;
+            memoryCollectionScope?: components["schemas"]["MemoryCollectionScope"];
+            /** @description Default: false. */
+            proactiveEnabled?: boolean;
+            /** @description Default: 60. */
+            proactiveIntervalMinutes?: number;
         };
         State: {
             telegram: components["schemas"]["Telegram"];
@@ -1660,6 +1675,14 @@ export interface components {
             researchProfileId: string;
             /** @default  */
             visionProfileId: string;
+            /** @description Default: . */
+            replyModel?: string;
+            /** @description Default: . */
+            memoryModel?: string;
+            /** @description Default: . */
+            researchModel?: string;
+            /** @description Default: . */
+            visionModel?: string;
         };
         ModelProfileTestResult: {
             /** @default false */
@@ -1820,6 +1843,16 @@ export interface components {
             estimated: boolean;
             includesHistory: boolean;
         };
+        /**
+         * @description Default: ai-enabled.
+         * @enum {string}
+         */
+        MemoryCollectionScope: "ai-enabled" | "all-allowed";
+        /**
+         * @description Default: inherit.
+         * @enum {string}
+         */
+        ProactiveMode: "inherit" | "disabled" | "enabled";
     };
     responses: never;
     parameters: never;

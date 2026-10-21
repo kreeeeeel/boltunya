@@ -29,6 +29,7 @@ import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
 import {normalizeCommunicationRule} from '@/modules/workspace/model/normalizeCommunicationRule';
 import {useModelProfiles} from '@/modules/settings/model/useModelProfiles';
 import {PromptBudgetNotice} from '@/modules/settings/PromptBudgetNotice/PromptBudgetNotice';
+import {ProactiveInterval} from '@/modules/settings/ProactiveInterval/ProactiveInterval';
 
 export function RuleDialog({
     chat,
@@ -125,6 +126,46 @@ export function RuleDialog({
                             onUpdate={(enabled) => setRule({...rule, enabled})}
                             controlProps={{'aria-label': t('enableAi')}}
                         />
+                    </Flex>
+                    <Flex direction="column" gap={3}>
+                        <Text variant="subheader-2">{t('proactive.title')}</Text>
+                        <Select
+                            size="l"
+                            width="max"
+                            value={[rule.proactiveMode ?? 'inherit']}
+                            aria-label={t('proactive.mode')}
+                            options={(['inherit', 'disabled', 'enabled'] as const).map((mode) => ({
+                                value: mode,
+                                content: t('proactive.modes.' + mode),
+                            }))}
+                            onUpdate={([proactiveMode]) => {
+                                if (
+                                    proactiveMode === 'inherit' ||
+                                    proactiveMode === 'disabled' ||
+                                    proactiveMode === 'enabled'
+                                ) {
+                                    setRule({...rule, proactiveMode});
+                                }
+                            }}
+                        />
+                        <Text color="secondary">{t('proactive.hint')}</Text>
+                        <Switch
+                            checked={!rule.proactiveIntervalMinutes}
+                            onUpdate={(inherit) =>
+                                setRule({...rule, proactiveIntervalMinutes: inherit ? 0 : 60})
+                            }
+                        >
+                            {t('proactive.inheritInterval')}
+                        </Switch>
+                        {!!rule.proactiveIntervalMinutes && (
+                            <ProactiveInterval
+                                value={rule.proactiveIntervalMinutes}
+                                disabled={rule.proactiveMode === 'disabled'}
+                                onUpdate={(proactiveIntervalMinutes) =>
+                                    setRule({...rule, proactiveIntervalMinutes})
+                                }
+                            />
+                        )}
                     </Flex>
                     {chat.kind && chat.kind !== 'private' && (
                         <Box>

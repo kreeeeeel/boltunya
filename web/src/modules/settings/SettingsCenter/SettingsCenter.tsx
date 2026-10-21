@@ -116,7 +116,7 @@ export function SettingsCenter({
             return <ProviderProfiles onRefresh={onRefresh} />;
         }
         if (id === 'routing') {
-            return <ModelRoutingSettings />;
+            return <ModelRoutingSettings engine={engine} />;
         }
         return (
             <SettingsSection

@@ -90,6 +90,25 @@
     animation: message-enter 180ms var(--tiho-ease);
 }
 
+.messageRow {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    background: transparent;
+    cursor: context-menu;
+    border-radius: 10px;
+    outline: none;
+}
+
+.messageRow:focus-visible {
+    outline: 2px solid var(--g-color-line-focus);
+    outline-offset: 3px;
+}
+
+.messageRowOutgoing {
+    justify-content: flex-end;
+}
+
 .incoming {
     align-self: flex-start;
     background: var(--tiho-bubble);
@@ -103,6 +122,7 @@
 }
 
 .messageText {
+    cursor: text;
     font-size: 15px;
     line-height: 1.4;
     font-family: inherit;
@@ -113,11 +133,15 @@
 
 .contextExcluded {
     display: flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--tiho-muted);
+    width: fit-content;
     font-size: 14px;
-    margin: 6px 4px 2px;
+    margin: 8px 0 2px;
+    border-radius: 7px;
+    user-select: none;
+}
+
+.contextExcluded :global(.g-label__text) {
+    font-size: 14px;
 }
 
 .messageMeta {
@@ -175,6 +199,22 @@
     flex-shrink: 0;
     border-radius: 8px;
     align-self: center;
+}
+
+.attachmentMenu {
+    --g-popup-border-width: 0px;
+    --g-popup-border-radius: 14px;
+
+    overflow: hidden;
+}
+
+.attachmentMenu :global(.g-menu) {
+    padding: 6px;
+}
+
+.attachmentMenu :global(.g-menu__item) {
+    border-radius: 8px;
+    min-height: 36px;
 }
 
 .draftSkeleton {

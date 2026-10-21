@@ -7,8 +7,9 @@
 }
 
 .root {
-    width: min(380px, calc(100vw - 32px));
-    height: 360px;
+    width: clamp(280px, 34vw, 440px);
+    max-width: calc(100vw - 24px);
+    max-height: min(480px, calc(100dvh - 120px));
     padding: 10px;
     gap: 8px;
 }
@@ -31,6 +32,18 @@
     border-radius: 10px;
 }
 
+.pack :global(.g-button__text) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-width: 0;
+}
+
+.pack :global(.g-text) {
+    line-height: 20px;
+}
+
 .pack[aria-selected='true'] {
     --g-button-background-color: var(--tiho-selected);
     --g-button-background-color-hover: var(--tiho-selected);
@@ -47,23 +60,28 @@
 
 .content {
     min-height: 0;
-    flex: 1;
+    max-height: min(396px, calc(100dvh - 188px));
+}
+
+.content > :global(div:first-child) {
+    max-height: inherit;
 }
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
     gap: 6px;
     padding: 4px;
 }
 
 .sticker {
-    --g-button-height: 78px;
+    --g-button-height: auto;
     --g-button-padding: 4px;
     --g-button-background-color-hover: transparent;
     --g-button-background-color-active: transparent;
 
     width: 100%;
+    aspect-ratio: 1;
     border-radius: 12px;
 }
 
@@ -77,23 +95,31 @@
 .sticker img,
 .sticker video {
     width: 100%;
-    height: 70px;
+    height: 100%;
     object-fit: contain;
 }
 
 .sticker :global(.g-button__text) {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
+    height: 100%;
 }
 
 .sticker :global(canvas),
 .sticker :global(svg) {
     max-width: 100%;
-    max-height: 70px;
+    max-height: 100%;
+}
+
+.sticker :global([role='img']) {
+    width: 100%;
+    height: 100%;
 }
 
 .empty {
-    min-height: 240px;
+    min-height: 160px;
     text-align: center;
     padding: 20px;
 }

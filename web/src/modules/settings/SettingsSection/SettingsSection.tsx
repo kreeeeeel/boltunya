@@ -30,7 +30,13 @@ export function SettingsSection({
                 </Flex>
             </ScrollArea>
             {actions && (
-                <Flex className={styles.actions} justifyContent="flex-end" alignItems="center" gap={3}>
+                <Flex
+                    className={styles.actions}
+                    justifyContent="flex-end"
+                    alignItems="center"
+                    gap={3}
+                    qa="settings-actions"
+                >
                     {actions}
                 </Flex>
             )}

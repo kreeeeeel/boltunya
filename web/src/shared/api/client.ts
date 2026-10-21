@@ -48,4 +48,6 @@ export const defaultRule: ChatRule = {
     sourceLinks: 'requested',
     matchMyStyle: true,
     useMemory: true,
+    proactiveMode: 'inherit',
+    proactiveIntervalMinutes: 0,
 };

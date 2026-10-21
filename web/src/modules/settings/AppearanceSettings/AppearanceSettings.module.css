@@ -11,6 +11,21 @@
     justify-content: center;
 }
 
+.picker :global(.g-color-picker__color-swatch) {
+    border: 0;
+    box-shadow: none;
+}
+
+.picker :global(.g-color-picker__color-swatch)::before,
+.picker :global(.g-color-picker__color-swatch)::after {
+    border: 0;
+    box-shadow: none;
+}
+
+.picker :global(.g-color-picker__color-swatch):focus:not(:focus-visible) {
+    outline: none;
+}
+
 @media (width <= 500px) {
     .colors {
         grid-template-columns: 1fr;

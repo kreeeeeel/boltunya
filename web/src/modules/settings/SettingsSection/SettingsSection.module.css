@@ -29,7 +29,7 @@
 
 .actions {
     flex-shrink: 0;
-    padding: 16px 24px;
+    padding: 10px 24px;
     background: var(--tiho-panel);
     box-shadow: 0 -1px 0 var(--tiho-line);
 }
@@ -40,6 +40,6 @@
     }
 
     .actions {
-        padding: 16px 20px;
+        padding: 10px 20px;
     }
 }

@@ -29,3 +29,5 @@ desktop/dist/
 desktop/node_modules/
 desktop/assets/*.ico
 desktop/assets/*.png
+
+/web/test-results-*/

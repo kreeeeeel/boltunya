@@ -1,4 +1,4 @@
-import {Avatar, Button, Flex, Icon, Text} from '@gravity-ui/uikit';
+import {Avatar, Button, Flex, Icon, Loader, Text} from '@gravity-ui/uikit';
 import {Copy, Minus, Pause, Play, Square, Xmark} from '@gravity-ui/icons';
 import {useTranslations} from 'next-intl';
 import {useEffect, useState} from 'react';
@@ -20,11 +20,23 @@ export function WindowBar({
 }) {
     const t = useTranslations();
     const [native, setNative] = useState(false);
+    const [pending, setPending] = useState(false);
     useEffect(() => {
         queueMicrotask(() => setNative(Boolean(desktopBridge())));
     }, []);
     const maximized = state?.window?.maximized ?? false;
     const paused = state?.settings.paused ?? true;
+    const warming = !paused && Boolean(state?.engine.warming);
+    async function toggleAssistant() {
+        setPending(true);
+        try {
+            await onPause();
+        } catch (cause) {
+            onError(errorMessage(cause));
+        } finally {
+            setPending(false);
+        }
+    }
     async function action(command: DesktopWindowAction) {
         try {
             await desktopBridge()?.action(command);
@@ -44,11 +56,27 @@ export function WindowBar({
                         size="s"
                         className={styles.ai}
                         view={paused ? 'flat-secondary' : 'flat-info'}
-                        onClick={() => void onPause()}
+                        onClick={() => void toggleAssistant()}
+                        disabled={pending}
+                        aria-busy={pending || warming}
                         aria-label={t(paused ? 'resume' : 'pause')}
                     >
-                        <Icon data={paused ? Play : Pause} size={14} />
-                        <Text>{t(paused ? 'resume' : 'pause')}</Text>
+                        {pending || warming ? (
+                            <Loader size="s" />
+                        ) : (
+                            <Icon data={paused ? Play : Pause} size={14} />
+                        )}
+                        <Text role={pending || warming ? 'status' : undefined}>
+                            {t(
+                                warming
+                                    ? 'aiControl.warming'
+                                    : pending
+                                      ? 'aiControl.updating'
+                                      : paused
+                                        ? 'resume'
+                                        : 'pause',
+                            )}
+                        </Text>
                     </Button>
                 )}
                 {native && (

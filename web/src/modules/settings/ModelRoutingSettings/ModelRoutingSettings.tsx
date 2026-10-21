@@ -7,8 +7,16 @@ import type {components} from '@/shared/api/schema';
 import {SettingsSection} from '@/modules/settings/SettingsSection/SettingsSection';
 import {useModelProfiles} from '@/modules/settings/model/useModelProfiles';
 import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
-const tasks = ['replyProfileId', 'memoryProfileId', 'researchProfileId', 'visionProfileId'] as const;
-export function ModelRoutingSettings() {
+import type {Engine} from '@/shared/api/client';
+
+const tasks = [
+    {profile: 'replyProfileId', model: 'replyModel'},
+    {profile: 'memoryProfileId', model: 'memoryModel'},
+    {profile: 'researchProfileId', model: 'researchModel'},
+    {profile: 'visionProfileId', model: 'visionModel'},
+] as const;
+
+export function ModelRoutingSettings({engine}: {readonly engine?: Engine}) {
     const t = useTranslations('modelRouting');
     const common = useTranslations();
     const report = useModelProfiles();
@@ -70,32 +78,70 @@ export function ModelRoutingSettings() {
                         {t('enabled')}
                     </Switch>
                     <Text color="secondary">{t('priorityHint')}</Text>
-                    {tasks.map((task) => (
-                        <Flex key={task} direction="column" gap={2}>
-                            <Text variant="subheader-2">{t('tasks.' + task)}</Text>
-                            <Select
-                                size="l"
-                                width="max"
-                                disabled={!value.enabled}
-                                value={[value[task]]}
-                                options={[
-                                    {value: '', content: t('primary')},
-                                    ...report.profiles
-                                        .filter(
-                                            (profile) =>
-                                                profile.enabled &&
-                                                (task !== 'visionProfileId' || profile.capabilities.vision),
-                                        )
-                                        .map((profile) => ({
-                                            value: profile.id,
-                                            content: profile.name + ' · ' + profile.model,
-                                        })),
-                                ]}
-                                onUpdate={([id]) => setValue({...value, [task]: id})}
-                                aria-label={t('tasks.' + task)}
-                            />
-                        </Flex>
-                    ))}
+                    <Text color="secondary">{t('localHint')}</Text>
+                    {tasks.map((task) => {
+                        const selectedProfile = value[task.profile];
+                        const selectedModel = value[task.model] ?? '';
+                        const selected = selectedProfile
+                            ? 'profile:' + selectedProfile
+                            : selectedModel
+                              ? 'local:' + selectedModel
+                              : '';
+                        const options = [
+                            {value: '', content: t('primary')},
+                            ...(engine?.models ?? [])
+                                .filter(
+                                    (model) =>
+                                        model.installed &&
+                                        (task.model !== 'visionModel' || model.supportsVision),
+                                )
+                                .map((model) => ({
+                                    value: 'local:' + model.id,
+                                    content: t('localOption', {name: model.name}),
+                                })),
+                            ...report.profiles
+                                .filter(
+                                    (profile) =>
+                                        profile.enabled &&
+                                        (task.profile !== 'visionProfileId' || profile.capabilities.vision),
+                                )
+                                .map((profile) => ({
+                                    value: 'profile:' + profile.id,
+                                    content: profile.name + ' · ' + profile.model,
+                                })),
+                        ];
+                        if (selected && !options.some((option) => option.value === selected)) {
+                            options.push({
+                                value: selected,
+                                content: t('unavailable', {name: selectedModel || selectedProfile}),
+                            });
+                        }
+                        return (
+                            <Flex key={task.profile} direction="column" gap={2}>
+                                <Text variant="subheader-2">{t('tasks.' + task.profile)}</Text>
+                                <Select
+                                    size="l"
+                                    width="max"
+                                    disabled={!value.enabled}
+                                    value={[selected]}
+                                    options={options}
+                                    filterable
+                                    onUpdate={([selection = '']) =>
+                                        setValue({
+                                            ...value,
+                                            [task.profile]: selection.startsWith('profile:')
+                                                ? selection.slice(8)
+                                                : '',
+                                            [task.model]: selection.startsWith('local:')
+                                                ? selection.slice(6)
+                                                : '',
+                                        })
+                                    }
+                                    aria-label={t('tasks.' + task.profile)}
+                                />
+                            </Flex>
+                        );
+                    })}
                     <Switch
                         checked={value.parallelIndependentTasks}
                         disabled={!value.enabled}

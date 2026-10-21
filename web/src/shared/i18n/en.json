@@ -100,7 +100,9 @@
         "gpt": "OpenAI’s open model for reasoning. Requires substantially more memory.",
         "llama": "Compact general-purpose Meta models.",
         "mistral": "General conversations and instructions.",
-        "phi": "Compact Microsoft model for conversation and reasoning."
+        "phi": "Compact Microsoft model for conversation and reasoning.",
+        "qwen-vl": "A multimodal model that understands images and replies with text.",
+        "custom": "An Ollama model installed outside the built-in catalog. Unverified specifications are not displayed."
     },
     "engineOnline": "Ollama is running",
     "engineOffline": "Engine offline",
@@ -334,7 +336,9 @@
         "gpt": "OpenAI",
         "llama": "Meta Llama",
         "mistral": "Mistral",
-        "phi": "Microsoft Phi"
+        "phi": "Microsoft Phi",
+        "qwen-vl": "Qwen · vision and text",
+        "custom": "Installed model"
     },
     "modelContextSize": "{count} tokens",
     "memory": {
@@ -370,7 +374,13 @@
             "waiting_model": "Waiting for model",
             "error": "Update failed"
         },
-        "ownerSummary": "What I know about you"
+        "ownerSummary": "What I know about you",
+        "collectionScope": "Background memory sources",
+        "collectionScopeHint": "Both modes exclude channels and chats with memory turned off.",
+        "collectionScopes": {
+            "ai-enabled": "Only chats with AI enabled",
+            "all-allowed": "All available private and group chats"
+        }
     },
     "chatGroup": "Group",
     "chatMembers": "{count, plural, one {# participant} other {# participants}}",
@@ -569,7 +579,8 @@
         },
         "memoryDetails": "Context collection history",
         "taskTime": "Processing time",
-        "memoryPrivacy": "Conversation and memory contents are not recorded in this task history."
+        "memoryPrivacy": "Conversation and memory contents are not recorded in this task history.",
+        "initiative": "Initiative"
     },
     "modelWarming": "Warming up",
     "diagnostics": {
@@ -825,7 +836,10 @@
             "visionProfileId": "Image analysis"
         },
         "parallel": "Run independent tasks in parallel",
-        "parallelHint": "Parallel tasks may use more memory or API capacity. Tasks that depend on one another still run in sequence."
+        "parallelHint": "Parallel tasks may use more memory or API capacity. Tasks that depend on one another still run in sequence.",
+        "localHint": "Choose an installed Ollama model or an API connection for each task. Enabling routing does not download models.",
+        "localOption": "Ollama · {name}",
+        "unavailable": "Unavailable · {name}"
     },
     "chatFeatures": {
         "delivery": "Send responses",
@@ -884,5 +898,38 @@
     "draftQueue": {
         "cancelled": "Reply preparation was cancelled.",
         "failed": "Could not prepare a reply."
-    }
+    },
+    "chatUi": {
+        "photos": "Photos",
+        "videos": "Videos",
+        "messageActions": "Message actions"
+    },
+    "aiControl": {
+        "warming": "Warming up the model…",
+        "updating": "Updating status…"
+    },
+    "proactive": {
+        "title": "Keep the conversation going",
+        "hint": "In AI-enabled chats, it can write after a pause, then wait for a human reply.",
+        "mode": "Initiative in this chat",
+        "modes": {
+            "inherit": "Use global settings",
+            "disabled": "Off",
+            "enabled": "On"
+        },
+        "interval": "Wait before initiating",
+        "unit": "Interval unit",
+        "minutes": "Minutes",
+        "hours": "Hours",
+        "inheritInterval": "Use the global interval"
+    },
+    "modelFilters": {
+        "label": "Model type",
+        "all": "All",
+        "generation": "Generation",
+        "vision": "Image analysis"
+    },
+    "modelMetadataUnknown": "Unknown",
+    "imagesSupported": "Supported",
+    "imagesUnsupported": "Not supported"
 }

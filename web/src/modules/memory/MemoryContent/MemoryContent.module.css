@@ -26,3 +26,9 @@
     font-size: 13px;
     overflow-wrap: anywhere;
 }
+
+.actions {
+    padding: 8px;
+    border-radius: 14px;
+    background: var(--g-color-base-generic);
+}

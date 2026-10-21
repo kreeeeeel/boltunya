@@ -243,10 +243,18 @@ for (const dark of [false, true]) {
                     right: card.right - indicator.right,
                     border: getComputedStyle(label).borderWidth,
                     bold: Number(getComputedStyle(name).fontWeight),
+                    height: card.height,
                 };
             }),
         );
         expect(geometry).toHaveLength(4);
+        const languageGaps = await dialog.getByRole('radio').evaluateAll((radios) =>
+            radios.slice(1).map((radio, index) => {
+                const previous = radios[index].closest('label')!.getBoundingClientRect();
+                return radio.closest('label')!.getBoundingClientRect().top - previous.bottom;
+            }),
+        );
+        expect(languageGaps.every((gap) => gap <= 8)).toBe(true);
         geometry.forEach((card) => {
             expect(card.flagCenter).toBeLessThan(1);
             expect(card.radioCenter).toBeLessThan(1);
@@ -254,6 +262,7 @@ for (const dark of [false, true]) {
             expect(card.right).toBeLessThanOrEqual(20);
             expect(card.border).toBe('0px');
             expect(card.bold).toBeGreaterThanOrEqual(600);
+            expect(card.height).toBeLessThanOrEqual(50);
         });
         const nav = page.locator('[data-qa="settings-navigation-scroll"]');
         const track = nav.locator('..').getByRole('scrollbar').locator('..');
@@ -283,8 +292,61 @@ for (const dark of [false, true]) {
         });
         await chooseSettingsSection(page, 'appearance');
         await expect(page.locator('[data-qa="appearance-live-preview"]')).toBeVisible();
+        const colorButton = page.locator('.g-color-picker__color-swatch').first();
+        await expect(colorButton).toHaveCSS('border-width', '0px');
+        const swatchBorders = await colorButton.evaluate((element) =>
+            ['::before', '::after'].map((pseudo) => ({
+                border: getComputedStyle(element, pseudo).borderWidth,
+                shadow: getComputedStyle(element, pseudo).boxShadow,
+            })),
+        );
+        expect(swatchBorders).toEqual([
+            {border: '0px', shadow: 'none'},
+            {border: '0px', shadow: 'none'},
+        ]);
+        expect(
+            (await page.locator('[data-qa="settings-actions"]:visible').boundingBox())!.height,
+        ).toBeLessThanOrEqual(60);
         await page.screenshot({
             path: `../docs/resources/settings-appearance-${dark ? 'dark' : 'light'}.png`,
+            animations: 'disabled',
+        });
+        await page.keyboard.press('Tab');
+        await colorButton.focus();
+        await expect(colorButton).toHaveCSS('outline-width', '2px');
+        await chooseSettingsSection(page, 'replies');
+        await expect(page.getByRole('switch', {name: ru.proactive.title, exact: true})).not.toBeChecked();
+        await page.screenshot({
+            path: `../docs/resources/settings-replies-${dark ? 'dark' : 'light'}.png`,
+            animations: 'disabled',
+        });
+        await page.route('**/api/memory', (route) =>
+            route.fulfill({
+                json: {
+                    chatId: '',
+                    notes: 'Предпочитаю встречаться после работы.',
+                    summary: '**Интересы**\n\nИзучает Kotlin, работает над своим приложением.',
+                    revision: 'synthetic',
+                    updatedAt: 1792578000,
+                    processedMessages: 240,
+                    backfillComplete: true,
+                    status: 'ready',
+                    error: '',
+                    trackedChats: 3,
+                    relativePath: 'memory/100/MEMORY.md',
+                },
+            }),
+        );
+        await chooseSettingsSection(page, 'memory');
+        const memoryActions = page.locator('[data-qa="memory-actions"]');
+        await expect(memoryActions.getByRole('button')).toHaveCount(3);
+        await expect(memoryActions).toHaveCSS('border-radius', '14px');
+        const actionSizes = await memoryActions
+            .getByRole('button')
+            .evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().height));
+        expect(new Set(actionSizes).size).toBe(1);
+        await page.screenshot({
+            path: `../docs/resources/settings-memory-${dark ? 'dark' : 'light'}.png`,
             animations: 'disabled',
         });
     });

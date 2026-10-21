@@ -76,3 +76,36 @@ it('keeps legacy custom instructions while replacing a missing preset with a con
         ),
     );
 });
+
+it('saves the proactive mode and a chat-specific interval without closing the dialog', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const onClose = vi.fn();
+    const chat = structuredClone(workspaceState.chats[0]);
+    render(
+        <NextIntlClientProvider locale="ru" messages={ru}>
+            <ThemeProvider>
+                <RuleDialog
+                    chat={chat}
+                    customStyles={[]}
+                    engine={workspaceState.engine}
+                    defaultModel={workspaceState.settings.defaultModel}
+                    onClose={onClose}
+                    onCollectContext={vi.fn()}
+                    onDeleted={vi.fn()}
+                    onSave={onSave}
+                />
+            </ThemeProvider>
+        </NextIntlClientProvider>,
+    );
+    fireEvent.click(screen.getByRole('combobox', {name: ru.proactive.mode}));
+    fireEvent.click(await screen.findByRole('option', {name: ru.proactive.modes.enabled}));
+    fireEvent.click(screen.getByRole('switch', {name: ru.proactive.inheritInterval}));
+    fireEvent.change(screen.getByRole('spinbutton', {name: ru.proactive.interval}), {target: {value: '2'}});
+    fireEvent.click(screen.getByRole('button', {name: ru.save}));
+    await waitFor(() =>
+        expect(onSave).toHaveBeenCalledWith(
+            expect.objectContaining({proactiveMode: 'enabled', proactiveIntervalMinutes: 120}),
+        ),
+    );
+    expect(onClose).not.toHaveBeenCalled();
+});

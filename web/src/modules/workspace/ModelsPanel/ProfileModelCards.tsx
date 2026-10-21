@@ -66,7 +66,11 @@ export function ProfileModelCards({
                                     ],
                                     [
                                         t('modelProfiles.capability.vision'),
-                                        t(profile.capabilities.vision ? 'thinkingOn' : 'thinkingOff'),
+                                        t(
+                                            profile.capabilities.vision
+                                                ? 'imagesSupported'
+                                                : 'imagesUnsupported',
+                                        ),
                                     ],
                                 ].map(([label, value]) => (
                                     <Flex key={label} justifyContent="space-between" gap={3}>

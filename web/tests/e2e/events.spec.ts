@@ -7,6 +7,7 @@ import {activityDetails, testActivity} from '../fixtures/activity';
 import type {components} from '@/shared/api/schema';
 import {persistTestTheme} from '../fixtures/settings';
 import {historyPage, historyStorage} from '../fixtures/activityHistory';
+import ru from '../../src/shared/i18n/ru.json';
 
 test.beforeEach(async ({page}) => {
     const state = structuredClone(workspaceState);
@@ -320,6 +321,70 @@ test('parallel queue settings persist without fabricated resource forecasts', as
 });
 
 for (const dark of [false, true]) {
+    test(`completed memory and initiative tags stay readable in ${dark ? 'dark' : 'light'} theme`, async ({
+        page,
+    }) => {
+        const state = structuredClone(workspaceState);
+        const finishedAt = Date.UTC(2026, 9, 21, 10, 24);
+        const memory = {
+            ...testActivity[2],
+            id: 'memory-ready',
+            kind: 'memory' as const,
+            status: 'ready' as const,
+            phase: 'ready',
+            title: 'Общая память',
+            finishedAt,
+            feedbackAvailable: false,
+            thinking: '',
+            preview: '',
+        };
+        state.activity = [memory, {...testActivity[2], id: 'initiative', kind: 'initiative'}];
+        state.settings.paused = false;
+        state.engine.warming = state.settings.defaultModel;
+        await page.route('**/api/state', (route) => route.fulfill({json: state}));
+        await page.route('**/api/activity/history?**', (route) =>
+            route.fulfill({json: historyPage(state.activity)}),
+        );
+        if (dark) {
+            await persistTestTheme(page, true);
+        }
+        await page.reload();
+        await page.locator('[data-qa="nav-activity"]').click();
+        const card = page.locator('[data-qa="event-memory-ready"]');
+        const result = card.locator('[data-qa="reply-process"]');
+        const identity = card.locator('[data-qa="event-identity"]');
+        const tags = card.locator('[data-qa="event-tags"]');
+        expect((await identity.boundingBox())!.y + (await identity.boundingBox())!.height).toBeLessThan(
+            (await tags.boundingBox())!.y,
+        );
+        expect(
+            await identity
+                .getByText('Общая память', {exact: true})
+                .evaluate((title) => title.scrollWidth <= title.clientWidth),
+        ).toBe(true);
+        await expect(result).toContainText(ru.events.memoryReady);
+        const completedTime = await page.evaluate(
+            (date) =>
+                new Date(date).toLocaleTimeString('ru', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                }),
+            finishedAt,
+        );
+        await expect(result).toContainText(completedTime);
+        await expect(result.getByRole('progressbar')).toHaveCount(0);
+        await expect(page.locator('[data-qa="window-bar"]')).toContainText(ru.aiControl.warming);
+        const heights = await page
+            .locator('[data-qa="events-grid"] .g-label')
+            .evaluateAll((tags) => tags.map((tag) => tag.getBoundingClientRect().height));
+        expect(heights.length).toBeGreaterThanOrEqual(4);
+        expect(new Set(heights).size).toBe(1);
+        await page.screenshot({
+            path: `../docs/resources/activity-memory-${dark ? 'dark' : 'light'}.png`,
+            animations: 'disabled',
+        });
+    });
+
     test(`persisted history loads older pages without duplicating live cards in ${dark ? 'dark' : 'light'} theme`, async ({
         page,
     }) => {

@@ -1,0 +1,14 @@
+.root {
+    max-width: 340px;
+    width: 100%;
+}
+
+.value {
+    flex: 1;
+    min-width: 0;
+}
+
+.unit {
+    flex-shrink: 0;
+    min-width: 120px;
+}

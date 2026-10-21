@@ -1,6 +1,6 @@
-import {Box, Flex, Icon, Text, Tooltip} from '@gravity-ui/uikit';
+import {Box, Flex, Icon, Label, Text, Tooltip} from '@gravity-ui/uikit';
 import {Check, CheckDouble, Sparkles, TrashBin, EyeSlash} from '@gravity-ui/icons';
-import {useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {useLocale, useTranslations} from 'next-intl';
 import type {Message} from '@/shared/api/client';
 import {isEmojiMessage} from '@/modules/workspace/model/messagePresentation';
@@ -19,6 +19,7 @@ export function MessageBubble({
     replyText,
     onContextChanged,
     onDraftRequest,
+    onMenuOpenChange,
 }: {
     readonly message: Message;
     readonly nextMessage?: Message;
@@ -27,11 +28,24 @@ export function MessageBubble({
     readonly replyText?: string;
     readonly onContextChanged?: (change: ContextExclusionChange) => Promise<void>;
     readonly onDraftRequest?: () => Promise<void>;
+    readonly onMenuOpenChange?: (messageId: string, open: boolean) => void;
 }) {
     const t = useTranslations();
+    const chatUi = useTranslations('chatUi');
     const locale = useLocale();
     const [menu, setMenu] = useState<{x: number; y: number} | null>(null);
     const [menuInitialized, setMenuInitialized] = useState(false);
+    const row = useRef<HTMLDivElement>(null);
+    useEffect(() => () => onMenuOpenChange?.(message.id, false), [message.id, onMenuOpenChange]);
+    function openMenu(x: number, y: number) {
+        setMenuInitialized(true);
+        setMenu({x, y});
+        onMenuOpenChange?.(message.id, true);
+    }
+    function closeMenu() {
+        setMenu(null);
+        onMenuOpenChange?.(message.id, false);
+    }
     const continues = messagesGrouped(message, nextMessage, group);
     const groupIncoming = group && !message.outgoing;
     const bubble = (
@@ -41,11 +55,6 @@ export function MessageBubble({
             data-message-kind={message.kind}
             data-message-deleted={message.deleted || undefined}
             data-message-context-excluded={message.contextExcluded || undefined}
-            onContextMenu={(event) => {
-                event.preventDefault();
-                setMenuInitialized(true);
-                setMenu({x: event.clientX, y: event.clientY});
-            }}
             className={`${styles.bubble} ${message.outgoing ? styles.outgoing : styles.incoming} ${message.kind === 'sticker' || isEmojiMessage(message.text) ? styles.stickerBubble : ''} ${isEmojiMessage(message.text) ? styles.emojiBubble : ''} ${message.media ? styles.mediaBubble : ''} ${continues ? styles.grouped : styles.tail}`}
         >
             {groupIncoming && !messagesGrouped(message, previousMessage, group) && (
@@ -71,10 +80,17 @@ export function MessageBubble({
                 />
             )}
             {message.contextExcluded && (
-                <Text className={styles.contextExcluded} qa="message-context-excluded">
-                    <Icon data={EyeSlash} size={14} />
+                <Label
+                    className={styles.contextExcluded}
+                    qa="message-context-excluded"
+                    icon={<Icon data={EyeSlash} size={14} />}
+                    size="s"
+                    theme="normal"
+                    width="auto"
+                    title={t('messageMenu.excluded')}
+                >
                     {t('messageMenu.excluded')}
-                </Text>
+                </Label>
             )}
             <Flex justifyContent="flex-end" alignItems="center" gap={1} className={styles.messageMeta}>
                 {message.deleted && (
@@ -126,12 +142,41 @@ export function MessageBubble({
     );
     return (
         <>
-            {content}
+            <Box
+                ref={row}
+                qa="message-row"
+                data-message-row-id={message.id}
+                className={`${styles.messageRow} ${message.outgoing ? styles.messageRowOutgoing : ''}`}
+                role="group"
+                aria-label={chatUi('messageActions')}
+                tabIndex={0}
+                onMouseDown={(event) => {
+                    if (event.button === 2) {
+                        event.preventDefault();
+                    }
+                }}
+                onContextMenu={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    openMenu(event.clientX, event.clientY);
+                }}
+                onKeyDown={(event) => {
+                    if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
+                        event.preventDefault();
+                        const bounds = row.current?.getBoundingClientRect();
+                        if (bounds) {
+                            openMenu(bounds.left + Math.min(160, bounds.width / 2), bounds.top + 24);
+                        }
+                    }
+                }}
+            >
+                {content}
+            </Box>
             {menuInitialized && (
                 <MessageContextMenu
                     message={message}
                     position={menu}
-                    onClose={() => setMenu(null)}
+                    onClose={closeMenu}
                     onExcludedChanged={onContextChanged ?? (async () => {})}
                     onDraftRequest={onDraftRequest}
                 />

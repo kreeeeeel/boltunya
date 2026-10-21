@@ -9,22 +9,22 @@ vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
     api: mocks,
 }));
-const page = (id: string, nextCursor: string | null) => ({
-    data: {...historyPage([{...testActivity[2], id}]), nextCursor, hasMore: !!nextCursor},
+const page = (id: string, nextCursor: string | null, date = 1000) => ({
+    data: {...historyPage([{...testActivity[2], id, date}]), nextCursor, hasMore: !!nextCursor},
     response: new Response(),
 });
 
 it('retains older pages across polling and continues from the last loaded cursor', async () => {
     mocks.GET.mockReset()
-        .mockResolvedValueOnce(page('new', 'cursor-1'))
-        .mockResolvedValueOnce(page('old', 'cursor-2'))
-        .mockResolvedValueOnce(page('latest', 'new-first-page'))
-        .mockResolvedValueOnce(page('oldest', null));
+        .mockResolvedValueOnce(page('new', 'cursor-1', 3))
+        .mockResolvedValueOnce(page('old', 'cursor-2', 2))
+        .mockResolvedValueOnce(page('latest', 'new-first-page', 4))
+        .mockResolvedValueOnce(page('oldest', null, 1));
     const view = renderHook(useActivityHistory);
     await waitFor(() => expect(view.result.current.loading).toBe(false));
     await act(() => view.result.current.loadMore());
     await act(() => view.result.current.refresh());
-    expect(view.result.current.entries.map((entry) => entry.id)).toEqual(['new', 'old', 'latest']);
+    expect(view.result.current.entries.map((entry) => entry.id)).toEqual(['latest', 'new', 'old']);
     await act(() => view.result.current.loadMore());
     expect(mocks.GET.mock.calls[3][1].params.query.cursor).toBe('cursor-2');
     expect(view.result.current.entries).toHaveLength(4);

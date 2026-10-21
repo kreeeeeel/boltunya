@@ -117,3 +117,45 @@ it('searches API profiles together with local models and keeps one authoritative
     expect(screen.queryByText(ru.modelSearch.empty)).toBeNull();
     expect(screen.getAllByRole('button', {name: ru.chosen})).toHaveLength(1);
 });
+
+it('filters image-capable installed and catalog models together with API profiles under the search field', async () => {
+    mocks.GET.mockResolvedValue({data: {profiles: modelProfiles, presets: []}, response: new Response()});
+    const engine = structuredClone(workspaceState.engine);
+    engine.models[2].supportsVision = true;
+    const view = render(
+        <NextIntlClientProvider locale="ru" messages={ru}>
+            <ThemeProvider>
+                <ModelsPanel engine={engine} defaultModel="qwen3:1.7b" onRefresh={vi.fn()} />
+            </ThemeProvider>
+        </NextIntlClientProvider>,
+    );
+    await screen.findByText('Photo model');
+    fireEvent.click(screen.getByRole('tab', {name: ru.modelFilters.vision}));
+    expect(view.container.querySelectorAll('[data-qa="model-card"]')).toHaveLength(1);
+    expect(screen.getByText('Gemma 3 · 4B')).toBeVisible();
+    expect(screen.getByText('Photo model')).toBeVisible();
+    expect(screen.queryByText('Cloud text')).toBeNull();
+    const local = view.container.querySelector('[data-model-id="gemma3:4b"]') as HTMLElement;
+    const localVision = within(local).getByText(ru.modelProfiles.capability.vision).parentElement;
+    expect(localVision).toHaveTextContent(ru.imagesSupported);
+    expect(localVision).not.toHaveTextContent(ru.thinkingOn);
+    const profile = view.container.querySelector('[data-profile-id="profile-vision"]') as HTMLElement;
+    expect(within(profile).getByText(ru.modelProfiles.capability.vision).parentElement).toHaveTextContent(
+        ru.imagesSupported,
+    );
+    expect(within(profile).getByText(ru.compareThinking).parentElement).toHaveTextContent(ru.thinkingOn);
+    fireEvent.change(screen.getByRole('textbox', {name: ru.modelSearch.label}), {target: {value: 'Photo'}});
+    expect(view.container.querySelectorAll('[data-qa="model-card"]')).toHaveLength(0);
+    expect(screen.getByText('Photo model')).toBeVisible();
+    fireEvent.change(screen.getByRole('textbox', {name: ru.modelSearch.label}), {target: {value: ''}});
+    fireEvent.click(screen.getByRole('tab', {name: ru.modelFilters.generation}));
+    expect(view.container.querySelectorAll('[data-qa="model-card"]')).toHaveLength(2);
+    expect(screen.getByText('Cloud text')).toBeVisible();
+    expect(screen.queryByText('Photo model')).toBeNull();
+    const textModel = view.container.querySelector('[data-model-id="qwen3:1.7b"]') as HTMLElement;
+    expect(within(textModel).getByText(ru.modelProfiles.capability.vision).parentElement).toHaveTextContent(
+        ru.imagesUnsupported,
+    );
+    fireEvent.click(screen.getByRole('tab', {name: ru.modelFilters.all}));
+    expect(view.container.querySelectorAll('[data-qa="model-card"]')).toHaveLength(3);
+});

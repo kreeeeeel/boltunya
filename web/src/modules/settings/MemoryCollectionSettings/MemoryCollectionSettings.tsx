@@ -21,6 +21,26 @@ export function MemoryCollectionSettings({value, onUpdate}: SettingsDraftSection
                 {t('memory.enabled')}
             </Switch>
             <Text color="secondary">{t('memory.scheduleHint')}</Text>
+            <Flex direction="column" gap={2}>
+                <Text>{t('memory.collectionScope')}</Text>
+                <Select
+                    size="l"
+                    width="max"
+                    disabled={!value.memoryEnabled}
+                    value={[value.memoryCollectionScope]}
+                    options={(['ai-enabled', 'all-allowed'] as const).map((scope) => ({
+                        value: scope,
+                        content: t('memory.collectionScopes.' + scope),
+                    }))}
+                    onUpdate={([scope]) => {
+                        if (scope === 'ai-enabled' || scope === 'all-allowed') {
+                            onUpdate({...value, memoryCollectionScope: scope});
+                        }
+                    }}
+                    aria-label={t('memory.collectionScope')}
+                />
+                <Text color="secondary">{t('memory.collectionScopeHint')}</Text>
+            </Flex>
             <Select
                 size="l"
                 width="max"

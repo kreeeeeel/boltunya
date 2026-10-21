@@ -104,6 +104,11 @@
     margin-top: 24px;
 }
 
+.filters {
+    display: flex;
+    margin-top: 16px;
+}
+
 .searchInput {
     flex: 1;
     min-width: min(260px, 100%);

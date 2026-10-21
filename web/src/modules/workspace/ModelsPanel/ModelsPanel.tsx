@@ -13,6 +13,7 @@ import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
 import {ProfileModelCards} from '@/modules/workspace/ModelsPanel/ProfileModelCards';
 import {useModelProfiles} from '@/modules/settings/model/useModelProfiles';
 import {PromptBudgetNotice} from '@/modules/settings/PromptBudgetNotice/PromptBudgetNotice';
+import {SegmentedTabs} from '@/shared/ui/SegmentedTabs/SegmentedTabs';
 
 export function ModelsPanel({
     engine,
@@ -27,6 +28,7 @@ export function ModelsPanel({
     const [busy, setBusy] = useState('');
     const [error, setError] = useState('');
     const [search, setSearch] = useState('');
+    const [category, setCategory] = useState('all');
     const [measurements, setMeasurements] = useState<Record<string, Reply>>({});
 
     async function measure(model: string) {
@@ -96,6 +98,9 @@ export function ModelsPanel({
                         <Skeleton className={styles.searchInput} height={40} />
                         <Skeleton width={100} height={20} />
                     </Flex>
+                    <Box className={styles.filters}>
+                        <Skeleton width={320} height={36} />
+                    </Box>
                     <Box className={styles.cards}>
                         {Array.from({length: 12}, (_, index) => (
                             <Flex
@@ -115,7 +120,7 @@ export function ModelsPanel({
                                 </Flex>
                                 <Skeleton height={45} />
                                 <Flex direction="column" className={styles.comparison}>
-                                    {Array.from({length: 9}, (_, feature) => (
+                                    {Array.from({length: 10}, (_, feature) => (
                                         <Flex
                                             key={feature}
                                             className={styles.feature}
@@ -143,14 +148,19 @@ export function ModelsPanel({
     const query = search.trim().toLocaleLowerCase(locale);
     const engineInstalled = engine.installed ?? engine.online;
     const installingEngine = engine.downloading === 'Ollama';
-    const models = engine.models.filter((model) =>
-        [model.id, model.name, model.description].some((value) =>
-            value.toLocaleLowerCase(locale).includes(query),
-        ),
+    const models = engine.models.filter(
+        (model) =>
+            (category === 'all' || (category === 'vision' ? model.supportsVision : !model.supportsVision)) &&
+            [model.id, model.name, model.description].some((value) =>
+                value.toLocaleLowerCase(locale).includes(query),
+            ),
     );
     const enabledProfiles = connections.profiles.filter((profile) => profile.enabled);
-    const profiles = enabledProfiles.filter((profile) =>
-        [profile.name, profile.model].some((value) => value.toLocaleLowerCase(locale).includes(query)),
+    const profiles = enabledProfiles.filter(
+        (profile) =>
+            (category === 'all' ||
+                (category === 'vision' ? profile.capabilities.vision : !profile.capabilities.vision)) &&
+            [profile.name, profile.model].some((value) => value.toLocaleLowerCase(locale).includes(query)),
     );
     return (
         <Container className={[styles.root, embedded ? styles.embedded : ''].join(' ')}>
@@ -283,6 +293,17 @@ export function ModelsPanel({
                         })}
                     </Text>
                 </Flex>
+                <Box className={styles.filters}>
+                    <SegmentedTabs
+                        label={t('modelFilters.label')}
+                        value={category}
+                        onUpdate={setCategory}
+                        items={['all', 'generation', 'vision'].map((value) => ({
+                            value,
+                            label: t('modelFilters.' + value),
+                        }))}
+                    />
+                </Box>
                 <ProfileModelCards
                     selected={defaultModelProfileId}
                     onRefresh={onRefresh}
@@ -313,21 +334,28 @@ export function ModelsPanel({
                                 gap={4}
                                 className={`${styles.card} ${model.recommended ? styles.recommended : ''} ${!defaultModelProfileId && defaultModel === model.id ? styles.selected : ''}`}
                             >
-                                <Flex alignItems="center" justifyContent="space-between">
+                                <Flex alignItems="center" justifyContent="space-between" gap={2}>
                                     <Box className={styles.modelIcon}>
                                         <Icon data={index === 0 ? Thunderbolt : Sparkles} size={28} />
                                     </Box>
-                                    {model.supportsAutomation === false ? (
-                                        <Label theme="warning" size="m">
-                                            {t('modelDraftOnly')}
-                                        </Label>
-                                    ) : (
-                                        model.recommended && (
+                                    <Flex gap={2} wrap justifyContent="flex-end">
+                                        {model.supportsVision && (
                                             <Label theme="info" size="m">
-                                                {t('recommended')}
+                                                {t('modelFilters.vision')}
                                             </Label>
-                                        )
-                                    )}
+                                        )}
+                                        {model.supportsAutomation === false ? (
+                                            <Label theme="warning" size="m">
+                                                {t('modelDraftOnly')}
+                                            </Label>
+                                        ) : (
+                                            model.recommended && (
+                                                <Label theme="info" size="m">
+                                                    {t('recommended')}
+                                                </Label>
+                                            )
+                                        )}
+                                    </Flex>
                                 </Flex>
                                 <Flex direction="column" gap={2}>
                                     <Text variant="header-1">{model.name}</Text>
@@ -358,29 +386,55 @@ export function ModelsPanel({
                                         [
                                             'compareSpeed',
                                             t(
-                                                model.speed
-                                                    ? 'speed.' + model.speed
-                                                    : ['speedFastest', 'speedFast', 'speedBalanced'][index],
+                                                model.speed === 'unknown'
+                                                    ? 'modelMetadataUnknown'
+                                                    : model.speed
+                                                      ? 'speed.' + model.speed
+                                                      : ['speedFastest', 'speedFast', 'speedBalanced'][index],
                                             ),
                                         ],
                                         [
                                             'compareQuality',
                                             t(
-                                                model.quality
-                                                    ? 'quality.' + model.quality
-                                                    : ['qualityBasic', 'qualityGood', 'qualityBest'][index],
+                                                model.quality === 'unknown'
+                                                    ? 'modelMetadataUnknown'
+                                                    : model.quality
+                                                      ? 'quality.' + model.quality
+                                                      : ['qualityBasic', 'qualityGood', 'qualityBest'][index],
                                             ),
                                         ],
-                                        ['compareThinking', t(model.thinking ? 'thinkingOn' : 'thinkingOff')],
+                                        [
+                                            'compareThinking',
+                                            model.family === 'custom'
+                                                ? '—'
+                                                : t(model.thinking ? 'thinkingOn' : 'thinkingOff'),
+                                        ],
+                                        [
+                                            'modelProfiles.capability.vision',
+                                            model.family === 'custom'
+                                                ? t('modelMetadataUnknown')
+                                                : t(
+                                                      model.supportsVision
+                                                          ? 'imagesSupported'
+                                                          : 'imagesUnsupported',
+                                                  ),
+                                        ],
                                         [
                                             'compareContext',
-                                            t('modelContextSize', {
-                                                count: new Intl.NumberFormat(locale).format(
-                                                    model.contextTokens ?? 8192,
-                                                ),
-                                            }),
+                                            model.contextTokens === 0
+                                                ? '—'
+                                                : t('modelContextSize', {
+                                                      count: new Intl.NumberFormat(locale).format(
+                                                          model.contextTokens ?? 8192,
+                                                      ),
+                                                  }),
                                         ],
-                                        ['compareMemory', t('memoryRequirement', {gb: model.memoryGb ?? 8})],
+                                        [
+                                            'compareMemory',
+                                            model.memoryGb === 0
+                                                ? '—'
+                                                : t('memoryRequirement', {gb: model.memoryGb ?? 8}),
+                                        ],
                                         ['compareLicense', model.license ?? '—'],
                                         ['compareSize', model.size],
                                         [

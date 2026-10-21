@@ -1,7 +1,7 @@
 import {Box, Button, Flex, Icon, Loader, Text, Tooltip} from '@gravity-ui/uikit';
 import {ArrowLeft, BookOpen, CircleInfo, Sliders} from '@gravity-ui/icons';
 import {useLocale, useTranslations} from 'next-intl';
-import {Fragment, useEffect, useLayoutEffect, useRef, useState} from 'react';
+import {Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {messageDay} from '@/modules/workspace/model/messagePresentation';
 
 import type {ConversationProps} from '@/modules/workspace/Conversation/Conversation.types';
@@ -49,6 +49,14 @@ export function Conversation({
     const stick = useRef(true);
     const lastChat = useRef(chat?.id);
     const pagination = useRef(false);
+    const contextMenus = useRef(new Set<string>());
+    const menuOpenChanged = useCallback((messageId: string, open: boolean) => {
+        if (open) {
+            contextMenus.current.add(messageId);
+        } else {
+            contextMenus.current.delete(messageId);
+        }
+    }, []);
     const anchor = useRef<{id: string; top: number; first: string} | null>(null);
 
     useLayoutEffect(() => {
@@ -66,7 +74,7 @@ export function Conversation({
 
     async function earlier() {
         const area = scroll.current;
-        if (!area || pagination.current || !hasEarlier || !messages.length) {
+        if (!area || pagination.current || contextMenus.current.size || !hasEarlier || !messages.length) {
             return;
         }
         pagination.current = true;
@@ -102,8 +110,9 @@ export function Conversation({
         if (lastChat.current !== chat?.id) {
             lastChat.current = chat?.id;
             stick.current = true;
+            contextMenus.current.clear();
         }
-        if (stick.current) {
+        if (stick.current && !contextMenus.current.size) {
             const area = scroll.current;
             if (area) {
                 area.scrollTop = area.scrollHeight;
@@ -232,7 +241,7 @@ export function Conversation({
                         className={styles.messages}
                         onScroll={() => {
                             const el = scroll.current;
-                            if (el) {
+                            if (el && !contextMenus.current.size) {
                                 stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
                                 if (el.scrollTop < 100) {
                                     void earlier();
@@ -267,6 +276,7 @@ export function Conversation({
                                     <MessageBubble
                                         message={message}
                                         onContextChanged={onContextChanged}
+                                        onMenuOpenChange={menuOpenChanged}
                                         onDraftRequest={
                                             !message.outgoing ? () => draft(message.id) : undefined
                                         }

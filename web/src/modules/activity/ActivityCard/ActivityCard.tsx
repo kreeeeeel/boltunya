@@ -41,8 +41,8 @@ export function ActivityCard({
                 title={t('history')}
                 aria-label={t('open', {name: entry.title})}
             />
-            <Flex alignItems="center" justifyContent="space-between" gap={3} className={styles.heading}>
-                <Flex alignItems="center" gap={3} className={styles.identity}>
+            <Flex direction="column" gap={3} className={styles.heading}>
+                <Flex alignItems="center" gap={3} className={styles.identity} qa="event-identity">
                     <TelegramAvatar title={entry.title} url={entry.avatarUrl} />
                     <Flex direction="column" gap={1} className={styles.name}>
                         <Text variant="subheader-2" ellipsis>
@@ -53,18 +53,33 @@ export function ActivityCard({
                         </Text>
                     </Flex>
                 </Flex>
-                <Flex gap={2} alignItems="center" wrap>
-                    {entry.kind === 'draft' && <Label theme="info">{t('draft')}</Label>}
-                    {entry.kind === 'memory' && <Label theme="info">{t('memoryTask')}</Label>}
+                <Flex gap={2} alignItems="center" wrap qa="event-tags">
+                    {entry.kind === 'draft' && (
+                        <Label theme="info" size="m">
+                            {t('draft')}
+                        </Label>
+                    )}
+                    {entry.kind === 'memory' && (
+                        <Label theme="info" size="m">
+                            {t('memoryTask')}
+                        </Label>
+                    )}
+                    {entry.kind === 'initiative' && (
+                        <Label theme="info" size="m">
+                            {t('initiative')}
+                        </Label>
+                    )}
                     {entry.priority && (
-                        <Label icon={<Icon data={ArrowUpToLine} size={13} />}>{t('priority')}</Label>
+                        <Label size="m" icon={<Icon data={ArrowUpToLine} size={13} />}>
+                            {t('priority')}
+                        </Label>
                     )}
                     <Label theme={statusTheme(entry.status)} size="m" loading={running}>
                         {t(statusLabelKey(entry))}
                     </Label>
                 </Flex>
             </Flex>
-            {active ? (
+            {active || (entry.kind === 'memory' && entry.status === 'ready') ? (
                 <ActivityProgress entry={entry} />
             ) : (
                 <Text className={styles.preview} color={entry.status === 'error' ? 'danger' : 'secondary'}>

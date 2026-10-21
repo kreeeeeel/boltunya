@@ -429,6 +429,14 @@ test('Escape clears pointer focus on the chat row while keyboard focus remains v
                 return {x: rect.x, y: rect.y, width: rect.width, height: rect.height};
             }),
         );
+        const controls = await skeleton
+            .locator('[data-qa="skeleton-composer-control"]')
+            .evaluateAll((elements) =>
+                elements.map((element) => {
+                    const rect = element.getBoundingClientRect();
+                    return {x: rect.x, center: rect.y + rect.height / 2};
+                }),
+            );
         if (width === 1440) {
             await page.screenshot({
                 path: '../docs/resources/conversation-loading.png',
@@ -446,6 +454,19 @@ test('Escape clears pointer focus on the chat row while keyboard focus remains v
                 return {x: rect.x, y: rect.y, width: rect.width, height: rect.height};
             }),
         );
+        const loadedControls = await page
+            .locator('[data-qa="message-composer"] button')
+            .evaluateAll((elements) =>
+                elements.map((element) => {
+                    const rect = element.getBoundingClientRect();
+                    return {x: rect.x, center: rect.y + rect.height / 2};
+                }),
+            );
+        expect(loadedControls).toHaveLength(controls.length);
+        loadedControls.forEach((control, index) => {
+            expect(Math.abs(control.x - controls[index].x)).toBeLessThanOrEqual(1);
+            expect(Math.abs(control.center - controls[index].center)).toBeLessThanOrEqual(1);
+        });
         loaded.forEach((rect, index) =>
             Object.entries(rect).forEach(([key, value]) => {
                 expect(

@@ -2,13 +2,10 @@ import {useCallback, useEffect, useRef, useState} from 'react';
 import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
 import type {Activity} from '@/shared/api/client';
 import type {components} from '@/shared/api/schema';
+import {mergeActivityEntries, orderActivityEntries} from '@/modules/activity/model/activity';
 
 const PAGE_SIZE = 30;
 const POLL_INTERVAL_MS = 5000;
-
-function mergeEntries(previous: Activity[], incoming: Activity[]) {
-    return [...new Map([...previous, ...incoming].map((entry) => [entry.id, entry])).values()];
-}
 
 export function useActivityHistory() {
     const [entries, setEntries] = useState<Activity[]>([]);
@@ -46,7 +43,11 @@ export function useActivityHistory() {
             if (controller.signal.aborted || version !== generation.current) {
                 return;
             }
-            setEntries((previous) => mergeEntries(reset ? [] : previous, page.entries));
+            setEntries((previous) =>
+                orderActivityEntries(
+                    mergeActivityEntries(reset ? [] : previous, page.entries, more ? 'older' : 'newer'),
+                ),
+            );
             setStorage(page.storage);
             setTotal(page.total);
             if (more || !paginated.current) {

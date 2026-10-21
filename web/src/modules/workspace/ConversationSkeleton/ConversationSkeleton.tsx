@@ -48,10 +48,13 @@ export function ConversationSkeleton() {
                 ))}
             </Flex>
             <Box className={styles.composerArea}>
-                <Flex alignItems="center" gap={2} className={styles.composer} qa="skeleton-message-composer">
-                    <Skeleton width={32} height={32} />
+                <Flex alignItems="center" gap={1} className={styles.composer} qa="skeleton-message-composer">
+                    <Skeleton width={32} height={32} qa="skeleton-composer-control" />
+                    <Skeleton width={32} height={32} qa="skeleton-composer-control" />
                     <Skeleton className={styles.input} height={18} />
-                    <Skeleton width={32} height={32} />
+                    <Skeleton width={32} height={32} qa="skeleton-composer-control" />
+                    <Skeleton width={32} height={32} qa="skeleton-composer-control" />
+                    <Skeleton width={32} height={32} qa="skeleton-composer-control" />
                 </Flex>
             </Box>
         </Flex>

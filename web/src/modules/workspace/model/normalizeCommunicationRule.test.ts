@@ -34,3 +34,13 @@ it('migrates an unnamed or removed custom selection without losing personal inst
     };
     expect(normalizeCommunicationRule(rule, [])).toEqual({...rule, style: 'friendly', styleId: ''});
 });
+
+it('normalizes legacy proactive defaults without changing explicit per-chat choices', () => {
+    const legacy = {...defaultRule, proactiveMode: undefined, proactiveIntervalMinutes: undefined};
+    expect(normalizeCommunicationRule(legacy, [])).toMatchObject({
+        proactiveMode: 'inherit',
+        proactiveIntervalMinutes: 0,
+    });
+    const configured = {...defaultRule, proactiveMode: 'enabled' as const, proactiveIntervalMinutes: 90};
+    expect(normalizeCommunicationRule(configured, [])).toBe(configured);
+});

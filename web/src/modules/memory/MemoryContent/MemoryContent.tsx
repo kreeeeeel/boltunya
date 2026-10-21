@@ -1,9 +1,9 @@
-import {Box, Button, Flex, Icon, Label, Skeleton, Text, TextArea} from '@gravity-ui/uikit';
-import {FolderOpen} from '@gravity-ui/icons';
+import {Box, Button, Flex, Icon, Label, Skeleton, Text, TextArea, Tooltip} from '@gravity-ui/uikit';
+import {ArrowRotateRight, ArrowsRotateRight, FolderOpen, FileArrowUp} from '@gravity-ui/icons';
 import {useState} from 'react';
 import {useLocale, useTranslations} from 'next-intl';
 import type {useMemoryDocument} from '@/modules/memory/model/useMemoryDocument';
-import styles from '@/modules/memory/MemoryDialog/MemoryDialog.module.css';
+import styles from '@/modules/memory/MemoryContent/MemoryContent.module.css';
 import {MarkdownContent} from '@/shared/ui/MarkdownContent/MarkdownContent';
 import {desktopBridge} from '@/shared/desktop/bridge';
 import {errorMessage} from '@/shared/api/client';
@@ -100,39 +100,51 @@ export function MemoryContent({
                                 {t(document.backfillComplete ? 'memory.complete' : 'memory.scanning')}
                             </Text>
                         </Box>
-                        <Flex gap={2} wrap>
+                        <Flex gap={2} wrap alignItems="center" className={styles.actions} qa="memory-actions">
                             <Button
+                                view="flat-secondary"
+                                size="l"
                                 disabled={memory.busy || document.status === 'disabled'}
                                 onClick={() => void memory.refresh()}
                             >
+                                <Icon data={ArrowRotateRight} size={18} />
                                 {t('memory.refresh')}
                             </Button>
-                            {chatId && (
-                                <Button
-                                    disabled={memory.busy || document.status === 'disabled'}
-                                    onClick={() => void memory.refresh(true)}
-                                >
-                                    {t('memory.rebuild')}
-                                </Button>
-                            )}
                             <Button
                                 view="flat-secondary"
+                                size="l"
+                                disabled={memory.busy || document.status === 'disabled'}
+                                onClick={() => void memory.refresh(true)}
+                            >
+                                <Icon data={ArrowsRotateRight} size={18} />
+                                {t('memory.rebuild')}
+                            </Button>
+                            <Button
+                                view="flat-secondary"
+                                size="l"
                                 disabled={memory.busy}
                                 onClick={() => void memory.reload()}
                             >
+                                <Icon data={FileArrowUp} size={18} />
                                 {t('memory.reload')}
                             </Button>
+                            {desktopBridge() && (
+                                <Tooltip content={t('storageLocations.open')}>
+                                    <Button
+                                        view="flat-secondary"
+                                        size="l"
+                                        aria-label={t('storageLocations.open')}
+                                        onClick={() => void openFolder()}
+                                    >
+                                        <Icon data={FolderOpen} size={20} />
+                                    </Button>
+                                </Tooltip>
+                            )}
                         </Flex>
                         {document.error && <Text color="danger">{document.error}</Text>}
                         <Text color="secondary" className={styles.path}>
                             {document.relativePath}
                         </Text>
-                        {desktopBridge() && (
-                            <Button view="flat-secondary" onClick={() => void openFolder()}>
-                                <Icon data={FolderOpen} size={18} />
-                                {t('storageLocations.open')}
-                            </Button>
-                        )}
                         {folderError && (
                             <Text color="danger" role="alert">
                                 {folderError}

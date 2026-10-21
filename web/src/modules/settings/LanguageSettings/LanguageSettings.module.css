@@ -1,5 +1,5 @@
 .options {
-    gap: 12px;
+    gap: 8px;
 }
 
 .option {
@@ -8,8 +8,8 @@
     flex-direction: row-reverse;
     justify-content: space-between;
     align-items: center;
-    padding: 18px;
-    min-height: 64px;
+    padding: 10px 16px;
+    min-height: 48px;
     border-radius: 12px;
     background: var(--tiho-bg);
     transition: background var(--tiho-duration);
@@ -17,6 +17,10 @@
 
 .option:global(.g-radio_checked) {
     background: var(--tiho-selected);
+}
+
+.options:global(.g-radio-group_direction_vertical) .option:global(.g-radio-group__option):not(:last-child) {
+    margin-block-end: 0;
 }
 
 .option :global(.g-control-label__text) {

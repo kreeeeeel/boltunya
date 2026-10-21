@@ -5,7 +5,7 @@ import {useState} from 'react';
 
 import {ActivityCard} from '@/modules/activity/ActivityCard/ActivityCard';
 import {ActivityDetailsDialog} from '@/modules/activity/ActivityDetailsDialog/ActivityDetailsDialog';
-import {isActive} from '@/modules/activity/model/activity';
+import {isActive, mergeActivityEntries, orderActivityEntries} from '@/modules/activity/model/activity';
 import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
 import type {Activity, ReplyQueue} from '@/shared/api/client';
 import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
@@ -32,9 +32,11 @@ export function ActivityPanel({
     const [parallelOpen, setParallelOpen] = useState(false);
     const [historyOpen, setHistoryOpen] = useState(false);
     const history = useActivityHistory();
-    const entries = [
-        ...new Map([...history.entries, ...currentEntries].map((entry) => [entry.id, entry])).values(),
-    ];
+    const archived = new Map(history.entries.map((entry) => [entry.id, entry]));
+    const entries = mergeActivityEntries(
+        history.entries,
+        currentEntries.map((entry) => (!isActive(entry) ? (archived.get(entry.id) ?? entry) : entry)),
+    );
     const [busy, setBusy] = useState('');
     const [error, setError] = useState('');
     async function act(key: string, action: () => Promise<unknown>) {
@@ -50,14 +52,7 @@ export function ActivityPanel({
         }
     }
     const queued = queue?.queued ?? entries.filter((entry) => entry.status === 'queued').length;
-    const ordered = [...entries].sort((a, b) => {
-        const rank = (entry: Activity) =>
-            entry.status === 'generating' ? 0 : entry.status === 'queued' ? 1 : 2;
-        return (
-            rank(a) - rank(b) ||
-            (a.status === 'queued' ? (a.queuePosition ?? 0) - (b.queuePosition ?? 0) : b.date - a.date)
-        );
-    });
+    const ordered = orderActivityEntries(entries);
     const enableButton = assistantPaused ? (
         <Button
             view="action"

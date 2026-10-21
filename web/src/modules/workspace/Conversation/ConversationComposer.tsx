@@ -1,5 +1,5 @@
 import {Box, Button, DropdownMenu, Flex, Icon, Text, TextArea, Tooltip} from '@gravity-ui/uikit';
-import {FaceSmile, Paperclip, PaperPlane, Sparkles} from '@gravity-ui/icons';
+import {FaceSmile, File, Paperclip, PaperPlane, Picture, Sparkles, Sticker, Video} from '@gravity-ui/icons';
 import {useEffect, useRef, useState} from 'react';
 import {useTranslations} from 'next-intl';
 import {api, dataOrThrow} from '@/shared/api/client';
@@ -9,7 +9,10 @@ import {StickerPicker} from '@/modules/media/StickerPicker/StickerPicker';
 import {useMediaMessages} from '@/modules/media/i18n/messages';
 import {validAttachments} from '@/modules/media/model/uploads';
 import type {AttachmentKind} from '@/modules/media/model/uploads';
+import {EmojiPicker} from '@/shared/ui/EmojiPicker/EmojiPicker';
 import styles from '@/modules/workspace/Conversation/Conversation.module.css';
+
+const MAX_MESSAGE_LENGTH = 4096;
 
 export function ConversationComposer({
     chatId,
@@ -29,12 +32,14 @@ export function ConversationComposer({
     readonly onMediaSent: () => Promise<void>;
 }) {
     const t = useTranslations();
+    const chatUi = useTranslations('chatUi');
     const media = useMediaMessages();
     const [error, setError] = useState('');
     const [selection, setSelection] = useState<AttachmentSelection[]>();
     const [kind, setKind] = useState<AttachmentKind>('media');
     const [stickers, setStickers] = useState(false);
     const files = useRef<HTMLInputElement>(null);
+    const input = useRef<HTMLTextAreaElement>(null);
     const [stickerAnchor, setStickerAnchor] = useState<HTMLButtonElement | null>(null);
     const urls = useRef(new Set<string>());
 
@@ -42,14 +47,32 @@ export function ConversationComposer({
         const values = urls.current;
         return () => values.forEach(URL.revokeObjectURL);
     }, []);
-    function choose(mode: AttachmentKind) {
-        setKind(mode);
+    function choose(mode: 'photo' | 'video' | 'document') {
+        setKind(mode === 'document' ? 'document' : 'media');
         setError('');
         if (files.current) {
             files.current.accept =
-                mode === 'media' ? 'image/jpeg,image/png,image/webp,video/mp4,video/webm' : '';
+                mode === 'photo'
+                    ? 'image/jpeg,image/png,image/webp'
+                    : mode === 'video'
+                      ? 'video/mp4,video/webm'
+                      : '';
             files.current.click();
         }
+    }
+
+    function insertEmoji(emoji: string) {
+        const start = input.current?.selectionStart ?? text.length;
+        const end = input.current?.selectionEnd ?? start;
+        const next = text.slice(0, start) + emoji + text.slice(end);
+        if (next.length > MAX_MESSAGE_LENGTH) {
+            return;
+        }
+        onTextChange(next);
+        requestAnimationFrame(() => {
+            input.current?.focus({preventScroll: true});
+            input.current?.setSelectionRange(start + emoji.length, start + emoji.length);
+        });
     }
 
     function closeAttachments() {
@@ -100,14 +123,29 @@ export function ConversationComposer({
                 />
                 <DropdownMenu
                     items={[
-                        {text: media.photos, action: () => choose('media')},
-                        {text: media.documents, action: () => choose('document')},
+                        {
+                            text: chatUi('photos'),
+                            iconStart: <Icon data={Picture} size={18} />,
+                            action: () => choose('photo'),
+                        },
+                        {
+                            text: chatUi('videos'),
+                            iconStart: <Icon data={Video} size={18} />,
+                            action: () => choose('video'),
+                        },
+                        {
+                            text: media.documents,
+                            iconStart: <Icon data={File} size={18} />,
+                            action: () => choose('document'),
+                        },
                     ]}
+                    popupProps={{className: styles.attachmentMenu, placement: ['top-start', 'bottom-start']}}
                     renderSwitcher={(props) => (
                         <Button
                             {...props}
                             className={styles.composerButton}
                             view="flat-secondary"
+                            disabled={busy === 'send'}
                             aria-label={media.attach}
                         >
                             <Icon data={Paperclip} size={20} />
@@ -127,6 +165,7 @@ export function ConversationComposer({
                     </Button>
                 </Tooltip>
                 <TextArea
+                    controlRef={input}
                     view="clear"
                     size="l"
                     className={styles.input}
@@ -136,7 +175,7 @@ export function ConversationComposer({
                     minRows={1}
                     maxRows={5}
                     placeholder={t('messagePlaceholder')}
-                    controlProps={{'aria-label': t('messagePlaceholder'), maxLength: 4096}}
+                    controlProps={{'aria-label': t('messagePlaceholder'), maxLength: MAX_MESSAGE_LENGTH}}
                     onKeyDown={(event) => {
                         if (event.key === 'Enter' && !event.shiftKey) {
                             event.preventDefault();
@@ -144,14 +183,24 @@ export function ConversationComposer({
                         }
                     }}
                 />
+                <EmojiPicker
+                    value=""
+                    trigger={<Icon data={FaceSmile} size={20} />}
+                    className={styles.composerButton}
+                    disabled={busy === 'send'}
+                    placement="top-end"
+                    returnFocus={false}
+                    onUpdate={insertEmoji}
+                />
                 <Button
                     ref={setStickerAnchor}
                     className={styles.composerButton}
                     view="flat-secondary"
                     aria-label={media.stickers}
+                    disabled={busy === 'send'}
                     onClick={() => setStickers((value) => !value)}
                 >
-                    <Icon data={FaceSmile} size={20} />
+                    <Icon data={Sticker} size={20} />
                 </Button>
                 <Button
                     view="action"
