@@ -2,6 +2,8 @@
 
 Aigram uses the official sherpa-onnx **1.13.8 Java API** for CPU speech recognition and synthesis. Its Windows x64 JNI runtime and the selected models are optional downloads. Opening the app or changing a setting never downloads them. Models require the separately installed `sherpa-runtime` asset; inference reports a missing installation instead of installing dependencies automatically.
 
+The table below records the historical five-asset baseline of the published **v2.6.41**, including its original three synthesis voices. It is not the complete current library. See the [expanded catalog](catalog-en.md) for the current models and their individual terms.
+
 | Asset ID | Download bytes | Purpose |
 | --- | ---: | --- |
 | `sherpa-runtime` | 8,277,046 | Windows x64 CPU JNI runtime |
@@ -28,6 +30,8 @@ Model import uploads a `.tar.bz2` archive through the local authenticated API, t
 
 Successful imports publish a `custom-…` voice and its persistent local registry atomically. The catalog includes it in the regular synthesis selector after restart. Missing files are reported as an incomplete local installation; a user-provided voice has no automatic download URL. **Refresh list** rereads installation state, and the desktop **Open in Explorer** action accepts only the fixed `speech` storage-location ID. See the [supported package layout](en.md#test-and-import-voices-in-settings).
 
+The manual **Voice message** dialog uses a separate chat-bound draft path. It accepts an installed voice and speed for this request without updating global preferences. **Test** is optional; **Speak and send** queues synthesis and sends the resulting voice note, or reuses an unchanged ready preview. Closing or cancelling clears the send intention before dispatch. An uncertain send cannot be retried with the same recording, and a failed refresh after confirmed delivery retries only the refresh. See [manual voice and AI drafts](en.md#preview-before-sending).
+
 ## Worker isolation and private data
 
 Each inference starts an owned JVM worker without Spring. Requests, including text, travel through bounded UTF-8 JSON on standard input. The command line contains no utterance or transcript. Native standard output and error are discarded; a bounded private result file carries the response and is removed after the request.
@@ -47,7 +51,7 @@ The catalog displays licence provenance instead of calling every model unrestric
 
 ## Verification
 
-Unit and HTTP regressions cover pinned byte bounds and checksums, archive traversal/link rejection, installation state, cancellation, offline startup, selected models, exact Unicode synthesis input, protocol cleanup, preview/send separation and imported-model persistence. The final Gradle gate completed with 619 Kotlin cases, zero failures and 14 skips: 12 unrelated opt-in AI/network/memory checks and two Windows symlink-privilege checks. All 12 installed SDK tests, 257 full UI unit tests, 39 Electron tests and 10 script tests passed. A further focused run passed 16 tests across four files, including three new hook regressions.
+The original speech release's unit and HTTP regressions cover pinned byte bounds and checksums, archive traversal/link rejection, installation state, cancellation, offline startup, selected models, exact Unicode synthesis input, protocol cleanup, preview/send separation and imported-model persistence. Its final Gradle gate completed with 619 Kotlin cases, zero failures and 14 skips: 12 unrelated opt-in AI/network/memory checks and two Windows symlink-privilege checks. All 12 installed SDK tests, 257 full UI unit tests, 39 Electron tests and 10 script tests passed. A further focused run passed 16 tests across four files, including three new hook regressions. These are historical baseline results. New expanded-library local results are recorded in the main speech guide; publication is verified separately.
 
 Live tests are opt-in with `AIGRAM_LIVE_SPEECH=true` and use previously downloaded artifacts in `build/speech-verification`. The following isolated checks have passed:
 
@@ -55,11 +59,11 @@ Live tests are opt-in with `AIGRAM_LIVE_SPEECH=true` and use previously download
 | --- | --- | ---: |
 | `LiveSpeechSettingsTest` | Upload a real 21 MB Piper archive through HTTP, import it, synthesize the entered sample and retrieve playable Ogg audio | 15.782 s |
 | `LiveSpeechPipelineTest` | Verified installation → Russian Piper synthesis → Ogg/Opus → mono 16 kHz WAV → Whisper recognition | 36.130 s |
-| `LiveSpeechVoicesTest` | Install and synthesize with all three curated voices: Irina, Ruslan and Amy | 34.490 s |
+| `LiveSpeechVoicesTest` | Install and synthesize with the original three curated voices: Irina, Ruslan and Amy | 34.490 s |
 
-The voice run recorded 14,866 ms for installation and synthesis times of 3,886 ms for Irina, 3,673 ms for Ruslan and 5,994 ms for Amy. The earlier intermittent Ruslan install error was not reproduced by standalone/final all-voice verification; its cause remains undetermined. Test-only diagnostics capture installation failures without changing production behavior.
+The original three-voice run recorded 14,866 ms for installation and synthesis times of 3,886 ms for Irina, 3,673 ms for Ruslan and 5,994 ms for Amy. The earlier intermittent Ruslan install error was not reproduced by standalone/final three-voice verification; its cause remains undetermined. Test-only diagnostics capture installation failures without changing production behavior.
 
-The pipeline preserved the spoken words; Whisper infers punctuation, so punctuation equality is not required. Test totals include setup and cleanup, not just model latency, and depend on the verification hardware. These checks do not contact Telegram, use the actual app profile or alter Ollama models. The full browser run passed 135 scenarios; all eight final voice browser scenarios passed after the collapsed-heading and preview-hook changes (`build/speech-browser-last.log`). Browser fixtures verify controls independently; the packaged check below also exercises actual local synthesis and playback.
+The pipeline preserved the spoken words; Whisper infers punctuation, so punctuation equality is not required. Test totals include setup and cleanup, not just model latency, and depend on the verification hardware. These checks do not contact Telegram, use the actual app profile or alter Ollama models. The original release's full browser run passed 135 scenarios; all eight voice browser scenarios passed after its collapsed-heading and preview-hook changes (`build/speech-browser-last.log`). These totals do not cover the new catalog or manual dialog. Browser fixtures verify controls independently; the packaged check below also exercises actual local synthesis and playback.
 
 ## Optional packaged speech smoke
 
@@ -82,4 +86,12 @@ Synthetic audio, the settings screenshot and timing/boolean evidence are retaine
 
 The actual unpacked Aigram **2.6.39** passed this check in **44.259 s**. The API synthesis flow took 10.850 s; the settings synthesis/playback flow took 10.011 s. Both produced real Ogg audio, and the settings player loaded its duration and advanced playback. The model trap recorded zero inference and zero unexpected requests. Telegram remained signed out with no chats, unsaved settings stayed unchanged, and `launch.url` was removed after shutdown. Local evidence is in `build/speech-verification/packaged-proof/run-KslmQb/proof.json`.
 
-The local portable EXE's extracted payload also passed in **76.760 s**, retaining its original EXE and payload hashes in `build/speech-verification/packaged-proof/run-193EDQ/proof.json`. Native window, tray and Windows startup checks passed separately. This verifies local packages. After Windows CI publishes the release, verify its source/tag, downloaded EXE/SDK hashes, the downloaded application's behavior and the actual-profile restart. Record that separate result in the release notes and local `complie/VERIFICATION.md`.
+The local portable EXE's extracted payload also passed in **76.760 s**, retaining its original EXE and payload hashes in `build/speech-verification/packaged-proof/run-193EDQ/proof.json`. Native window, tray and Windows startup checks passed separately. These earlier runs verified local packages.
+
+### Published v2.6.41 verification
+
+The published [v2.6.41 release](https://github.com/kreeeeeel/boltunya/releases/tag/v2.6.41) passed [Windows CI](https://github.com/kreeeeeel/boltunya/actions/runs/39668438423). Its release tag and source commit both resolve to `159228cc30f4fca063e9ddad0cd59b4a244a5b58`; the downloaded EXE and SDK hashes were checked against the published digests. The downloaded portable EXE is 267,083,244 bytes, SHA-256 `a3ecb4870f6d981f8e8df967d0791293809b3a77c8caa14fdb0b69f5625e679f`.
+
+That exact downloaded application's extracted payload passed real speech verification in **34.822 s**: API synthesis took 4.743 s and settings synthesis/playback 4.417 s. The real audio played in a fresh signed-out profile with zero conversation-model inference or unexpected model requests. Unsaved voice/rate preferences remained unchanged and shutdown removed the session descriptor. Evidence: `build/speech-verification/packaged-proof/run-V0O1bt/proof.json`.
+
+The published portable EXE was then launched normally with the existing profile, upgrading **2.6.38 → 2.6.41** while preserving Telegram authorization, settings and manual memory notes. The safe-status report is `build/aigram-2.6.41-published-restart.json`; the combined release evidence is recorded in local `complie/VERIFICATION.md`. This verifies the published baseline, not the expanded catalog or new manual dialog, whose newer local results are recorded in the main speech guide.

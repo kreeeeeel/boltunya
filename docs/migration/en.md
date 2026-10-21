@@ -104,6 +104,19 @@ The recurring enhancement automation remains paused. Work is limited to the requ
 - [x] Verify all 135 browser scenarios before the final collapsed-heading/preview-hook changes.
 - [x] Pass all eight final voice browser scenarios after the last changes (`build/speech-browser-last.log`).
 - [x] Run real packaged speech on the local unpacked Aigram 2.6.39 (44.259 s): API and settings synthesis, actual playback, no model inference, signed out, unchanged preferences and clean shutdown. Retain the isolated evidence in `build/speech-verification/packaged-proof/run-KslmQb`. [Commands and limits](../speech/runtime-en.md#optional-packaged-speech-smoke).
-- [ ] Publish, verify Windows CI, EXE/SDK SHA-256 and source tag, then launch the published EXE with the existing profile. Record exact evidence rather than treating a push as a completed release.
+- [x] Publish [v2.6.41](https://github.com/kreeeeeel/boltunya/releases/tag/v2.6.41), verify successful Windows CI, EXE/SDK SHA-256 and source `159228c`, then open the published portable with the existing profile. Real speech in its extracted payload passed in 34.822 s; Telegram authorization, settings and manual notes were preserved. Exact evidence is recorded in the release notes and local `complie/VERIFICATION.md`.
 
-Details and current limitations: [voice messages](../speech/en.md), [runtime](../speech/runtime-en.md). Speech remains off until explicitly enabled. The integrated settings test cannot send Telegram messages. The local unpacked build is verified; Windows publication, downloaded-asset verification and the actual-profile restart still require separate evidence in the release notes and local `complie/VERIFICATION.md`.
+Details and current limitations: [voice messages](../speech/en.md), [runtime](../speech/runtime-en.md). Speech remains off until explicitly enabled. The integrated settings test cannot send Telegram messages. This checkpoint is published and verified; recurring enhancement automation remains paused.
+
+## Current manual checkpoint — speech library and reply settings
+
+- [x] Expand the catalog with distinct, verified single-speaker Piper voices, preserving existing IDs, exact artifact sizes/checksums, source model cards and license qualifications. Include a real compatible character voice only when its package is confirmed.
+- [x] Move automatic text/voice reply mode and probability to Assistant → Replies. Organize Speech models using the shared Engine / Recognition / Synthesis tabs, searchable language-filtered cards and the real settings preview.
+- [x] Repair outgoing attachment/voice playback using a bounded owned native-input cache, session-safe media lookup, explicit completed-cache cleanup and compact wave/time layout.
+- [x] Replace composer emoji/sticker pickers with manual text-to-voice composition, per-draft voice choice, real preview, one-action synthesis/send, cancellation and duplicate-send protection. Preserve ordinary drafts and existing received media.
+- [x] Transcribe every eligible incoming/outgoing voice in selected reply history and memory batches; preserve provenance/exclusions and replan memory token budgets after transcription without skipping sources.
+- [x] Verify at least two newly added voices through download verification, installation, native synthesis, Opus and recognition in an isolated profile. Do not install the whole catalog in the user's profile or send Telegram messages.
+- [x] Pass local backend/SDK/UI/Electron/script checks; verify all 141 browser scenarios across full/final speech runs, inspect both themes and narrow/short windows, and update English/Russian guides and screenshots.
+- [ ] Publish through Windows CI, verify the downloaded EXE/SDK hashes and source/tag, exercise real speech in the published payload, and restart the preserved actual profile. Record final evidence in release notes and local complie/VERIFICATION.md.
+
+Alice, streamer and Minecraft searches must distinguish direct text-to-speech from RVC/So-VITS voice conversion. A renamed archive is not a compatible model; unsupported packages must not become fake downloadable TTS cards.

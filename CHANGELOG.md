@@ -2,6 +2,37 @@
 
 Release versions are assigned by Windows CI. Each GitHub release includes the first dated entry below, the tested source commit and its verification run.
 
+## 2026-10-22 — Voice catalog, manual recordings and transcribed history
+
+### Added
+
+- Expand the optional local catalog to 63 synthesis voices across 39 languages, including four compatible GLaDOS voices. Add searchable synthesis/recognition/engine tabs, language filters, source and license details, and compact download cards. Existing asset identifiers and imported voices remain compatible.
+- Add a microphone action beside the composer. Choose an installed voice and speech rate, enter exact text, optionally preview it, or synthesize and send a native voice note in one action. Keep the ordinary text draft, use the shared cancellable queue, and protect against duplicate or uncertain sends.
+- Transcribe eligible voice notes from both participants throughout the history selected for a reply. Apply the same recognition to selected memory batches and recheck their token budget after transcription. Preserve author metadata, automation provenance and context exclusions.
+- Expose typed speech operations through the hand-written Kotlin SDK facade as well as the generated clients. Extend the canonical draft request with optional per-request voice and speed, without changing saved defaults.
+
+### Changed
+
+- Move automatic reply format and random voice probability into Assistant → Replies. Group runtime, recognition, synthesis, testing and importing under Models and tools → Speech models.
+- Remove emoji and sticker pickers from the message composer and editing toolbar. Received stickers and existing message formatting remain supported.
+
+### Fixed
+
+- Retain native outgoing voice and attachment inputs independently of temporary drafts. Include the bounded outgoing cache in cache statistics and cleanup, and keep uncertain native uploads pinned until successful completion rather than treating a timeout as delivery.
+- Recover registered older generated voice files within their own account/session, refresh completed media state, and retry failed audio loads. Keep playing audio intact when Telegram confirms a download or supplies its identity.
+- Reduce spacing between voice waveforms and message timestamps, and remove the photo-style time overlay from audio messages.
+
+### Verification and limitations
+
+- The local Gradle gate passed 644 Kotlin cases with zero failures and 20 opt-in/platform skips, plus all 12 installed TypeScript SDK tests. Electron and script suites passed 39 and 10 tests respectively.
+- All 281 UI cases were covered by the full run and focused corrections. All 141 browser scenarios were verified across the full run and final 16 speech cases, including playback and geometry in both themes at 1440/390 px and a short 640 × 520 window. Screenshot review caught and fixed a 480/520 px modal-container mismatch; field/button containment is now asserted explicitly.
+- Real GLaDOS (English) and Dmitri (Russian) installation → synthesis → Opus → Whisper verification passed in 77.408 s. Their individual synthesis calls took 3.102 s and 5.313 s on this machine under load; these are observations, not latency guarantees. The final real settings HTTP upload/import/preview and chat-bound manual synthesis check passed in 29.294 s. Two identical send requests delivered one recording to a synthetic Telegram gateway, with unchanged preferences and no conversation-model call or real Telegram send.
+- Local quality gates, browser checks, real speech verification and publication results are recorded with the release. Published EXE/SDK checksums, source/tag correspondence and actual-profile restart must be verified separately from a local build.
+- Recognition remains opt-in. Deleted or excluded messages are never transcribed for model context; automated replies never become owner-style examples. No automatic chat permissions are enabled by this update.
+- Model weights remain explicit optional downloads. Catalog compatibility and pinned archive metadata are checked for every entry; real inference checks sample selected voices, not all 63. Dataset and character rights vary and are disclosed separately from software licenses.
+- Alice, Bratishkinoff and Minecraft packs found during research use RVC or So-VITS-SVC voice conversion and cannot run in the current Piper engine. They are documented with their sources rather than offered as incompatible downloads.
+- Tests use synthetic speech and conversations. No test messages are sent to people, and recurring enhancement automation remains paused.
+
 ## 2026-10-21 — Local speech recognition and voice replies
 
 ### Added
