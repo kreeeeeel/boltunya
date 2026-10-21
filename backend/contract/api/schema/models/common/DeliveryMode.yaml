@@ -1,0 +1,6 @@
+DeliveryMode:
+    type: string
+    enum:
+        - inherit
+        - reply
+        - send

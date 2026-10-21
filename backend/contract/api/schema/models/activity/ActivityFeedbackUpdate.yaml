@@ -1,0 +1,12 @@
+ActivityFeedbackUpdate:
+    type: object
+    required:
+        - rating
+    additionalProperties: false
+    properties:
+        rating:
+            $ref: ./ActivityFeedbackRating.yaml#/ActivityFeedbackRating
+        comment:
+            type: string
+            maxLength: 1000
+            description: Omit to preserve the current comment. An explicit empty string clears it.

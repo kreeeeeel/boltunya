@@ -1,0 +1,6 @@
+MemoryCollectionScope:
+    type: string
+    enum:
+        - ai-enabled
+        - all-allowed
+    description: 'Default: ai-enabled.'

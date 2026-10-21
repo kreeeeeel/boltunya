@@ -1,0 +1,7 @@
+QueuePauseRequest:
+    type: object
+    required:
+        - paused
+    properties:
+        paused:
+            type: boolean

@@ -1,0 +1,9 @@
+ModelPromptReport:
+    type: object
+    required:
+        - prompts
+    properties:
+        prompts:
+            type: array
+            items:
+                $ref: ./ModelPromptSettings.yaml#/ModelPromptSettings

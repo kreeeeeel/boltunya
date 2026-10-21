@@ -1,0 +1,9 @@
+StorageLocationReport:
+    type: object
+    required:
+        - locations
+    properties:
+        locations:
+            type: array
+            items:
+                $ref: ./StorageLocation.yaml#/StorageLocation

@@ -1,0 +1,34 @@
+ModelProfileTestResult:
+    type: object
+    required:
+        - ok
+        - code
+        - message
+        - durationMs
+        - inputTokens
+        - outputTokens
+        - finishReason
+        - preview
+    properties:
+        ok:
+            type: boolean
+            default: false
+        code:
+            type: string
+            default: ''
+        message:
+            type: string
+            default: ''
+        durationMs:
+            type: integer
+            format: int64
+        inputTokens:
+            type: integer
+        outputTokens:
+            type: integer
+        finishReason:
+            type: string
+            default: ''
+        preview:
+            type: string
+            default: ''

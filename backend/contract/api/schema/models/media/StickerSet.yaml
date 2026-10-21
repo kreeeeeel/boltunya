@@ -1,0 +1,21 @@
+StickerSet:
+    type: object
+    required:
+        - id
+        - title
+        - name
+        - count
+    properties:
+        id:
+            type: string
+        title:
+            type: string
+        name:
+            type: string
+        thumbnail:
+            allOf:
+                -
+                    $ref: ./MediaAttachment.yaml#/MediaAttachment
+            nullable: true
+        count:
+            type: integer

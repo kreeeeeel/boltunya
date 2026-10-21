@@ -1,0 +1,74 @@
+ChatRule:
+    type: object
+    required:
+        - enabled
+        - style
+        - model
+        - instructions
+        - contextMessages
+        - maxTokens
+        - delaySeconds
+        - creativity
+        - emoji
+        - modelProfileId
+        - deliveryMode
+        - analyzePhotos
+        - aiStickers
+    properties:
+        enabled:
+            type: boolean
+        style:
+            $ref: ./CommunicationStyle.yaml#/CommunicationStyle
+        model:
+            type: string
+        instructions:
+            type: string
+        contextMessages:
+            type: integer
+        maxTokens:
+            type: integer
+        delaySeconds:
+            type: integer
+        creativity:
+            type: integer
+        emoji:
+            type: boolean
+        internetAccess:
+            type: boolean
+            default: true
+        matchMyStyle:
+            type: boolean
+            default: true
+        styleId:
+            type: string
+            maxLength: 64
+        groupReplies:
+            $ref: ./ChatGroupReplies.yaml#/ChatGroupReplies
+        useMemory:
+            type: boolean
+            default: true
+        sourceLinks:
+            $ref: ./SourceLinksMode.yaml#/SourceLinksMode
+        useDefaultModel:
+            type: boolean
+            default: true
+            description: Follow the global model selection unless explicitly overridden.
+        modelProfileId:
+            type: string
+            default: ''
+            maxLength: 36
+        deliveryMode:
+            $ref: ../common/DeliveryMode.yaml#/DeliveryMode
+        analyzePhotos:
+            type: boolean
+            default: false
+        aiStickers:
+            type: boolean
+            default: false
+        proactiveMode:
+            $ref: ../settings/ProactiveMode.yaml#/ProactiveMode
+        proactiveIntervalMinutes:
+            type: integer
+            minimum: 0
+            maximum: 43200
+            description: 'Default: 0.'

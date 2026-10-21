@@ -1,0 +1,6 @@
+ContextExclusionScope:
+    type: string
+    enum:
+        - message
+        - through
+        - from

@@ -1,0 +1,6 @@
+DefaultDeliveryMode:
+    type: string
+    enum:
+        - reply
+        - send
+    default: reply

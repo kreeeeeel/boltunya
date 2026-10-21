@@ -1,0 +1,34 @@
+CacheStatistics:
+    type: object
+    required:
+        - totalBytes
+        - fileCount
+        - photoBytes
+        - videoBytes
+        - audioBytes
+        - documentBytes
+    properties:
+        totalBytes:
+            type: integer
+            format: int64
+            minimum: 0
+        fileCount:
+            type: integer
+            format: int64
+            minimum: 0
+        photoBytes:
+            type: integer
+            format: int64
+            minimum: 0
+        videoBytes:
+            type: integer
+            format: int64
+            minimum: 0
+        audioBytes:
+            type: integer
+            format: int64
+            minimum: 0
+        documentBytes:
+            type: integer
+            format: int64
+            minimum: 0

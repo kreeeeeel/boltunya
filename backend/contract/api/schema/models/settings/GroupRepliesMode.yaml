@@ -1,0 +1,6 @@
+GroupRepliesMode:
+    type: string
+    enum:
+        - disabled
+        - mentions
+        - all

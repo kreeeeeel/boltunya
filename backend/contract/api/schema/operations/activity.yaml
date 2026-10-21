@@ -1,0 +1,358 @@
+activity:
+    delete:
+        operationId: clearActivity
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '404':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        tags:
+            - activity
+activityQueue:
+    patch:
+        operationId: pauseReplyQueue
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '404':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/activity/QueuePauseRequest.yaml#/QueuePauseRequest
+        tags:
+            - activity
+activityById:
+    get:
+        operationId: activityDetails
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/activity/ActivityDetails.yaml#/ActivityDetails
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '404':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        parameters:
+            -
+                name: id
+                in: path
+                required: true
+                schema:
+                    type: string
+        tags:
+            - activity
+activityByIdCancel:
+    post:
+        operationId: cancelActivity
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '404':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '409':
+                description: Delivery already started
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        parameters:
+            -
+                name: id
+                in: path
+                required: true
+                schema:
+                    type: string
+        tags:
+            - activity
+activityByIdPriority:
+    post:
+        operationId: prioritizeActivity
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '404':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        parameters:
+            -
+                name: id
+                in: path
+                required: true
+                schema:
+                    type: string
+        tags:
+            - activity
+activityByIdFeedback:
+    put:
+        operationId: saveActivityFeedback
+        tags:
+            - activity
+        description: >-
+            Store explicit local human feedback for a completed event with a ready response. This does not train the
+            model or alter memory. Omitted comments retain the previous comment.
+        parameters:
+            -
+                name: id
+                in: path
+                required: true
+                schema:
+                    type: string
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/activity/ActivityFeedbackUpdate.yaml#/ActivityFeedbackUpdate
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/activity/ActivityFeedback.yaml#/ActivityFeedback
+            '400':
+                description: Invalid rating or comment
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Local session required
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '404':
+                description: Activity event not found
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '409':
+                description: The event is not final or has no ready response
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+    delete:
+        operationId: removeActivityFeedback
+        tags:
+            - activity
+        description: Remove local human feedback. Repeated deletion on an eligible event is successful.
+        parameters:
+            -
+                name: id
+                in: path
+                required: true
+                schema:
+                    type: string
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '401':
+                description: Local session required
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '404':
+                description: Activity event not found
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '409':
+                description: The event is not final or has no ready response
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+activityHistory:
+    get:
+        operationId: activityHistory
+        tags:
+            - activity
+        parameters:
+            -
+                name: cursor
+                in: query
+                schema:
+                    type: string
+                    maxLength: 200
+            -
+                name: limit
+                in: query
+                schema:
+                    type: integer
+                    minimum: 1
+                    maximum: 100
+                    default: 30
+        responses:
+            '200':
+                description: Successful response
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/activity/ActivityHistoryPage.yaml#/ActivityHistoryPage
+activityHistorySettings:
+    get:
+        operationId: activityHistorySettings
+        tags:
+            - activity
+        responses:
+            '200':
+                description: Successful response
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/activity/ActivityHistoryStorage.yaml#/ActivityHistoryStorage
+    put:
+        operationId: configureActivityHistory
+        tags:
+            - activity
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/activity/ActivityHistorySettings.yaml#/ActivityHistorySettings
+        responses:
+            '200':
+                description: Successful response
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/activity/ActivityHistoryStorage.yaml#/ActivityHistoryStorage

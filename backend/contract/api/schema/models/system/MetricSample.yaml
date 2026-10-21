@@ -1,0 +1,43 @@
+MetricSample:
+    type: object
+    required:
+        - timestamp
+        - cpuPercent
+        - appCpuPercent
+        - memoryUsedBytes
+        - memoryTotalBytes
+        - appMemoryBytes
+        - backendMemoryBytes
+        - ollamaMemoryBytes
+        - networkReceiveBytesPerSecond
+        - networkSendBytesPerSecond
+    properties:
+        timestamp:
+            type: integer
+        cpuPercent:
+            type: number
+        appCpuPercent:
+            type: number
+        memoryUsedBytes:
+            type: integer
+        memoryTotalBytes:
+            type: integer
+        appMemoryBytes:
+            type: integer
+        backendMemoryBytes:
+            type: integer
+        ollamaMemoryBytes:
+            type: integer
+        networkReceiveBytesPerSecond:
+            type: integer
+        networkSendBytesPerSecond:
+            type: integer
+        gpuPercent:
+            type: number
+            nullable: true
+        gpuMemoryUsedBytes:
+            type: integer
+            nullable: true
+        gpuMemoryTotalBytes:
+            type: integer
+            nullable: true

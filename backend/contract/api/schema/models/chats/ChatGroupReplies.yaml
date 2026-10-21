@@ -1,0 +1,7 @@
+ChatGroupReplies:
+    type: string
+    enum:
+        - inherit
+        - disabled
+        - mentions
+        - all

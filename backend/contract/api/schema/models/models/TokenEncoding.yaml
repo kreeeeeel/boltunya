@@ -1,0 +1,6 @@
+TokenEncoding:
+    type: string
+    enum:
+        - auto
+        - cl100k
+        - o200k

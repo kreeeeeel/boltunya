@@ -1,0 +1,5 @@
+ActivityFeedbackRating:
+    type: string
+    enum:
+        - good
+        - bad

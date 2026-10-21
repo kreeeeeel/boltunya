@@ -1,2 +1,2 @@
-src/shared/api/schema.d.ts
+build/
 next-env.d.ts

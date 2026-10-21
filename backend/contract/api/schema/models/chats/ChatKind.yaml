@@ -1,0 +1,7 @@
+ChatKind:
+    type: string
+    enum:
+        - private
+        - group
+        - supergroup
+        - channel

@@ -1,0 +1,5 @@
+GlobalDeliveryMode:
+    type: string
+    enum:
+        - reply
+        - send

@@ -1,0 +1,120 @@
+telegramConnect:
+    post:
+        operationId: connect
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/telegram/Credentials.yaml#/Credentials
+        tags:
+            - telegram
+telegramSubmit:
+    post:
+        operationId: submit
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/telegram/Value.yaml#/Value
+        tags:
+            - telegram
+telegramLogout:
+    post:
+        operationId: logout
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        tags:
+            - telegram
+telegramRestore:
+    post:
+        operationId: restoreTelegramSession
+        responses:
+            '200':
+                description: Restoring saved Telegram session
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '502':
+                description: Session restore failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        tags:
+            - telegram

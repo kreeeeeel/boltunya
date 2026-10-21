@@ -1,0 +1,7 @@
+ThinkingMode:
+    type: string
+    enum:
+        - default
+        - enabled
+        - disabled
+    default: default

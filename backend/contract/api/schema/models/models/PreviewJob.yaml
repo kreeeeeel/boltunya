@@ -1,0 +1,19 @@
+PreviewJob:
+    type: object
+    required:
+        - id
+        - status
+        - result
+        - error
+    properties:
+        id:
+            type: string
+        status:
+            $ref: ./PreviewJobStatus.yaml#/PreviewJobStatus
+        result:
+            allOf:
+                -
+                    $ref: ./Reply.yaml#/Reply
+            nullable: true
+        error:
+            type: string

@@ -1,0 +1,13 @@
+ChatTypingUser:
+    type: object
+    required:
+        - id
+        - name
+        - action
+    properties:
+        id:
+            type: string
+        name:
+            type: string
+        action:
+            $ref: ./TypingAction.yaml#/TypingAction

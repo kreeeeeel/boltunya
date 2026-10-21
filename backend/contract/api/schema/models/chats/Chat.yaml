@@ -1,0 +1,54 @@
+Chat:
+    type: object
+    required:
+        - id
+        - title
+        - preview
+        - date
+        - unread
+        - rule
+    properties:
+        id:
+            type: string
+        title:
+            type: string
+        preview:
+            type: string
+        date:
+            type: integer
+        unread:
+            type: integer
+        rule:
+            $ref: ./ChatRule.yaml#/ChatRule
+        avatarUrl:
+            type: string
+        kind:
+            $ref: ./ChatKind.yaml#/ChatKind
+        wallpaper:
+            $ref: ./ChatWallpaper.yaml#/ChatWallpaper
+            nullable: true
+        darkWallpaper:
+            $ref: ./ChatWallpaper.yaml#/ChatWallpaper
+            nullable: true
+        lastMessageId:
+            type: string
+        joined:
+            type: boolean
+            nullable: true
+            description: Current Telegram group membership, or null while the group status is unknown.
+        username:
+            type: string
+            description: First active Telegram username without the @ prefix.
+        memberCount:
+            type: integer
+            nullable: true
+            minimum: 0
+            description: Cached group participant count, or null when unavailable.
+        lastMessageOutgoing:
+            type: boolean
+        lastMessageSender:
+            type: string
+        typingUsers:
+            type: array
+            items:
+                $ref: ./ChatTypingUser.yaml#/ChatTypingUser

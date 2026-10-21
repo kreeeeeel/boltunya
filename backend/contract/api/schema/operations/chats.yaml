@@ -1,0 +1,510 @@
+chatsByChatIdMessages:
+    get:
+        operationId: history
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                $ref: ../models/chats/Message.yaml#/Message
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        parameters:
+            -
+                in: path
+                name: chatId
+                required: true
+                schema:
+                    type: string
+            -
+                in: query
+                name: before
+                required: false
+                schema:
+                    type: string
+        tags:
+            - chats
+    post:
+        operationId: send
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/chats/Text.yaml#/Text
+        parameters:
+            -
+                in: path
+                name: chatId
+                required: true
+                schema:
+                    type: string
+        tags:
+            - chats
+chatsByChatIdRule:
+    put:
+        operationId: rule
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/chats/ChatRule.yaml#/ChatRule
+        parameters:
+            -
+                in: path
+                name: chatId
+                required: true
+                schema:
+                    type: string
+        tags:
+            - chats
+chatsByChatIdDeleted:
+    get:
+        operationId: getDeletedMessages
+        tags:
+            - chats
+        security:
+            -
+                sessionCookie: []
+        parameters:
+            -
+                in: path
+                name: chatId
+                required: true
+                schema:
+                    type: string
+            -
+                in: query
+                name: before
+                schema:
+                    type: string
+                    description: Exclusive message ID cursor.
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                $ref: ../models/chats/Message.yaml#/Message
+chatsByChatIdMessagesByMessageIdLink:
+    get:
+        operationId: messageLink
+        parameters:
+            -
+                in: path
+                name: chatId
+                required: true
+                schema:
+                    type: string
+            -
+                in: path
+                name: messageId
+                required: true
+                schema:
+                    type: string
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/chats/MessageLink.yaml#/MessageLink
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        tags:
+            - chats
+chatsByChatIdMessagesByMessageIdContext:
+    put:
+        operationId: excludeMessageContext
+        parameters:
+            -
+                in: path
+                name: chatId
+                required: true
+                schema:
+                    type: string
+            -
+                in: path
+                name: messageId
+                required: true
+                schema:
+                    type: string
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/chats/ContextExclusionUpdate.yaml#/ContextExclusionUpdate
+        responses:
+            '200':
+                description: Context policy updated; Telegram message remains unchanged
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        tags:
+            - chats
+chatsByChatIdContextExclusions:
+    delete:
+        operationId: restoreChatContext
+        parameters:
+            -
+                in: path
+                name: chatId
+                required: true
+                schema:
+                    type: string
+        responses:
+            '200':
+                description: Context policy updated; Telegram message remains unchanged
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        tags:
+            - chats
+chatsByChatIdGallery:
+    get:
+        operationId: chatGallery
+        parameters:
+            -
+                in: path
+                name: chatId
+                required: true
+                schema:
+                    type: string
+            -
+                in: query
+                name: around
+                required: true
+                schema:
+                    type: string
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/chats/ChatGallery.yaml#/ChatGallery
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        tags:
+            - chats
+chatsByChatIdAttachments:
+    post:
+        operationId: sendAttachments
+        tags:
+            - chats
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/media/SendMediaRequest.yaml#/SendMediaRequest
+        parameters:
+            -
+                in: path
+                name: chatId
+                required: true
+                schema:
+                    type: string
+chatsByChatIdStickers:
+    post:
+        operationId: sendSticker
+        tags:
+            - chats
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/media/SendStickerRequest.yaml#/SendStickerRequest
+        parameters:
+            -
+                in: path
+                name: chatId
+                required: true
+                schema:
+                    type: string
+chatsByChatIdMessagesByMessageIdDeletion:
+    get:
+        operationId: messageDeletionOptions
+        parameters:
+            -
+                name: chatId
+                in: path
+                required: true
+                schema:
+                    type: string
+            -
+                name: messageId
+                in: path
+                required: true
+                schema:
+                    type: string
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/chats/MessageDeletionOptions.yaml#/MessageDeletionOptions
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '409':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        tags:
+            - chats
+chatsByChatIdMessagesByMessageId:
+    delete:
+        operationId: deleteMessage
+        parameters:
+            -
+                name: chatId
+                in: path
+                required: true
+                schema:
+                    type: string
+            -
+                name: messageId
+                in: path
+                required: true
+                schema:
+                    type: string
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/chats/MessageDeletionResult.yaml#/MessageDeletionResult
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '409':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/chats/MessageDeletionRequest.yaml#/MessageDeletionRequest
+        tags:
+            - chats

@@ -1,0 +1,24 @@
+MemoryCollectionProgress:
+    type: object
+    properties:
+        active:
+            type: boolean
+            default: false
+        status:
+            $ref: ./MemoryCollectionStatus.yaml#/MemoryCollectionStatus
+        queuedChats:
+            type: integer
+            default: 0
+        queuePosition:
+            type: integer
+            default: 0
+        processedMessages:
+            type: integer
+            format: int64
+            default: 0
+    required:
+        - active
+        - status
+        - queuedChats
+        - queuePosition
+        - processedMessages

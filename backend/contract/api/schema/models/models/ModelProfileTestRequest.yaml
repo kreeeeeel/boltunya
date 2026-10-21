@@ -1,0 +1,8 @@
+ModelProfileTestRequest:
+    type: object
+    required:
+        - confirmGeneration
+    properties:
+        confirmGeneration:
+            type: boolean
+            default: false

@@ -1,0 +1,48 @@
+ModelTaskRouting:
+    type: object
+    required:
+        - enabled
+        - parallelIndependentTasks
+        - replyProfileId
+        - memoryProfileId
+        - researchProfileId
+        - visionProfileId
+    properties:
+        enabled:
+            type: boolean
+            default: false
+        parallelIndependentTasks:
+            type: boolean
+            default: false
+        replyProfileId:
+            type: string
+            default: ''
+            maxLength: 36
+        memoryProfileId:
+            type: string
+            default: ''
+            maxLength: 36
+        researchProfileId:
+            type: string
+            default: ''
+            maxLength: 36
+        visionProfileId:
+            type: string
+            default: ''
+            maxLength: 36
+        replyModel:
+            type: string
+            maxLength: 120
+            description: 'Default: .'
+        memoryModel:
+            type: string
+            maxLength: 120
+            description: 'Default: .'
+        researchModel:
+            type: string
+            maxLength: 120
+            description: 'Default: .'
+        visionModel:
+            type: string
+            maxLength: 120
+            description: 'Default: .'

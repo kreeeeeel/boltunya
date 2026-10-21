@@ -1,0 +1,45 @@
+MediaAttachment:
+    type: object
+    required:
+        - fileId
+        - mimeType
+        - fileName
+        - width
+        - height
+        - thumbnailFileId
+        - size
+    properties:
+        fileId:
+            type: integer
+        mimeType:
+            type: string
+        fileName:
+            type: string
+        width:
+            type: integer
+        height:
+            type: integer
+        thumbnailFileId:
+            type: integer
+        size:
+            type: integer
+            format: int64
+        duration:
+            type: integer
+            minimum: 0
+        waveform:
+            type: array
+            items:
+                type: integer
+                minimum: 0
+                maximum: 255
+        autoDownload:
+            type: boolean
+        downloaded:
+            type: boolean
+        cacheVersion:
+            type: integer
+            format: int64
+        uniqueId:
+            type: string
+            description: Stable file fingerprint used to prevent matching archived media to a reused TDLib file ID.

@@ -1,0 +1,29 @@
+ActivityDetails:
+    type: object
+    required:
+        - entry
+        - trigger
+        - response
+        - attempts
+        - steps
+    properties:
+        entry:
+            $ref: ./Activity.yaml#/Activity
+        trigger:
+            type: string
+        response:
+            type: string
+        attempts:
+            type: array
+            items:
+                $ref: ./ActivityAttempt.yaml#/ActivityAttempt
+        steps:
+            type: array
+            items:
+                $ref: ./ActivityStep.yaml#/ActivityStep
+        feedback:
+            type: object
+            nullable: true
+            allOf:
+                -
+                    $ref: ./ActivityFeedback.yaml#/ActivityFeedback

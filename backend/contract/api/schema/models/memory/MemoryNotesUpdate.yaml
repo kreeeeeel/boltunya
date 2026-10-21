@@ -1,0 +1,12 @@
+MemoryNotesUpdate:
+    type: object
+    required:
+        - notes
+        - revision
+    properties:
+        notes:
+            type: string
+            maxLength: 16000
+        revision:
+            type: string
+            maxLength: 64

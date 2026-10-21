@@ -1,0 +1,7 @@
+AppearanceMode:
+    type: string
+    enum:
+        - light
+        - dark
+        - system
+    default: system

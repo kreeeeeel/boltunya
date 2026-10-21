@@ -1,0 +1,6 @@
+WallpaperKind:
+    type: string
+    enum:
+        - fill
+        - wallpaper
+        - pattern

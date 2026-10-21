@@ -1,0 +1,16 @@
+ActivityFeedback:
+    type: object
+    required:
+        - rating
+        - comment
+        - updatedAt
+    properties:
+        rating:
+            $ref: ./ActivityFeedbackRating.yaml#/ActivityFeedbackRating
+        comment:
+            type: string
+            maxLength: 1000
+        updatedAt:
+            type: integer
+            format: int64
+            description: Unix epoch milliseconds of the last explicit user edit.

@@ -1,0 +1,7 @@
+Ok:
+    type: object
+    required:
+        - ok
+    properties:
+        ok:
+            type: boolean

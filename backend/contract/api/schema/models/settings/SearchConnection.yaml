@@ -1,0 +1,10 @@
+SearchConnection:
+    type: object
+    required:
+        - configured
+        - state
+    properties:
+        configured:
+            type: boolean
+        state:
+            $ref: ./SearchConnectionState.yaml#/SearchConnectionState

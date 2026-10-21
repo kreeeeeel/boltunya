@@ -1,0 +1,25 @@
+State:
+    type: object
+    required:
+        - telegram
+        - engine
+        - settings
+        - chats
+        - activity
+    properties:
+        telegram:
+            $ref: ../telegram/Telegram.yaml#/Telegram
+        engine:
+            $ref: ../models/Engine.yaml#/Engine
+        settings:
+            $ref: ../settings/Settings.yaml#/Settings
+        chats:
+            type: array
+            items:
+                $ref: ../chats/Chat.yaml#/Chat
+        activity:
+            type: array
+            items:
+                $ref: ../activity/Activity.yaml#/Activity
+        replyQueue:
+            $ref: ../activity/ReplyQueue.yaml#/ReplyQueue

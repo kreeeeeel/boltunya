@@ -1,0 +1,42 @@
+PromptBudgetReport:
+    type: object
+    required:
+        - model
+        - profileId
+        - contextWindow
+        - maxContextTokens
+        - systemTokens
+        - reservedOutputTokens
+        - remainingTokens
+        - fits
+        - tokenEncoding
+        - preferences
+        - estimated
+        - includesHistory
+    properties:
+        model:
+            type: string
+        profileId:
+            type: string
+        contextWindow:
+            type: integer
+        maxContextTokens:
+            type: integer
+        systemTokens:
+            type: integer
+        reservedOutputTokens:
+            type: integer
+        remainingTokens:
+            type: integer
+        fits:
+            type: boolean
+        tokenEncoding:
+            $ref: ./TokenEncoding.yaml#/TokenEncoding
+        preferences:
+            $ref: ./ModelPromptSettings.yaml#/ModelPromptSettings
+        estimated:
+            type: boolean
+        includesHistory:
+            type: boolean
+        automaticContext:
+            type: boolean

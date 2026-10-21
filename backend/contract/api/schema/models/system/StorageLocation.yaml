@@ -1,0 +1,25 @@
+StorageLocation:
+    type: object
+    required:
+        - id
+        - label
+        - path
+        - available
+        - openable
+        - kind
+        - note
+    properties:
+        id:
+            type: string
+        label:
+            type: string
+        path:
+            type: string
+        available:
+            type: boolean
+        openable:
+            type: boolean
+        kind:
+            $ref: ./StorageLocationKind.yaml#/StorageLocationKind
+        note:
+            type: string

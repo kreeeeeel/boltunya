@@ -1,0 +1,10 @@
+MemoryRefreshRequest:
+    type: object
+    properties:
+        rebuild:
+            type: boolean
+            default: false
+        immediate:
+            type: boolean
+            default: false
+            description: Prioritize this chat and wake the local collection worker immediately.

@@ -1,0 +1,23 @@
+ModelPromptSettings:
+    type: object
+    required:
+        - model
+    properties:
+        model:
+            type: string
+            maxLength: 160
+        profileId:
+            type: string
+            default: ''
+            maxLength: 36
+        instructions:
+            type: string
+            default: ''
+            maxLength: 20000
+        contextWindow:
+            type: integer
+            nullable: true
+            minimum: 512
+            maximum: 2097152
+        tokenEncoding:
+            $ref: ./TokenEncoding.yaml#/TokenEncoding

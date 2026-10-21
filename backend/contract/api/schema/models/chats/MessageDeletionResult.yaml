@@ -1,0 +1,14 @@
+MessageDeletionResult:
+    type: object
+    required:
+        - chatId
+        - messageId
+        - deletedAt
+    properties:
+        chatId:
+            type: string
+        messageId:
+            type: string
+        deletedAt:
+            type: integer
+            format: int64

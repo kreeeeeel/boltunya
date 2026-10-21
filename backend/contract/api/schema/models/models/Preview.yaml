@@ -1,0 +1,12 @@
+Preview:
+    type: object
+    required:
+        - text
+        - rule
+    properties:
+        text:
+            type: string
+        rule:
+            $ref: ../chats/ChatRule.yaml#/ChatRule
+        chatId:
+            type: string

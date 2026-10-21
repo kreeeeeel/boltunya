@@ -1,0 +1,18 @@
+SendMediaRequest:
+    type: object
+    required:
+        - uploadIds
+        - kind
+    properties:
+        uploadIds:
+            type: array
+            items:
+                type: string
+                format: uuid
+            minItems: 1
+            maxItems: 10
+        kind:
+            $ref: ./OutgoingMediaKind.yaml#/OutgoingMediaKind
+        caption:
+            type: string
+            maxLength: 1024

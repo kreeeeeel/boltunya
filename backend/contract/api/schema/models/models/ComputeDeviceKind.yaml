@@ -1,0 +1,6 @@
+ComputeDeviceKind:
+    type: string
+    enum:
+        - auto
+        - cpu
+        - nvidia

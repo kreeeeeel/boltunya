@@ -1,0 +1,19 @@
+StickerCatalog:
+    type: object
+    required:
+        - recent
+        - favorites
+        - sets
+    properties:
+        recent:
+            type: array
+            items:
+                $ref: ./StickerItem.yaml#/StickerItem
+        favorites:
+            type: array
+            items:
+                $ref: ./StickerItem.yaml#/StickerItem
+        sets:
+            type: array
+            items:
+                $ref: ./StickerSet.yaml#/StickerSet

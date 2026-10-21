@@ -1,0 +1,11 @@
+SearchConnectionRequest:
+    type: object
+    additionalProperties: false
+    required:
+        - apiKey
+    properties:
+        apiKey:
+            type: string
+            minLength: 8
+            maxLength: 256
+            writeOnly: true

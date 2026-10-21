@@ -1,0 +1,8 @@
+ComputeDeviceLimitation:
+    type: string
+    enum:
+        - ''
+        - external
+        - remote
+        - missing-runtime
+        - next-start

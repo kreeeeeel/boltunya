@@ -1,0 +1,20 @@
+ActivityHistoryStorage:
+    type: object
+    required:
+        - retentionDays
+        - maxStorageMb
+        - bytes
+        - recording
+        - errorCode
+    properties:
+        retentionDays:
+            type: integer
+        maxStorageMb:
+            type: integer
+        bytes:
+            type: integer
+            format: int64
+        recording:
+            type: boolean
+        errorCode:
+            type: string

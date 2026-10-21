@@ -1,0 +1,7 @@
+ActivityKind:
+    type: string
+    enum:
+        - reply
+        - draft
+        - memory
+        - initiative

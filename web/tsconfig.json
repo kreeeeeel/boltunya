@@ -20,6 +20,7 @@
         ],
         "paths": {
             "@/*": ["./src/*"],
+            "@generated/*": ["./build/generated/*"],
             "@tests/*": ["./tests/*"]
         }
     },

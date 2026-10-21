@@ -1,0 +1,5 @@
+StorageLocationKind:
+    type: string
+    enum:
+        - directory
+        - external

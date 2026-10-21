@@ -1,0 +1,9 @@
+SendStickerRequest:
+    type: object
+    required:
+        - stickerId
+    properties:
+        stickerId:
+            type: string
+            minLength: 1
+            maxLength: 80

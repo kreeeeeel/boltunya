@@ -1,0 +1,19 @@
+Reply:
+    type: object
+    required:
+        - text
+        - durationMs
+        - tokensPerSecond
+    properties:
+        text:
+            type: string
+        durationMs:
+            type: integer
+        tokensPerSecond:
+            type: number
+        model:
+            type: string
+            default: ''
+        stickerId:
+            type: string
+            default: ''

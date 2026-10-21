@@ -1,0 +1,5 @@
+MessageDeletionScope:
+    type: string
+    enum:
+        - self
+        - everyone

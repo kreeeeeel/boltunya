@@ -16,7 +16,7 @@ export default defineConfig([
     globalIgnores([
         '.next/**',
         'out/**',
-        'src/shared/api/schema.d.ts',
+        'build/**',
         'playwright-report/**',
         'test-results/**',
     ]),

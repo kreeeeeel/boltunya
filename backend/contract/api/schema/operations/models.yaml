@@ -1,0 +1,549 @@
+preview:
+    post:
+        operationId: preview
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/models/Reply.yaml#/Reply
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/models/Preview.yaml#/Preview
+        tags:
+            - models
+engineInstall:
+    post:
+        operationId: install
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        tags:
+            - models
+engineStart:
+    post:
+        operationId: start
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        tags:
+            - models
+modelsPull:
+    post:
+        operationId: pull
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/models/ModelRequest.yaml#/ModelRequest
+        tags:
+            - models
+modelsCancel:
+    post:
+        operationId: cancelModelDownload
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        tags:
+            - models
+engineDevices:
+    get:
+        operationId: engineDevices
+        tags:
+            - models
+        description: >-
+            Discover safe GPU choices and indicate whether the running Ollama is app-managed. Does not stop, restart or
+            change external Ollama, Docker, drivers or models.
+        responses:
+            '200':
+                description: Device choices and launch capabilities
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/models/ComputeDeviceStatus.yaml#/ComputeDeviceStatus
+            '401':
+                description: Local session required
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+modelProfiles:
+    get:
+        operationId: modelProfiles
+        tags:
+            - models
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/models/ModelProfileReport.yaml#/ModelProfileReport
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+    post:
+        operationId: createModelProfile
+        tags:
+            - models
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/models/ModelProfile.yaml#/ModelProfile
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/models/ModelProfileUpdate.yaml#/ModelProfileUpdate
+modelProfilesById:
+    put:
+        operationId: updateModelProfile
+        tags:
+            - models
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/models/ModelProfile.yaml#/ModelProfile
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '404':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '409':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/models/ModelProfileUpdate.yaml#/ModelProfileUpdate
+        parameters:
+            -
+                name: id
+                in: path
+                required: true
+                schema:
+                    type: string
+                    format: uuid
+    delete:
+        operationId: deleteModelProfile
+        tags:
+            - models
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '404':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '409':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        parameters:
+            -
+                name: id
+                in: path
+                required: true
+                schema:
+                    type: string
+                    format: uuid
+modelProfilesByIdTest:
+    post:
+        operationId: testModelProfile
+        tags:
+            - models
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/models/ModelProfileTestResult.yaml#/ModelProfileTestResult
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '404':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '409':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/models/ModelProfileTestRequest.yaml#/ModelProfileTestRequest
+        parameters:
+            -
+                name: id
+                in: path
+                required: true
+                schema:
+                    type: string
+                    format: uuid
+modelRouting:
+    get:
+        operationId: modelRouting
+        tags:
+            - models
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/models/ModelTaskRouting.yaml#/ModelTaskRouting
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+    put:
+        operationId: saveModelRouting
+        tags:
+            - models
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/models/ModelTaskRouting.yaml#/ModelTaskRouting
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '404':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '409':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/models/ModelTaskRouting.yaml#/ModelTaskRouting
+previewJobs:
+    post:
+        operationId: enqueuePreviewJob
+        tags:
+            - models
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/models/PreviewJobRequest.yaml#/PreviewJobRequest
+        responses:
+            '200':
+                description: Queued draft job; it never sends Telegram messages
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/models/PreviewJob.yaml#/PreviewJob
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '404':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+previewJobsById:
+    get:
+        operationId: previewJob
+        tags:
+            - models
+        parameters:
+            -
+                in: path
+                name: id
+                required: true
+                schema:
+                    type: string
+        responses:
+            '200':
+                description: Queued draft job; it never sends Telegram messages
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/models/PreviewJob.yaml#/PreviewJob
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '404':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+modelPrompts:
+    get:
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/models/ModelPromptReport.yaml#/ModelPromptReport
+        tags:
+            - models
+        operationId: getModelPrompts
+    put:
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/models/ModelPromptSettings.yaml#/ModelPromptSettings
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/models/ModelPromptSettings.yaml#/ModelPromptSettings
+        tags:
+            - models
+        operationId: saveModelPrompts
+promptsBudget:
+    post:
+        description: >-
+            Estimate saved or draft instructions without reading Telegram history or calling a model. Generation
+            validates the full assembled context separately.
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/models/PromptBudgetRequest.yaml#/PromptBudgetRequest
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/models/PromptBudgetReport.yaml#/PromptBudgetReport
+        tags:
+            - models
+        operationId: estimatePromptBudget

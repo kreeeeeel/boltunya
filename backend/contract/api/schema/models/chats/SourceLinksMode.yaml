@@ -1,0 +1,7 @@
+SourceLinksMode:
+    type: string
+    enum:
+        - requested
+        - always
+        - never
+    default: requested

@@ -1,0 +1,22 @@
+ActivityHistoryPage:
+    type: object
+    required:
+        - entries
+        - nextCursor
+        - hasMore
+        - total
+        - storage
+    properties:
+        entries:
+            type: array
+            items:
+                $ref: ./Activity.yaml#/Activity
+        nextCursor:
+            type: string
+            nullable: true
+        hasMore:
+            type: boolean
+        total:
+            type: integer
+        storage:
+            $ref: ./ActivityHistoryStorage.yaml#/ActivityHistoryStorage

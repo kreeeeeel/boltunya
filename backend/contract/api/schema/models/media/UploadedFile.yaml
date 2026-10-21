@@ -1,0 +1,18 @@
+UploadedFile:
+    type: object
+    required:
+        - id
+        - fileName
+        - mimeType
+        - size
+    properties:
+        id:
+            type: string
+            format: uuid
+        fileName:
+            type: string
+        mimeType:
+            type: string
+        size:
+            type: integer
+            format: int64

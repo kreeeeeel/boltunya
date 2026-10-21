@@ -1,0 +1,211 @@
+memory:
+    get:
+        tags:
+            - memory
+        security:
+            -
+                sessionCookie: []
+        operationId: getGlobalMemory
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/memory/MemoryDocument.yaml#/MemoryDocument
+            '400':
+                description: Invalid input
+            '401':
+                description: Unauthorized
+            '403':
+                description: Forbidden
+            '409':
+                description: Memory was edited concurrently
+    patch:
+        tags:
+            - memory
+        security:
+            -
+                sessionCookie: []
+        operationId: updateGlobalMemory
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/memory/MemoryNotesUpdate.yaml#/MemoryNotesUpdate
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/memory/MemoryDocument.yaml#/MemoryDocument
+            '400':
+                description: Invalid input
+            '401':
+                description: Unauthorized
+            '403':
+                description: Forbidden
+            '409':
+                description: Memory was edited concurrently
+memoryRefresh:
+    post:
+        tags:
+            - memory
+        security:
+            -
+                sessionCookie: []
+        operationId: refreshChangedMemory
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Invalid input
+            '401':
+                description: Unauthorized
+            '403':
+                description: Forbidden
+            '409':
+                description: Memory was edited concurrently
+        requestBody:
+            required: false
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/memory/MemoryRefreshRequest.yaml#/MemoryRefreshRequest
+memoryByChatId:
+    get:
+        tags:
+            - memory
+        security:
+            -
+                sessionCookie: []
+        operationId: getChatMemory
+        parameters:
+            -
+                name: chatId
+                in: path
+                required: true
+                schema:
+                    type: string
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/memory/MemoryDocument.yaml#/MemoryDocument
+            '400':
+                description: Invalid input
+            '401':
+                description: Unauthorized
+            '403':
+                description: Forbidden
+            '409':
+                description: Memory was edited concurrently
+    patch:
+        tags:
+            - memory
+        security:
+            -
+                sessionCookie: []
+        operationId: updateChatMemory
+        parameters:
+            -
+                name: chatId
+                in: path
+                required: true
+                schema:
+                    type: string
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/memory/MemoryNotesUpdate.yaml#/MemoryNotesUpdate
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/memory/MemoryDocument.yaml#/MemoryDocument
+            '400':
+                description: Invalid input
+            '401':
+                description: Unauthorized
+            '403':
+                description: Forbidden
+            '409':
+                description: Memory was edited concurrently
+    post:
+        tags:
+            - memory
+        security:
+            -
+                sessionCookie: []
+        operationId: refreshChatMemory
+        parameters:
+            -
+                name: chatId
+                in: path
+                required: true
+                schema:
+                    type: string
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/memory/MemoryRefreshRequest.yaml#/MemoryRefreshRequest
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/memory/MemoryDocument.yaml#/MemoryDocument
+            '400':
+                description: Invalid input
+            '401':
+                description: Unauthorized
+            '403':
+                description: Forbidden
+            '409':
+                description: Memory was edited concurrently
+memoryCancel:
+    post:
+        operationId: cancelGlobalMemoryCollection
+        responses:
+            '200':
+                description: Collection cancelled; saved memory is preserved
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/memory/MemoryDocument.yaml#/MemoryDocument
+        tags:
+            - memory
+memoryByChatIdCancel:
+    post:
+        operationId: cancelChatMemoryCollection
+        parameters:
+            -
+                name: chatId
+                in: path
+                required: true
+                schema:
+                    type: string
+        responses:
+            '200':
+                description: Collection cancelled; saved memory is preserved
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/memory/MemoryDocument.yaml#/MemoryDocument
+        tags:
+            - memory

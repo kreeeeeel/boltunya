@@ -1,0 +1,7 @@
+OutgoingMediaKind:
+    type: string
+    enum:
+        - media
+        - photo
+        - video
+        - document

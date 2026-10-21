@@ -1,0 +1,54 @@
+Model:
+    type: object
+    required:
+        - id
+        - name
+        - description
+        - size
+        - installed
+        - recommended
+    properties:
+        id:
+            type: string
+        name:
+            type: string
+        description:
+            type: string
+        size:
+            type: string
+        installed:
+            type: boolean
+        recommended:
+            type: boolean
+        supportsAutomation:
+            type: boolean
+            description: Whether the model may send automatic replies; false allows manual drafts only.
+        family:
+            type: string
+        speed:
+            type: string
+        quality:
+            type: string
+        thinking:
+            type: boolean
+        memoryGb:
+            type: integer
+        contextTokens:
+            type: integer
+        license:
+            type: string
+        measurement:
+            type: object
+            nullable: true
+            required:
+                - durationMs
+                - tokensPerSecond
+            properties:
+                durationMs:
+                    type: integer
+                    format: int64
+                tokensPerSecond:
+                    type: number
+        supportsVision:
+            type: boolean
+            description: 'Default: false.'

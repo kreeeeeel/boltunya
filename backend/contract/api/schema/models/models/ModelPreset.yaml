@@ -1,0 +1,9 @@
+ModelPreset:
+    type: string
+    enum:
+        - ollama
+        - openai
+        - deepseek
+        - openrouter
+        - groq
+        - custom

@@ -1,0 +1,10 @@
+CommunicationStyle:
+    type: string
+    enum:
+        - friendly
+        - business
+        - concise
+        - warm
+        - aggressive
+        - rough
+        - custom

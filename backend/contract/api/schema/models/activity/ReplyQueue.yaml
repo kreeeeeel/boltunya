@@ -1,0 +1,21 @@
+ReplyQueue:
+    type: object
+    required:
+        - paused
+        - queued
+        - running
+    properties:
+        paused:
+            type: boolean
+        queued:
+            type: integer
+            format: int64
+        running:
+            type: integer
+            format: int64
+        maxParallelTasks:
+            type: integer
+            minimum: 1
+            maximum: 4
+        activeTasks:
+            type: integer

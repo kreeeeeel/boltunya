@@ -1,0 +1,11 @@
+ActivityStep:
+    type: object
+    required:
+        - phase
+        - date
+    properties:
+        phase:
+            type: string
+        date:
+            type: integer
+            format: int64

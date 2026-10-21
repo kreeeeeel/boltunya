@@ -1,0 +1,14 @@
+ModelProfileReport:
+    type: object
+    required:
+        - profiles
+        - presets
+    properties:
+        profiles:
+            type: array
+            items:
+                $ref: ./ModelProfile.yaml#/ModelProfile
+        presets:
+            type: array
+            items:
+                $ref: ./ModelProviderPreset.yaml#/ModelProviderPreset

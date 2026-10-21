@@ -1,0 +1,63 @@
+Message:
+    type: object
+    required:
+        - id
+        - chatId
+        - text
+        - outgoing
+        - date
+        - kind
+    properties:
+        id:
+            type: string
+        chatId:
+            type: string
+        text:
+            type: string
+        outgoing:
+            type: boolean
+        date:
+            type: integer
+        kind:
+            type: string
+        media:
+            nullable: true
+            allOf:
+                -
+                    $ref: ../media/MediaAttachment.yaml#/MediaAttachment
+        entities:
+            type: array
+            items:
+                $ref: ./MessageEntity.yaml#/MessageEntity
+        read:
+            type: boolean
+        automated:
+            type: boolean
+            description: Sent by this application; AI metadata is visible only in the local interface.
+        group:
+            type: boolean
+        mentionsMe:
+            type: boolean
+        topicId:
+            type: integer
+        senderName:
+            type: string
+        senderAvatarUrl:
+            type: string
+        replyToId:
+            type: string
+        replyText:
+            type: string
+        senderId:
+            type: string
+        deleted:
+            type: boolean
+        deletedAt:
+            type: integer
+            format: int64
+        contextExcluded:
+            type: boolean
+        senderUsername:
+            type: string
+        mediaAlbumId:
+            type: string

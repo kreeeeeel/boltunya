@@ -1,0 +1,12 @@
+TypingAction:
+    type: string
+    enum:
+        - typing
+        - uploadPhoto
+        - uploadVideo
+        - uploadDocument
+        - recordVoice
+        - uploadVoice
+        - recordVideo
+        - uploadVideoNote
+        - chooseSticker

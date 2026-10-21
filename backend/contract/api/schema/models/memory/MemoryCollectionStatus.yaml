@@ -1,0 +1,10 @@
+MemoryCollectionStatus:
+    type: string
+    enum:
+        - disabled
+        - idle
+        - queued
+        - processing
+        - ready
+        - waiting_model
+        - error

@@ -1,0 +1,19 @@
+AppearanceSettings:
+    type: object
+    required:
+        - mode
+        - tokens
+        - css
+    properties:
+        mode:
+            $ref: ./AppearanceMode.yaml#/AppearanceMode
+        tokens:
+            type: object
+            additionalProperties:
+                type: string
+                maxLength: 9
+            maxProperties: 8
+        css:
+            type: string
+            maxLength: 20000
+            default: ''

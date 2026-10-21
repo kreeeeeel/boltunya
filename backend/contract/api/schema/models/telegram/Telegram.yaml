@@ -1,0 +1,20 @@
+Telegram:
+    type: object
+    required:
+        - state
+        - name
+        - prompt
+        - error
+    properties:
+        state:
+            type: string
+        name:
+            type: string
+        prompt:
+            type: string
+        error:
+            type: string
+        avatarUrl:
+            type: string
+        userId:
+            type: string

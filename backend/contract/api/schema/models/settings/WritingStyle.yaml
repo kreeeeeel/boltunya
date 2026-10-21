@@ -1,0 +1,23 @@
+WritingStyle:
+    type: object
+    required:
+        - id
+        - name
+        - emoji
+        - instructions
+    properties:
+        id:
+            type: string
+            maxLength: 120
+        name:
+            type: string
+            minLength: 1
+            maxLength: 40
+        emoji:
+            type: string
+            minLength: 1
+            maxLength: 16
+        instructions:
+            type: string
+            minLength: 1
+            maxLength: 4000

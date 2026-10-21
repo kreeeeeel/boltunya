@@ -1,0 +1,8 @@
+PreviewJobStatus:
+    type: string
+    enum:
+        - queued
+        - generating
+        - ready
+        - error
+        - cancelled

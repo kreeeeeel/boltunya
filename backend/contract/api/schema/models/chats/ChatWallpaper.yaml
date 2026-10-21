@@ -1,0 +1,19 @@
+ChatWallpaper:
+    type: object
+    properties:
+        kind:
+            $ref: ./WallpaperKind.yaml#/WallpaperKind
+        url:
+            type: string
+        colors:
+            type: array
+            items:
+                type: string
+        rotation:
+            type: integer
+        blurred:
+            type: boolean
+        dimming:
+            type: integer
+        intensity:
+            type: integer

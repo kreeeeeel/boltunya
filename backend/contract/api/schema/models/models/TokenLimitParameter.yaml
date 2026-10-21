@@ -1,0 +1,6 @@
+TokenLimitParameter:
+    type: string
+    enum:
+        - max_tokens
+        - max_completion_tokens
+    default: max_tokens

@@ -1,0 +1,61 @@
+ActivityAttempt:
+    type: object
+    required:
+        - number
+        - purpose
+        - model
+        - messages
+        - options
+        - startedAt
+        - response
+        - thinking
+        - durationMs
+        - inputTokens
+        - outputTokens
+        - tokensPerSecond
+        - loadDurationMs
+        - promptDurationMs
+        - finishReason
+        - complete
+    properties:
+        number:
+            type: integer
+            format: int64
+        purpose:
+            type: string
+        model:
+            type: string
+        messages:
+            type: array
+            items:
+                $ref: ./ActivityMessage.yaml#/ActivityMessage
+        options:
+            type: string
+        startedAt:
+            type: integer
+            format: int64
+        response:
+            type: string
+        thinking:
+            type: string
+        durationMs:
+            type: integer
+            format: int64
+        inputTokens:
+            type: integer
+            format: int64
+        outputTokens:
+            type: integer
+            format: int64
+        tokensPerSecond:
+            type: number
+        loadDurationMs:
+            type: integer
+            format: int64
+        promptDurationMs:
+            type: integer
+            format: int64
+        finishReason:
+            type: string
+        complete:
+            type: boolean

@@ -1,0 +1,17 @@
+MessageEntity:
+    type: object
+    required:
+        - offset
+        - length
+        - type
+    properties:
+        offset:
+            type: integer
+        length:
+            type: integer
+        type:
+            type: string
+        url:
+            type: string
+        language:
+            type: string

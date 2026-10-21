@@ -1,0 +1,33 @@
+ModelProviderPreset:
+    type: object
+    required:
+        - id
+        - name
+        - provider
+        - baseUrl
+        - model
+        - apiKeyRequired
+        - defaultsOptions
+        - defaultCapabilities
+    properties:
+        id:
+            type: string
+            default: ''
+        name:
+            type: string
+            default: ''
+        provider:
+            $ref: ./ModelProvider.yaml#/ModelProvider
+        baseUrl:
+            type: string
+            default: ''
+        model:
+            type: string
+            default: ''
+        apiKeyRequired:
+            type: boolean
+            default: false
+        defaultsOptions:
+            $ref: ./ModelProfileOptions.yaml#/ModelProfileOptions
+        defaultCapabilities:
+            $ref: ./ModelCapabilities.yaml#/ModelCapabilities

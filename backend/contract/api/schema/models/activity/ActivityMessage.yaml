@@ -1,0 +1,10 @@
+ActivityMessage:
+    type: object
+    required:
+        - role
+        - text
+    properties:
+        role:
+            type: string
+        text:
+            type: string

@@ -1,0 +1,43 @@
+ModelProfileUpdate:
+    type: object
+    required:
+        - name
+        - provider
+        - preset
+        - baseUrl
+        - model
+        - enabled
+        - options
+        - capabilities
+    properties:
+        name:
+            type: string
+            minLength: 1
+            maxLength: 80
+        provider:
+            $ref: ./ModelProvider.yaml#/ModelProvider
+        preset:
+            $ref: ./ModelPreset.yaml#/ModelPreset
+        baseUrl:
+            type: string
+            minLength: 1
+            maxLength: 500
+        model:
+            type: string
+            minLength: 1
+            maxLength: 160
+        enabled:
+            type: boolean
+            default: true
+        options:
+            $ref: ./ModelProfileOptions.yaml#/ModelProfileOptions
+        capabilities:
+            $ref: ./ModelCapabilities.yaml#/ModelCapabilities
+        apiKey:
+            type: string
+            maxLength: 8192
+            writeOnly: true
+            description: Omitted or empty keeps the existing key. Never returned.
+        clearApiKey:
+            type: boolean
+            default: false

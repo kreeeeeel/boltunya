@@ -1,0 +1,9 @@
+ComputeDeviceReason:
+    type: string
+    enum:
+        - ''
+        - compute
+        - driver
+    description: >-
+        compute disables explicit CUDA selection. driver is a recommendation warning and does not disable a device; the
+        installed Ollama determines actual compatibility.

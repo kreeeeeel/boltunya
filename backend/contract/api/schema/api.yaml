@@ -1,0 +1,349 @@
+openapi: 3.0.3
+info:
+    title: Aigram local API
+    version: 2.4.0
+paths:
+    /api/state:
+        $ref: ./operations/system.yaml#/state
+    /api/telegram/connect:
+        $ref: ./operations/telegram.yaml#/telegramConnect
+    /api/telegram/submit:
+        $ref: ./operations/telegram.yaml#/telegramSubmit
+    /api/telegram/logout:
+        $ref: ./operations/telegram.yaml#/telegramLogout
+    /api/chats/{chatId}/messages:
+        $ref: ./operations/chats.yaml#/chatsByChatIdMessages
+    /api/chats/{chatId}/rule:
+        $ref: ./operations/chats.yaml#/chatsByChatIdRule
+    /api/settings:
+        $ref: ./operations/settings.yaml#/settings
+    /api/preview:
+        $ref: ./operations/models.yaml#/preview
+    /api/engine/install:
+        $ref: ./operations/models.yaml#/engineInstall
+    /api/engine/start:
+        $ref: ./operations/models.yaml#/engineStart
+    /api/models/pull:
+        $ref: ./operations/models.yaml#/modelsPull
+    /api/quit:
+        $ref: ./operations/system.yaml#/quit
+    /api/media/{fileId}:
+        $ref: ./operations/media.yaml#/mediaByFileId
+    /api/telegram/restore:
+        $ref: ./operations/telegram.yaml#/telegramRestore
+    /api/metrics:
+        $ref: ./operations/system.yaml#/metrics
+    /api/memory:
+        $ref: ./operations/memory.yaml#/memory
+    /api/memory/refresh:
+        $ref: ./operations/memory.yaml#/memoryRefresh
+    /api/memory/{chatId}:
+        $ref: ./operations/memory.yaml#/memoryByChatId
+    /api/cache:
+        $ref: ./operations/system.yaml#/cache
+    /api/cache/clear:
+        $ref: ./operations/system.yaml#/cacheClear
+    /api/chats/{chatId}/deleted:
+        $ref: ./operations/chats.yaml#/chatsByChatIdDeleted
+    /api/media/{fileId}/download:
+        $ref: ./operations/media.yaml#/mediaByFileIdDownload
+    /api/search/connection:
+        $ref: ./operations/settings.yaml#/searchConnection
+    /api/search/check:
+        $ref: ./operations/settings.yaml#/searchCheck
+    /api/memory/cancel:
+        $ref: ./operations/memory.yaml#/memoryCancel
+    /api/memory/{chatId}/cancel:
+        $ref: ./operations/memory.yaml#/memoryByChatIdCancel
+    /api/models/cancel:
+        $ref: ./operations/models.yaml#/modelsCancel
+    /api/activity:
+        $ref: ./operations/activity.yaml#/activity
+    /api/activity/queue:
+        $ref: ./operations/activity.yaml#/activityQueue
+    /api/activity/{id}:
+        $ref: ./operations/activity.yaml#/activityById
+    /api/activity/{id}/cancel:
+        $ref: ./operations/activity.yaml#/activityByIdCancel
+    /api/activity/{id}/priority:
+        $ref: ./operations/activity.yaml#/activityByIdPriority
+    /api/diagnostics/errors:
+        $ref: ./operations/system.yaml#/diagnosticsErrors
+    /api/storage/locations:
+        $ref: ./operations/system.yaml#/storageLocations
+    /api/activity/{id}/feedback:
+        $ref: ./operations/activity.yaml#/activityByIdFeedback
+    /api/engine/devices:
+        $ref: ./operations/models.yaml#/engineDevices
+    /api/model-profiles:
+        $ref: ./operations/models.yaml#/modelProfiles
+    /api/model-profiles/{id}:
+        $ref: ./operations/models.yaml#/modelProfilesById
+    /api/model-profiles/{id}/test:
+        $ref: ./operations/models.yaml#/modelProfilesByIdTest
+    /api/model-routing:
+        $ref: ./operations/models.yaml#/modelRouting
+    /api/appearance:
+        $ref: ./operations/settings.yaml#/appearance
+    /api/uploads:
+        $ref: ./operations/media.yaml#/uploads
+    /api/uploads/{id}:
+        $ref: ./operations/media.yaml#/uploadsById
+    /api/stickers:
+        $ref: ./operations/media.yaml#/stickers
+    /api/stickers/sets/{id}:
+        $ref: ./operations/media.yaml#/stickersSetsById
+    /api/preview/jobs:
+        $ref: ./operations/models.yaml#/previewJobs
+    /api/preview/jobs/{id}:
+        $ref: ./operations/models.yaml#/previewJobsById
+    /api/chats/{chatId}/messages/{messageId}/link:
+        $ref: ./operations/chats.yaml#/chatsByChatIdMessagesByMessageIdLink
+    /api/chats/{chatId}/messages/{messageId}/context:
+        $ref: ./operations/chats.yaml#/chatsByChatIdMessagesByMessageIdContext
+    /api/chats/{chatId}/context-exclusions:
+        $ref: ./operations/chats.yaml#/chatsByChatIdContextExclusions
+    /api/chats/{chatId}/gallery:
+        $ref: ./operations/chats.yaml#/chatsByChatIdGallery
+    /api/chats/{chatId}/attachments:
+        $ref: ./operations/chats.yaml#/chatsByChatIdAttachments
+    /api/chats/{chatId}/stickers:
+        $ref: ./operations/chats.yaml#/chatsByChatIdStickers
+    /api/activity/history:
+        $ref: ./operations/activity.yaml#/activityHistory
+    /api/activity/history/settings:
+        $ref: ./operations/activity.yaml#/activityHistorySettings
+    /api/model-prompts:
+        $ref: ./operations/models.yaml#/modelPrompts
+    /api/prompts/budget:
+        $ref: ./operations/models.yaml#/promptsBudget
+    /api/chats/{chatId}/messages/{messageId}/deletion:
+        $ref: ./operations/chats.yaml#/chatsByChatIdMessagesByMessageIdDeletion
+    /api/chats/{chatId}/messages/{messageId}:
+        $ref: ./operations/chats.yaml#/chatsByChatIdMessagesByMessageId
+components:
+    schemas:
+        ChatRule:
+            $ref: ./models/chats/ChatRule.yaml#/ChatRule
+        Settings:
+            $ref: ./models/settings/Settings.yaml#/Settings
+        Chat:
+            $ref: ./models/chats/Chat.yaml#/Chat
+        Message:
+            $ref: ./models/chats/Message.yaml#/Message
+        Telegram:
+            $ref: ./models/telegram/Telegram.yaml#/Telegram
+        Credentials:
+            $ref: ./models/telegram/Credentials.yaml#/Credentials
+        Model:
+            $ref: ./models/models/Model.yaml#/Model
+        Engine:
+            $ref: ./models/models/Engine.yaml#/Engine
+        Activity:
+            $ref: ./models/activity/Activity.yaml#/Activity
+        Error:
+            $ref: ./models/common/Error.yaml#/Error
+        Ok:
+            $ref: ./models/common/Ok.yaml#/Ok
+        Text:
+            $ref: ./models/chats/Text.yaml#/Text
+        Value:
+            $ref: ./models/telegram/Value.yaml#/Value
+        ModelRequest:
+            $ref: ./models/models/ModelRequest.yaml#/ModelRequest
+        Preview:
+            $ref: ./models/models/Preview.yaml#/Preview
+        Reply:
+            $ref: ./models/models/Reply.yaml#/Reply
+        SettingsUpdate:
+            $ref: ./models/settings/SettingsUpdate.yaml#/SettingsUpdate
+        State:
+            $ref: ./models/system/State.yaml#/State
+        MediaAttachment:
+            $ref: ./models/media/MediaAttachment.yaml#/MediaAttachment
+        MessageEntity:
+            $ref: ./models/chats/MessageEntity.yaml#/MessageEntity
+        WritingStyle:
+            $ref: ./models/settings/WritingStyle.yaml#/WritingStyle
+        ChatWallpaper:
+            $ref: ./models/chats/ChatWallpaper.yaml#/ChatWallpaper
+        MetricSample:
+            $ref: ./models/system/MetricSample.yaml#/MetricSample
+        MemoryDocument:
+            $ref: ./models/memory/MemoryDocument.yaml#/MemoryDocument
+        MemoryNotesUpdate:
+            $ref: ./models/memory/MemoryNotesUpdate.yaml#/MemoryNotesUpdate
+        MemoryRefreshRequest:
+            $ref: ./models/memory/MemoryRefreshRequest.yaml#/MemoryRefreshRequest
+        CacheStatistics:
+            $ref: ./models/system/CacheStatistics.yaml#/CacheStatistics
+        SearchConnection:
+            $ref: ./models/settings/SearchConnection.yaml#/SearchConnection
+        MemoryCollectionProgress:
+            $ref: ./models/memory/MemoryCollectionProgress.yaml#/MemoryCollectionProgress
+        ReplyQueue:
+            $ref: ./models/activity/ReplyQueue.yaml#/ReplyQueue
+        ActivityMessage:
+            $ref: ./models/activity/ActivityMessage.yaml#/ActivityMessage
+        ActivityStep:
+            $ref: ./models/activity/ActivityStep.yaml#/ActivityStep
+        ActivityAttempt:
+            $ref: ./models/activity/ActivityAttempt.yaml#/ActivityAttempt
+        ActivityDetails:
+            $ref: ./models/activity/ActivityDetails.yaml#/ActivityDetails
+        DiagnosticEntry:
+            $ref: ./models/system/DiagnosticEntry.yaml#/DiagnosticEntry
+        DiagnosticReport:
+            $ref: ./models/system/DiagnosticReport.yaml#/DiagnosticReport
+        StorageLocation:
+            $ref: ./models/system/StorageLocation.yaml#/StorageLocation
+        StorageLocationReport:
+            $ref: ./models/system/StorageLocationReport.yaml#/StorageLocationReport
+        ActivityFeedbackRating:
+            $ref: ./models/activity/ActivityFeedbackRating.yaml#/ActivityFeedbackRating
+        ActivityFeedback:
+            $ref: ./models/activity/ActivityFeedback.yaml#/ActivityFeedback
+        ActivityFeedbackUpdate:
+            $ref: ./models/activity/ActivityFeedbackUpdate.yaml#/ActivityFeedbackUpdate
+        ComputeDevice:
+            $ref: ./models/models/ComputeDevice.yaml#/ComputeDevice
+        ComputeDeviceStatus:
+            $ref: ./models/models/ComputeDeviceStatus.yaml#/ComputeDeviceStatus
+        ModelProfileOptions:
+            $ref: ./models/models/ModelProfileOptions.yaml#/ModelProfileOptions
+        ModelCapabilities:
+            $ref: ./models/models/ModelCapabilities.yaml#/ModelCapabilities
+        ModelProfile:
+            $ref: ./models/models/ModelProfile.yaml#/ModelProfile
+        ModelProfileUpdate:
+            $ref: ./models/models/ModelProfileUpdate.yaml#/ModelProfileUpdate
+        ModelProviderPreset:
+            $ref: ./models/models/ModelProviderPreset.yaml#/ModelProviderPreset
+        ModelProfileReport:
+            $ref: ./models/models/ModelProfileReport.yaml#/ModelProfileReport
+        ModelTaskRouting:
+            $ref: ./models/models/ModelTaskRouting.yaml#/ModelTaskRouting
+        ModelProfileTestResult:
+            $ref: ./models/models/ModelProfileTestResult.yaml#/ModelProfileTestResult
+        DeliveryMode:
+            $ref: ./models/common/DeliveryMode.yaml#/DeliveryMode
+        ModelProfileTestRequest:
+            $ref: ./models/models/ModelProfileTestRequest.yaml#/ModelProfileTestRequest
+        AppearanceSettings:
+            $ref: ./models/settings/AppearanceSettings.yaml#/AppearanceSettings
+        UploadedFile:
+            $ref: ./models/media/UploadedFile.yaml#/UploadedFile
+        SendMediaRequest:
+            $ref: ./models/media/SendMediaRequest.yaml#/SendMediaRequest
+        SendStickerRequest:
+            $ref: ./models/media/SendStickerRequest.yaml#/SendStickerRequest
+        StickerItem:
+            $ref: ./models/media/StickerItem.yaml#/StickerItem
+        StickerSet:
+            $ref: ./models/media/StickerSet.yaml#/StickerSet
+        StickerCatalog:
+            $ref: ./models/media/StickerCatalog.yaml#/StickerCatalog
+        PreviewJob:
+            $ref: ./models/models/PreviewJob.yaml#/PreviewJob
+        PreviewJobRequest:
+            $ref: ./models/models/PreviewJobRequest.yaml#/PreviewJobRequest
+        ChatGallery:
+            $ref: ./models/chats/ChatGallery.yaml#/ChatGallery
+        MessageLink:
+            $ref: ./models/chats/MessageLink.yaml#/MessageLink
+        ChatTypingUser:
+            $ref: ./models/chats/ChatTypingUser.yaml#/ChatTypingUser
+        ContextExclusionUpdate:
+            $ref: ./models/chats/ContextExclusionUpdate.yaml#/ContextExclusionUpdate
+        ActivityHistorySettings:
+            $ref: ./models/activity/ActivityHistorySettings.yaml#/ActivityHistorySettings
+        ActivityHistoryStorage:
+            $ref: ./models/activity/ActivityHistoryStorage.yaml#/ActivityHistoryStorage
+        ActivityHistoryPage:
+            $ref: ./models/activity/ActivityHistoryPage.yaml#/ActivityHistoryPage
+        ModelPromptSettings:
+            $ref: ./models/models/ModelPromptSettings.yaml#/ModelPromptSettings
+        ModelPromptReport:
+            $ref: ./models/models/ModelPromptReport.yaml#/ModelPromptReport
+        PromptBudgetRequest:
+            $ref: ./models/models/PromptBudgetRequest.yaml#/PromptBudgetRequest
+        PromptBudgetReport:
+            $ref: ./models/models/PromptBudgetReport.yaml#/PromptBudgetReport
+        MemoryCollectionScope:
+            $ref: ./models/memory/MemoryCollectionScope.yaml#/MemoryCollectionScope
+        ProactiveMode:
+            $ref: ./models/settings/ProactiveMode.yaml#/ProactiveMode
+        MessageDeletionOptions:
+            $ref: ./models/chats/MessageDeletionOptions.yaml#/MessageDeletionOptions
+        MessageDeletionRequest:
+            $ref: ./models/chats/MessageDeletionRequest.yaml#/MessageDeletionRequest
+        MessageDeletionResult:
+            $ref: ./models/chats/MessageDeletionResult.yaml#/MessageDeletionResult
+        CommunicationStyle:
+            $ref: ./models/chats/CommunicationStyle.yaml#/CommunicationStyle
+        ChatGroupReplies:
+            $ref: ./models/chats/ChatGroupReplies.yaml#/ChatGroupReplies
+        SourceLinksMode:
+            $ref: ./models/chats/SourceLinksMode.yaml#/SourceLinksMode
+        GroupRepliesMode:
+            $ref: ./models/settings/GroupRepliesMode.yaml#/GroupRepliesMode
+        DefaultDeliveryMode:
+            $ref: ./models/settings/DefaultDeliveryMode.yaml#/DefaultDeliveryMode
+        ChatKind:
+            $ref: ./models/chats/ChatKind.yaml#/ChatKind
+        NullableActivityFeedbackRating:
+            $ref: ./models/activity/NullableActivityFeedbackRating.yaml#/NullableActivityFeedbackRating
+        ActivityKind:
+            $ref: ./models/activity/ActivityKind.yaml#/ActivityKind
+        GlobalDeliveryMode:
+            $ref: ./models/settings/GlobalDeliveryMode.yaml#/GlobalDeliveryMode
+        WallpaperKind:
+            $ref: ./models/chats/WallpaperKind.yaml#/WallpaperKind
+        MemoryCollectionStatus:
+            $ref: ./models/memory/MemoryCollectionStatus.yaml#/MemoryCollectionStatus
+        SearchConnectionState:
+            $ref: ./models/settings/SearchConnectionState.yaml#/SearchConnectionState
+        DiagnosticSource:
+            $ref: ./models/system/DiagnosticSource.yaml#/DiagnosticSource
+        StorageLocationKind:
+            $ref: ./models/system/StorageLocationKind.yaml#/StorageLocationKind
+        ComputeDeviceKind:
+            $ref: ./models/models/ComputeDeviceKind.yaml#/ComputeDeviceKind
+        ComputeDeviceReason:
+            $ref: ./models/models/ComputeDeviceReason.yaml#/ComputeDeviceReason
+        ComputeDeviceLimitation:
+            $ref: ./models/models/ComputeDeviceLimitation.yaml#/ComputeDeviceLimitation
+        ThinkingMode:
+            $ref: ./models/models/ThinkingMode.yaml#/ThinkingMode
+        TokenLimitParameter:
+            $ref: ./models/models/TokenLimitParameter.yaml#/TokenLimitParameter
+        ModelProvider:
+            $ref: ./models/models/ModelProvider.yaml#/ModelProvider
+        ModelPreset:
+            $ref: ./models/models/ModelPreset.yaml#/ModelPreset
+        AppearanceMode:
+            $ref: ./models/settings/AppearanceMode.yaml#/AppearanceMode
+        OutgoingMediaKind:
+            $ref: ./models/media/OutgoingMediaKind.yaml#/OutgoingMediaKind
+        PreviewJobStatus:
+            $ref: ./models/models/PreviewJobStatus.yaml#/PreviewJobStatus
+        TypingAction:
+            $ref: ./models/chats/TypingAction.yaml#/TypingAction
+        ContextExclusionScope:
+            $ref: ./models/chats/ContextExclusionScope.yaml#/ContextExclusionScope
+        TokenEncoding:
+            $ref: ./models/models/TokenEncoding.yaml#/TokenEncoding
+        MessageDeletionScope:
+            $ref: ./models/chats/MessageDeletionScope.yaml#/MessageDeletionScope
+        SearchConnectionRequest:
+            $ref: ./models/settings/SearchConnectionRequest.yaml#/SearchConnectionRequest
+        QueuePauseRequest:
+            $ref: ./models/activity/QueuePauseRequest.yaml#/QueuePauseRequest
+    securitySchemes:
+        sessionCookie:
+            type: apiKey
+            in: cookie
+            name: tiho
+security:
+    -
+        sessionCookie: []

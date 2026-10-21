@@ -1,0 +1,7 @@
+ProactiveMode:
+    type: string
+    enum:
+        - inherit
+        - disabled
+        - enabled
+    description: 'Default: inherit.'

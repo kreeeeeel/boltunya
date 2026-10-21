@@ -1,0 +1,64 @@
+Activity:
+    type: object
+    required:
+        - id
+        - chatId
+        - title
+        - status
+        - detail
+        - date
+        - durationMs
+    properties:
+        id:
+            type: string
+        chatId:
+            type: string
+        title:
+            type: string
+        status:
+            type: string
+        detail:
+            type: string
+        date:
+            type: integer
+        durationMs:
+            type: integer
+        avatarUrl:
+            type: string
+        phase:
+            type: string
+        thinking:
+            type: string
+        queuePosition:
+            type: integer
+            format: int64
+        priority:
+            type: boolean
+        inputTokens:
+            type: integer
+            format: int64
+        outputTokens:
+            type: integer
+            format: int64
+        attempts:
+            type: integer
+            format: int64
+        startedAt:
+            type: integer
+            format: int64
+        finishedAt:
+            type: integer
+            format: int64
+        waitUntil:
+            type: integer
+            format: int64
+        preview:
+            type: string
+        feedbackAvailable:
+            type: boolean
+            default: false
+            description: A final event has a nonempty ready response and can receive human feedback.
+        feedbackRating:
+            $ref: ./NullableActivityFeedbackRating.yaml#/NullableActivityFeedbackRating
+        kind:
+            $ref: ./ActivityKind.yaml#/ActivityKind

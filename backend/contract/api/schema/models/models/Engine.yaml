@@ -1,0 +1,36 @@
+Engine:
+    type: object
+    required:
+        - online
+        - downloading
+        - progress
+        - error
+        - models
+        - warming
+    properties:
+        installed:
+            type: boolean
+            default: false
+            description: An Ollama executable is available locally, or the configured server is online.
+        online:
+            type: boolean
+        downloading:
+            type: string
+        progress:
+            type: integer
+        error:
+            type: string
+        models:
+            type: array
+            items:
+                $ref: ./Model.yaml#/Model
+        warming:
+            type: string
+        downloadedBytes:
+            type: integer
+            format: int64
+        totalBytes:
+            type: integer
+            format: int64
+        downloadStage:
+            type: string

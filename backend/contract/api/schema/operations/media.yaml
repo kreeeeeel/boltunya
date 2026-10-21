@@ -1,0 +1,214 @@
+mediaByFileId:
+    get:
+        operationId: media
+        parameters:
+            -
+                name: fileId
+                in: path
+                required: true
+                schema:
+                    type: integer
+        responses:
+            '200':
+                description: Telegram media
+                content:
+                    application/octet-stream:
+                        schema:
+                            type: string
+                            format: binary
+            '400':
+                description: Unavailable file
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Authentication required
+        tags:
+            - media
+mediaByFileIdDownload:
+    post:
+        operationId: downloadMedia
+        tags:
+            - media
+        security:
+            -
+                sessionCookie: []
+        parameters:
+            -
+                in: path
+                name: fileId
+                required: true
+                schema:
+                    type: integer
+        responses:
+            '200':
+                description: Downloaded
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+uploads:
+    post:
+        operationId: uploadFile
+        tags:
+            - media
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/media/UploadedFile.yaml#/UploadedFile
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '413':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        parameters:
+            -
+                in: header
+                name: X-File-Name
+                required: true
+                description: UTF-8 filename encoded with encodeURIComponent. Path separators are sanitized.
+                schema:
+                    type: string
+                    maxLength: 2000
+        requestBody:
+            required: true
+            content:
+                application/octet-stream:
+                    schema:
+                        type: string
+                        format: binary
+                image/jpeg:
+                    schema:
+                        type: string
+                        format: binary
+                image/png:
+                    schema:
+                        type: string
+                        format: binary
+                video/mp4:
+                    schema:
+                        type: string
+                        format: binary
+uploadsById:
+    delete:
+        operationId: deleteUpload
+        tags:
+            - media
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        parameters:
+            -
+                in: path
+                name: id
+                required: true
+                schema:
+                    type: string
+stickers:
+    get:
+        operationId: stickers
+        tags:
+            - media
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/media/StickerCatalog.yaml#/StickerCatalog
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+stickersSetsById:
+    get:
+        operationId: stickerSet
+        tags:
+            - media
+        responses:
+            '200':
+                description: Success
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                $ref: ../models/media/StickerItem.yaml#/StickerItem
+            '400':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Request failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        parameters:
+            -
+                in: path
+                name: id
+                required: true
+                schema:
+                    type: string

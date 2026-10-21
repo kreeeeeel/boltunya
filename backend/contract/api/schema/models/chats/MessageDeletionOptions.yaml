@@ -1,0 +1,10 @@
+MessageDeletionOptions:
+    type: object
+    required:
+        - canDeleteForSelf
+        - canDeleteForEveryone
+    properties:
+        canDeleteForSelf:
+            type: boolean
+        canDeleteForEveryone:
+            type: boolean

@@ -1,0 +1,7 @@
+MessageDeletionRequest:
+    type: object
+    required:
+        - scope
+    properties:
+        scope:
+            $ref: ./MessageDeletionScope.yaml#/MessageDeletionScope

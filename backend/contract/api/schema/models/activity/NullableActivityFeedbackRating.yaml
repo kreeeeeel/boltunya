@@ -1,0 +1,7 @@
+NullableActivityFeedbackRating:
+    type: string
+    enum:
+        - good
+        - bad
+    nullable: true
+    default: null

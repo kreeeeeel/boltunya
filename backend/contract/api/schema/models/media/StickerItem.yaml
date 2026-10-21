@@ -1,0 +1,22 @@
+StickerItem:
+    type: object
+    required:
+        - id
+        - emoji
+        - setId
+        - media
+        - width
+        - height
+    properties:
+        id:
+            type: string
+        emoji:
+            type: string
+        setId:
+            type: string
+        media:
+            $ref: ./MediaAttachment.yaml#/MediaAttachment
+        width:
+            type: integer
+        height:
+            type: integer

@@ -1,0 +1,24 @@
+ComputeDevice:
+    type: object
+    required:
+        - id
+        - name
+        - kind
+        - memoryBytes
+        - selectable
+        - reason
+    properties:
+        id:
+            type: string
+        name:
+            type: string
+        kind:
+            $ref: ./ComputeDeviceKind.yaml#/ComputeDeviceKind
+        memoryBytes:
+            type: integer
+            format: int64
+            minimum: 0
+        selectable:
+            type: boolean
+        reason:
+            $ref: ./ComputeDeviceReason.yaml#/ComputeDeviceReason

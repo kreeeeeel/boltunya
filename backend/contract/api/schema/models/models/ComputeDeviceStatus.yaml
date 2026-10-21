@@ -1,0 +1,43 @@
+ComputeDeviceStatus:
+    type: object
+    required:
+        - configured
+        - active
+        - managed
+        - selectionSupported
+        - restartRequired
+        - limitation
+        - devices
+        - autoUsesEnvironment
+        - nvidiaSelectionOnly
+    properties:
+        configured:
+            type: string
+        active:
+            type: string
+            nullable: true
+            description: >-
+                Launch mode recorded for the process started by this application, not a measurement of actual GPU
+                offload.
+        managed:
+            type: boolean
+        selectionSupported:
+            type: boolean
+        restartRequired:
+            type: boolean
+        limitation:
+            $ref: ./ComputeDeviceLimitation.yaml#/ComputeDeviceLimitation
+        devices:
+            type: array
+            items:
+                $ref: ./ComputeDevice.yaml#/ComputeDevice
+        autoUsesEnvironment:
+            type: boolean
+            default: true
+            description: Automatic mode preserves inherited Ollama/CUDA/HIP/Vulkan environment settings.
+        nvidiaSelectionOnly:
+            type: boolean
+            default: true
+            description: >-
+                Only NVIDIA UUIDs are currently selectable explicitly. AMD and Intel are left to automatic Ollama
+                discovery.
