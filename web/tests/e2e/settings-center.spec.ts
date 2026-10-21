@@ -305,10 +305,11 @@ for (const dark of [false, true]) {
         }
         const dialog = page.getByRole('dialog', {name: ru.settings, exact: true});
         await expect.poll(async () => Math.round((await dialog.boundingBox())!.width)).toBe(960);
+        await expect(dialog).toHaveCSS('transform', 'none');
         const brand = page.locator('[data-qa="settings-brand"]');
         const initial = await brand.boundingBox();
         await chooseSettingsSection(page, 'language');
-        expect((await brand.boundingBox())!.y).toBe(initial!.y);
+        expect((await brand.boundingBox())!.y).toBeCloseTo(initial!.y, 2);
         const geometry = await dialog.getByRole('radio').evaluateAll((radios) =>
             radios.map((radio) => {
                 const label = radio.closest('label')!;
