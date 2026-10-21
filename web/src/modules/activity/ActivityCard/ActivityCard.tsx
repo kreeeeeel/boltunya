@@ -2,7 +2,7 @@ import {ArrowUpToLine, CircleStop, Sparkles} from '@gravity-ui/icons';
 import {Box, Button, Flex, Icon, Label, Text} from '@gravity-ui/uikit';
 import {useLocale, useTranslations} from 'next-intl';
 
-import {isActive, seconds, statusTheme} from '@/modules/activity/model/activity';
+import {isActive, seconds, statusLabelKey, statusTheme} from '@/modules/activity/model/activity';
 import type {Activity} from '@/shared/api/client';
 import {TelegramAvatar} from '@/shared/ui/TelegramAvatar/TelegramAvatar';
 import styles from '@/modules/activity/ActivityCard/ActivityCard.module.css';
@@ -54,11 +54,13 @@ export function ActivityCard({
                     </Flex>
                 </Flex>
                 <Flex gap={2} alignItems="center" wrap>
+                    {entry.kind === 'draft' && <Label theme="info">{t('draft')}</Label>}
+                    {entry.kind === 'memory' && <Label theme="info">{t('memoryTask')}</Label>}
                     {entry.priority && (
                         <Label icon={<Icon data={ArrowUpToLine} size={13} />}>{t('priority')}</Label>
                     )}
                     <Label theme={statusTheme(entry.status)} size="m" loading={running}>
-                        {t(`status.${entry.status}`)}
+                        {t(statusLabelKey(entry))}
                     </Label>
                 </Flex>
             </Flex>

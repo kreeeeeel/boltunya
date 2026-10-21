@@ -244,58 +244,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/flows": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getFlows"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/flows/{flowId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                flowId: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["saveFlow"];
-        post?: never;
-        delete: operations["deleteFlow"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/flows/{flowId}/test": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                flowId: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["previewFlow"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/memory": {
         parameters: {
             query?: never;
@@ -637,6 +585,278 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/model-profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["modelProfiles"];
+        put?: never;
+        post: operations["createModelProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/model-profiles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateModelProfile"];
+        post?: never;
+        delete: operations["deleteModelProfile"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/model-profiles/{id}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["testModelProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/model-routing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["modelRouting"];
+        put: operations["saveModelRouting"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/appearance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["appearance"];
+        put: operations["saveAppearance"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["uploadFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uploads/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteUpload"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stickers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["stickers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stickers/sets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["stickerSet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/preview/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["enqueuePreviewJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/preview/jobs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["previewJob"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chats/{chatId}/messages/{messageId}/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["messageLink"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chats/{chatId}/messages/{messageId}/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["excludeMessageContext"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chats/{chatId}/context-exclusions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["restoreChatContext"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chats/{chatId}/gallery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["chatGallery"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chats/{chatId}/attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sendAttachments"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/chats/{chatId}/stickers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sendSticker"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -671,6 +891,13 @@ export interface components {
              * @default true
              */
             useDefaultModel: boolean;
+            /** @default  */
+            modelProfileId: string;
+            deliveryMode: components["schemas"]["DeliveryMode"];
+            /** @default false */
+            analyzePhotos: boolean;
+            /** @default false */
+            aiStickers: boolean;
         };
         Settings: {
             paused: boolean;
@@ -709,6 +936,15 @@ export interface components {
              * @default auto
              */
             ollamaDevice: string;
+            /** @default  */
+            defaultModelProfileId: string;
+            /**
+             * @default reply
+             * @enum {string}
+             */
+            deliveryMode: "reply" | "send";
+            /** @default 1 */
+            maxParallelTasks: number;
         };
         Chat: {
             id: string;
@@ -731,6 +967,7 @@ export interface components {
             memberCount?: number | null;
             lastMessageOutgoing?: boolean;
             lastMessageSender?: string;
+            typingUsers?: components["schemas"]["ChatTypingUser"][];
         };
         Message: {
             id: string;
@@ -742,7 +979,7 @@ export interface components {
             media?: components["schemas"]["MediaAttachment"] | null;
             entities?: components["schemas"]["MessageEntity"][];
             read?: boolean;
-            /** @description Sent by this application’s AI; metadata is visible only in the local interface. */
+            /** @description Sent by this application; AI metadata is visible only in the local interface. */
             automated?: boolean;
             group?: boolean;
             mentionsMe?: boolean;
@@ -755,6 +992,8 @@ export interface components {
             deleted?: boolean;
             /** Format: int64 */
             deletedAt?: number;
+            contextExcluded?: boolean;
+            senderUsername?: string;
         };
         Telegram: {
             state: string;
@@ -846,6 +1085,8 @@ export interface components {
              * @enum {string|null}
              */
             feedbackRating: "good" | "bad" | null;
+            /** @enum {string} */
+            kind?: "reply" | "draft" | "memory";
         };
         Error: {
             message: string;
@@ -871,6 +1112,10 @@ export interface components {
             text: string;
             durationMs: number;
             tokensPerSecond: number;
+            /** @default  */
+            model: string;
+            /** @default  */
+            stickerId: string;
         };
         SettingsUpdate: {
             paused?: boolean;
@@ -895,6 +1140,10 @@ export interface components {
             autoDownloadMaxMb?: number;
             /** @description auto, cpu, or a supported discovered NVIDIA UUID. Saves a preference without stopping any process. */
             ollamaDevice?: string;
+            defaultModelProfileId?: string;
+            /** @enum {string} */
+            deliveryMode?: "reply" | "send";
+            maxParallelTasks?: number;
         };
         State: {
             telegram: components["schemas"]["Telegram"];
@@ -959,33 +1208,6 @@ export interface components {
             gpuPercent?: number | null;
             gpuMemoryUsedBytes?: number | null;
             gpuMemoryTotalBytes?: number | null;
-        };
-        FlowNode: {
-            id: string;
-            /** @enum {string} */
-            kind: "command" | "agent" | "reply" | "store" | "condition";
-            text: string;
-            key: string;
-            /** @enum {string} */
-            operation: "get" | "set" | "delete";
-            /** @enum {string} */
-            match: "prefix" | "equals" | "contains";
-            x: number;
-            y: number;
-        };
-        FlowEdge: {
-            id: string;
-            source: string;
-            target: string;
-            output: string;
-        };
-        AutomationFlow: {
-            id: string;
-            name: string;
-            enabled: boolean;
-            chatIds: string[];
-            nodes: components["schemas"]["FlowNode"][];
-            edges: components["schemas"]["FlowEdge"][];
         };
         MemoryDocument: {
             chatId: string;
@@ -1057,6 +1279,8 @@ export interface components {
             queued: number;
             /** Format: int64 */
             running: number;
+            maxParallelTasks?: number;
+            activeTasks?: number;
         };
         ActivityMessage: {
             role: string;
@@ -1183,6 +1407,234 @@ export interface components {
              * @default true
              */
             nvidiaSelectionOnly: boolean;
+        };
+        ModelProfileOptions: {
+            temperature?: number | null;
+            topP?: number | null;
+            topK?: number | null;
+            presencePenalty?: number | null;
+            frequencyPenalty?: number | null;
+            repeatPenalty?: number | null;
+            seed?: number | null;
+            /** @default [] */
+            stop: string[];
+            /** @default 2048 */
+            maxOutputTokens: number;
+            /** @default 8192 */
+            contextWindow: number;
+            /** @default 2048 */
+            reasoningTokens: number;
+            /** @default default */
+            reasoningEffort: string;
+            /**
+             * @default default
+             * @enum {string}
+             */
+            thinking: "default" | "enabled" | "disabled";
+            /** @default 10 */
+            connectTimeoutSeconds: number;
+            /** @default 600 */
+            idleTimeoutSeconds: number;
+            /** @default 0 */
+            totalTimeoutSeconds: number;
+            /** @default 20 */
+            keepAliveMinutes: number;
+        };
+        ModelCapabilities: {
+            /** @default true */
+            streaming: boolean;
+            /** @default false */
+            vision: boolean;
+            /** @default false */
+            structuredOutput: boolean;
+            /** @default false */
+            reasoning: boolean;
+            /** @default true */
+            temperature: boolean;
+            /** @default true */
+            topP: boolean;
+            /** @default false */
+            topK: boolean;
+            /** @default false */
+            penalties: boolean;
+            /**
+             * @default max_tokens
+             * @enum {string}
+             */
+            tokenLimit: "max_tokens" | "max_completion_tokens";
+        };
+        ModelProfile: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            provider: "ollama" | "openai-compatible";
+            /** @enum {string} */
+            preset: "ollama" | "openai" | "deepseek" | "openrouter" | "groq" | "custom";
+            baseUrl: string;
+            model: string;
+            /** @default true */
+            enabled: boolean;
+            options: components["schemas"]["ModelProfileOptions"];
+            capabilities: components["schemas"]["ModelCapabilities"];
+            /** @default false */
+            apiKeyConfigured: boolean;
+        };
+        ModelProfileUpdate: {
+            name: string;
+            /** @enum {string} */
+            provider: "ollama" | "openai-compatible";
+            /** @enum {string} */
+            preset: "ollama" | "openai" | "deepseek" | "openrouter" | "groq" | "custom";
+            baseUrl: string;
+            model: string;
+            /** @default true */
+            enabled: boolean;
+            options: components["schemas"]["ModelProfileOptions"];
+            capabilities: components["schemas"]["ModelCapabilities"];
+            /** @description Omitted or empty keeps the existing key. Never returned. */
+            apiKey?: string;
+            /** @default false */
+            clearApiKey: boolean;
+        };
+        ModelProviderPreset: {
+            /** @default  */
+            id: string;
+            /** @default  */
+            name: string;
+            /** @enum {string} */
+            provider: "ollama" | "openai-compatible";
+            /** @default  */
+            baseUrl: string;
+            /** @default  */
+            model: string;
+            /** @default false */
+            apiKeyRequired: boolean;
+            defaultsOptions: components["schemas"]["ModelProfileOptions"];
+            defaultCapabilities: components["schemas"]["ModelCapabilities"];
+        };
+        ModelProfileReport: {
+            profiles: components["schemas"]["ModelProfile"][];
+            presets: components["schemas"]["ModelProviderPreset"][];
+        };
+        ModelTaskRouting: {
+            /** @default false */
+            enabled: boolean;
+            /** @default false */
+            parallelIndependentTasks: boolean;
+            /** @default  */
+            replyProfileId: string;
+            /** @default  */
+            memoryProfileId: string;
+            /** @default  */
+            researchProfileId: string;
+            /** @default  */
+            visionProfileId: string;
+        };
+        ModelProfileTestResult: {
+            /** @default false */
+            ok: boolean;
+            /** @default  */
+            code: string;
+            /** @default  */
+            message: string;
+            /** Format: int64 */
+            durationMs: number;
+            inputTokens: number;
+            outputTokens: number;
+            /** @default  */
+            finishReason: string;
+            /** @default  */
+            preview: string;
+        };
+        /** @enum {string} */
+        DeliveryMode: "inherit" | "reply" | "send";
+        ModelProfileTestRequest: {
+            /** @default false */
+            confirmGeneration: boolean;
+        };
+        AppearanceSettings: {
+            /**
+             * @default system
+             * @enum {string}
+             */
+            mode: "light" | "dark" | "system";
+            tokens: {
+                [key: string]: string;
+            };
+            /** @default  */
+            css: string;
+        };
+        UploadedFile: {
+            /** Format: uuid */
+            id: string;
+            fileName: string;
+            mimeType: string;
+            /** Format: int64 */
+            size: number;
+        };
+        SendMediaRequest: {
+            uploadIds: string[];
+            /** @enum {string} */
+            kind: "media" | "photo" | "video" | "document";
+            caption?: string;
+        };
+        SendStickerRequest: {
+            stickerId: string;
+        };
+        StickerItem: {
+            id: string;
+            emoji: string;
+            setId: string;
+            media: components["schemas"]["MediaAttachment"];
+            width: number;
+            height: number;
+        };
+        StickerSet: {
+            id: string;
+            title: string;
+            name: string;
+            thumbnail?: components["schemas"]["MediaAttachment"] | null;
+            count: number;
+        };
+        StickerCatalog: {
+            recent: components["schemas"]["StickerItem"][];
+            favorites: components["schemas"]["StickerItem"][];
+            sets: components["schemas"]["StickerSet"][];
+        };
+        PreviewJob: {
+            id: string;
+            /** @enum {string} */
+            status: "queued" | "generating" | "ready" | "error" | "cancelled";
+            result: components["schemas"]["Reply"] | null;
+            error: string;
+        };
+        PreviewJobRequest: {
+            chatId: string;
+            rule?: components["schemas"]["ChatRule"];
+            /** @description Legacy compatibility; real chat history is used for draft generation. */
+            text?: string;
+            /** @description Optional incoming message ID. History is limited through this real message; no synthetic message is appended. */
+            messageId?: string;
+        };
+        ChatGallery: {
+            messages: components["schemas"]["Message"][];
+            hasMoreBefore: boolean;
+            hasMoreAfter: boolean;
+        };
+        MessageLink: {
+            url: string;
+        };
+        ChatTypingUser: {
+            id: string;
+            name: string;
+            /** @enum {string} */
+            action: "typing" | "uploadPhoto" | "uploadVideo" | "uploadDocument" | "recordVoice" | "uploadVoice" | "recordVideo" | "uploadVideoNote" | "chooseSticker";
+        };
+        ContextExclusionUpdate: {
+            /** @enum {string} */
+            scope: "message" | "through" | "from";
+            excluded: boolean;
         };
     };
     responses: never;
@@ -1923,179 +2375,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MetricSample"][];
-                };
-            };
-            /** @description Invalid request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Authentication required */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getFlows: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AutomationFlow"][];
-                };
-            };
-            /** @description Invalid request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Authentication required */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    saveFlow: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                flowId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AutomationFlow"];
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        ok?: boolean;
-                    };
-                };
-            };
-            /** @description Invalid request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Authentication required */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    deleteFlow: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                flowId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        ok?: boolean;
-                    };
-                };
-            };
-            /** @description Invalid request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Authentication required */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    previewFlow: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                flowId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    text: string;
-                    flow?: components["schemas"]["AutomationFlow"];
-                };
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Reply"];
                 };
             };
             /** @description Invalid request */
@@ -3318,6 +3597,1013 @@ export interface operations {
             };
             /** @description Local session required */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    modelProfiles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelProfileReport"];
+                };
+            };
+            /** @description Request failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    createModelProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModelProfileUpdate"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelProfile"];
+                };
+            };
+            /** @description Request failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    updateModelProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModelProfileUpdate"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelProfile"];
+                };
+            };
+            /** @description Request failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    deleteModelProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ok"];
+                };
+            };
+            /** @description Request failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    testModelProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModelProfileTestRequest"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelProfileTestResult"];
+                };
+            };
+            /** @description Request failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    modelRouting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelTaskRouting"];
+                };
+            };
+            /** @description Request failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    saveModelRouting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModelTaskRouting"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelTaskRouting"];
+                };
+            };
+            /** @description Request failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    appearance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Appearance preferences */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppearanceSettings"];
+                };
+            };
+            /** @description Invalid preferences */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    saveAppearance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppearanceSettings"];
+            };
+        };
+        responses: {
+            /** @description Appearance preferences */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppearanceSettings"];
+                };
+            };
+            /** @description Invalid preferences */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    uploadFile: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description UTF-8 filename encoded with encodeURIComponent. Path separators are sanitized. */
+                "X-File-Name": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+                "image/jpeg": string;
+                "image/png": string;
+                "video/mp4": string;
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadedFile"];
+                };
+            };
+            /** @description Request failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    deleteUpload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ok"];
+                };
+            };
+            /** @description Request failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    stickers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StickerCatalog"];
+                };
+            };
+            /** @description Request failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    stickerSet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StickerItem"][];
+                };
+            };
+            /** @description Request failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    enqueuePreviewJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreviewJobRequest"];
+            };
+        };
+        responses: {
+            /** @description Queued draft job; it never sends Telegram messages */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreviewJob"];
+                };
+            };
+            /** @description Request failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    previewJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queued draft job; it never sends Telegram messages */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreviewJob"];
+                };
+            };
+            /** @description Request failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    messageLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chatId: string;
+                messageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageLink"];
+                };
+            };
+            /** @description Request failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    excludeMessageContext: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chatId: string;
+                messageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContextExclusionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Context policy updated; Telegram message remains unchanged */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ok"];
+                };
+            };
+            /** @description Request failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    restoreChatContext: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chatId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Context policy updated; Telegram message remains unchanged */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ok"];
+                };
+            };
+            /** @description Request failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    chatGallery: {
+        parameters: {
+            query: {
+                around: string;
+            };
+            header?: never;
+            path: {
+                chatId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatGallery"];
+                };
+            };
+            /** @description Request failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    sendAttachments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chatId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendMediaRequest"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ok"];
+                };
+            };
+            /** @description Request failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    sendSticker: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chatId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendStickerRequest"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ok"];
+                };
+            };
+            /** @description Request failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Request failed */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };

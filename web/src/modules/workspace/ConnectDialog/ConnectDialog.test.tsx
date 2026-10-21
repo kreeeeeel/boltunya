@@ -20,7 +20,7 @@ describe('Telegram login', () => {
                 </ThemeProvider>
             </NextIntlClientProvider>,
         );
-        expect(screen.getByRole('link', {name: /my.telegram.org/})).toHaveAttribute(
+        expect(screen.getByRole('link', {name: (name) => name.includes('my.telegram.org')})).toHaveAttribute(
             'href',
             'https://my.telegram.org/apps',
         );

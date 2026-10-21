@@ -5,6 +5,7 @@ import {useTranslations} from 'next-intl';
 import type {Chat} from '@/shared/api/client';
 import {TelegramAvatar} from '@/shared/ui/TelegramAvatar/TelegramAvatar';
 import styles from '@/modules/workspace/ChatHeading/ChatHeading.module.css';
+import {TypingIndicator} from '@/modules/workspace/TypingIndicator/TypingIndicator';
 
 export function ChatHeading({chat}: {readonly chat: Chat}) {
     const t = useTranslations();
@@ -36,41 +37,45 @@ export function ChatHeading({chat}: {readonly chat: Chat}) {
             <TelegramAvatar title={chat.title} url={chat.avatarUrl} size="m" />
             <Flex direction="column" className={styles.text}>
                 <Text className={styles.title}>{chat.title}</Text>
-                {subtitle && (
-                    <Flex alignItems="center" gap={1} className={styles.subtitleRow}>
-                        <Text className={styles.subtitle} qa="chat-subtitle">
-                            {subtitle}
-                        </Text>
-                        {!group && chat.username && (
-                            <>
-                                {(['username', 'link'] as const).map((kind) => (
-                                    <Tooltip
-                                        key={kind}
-                                        content={t(copied === kind ? 'copied' : 'chatCopy.' + kind)}
-                                    >
-                                        <Button
-                                            view="flat-secondary"
-                                            size="xs"
-                                            className={styles.copy}
-                                            aria-label={t('chatCopy.' + kind)}
-                                            onClick={() => void copy(kind)}
+                {chat.typingUsers?.length ? (
+                    <TypingIndicator users={chat.typingUsers} group={group} live />
+                ) : (
+                    subtitle && (
+                        <Flex alignItems="center" gap={1} className={styles.subtitleRow}>
+                            <Text className={styles.subtitle} qa="chat-subtitle">
+                                {subtitle}
+                            </Text>
+                            {!group && chat.username && (
+                                <>
+                                    {(['username', 'link'] as const).map((kind) => (
+                                        <Tooltip
+                                            key={kind}
+                                            content={t(copied === kind ? 'copied' : 'chatCopy.' + kind)}
                                         >
-                                            <Icon
-                                                data={
-                                                    copied === kind
-                                                        ? Check
-                                                        : kind === 'username'
-                                                          ? Copy
-                                                          : Link
-                                                }
-                                                size={14}
-                                            />
-                                        </Button>
-                                    </Tooltip>
-                                ))}
-                            </>
-                        )}
-                    </Flex>
+                                            <Button
+                                                view="flat-secondary"
+                                                size="xs"
+                                                className={styles.copy}
+                                                aria-label={t('chatCopy.' + kind)}
+                                                onClick={() => void copy(kind)}
+                                            >
+                                                <Icon
+                                                    data={
+                                                        copied === kind
+                                                            ? Check
+                                                            : kind === 'username'
+                                                              ? Copy
+                                                              : Link
+                                                    }
+                                                    size={14}
+                                                />
+                                            </Button>
+                                        </Tooltip>
+                                    ))}
+                                </>
+                            )}
+                        </Flex>
+                    )
                 )}
                 {error && (
                     <Text color="danger" role="alert">

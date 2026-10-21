@@ -41,7 +41,7 @@ beforeEach(() => {
 
 it('opens separate explanation, recovery and technical blocks from an error card', async () => {
     mount();
-    fireEvent.click(await screen.findByRole('button', {name: /Ollama недоступна/}));
+    fireEvent.click(await screen.findByRole('button', {name: (name) => name.includes('Ollama недоступна')}));
     const dialog = screen.getByRole('dialog', {name: ru.diagnostics.details});
     expect(dialog).toHaveTextContent(ru.diagnostics.happened);
     expect(dialog).toHaveTextContent(ru.diagnostics.solution);

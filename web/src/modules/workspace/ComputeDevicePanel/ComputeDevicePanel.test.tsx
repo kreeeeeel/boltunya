@@ -32,7 +32,9 @@ it('offers known NVIDIA UUIDs and CPU mode for app-managed Ollama without starti
     mount('auto', 'auto', onUpdate);
     const select = await screen.findByRole('combobox', {name: ru.computeDevice.label});
     fireEvent.click(select);
-    fireEvent.click(await screen.findByRole('option', {name: /NVIDIA GeForce RTX 4070/}));
+    fireEvent.click(
+        await screen.findByRole('option', {name: (name) => name.includes('NVIDIA GeForce RTX 4070')}),
+    );
     expect(onUpdate).toHaveBeenCalledWith(computeDevices.devices[2].id);
     expect(screen.getByText(ru.computeDevice.nextStart)).toBeVisible();
     expect(mocks.GET).toHaveBeenCalledTimes(1);
@@ -83,7 +85,9 @@ it('shows an outdated-driver recommendation without blocking a selectable NVIDIA
     const onUpdate = vi.fn();
     mount('auto', 'auto', onUpdate);
     fireEvent.click(await screen.findByRole('combobox', {name: ru.computeDevice.label}));
-    fireEvent.click(await screen.findByRole('option', {name: /NVIDIA GeForce RTX 4070/}));
+    fireEvent.click(
+        await screen.findByRole('option', {name: (name) => name.includes('NVIDIA GeForce RTX 4070')}),
+    );
     expect(onUpdate).toHaveBeenCalledWith(data.devices[2].id);
     expect(screen.getByText((content) => content.includes(ru.computeDevice.reasons.driver))).toBeVisible();
 });

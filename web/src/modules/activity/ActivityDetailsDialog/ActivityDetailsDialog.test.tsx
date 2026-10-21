@@ -25,3 +25,33 @@ it('does not claim a ready reply was sent when Telegram delivery failed', () => 
     expect(screen.queryByText(ru.events.delivered)).toBeNull();
     expect(screen.getByText(details.response)).toBeVisible();
 });
+
+it('shows completed memory timings and tokens without empty conversation or prompt blocks', () => {
+    const details = activityDetails({
+        ...testActivity[2],
+        kind: 'memory',
+        status: 'ready',
+        phase: 'ready',
+        inputTokens: 123,
+        outputTokens: 45,
+        feedbackAvailable: false,
+    });
+    details.response = '';
+    details.trigger = '';
+    details.attempts = [];
+    mocks.details.mockReturnValue({details, error: '', updateFeedback: vi.fn()});
+    render(
+        <NextIntlClientProvider locale="ru" messages={ru}>
+            <ThemeProvider>
+                <ActivityDetailsDialog id="memory" onClose={vi.fn()} onRefresh={vi.fn()} />
+            </ThemeProvider>
+        </NextIntlClientProvider>,
+    );
+    expect(screen.getByRole('dialog', {name: ru.events.memoryDetails})).toBeVisible();
+    expect(screen.getByText(ru.events.memoryReady)).toBeVisible();
+    expect(screen.getByText('123')).toBeVisible();
+    expect(screen.getByText('45')).toBeVisible();
+    expect(screen.getByText(ru.events.memoryPrivacy)).toBeVisible();
+    expect(screen.queryByText(ru.events.trigger)).toBeNull();
+    expect(screen.queryByText(ru.events.delivered)).toBeNull();
+});

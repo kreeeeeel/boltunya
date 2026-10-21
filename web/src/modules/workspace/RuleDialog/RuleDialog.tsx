@@ -27,18 +27,21 @@ import {ChatHistoryActions} from '@/modules/workspace/ChatHistoryActions';
 import {SaveDialogFooter} from '@/shared/ui/SaveDialogFooter/SaveDialogFooter';
 import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
 import {normalizeCommunicationRule} from '@/modules/workspace/model/normalizeCommunicationRule';
+import {useModelProfiles} from '@/modules/settings/model/useModelProfiles';
 
 export function RuleDialog({
     chat,
     engine,
     customStyles,
     defaultModel,
+    defaultModelProfileId,
     onClose,
     onCollectContext,
     onDeleted,
     onSave,
 }: RuleDialogProps) {
     const t = useTranslations();
+    const profiles = useModelProfiles();
     const [rule, setRule] = useState(() =>
         normalizeCommunicationRule(
             chat.rule,
@@ -184,16 +187,32 @@ export function RuleDialog({
                             <Select
                                 width="max"
                                 size="l"
-                                value={[(rule.useDefaultModel ?? true) ? 'default' : rule.model]}
+                                value={[
+                                    (rule.useDefaultModel ?? true)
+                                        ? 'default'
+                                        : rule.modelProfileId
+                                          ? 'profile:' + rule.modelProfileId
+                                          : rule.model,
+                                ]}
                                 options={[
                                     {
                                         value: 'default',
                                         content: t('modelDefaultOption', {
                                             name:
+                                                profiles.profiles.find(
+                                                    (profile) => profile.id === defaultModelProfileId,
+                                                )?.name ??
                                                 engine.models.find((model) => model.id === defaultModel)
-                                                    ?.name ?? defaultModel,
+                                                    ?.name ??
+                                                defaultModel,
                                         }),
                                     },
+                                    ...profiles.profiles
+                                        .filter((profile) => profile.enabled)
+                                        .map((profile) => ({
+                                            value: 'profile:' + profile.id,
+                                            content: profile.name + ' · ' + profile.model,
+                                        })),
                                     ...(engine?.models ?? []).map((model) => ({
                                         value: model.id,
                                         content:
@@ -203,7 +222,13 @@ export function RuleDialog({
                                 onUpdate={([model]) =>
                                     setRule({
                                         ...rule,
-                                        model: model === 'default' ? defaultModel : model,
+                                        model:
+                                            model === 'default'
+                                                ? defaultModel
+                                                : model.startsWith('profile:')
+                                                  ? rule.model
+                                                  : model,
+                                        modelProfileId: model.startsWith('profile:') ? model.slice(8) : '',
                                         useDefaultModel: model === 'default',
                                     })
                                 }
@@ -211,6 +236,45 @@ export function RuleDialog({
                             />
                         )}
                         <Text className={styles.hint}>{t('modelDefaultHint')}</Text>
+                        {profiles.error && (
+                            <Text color="danger" role="alert">
+                                {profiles.error}
+                            </Text>
+                        )}
+                    </Box>
+                    <Box>
+                        <Text className={styles.label}>{t('chatFeatures.delivery')}</Text>
+                        <Select
+                            size="l"
+                            width="max"
+                            value={[rule.deliveryMode ?? 'inherit']}
+                            options={['inherit', 'reply', 'send'].map((value) => ({
+                                value,
+                                content: t('settingsCenter.delivery.' + value),
+                            }))}
+                            onUpdate={([deliveryMode]) =>
+                                setRule({...rule, deliveryMode: deliveryMode as ChatRule['deliveryMode']})
+                            }
+                            aria-label={t('chatFeatures.delivery')}
+                        />
+                    </Box>
+                    <Box>
+                        <Switch
+                            checked={rule.analyzePhotos ?? false}
+                            onUpdate={(analyzePhotos) => setRule({...rule, analyzePhotos})}
+                        >
+                            {t('chatFeatures.analyzePhotos')}
+                        </Switch>
+                        <Text className={styles.hint}>{t('chatFeatures.photosHint')}</Text>
+                    </Box>
+                    <Box>
+                        <Switch
+                            checked={rule.aiStickers ?? false}
+                            onUpdate={(aiStickers) => setRule({...rule, aiStickers})}
+                        >
+                            {t('chatFeatures.aiStickers')}
+                        </Switch>
+                        <Text className={styles.hint}>{t('chatFeatures.stickersHint')}</Text>
                     </Box>
                     <Box>
                         <Text className={styles.label}>{t('instructions')}</Text>

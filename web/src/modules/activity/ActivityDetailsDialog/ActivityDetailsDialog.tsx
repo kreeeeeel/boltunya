@@ -3,7 +3,7 @@ import {useLocale, useTranslations} from 'next-intl';
 
 import {ActivityAttempt} from '@/modules/activity/ActivityAttempt/ActivityAttempt';
 import {useActivityDetails} from '@/modules/activity/model/useActivityDetails';
-import {isActive, seconds, statusTheme} from '@/modules/activity/model/activity';
+import {isActive, seconds, statusLabelKey, statusTheme} from '@/modules/activity/model/activity';
 import {TelegramAvatar} from '@/shared/ui/TelegramAvatar/TelegramAvatar';
 import styles from '@/modules/activity/ActivityDetailsDialog/ActivityDetailsDialog.module.css';
 import {ActivityFeedbackEditor} from '@/modules/activity/ActivityFeedbackEditor/ActivityFeedbackEditor';
@@ -28,10 +28,10 @@ export function ActivityDetailsDialog({
             fullWidth
             contentOverflow="auto"
             onClose={onClose}
-            aria-label={t('details')}
+            aria-label={t(entry?.kind === 'memory' ? 'memoryDetails' : 'details')}
             qa="event-details"
         >
-            <Dialog.Header caption={t('details')} />
+            <Dialog.Header caption={t(entry?.kind === 'memory' ? 'memoryDetails' : 'details')} />
             <Dialog.Body>
                 {!details && !error && (
                     <Flex direction="column" gap={5} role="status" aria-busy="true" aria-label={t('details')}>
@@ -81,20 +81,25 @@ export function ActivityDetailsDialog({
                                 </Flex>
                             </Flex>
                             <Label size="m" theme={statusTheme(entry.status)}>
-                                {t(`status.${entry.status}`)}
+                                {t(statusLabelKey(entry))}
                             </Label>
                         </Flex>
                         <Box className={styles.stats}>
                             {[
-                                [t('responseTime'), t('seconds', {value: seconds(entry.durationMs, locale)})],
+                                [
+                                    t(entry.kind === 'memory' ? 'taskTime' : 'responseTime'),
+                                    t('seconds', {value: seconds(entry.durationMs, locale)}),
+                                ],
                                 [
                                     t('inputTokens'),
+                                    (entry.kind === 'memory' && entry.inputTokens != null) ||
                                     details.attempts.some((attempt) => attempt.complete)
                                         ? (entry.inputTokens ?? 0)
                                         : '—',
                                 ],
                                 [
                                     t('outputTokens'),
+                                    (entry.kind === 'memory' && entry.outputTokens != null) ||
                                     details.attempts.some((attempt) => attempt.complete)
                                         ? (entry.outputTokens ?? 0)
                                         : '—',
@@ -117,12 +122,14 @@ export function ActivityDetailsDialog({
                                 </Label>
                             ))}
                         </Flex>
-                        <Box className={styles.message}>
-                            <Text variant="subheader-1">{t('trigger')}</Text>
-                            <Box as="pre" className={styles.pre}>
-                                {details.trigger}
+                        {entry.kind !== 'memory' && (
+                            <Box className={styles.message}>
+                                <Text variant="subheader-1">{t('trigger')}</Text>
+                                <Box as="pre" className={styles.pre}>
+                                    {details.trigger}
+                                </Box>
                             </Box>
-                        </Box>
+                        )}
                         {entry.status === 'error' && <Text color="danger">{entry.detail}</Text>}
                         {details.response && (
                             <Box className={styles.delivered}>
@@ -134,7 +141,7 @@ export function ActivityDetailsDialog({
                                 </Box>
                             </Box>
                         )}
-                        {!isActive(entry) && details.response.trim() && (
+                        {entry.feedbackAvailable !== false && !isActive(entry) && details.response.trim() && (
                             <ActivityFeedbackEditor
                                 id={id}
                                 value={details.feedback ?? null}
@@ -145,7 +152,11 @@ export function ActivityDetailsDialog({
                         {details.attempts.map((attempt) => (
                             <ActivityAttempt key={attempt.number} attempt={attempt} />
                         ))}
-                        {!details.attempts.length && <Text color="secondary">{t('noRequests')}</Text>}
+                        {!details.attempts.length && (
+                            <Text color="secondary">
+                                {t(entry.kind === 'memory' ? 'memoryPrivacy' : 'noRequests')}
+                            </Text>
+                        )}
                     </Flex>
                 )}
             </Dialog.Body>

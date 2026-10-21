@@ -5,14 +5,14 @@ import {useEffect, useState} from 'react';
 import {useTranslations} from 'next-intl';
 import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
 import styles from '@/modules/workspace/TrayMenu/TrayMenu.module.css';
-import '@/shared/desktop/bridge';
+import {trayBridge} from '@/shared/desktop/bridge';
 
 export function TrayMenu() {
     const t = useTranslations();
     const [paused, setPaused] = useState(true);
     const [error, setError] = useState('');
     function command(action: string) {
-        void window.boltunyaTray?.action(action);
+        void trayBridge()?.action(action);
     }
     useEffect(() => {
         const refresh = async () => {

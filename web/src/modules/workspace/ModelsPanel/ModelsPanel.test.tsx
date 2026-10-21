@@ -6,8 +6,16 @@ import {expect, it, vi} from 'vitest';
 import {ModelsPanel} from '@/modules/workspace/ModelsPanel/ModelsPanel';
 import {workspaceState} from '@tests/fixtures/workspace';
 import ru from '@/shared/i18n/ru.json';
+import {modelProfiles} from '@tests/fixtures/modelProfiles';
 
-const mocks = vi.hoisted(() => ({POST: vi.fn(), PATCH: vi.fn()}));
+const mocks = vi.hoisted(() => ({
+    POST: vi.fn(),
+    PATCH: vi.fn(),
+    GET: vi.fn(async () => ({
+        data: {profiles: [] as typeof modelProfiles, presets: []},
+        response: new Response(),
+    })),
+}));
 vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
     api: mocks,
@@ -63,7 +71,7 @@ it('keeps installed selected models visibly warming while Ollama is loading them
     expect(within(card).queryByRole('button', {name: ru.chosen})).toBeNull();
 });
 
-it('searches model names and identifiers and restores the catalog after an empty result', () => {
+it('searches model names and identifiers and restores the catalog after an empty result', async () => {
     const view = render(
         <NextIntlClientProvider locale="ru" messages={ru}>
             <ThemeProvider>
@@ -80,8 +88,31 @@ it('searches model names and identifiers and restores the catalog after an empty
     fireEvent.change(search, {target: {value: 'QWEN'}});
     expect(rows()).toHaveLength(2);
     fireEvent.change(search, {target: {value: 'nothing-matches'}});
-    expect(screen.getByText(ru.modelSearch.empty)).toBeInTheDocument();
+    expect(await screen.findByText(ru.modelSearch.empty)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', {name: ru.modelSearch.clear}));
     expect(rows()).toHaveLength(3);
     expect(search).toHaveValue('');
+});
+
+it('searches API profiles together with local models and keeps one authoritative selection', async () => {
+    mocks.GET.mockResolvedValue({data: {profiles: modelProfiles, presets: []}, response: new Response()});
+    render(
+        <NextIntlClientProvider locale="ru" messages={ru}>
+            <ThemeProvider>
+                <ModelsPanel
+                    engine={workspaceState.engine}
+                    defaultModel="qwen3:1.7b"
+                    defaultModelProfileId="profile-primary"
+                    onRefresh={vi.fn()}
+                />
+            </ThemeProvider>
+        </NextIntlClientProvider>,
+    );
+    expect(await screen.findByText('Cloud text')).toBeVisible();
+    fireEvent.change(screen.getByRole('textbox', {name: ru.modelSearch.label}), {
+        target: {value: 'Cloud text'},
+    });
+    expect(screen.getByText('Cloud text')).toBeVisible();
+    expect(screen.queryByText(ru.modelSearch.empty)).toBeNull();
+    expect(screen.getAllByRole('button', {name: ru.chosen})).toHaveLength(1);
 });

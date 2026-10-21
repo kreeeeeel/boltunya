@@ -3,7 +3,6 @@ import type {ReactNode} from 'react';
 import {getRootClassName} from '@gravity-ui/uikit/server';
 
 import '@gravity-ui/uikit/styles/styles.css';
-import '@xyflow/react/dist/style.css';
 import '@/shared/styles/globals.css';
 import '@/shared/styles/typography.css';
 
@@ -11,8 +10,8 @@ import {Preferences} from '@/shared/theme/Preferences';
 import {uiFont} from '@/shared/theme/fonts';
 
 export const metadata: Metadata = {
-    title: 'Болтунья — Telegram',
-    icons: {icon: '/assets/brand/boltunya.svg'},
+    title: 'Aigram — Telegram',
+    icons: {icon: '/assets/brand/aigram.svg'},
     description: 'Локальный ИИ-помощник для личных диалогов Telegram',
 };
 

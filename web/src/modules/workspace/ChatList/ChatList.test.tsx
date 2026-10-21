@@ -8,6 +8,24 @@ import {testChats} from '@tests/fixtures/chats';
 import ru from '@/shared/i18n/ru.json';
 
 describe('Chat selection', () => {
+    it('temporarily replaces the preview with Telegram activity without changing the last message', () => {
+        const chat = {
+            ...testChats[0],
+            preview: 'Последнее сообщение',
+            typingUsers: [{id: 'user:1', name: 'Аня', action: 'recordVoice' as const}],
+        };
+        const view = render(
+            <NextIntlClientProvider locale="ru" messages={ru}>
+                <ThemeProvider>
+                    <ChatList chats={[chat]} selected={null} onSelect={vi.fn()} />
+                </ThemeProvider>
+            </NextIntlClientProvider>,
+        );
+        expect(screen.getByText('записывает голосовое…')).toBeVisible();
+        expect(screen.queryByText('Последнее сообщение')).toBeNull();
+        expect(chat.preview).toBe('Последнее сообщение');
+        view.unmount();
+    });
     it('loads contacts in pages and searches beyond the displayed page', async () => {
         const chats = Array.from({length: 95}, (_, index) => ({
             ...testChats[0],

@@ -8,6 +8,15 @@ import styles from '@/modules/workspace/ConnectDialog/ConnectDialog.module.css';
 import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
 import {FormSkeleton} from '@/shared/ui/FormSkeleton/FormSkeleton';
 
+function validPhone(value: string) {
+    return (
+        value.startsWith('+') &&
+        value.length >= 8 &&
+        value.length <= 16 &&
+        Array.from(value.slice(1)).every((character) => '0123456789'.includes(character))
+    );
+}
+
 export function ConnectDialog({status, onClose, onRefresh}: ConnectDialogProps) {
     const t = useTranslations();
     const [apiId, setApiId] = useState('');
@@ -24,9 +33,13 @@ export function ConnectDialog({status, onClose, onRefresh}: ConnectDialogProps) 
         setError('');
         if (
             starting &&
-            (!/^\d+$/.test(apiId) ||
-                !/^[a-fA-F0-9]{32}$/.test(apiHash) ||
-                !/^\+\d{7,15}$/.test(phone.replaceAll(' ', '')))
+            (!apiId ||
+                !Array.from(apiId).every((character) => '0123456789'.includes(character)) ||
+                apiHash.length !== 32 ||
+                !Array.from(apiHash).every((character) =>
+                    '0123456789abcdef'.includes(character.toLowerCase()),
+                ) ||
+                !validPhone(phone.replaceAll(' ', '')))
         ) {
             setError(t('credentialsInvalid'));
             return;

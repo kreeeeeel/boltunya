@@ -5,6 +5,7 @@ import {useTranslations} from 'next-intl';
 import type {Chat} from '@/shared/api/client';
 import {TelegramAvatar} from '@/shared/ui/TelegramAvatar/TelegramAvatar';
 import styles from '@/modules/workspace/ChatList/ChatList.module.css';
+import {TypingIndicator} from '@/modules/workspace/TypingIndicator/TypingIndicator';
 
 export function ChatListRow({
     chat,
@@ -59,16 +60,20 @@ export function ChatListRow({
                 <Text qa="chat-name" className={styles.name}>
                     {chat.title}
                 </Text>
-                <Text qa="chat-preview" className={styles.preview}>
-                    {author && chat.preview && (
-                        <Text qa="chat-preview-author" className={styles.previewAuthor}>
-                            {author}:{' '}
+                {chat.typingUsers?.length ? (
+                    <TypingIndicator users={chat.typingUsers} group={group} />
+                ) : (
+                    <Text qa="chat-preview" className={styles.preview}>
+                        {author && chat.preview && (
+                            <Text qa="chat-preview-author" className={styles.previewAuthor}>
+                                {author}:{' '}
+                            </Text>
+                        )}
+                        <Text qa="chat-preview-text" className={styles.previewText}>
+                            {chat.preview}
                         </Text>
-                    )}
-                    <Text qa="chat-preview-text" className={styles.previewText}>
-                        {chat.preview}
                     </Text>
-                </Text>
+                )}
             </Flex>
             <Flex direction="column" alignItems="flex-end" className={styles.aside}>
                 <Text className={styles.time}>

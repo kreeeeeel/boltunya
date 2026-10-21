@@ -57,6 +57,9 @@ export const workspaceState: AppState = {
         ],
     },
     settings: {
+        maxParallelTasks: 1,
+        defaultModelProfileId: '',
+        deliveryMode: 'reply',
         globalPrompt: '',
         paused: true,
         defaultModel: 'qwen3:1.7b',

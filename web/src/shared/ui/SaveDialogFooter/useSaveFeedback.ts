@@ -16,6 +16,7 @@ export function useSaveFeedback<T>(value: T) {
     return {
         saved: savedValue !== null && savedValue === value,
         markSaved: () => setSavedValue(value),
+        markValueSaved: (nextValue: T) => setSavedValue(nextValue),
         clearSaved: () => setSavedValue(null),
     };
 }

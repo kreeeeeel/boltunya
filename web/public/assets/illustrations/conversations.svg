@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640" viewBox="0 0 640 640" fill="none">
+  <title>A place for your next conversation</title>
+  <defs>
+    <linearGradient id="card" x1="164" y1="186" x2="496" y2="464" gradientUnits="userSpaceOnUse"><stop stop-color="#FCFEFF"/><stop offset="1" stop-color="#EAF2F6"/></linearGradient>
+    <linearGradient id="reply" x1="269" y1="333" x2="474" y2="440" gradientUnits="userSpaceOnUse"><stop stop-color="#BDEBDD"/><stop offset="1" stop-color="#91D4D1"/></linearGradient>
+    <filter id="shadow" x="-40%" y="-40%" width="180%" height="190%"><feDropShadow dy="18" stdDeviation="18" flood-color="#173A50" flood-opacity=".11"/></filter>
+  </defs>
+  <circle cx="320" cy="326" r="215" fill="#80BDC9" fill-opacity=".055"/>
+  <path d="M114 330c-4-108 104-208 219-188m175 125c43 124-43 221-164 237" stroke="#92B8CB" stroke-opacity=".38" stroke-width="2" stroke-dasharray="5 12" stroke-linecap="round"/>
+  <g transform="rotate(9 353 331)"><rect x="194" y="184" width="321" height="298" rx="34" fill="#9DBCE4" fill-opacity=".45"/></g>
+  <g transform="rotate(-5 321 330)" filter="url(#shadow)">
+    <rect x="145" y="168" width="343" height="304" rx="34" fill="url(#card)"/>
+    <circle cx="190" cy="215" r="18" fill="#8FCBC4"/>
+    <path d="M179 219c5-13 16-15 23-8" stroke="#F5FFFE" stroke-width="5" stroke-linecap="round"/>
+    <rect x="223" y="204" width="104" height="9" rx="4.5" fill="#A8BFCD"/>
+    <rect x="223" y="223" width="66" height="7" rx="3.5" fill="#D0DFE7"/>
+    <path d="M145 253h343" stroke="#DCE8EE" stroke-width="2"/>
+    <rect x="177" y="279" width="214" height="63" rx="20" fill="#DCE9F2"/>
+    <rect x="195" y="298" width="153" height="7" rx="3.5" fill="#ADC3D4"/>
+    <rect x="195" y="314" width="110" height="7" rx="3.5" fill="#BDCFDD"/>
+    <path d="M289 361h166v68l-22-11H289a20 20 0 0 1-20-20v-17a20 20 0 0 1 20-20Z" fill="url(#reply)"/>
+    <rect x="289" y="380" width="123" height="7" rx="3.5" fill="#5D9C9D"/>
+    <rect x="289" y="395" width="83" height="7" rx="3.5" fill="#7BB6B3"/>
+  </g>
+  <g transform="rotate(-9 139 392)" filter="url(#shadow)">
+    <rect x="93" y="350" width="113" height="83" rx="25" fill="#8FAFF0"/>
+    <path d="m114 373 21 16 26-16m-47 0v38h47v-38" stroke="#F1F7FF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g filter="url(#shadow)"><rect x="407" y="130" width="83" height="70" rx="24" fill="#B8E7DC"/><circle cx="430" cy="165" r="5" fill="#4B878A"/><circle cx="449" cy="165" r="5" fill="#4B878A"/><circle cx="468" cy="165" r="5" fill="#4B878A"/></g>
+  <circle cx="134" cy="260" r="8" fill="#93BECC"/><circle cx="511" cy="390" r="10" fill="#A3CBE1"/><circle cx="252" cy="501" r="5" fill="#80BDB5"/>
+</svg>

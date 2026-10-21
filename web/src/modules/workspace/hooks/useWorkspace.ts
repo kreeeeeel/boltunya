@@ -1,6 +1,7 @@
 import {useCallback, useEffect, useState} from 'react';
 
 import {mergeRecentMessages} from '@/modules/workspace/model/mergeMessages';
+import {shareSnapshot} from '@/modules/workspace/model/shareSnapshot';
 
 import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
 import type {AppState, Message} from '@/shared/api/client';
@@ -22,7 +23,7 @@ export function useWorkspace(chatId: string | null) {
             if (desktop) {
                 result.window = await desktop.state();
             }
-            setState(result);
+            setState((previous) => shareSnapshot(previous, result));
             setError('');
         } catch (cause) {
             setError(errorMessage(cause));
@@ -65,7 +66,7 @@ export function useWorkspace(chatId: string | null) {
                     await api.GET('/api/chats/{chatId}/messages', {params: {path: {chatId: chatId ?? ''}}}),
                 );
                 if (active) {
-                    setMessages((previous) => mergeRecentMessages(previous, result));
+                    setMessages((previous) => shareSnapshot(previous, mergeRecentMessages(previous, result)));
                     setHistoryStatus({chatId, resolved: true, error: ''});
                 }
             } catch (cause) {

@@ -1,0 +1,12 @@
+export const settingsGroups = [
+    {id: 'application', sections: ['application']},
+    {id: 'assistant', sections: ['replies', 'prompt', 'styles']},
+    {id: 'intelligence', sections: ['providers', 'routing', 'compute', 'search']},
+    {id: 'memory', sections: ['memory', 'collection']},
+    {id: 'appearance', sections: ['appearance', 'language']},
+    {id: 'data', sections: ['media', 'cache', 'storage']},
+] as const;
+
+export type SettingsSectionId = (typeof settingsGroups)[number]['sections'][number];
+
+export const settingsSections = settingsGroups.flatMap((group) => [...group.sections]);

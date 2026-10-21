@@ -1,0 +1,71 @@
+.popup {
+    --g-popup-border-radius: 18px;
+    --g-popup-border-width: 0px;
+
+    overflow: hidden;
+    box-shadow: 0 12px 48px #0003;
+}
+
+.root {
+    width: min(380px, calc(100vw - 32px));
+    height: 380px;
+    padding: 12px;
+    gap: 12px;
+}
+
+.tabs {
+    flex-shrink: 0;
+    overflow-x: auto;
+    padding: 2px;
+    scrollbar-width: thin;
+}
+
+.content {
+    min-height: 0;
+    flex: 1;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    padding: 4px;
+}
+
+.sticker {
+    --g-button-height: 78px;
+    --g-button-padding: 4px;
+    --g-button-background-color-hover: transparent;
+
+    width: 100%;
+    border-radius: 12px;
+}
+
+.sticker img,
+.sticker video {
+    width: 100%;
+    height: 70px;
+    object-fit: contain;
+}
+
+.sticker :global(.g-button__text) {
+    display: block;
+    width: 100%;
+}
+
+.sticker :global(canvas),
+.sticker :global(svg) {
+    max-width: 100%;
+    max-height: 70px;
+}
+
+.empty {
+    min-height: 240px;
+    text-align: center;
+    padding: 20px;
+}
+
+.error {
+    display: block;
+    padding: 16px;
+}

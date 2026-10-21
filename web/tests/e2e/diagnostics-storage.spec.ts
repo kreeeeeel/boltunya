@@ -1,3 +1,4 @@
+import {chooseSettingsSection} from '../fixtures/settings';
 import {expect, test} from '@playwright/test';
 
 import {workspaceState} from '../fixtures/workspace';
@@ -47,7 +48,11 @@ test.beforeEach(async ({page}) => {
     });
     await page.route('**/api/**', async (route) => {
         const path = new URL(route.request().url()).pathname;
-        if (path === '/api/state') {
+        if (path === '/api/appearance') {
+            await route.fulfill({json: {mode: 'system', tokens: {}, css: ''}});
+        } else if (path === '/api/model-profiles') {
+            await route.fulfill({json: {profiles: [], presets: []}});
+        } else if (path === '/api/state') {
             await route.fulfill({json: state});
         } else if (path === '/api/diagnostics/errors') {
             if (route.request().method() === 'DELETE') {
@@ -166,6 +171,7 @@ test('errors appear as cards with distinct detail blocks and can be cleared', as
 test('storage paths open through the allowlisted desktop bridge', async ({page}) => {
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
     await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
+    await chooseSettingsSection(page, 'storage');
     const panel = page.locator('[data-qa="storage-locations"]');
     await panel.scrollIntoViewIfNeeded();
     await panel.getByRole('button', {name: 'Открыть: Банк памяти', exact: true}).click();

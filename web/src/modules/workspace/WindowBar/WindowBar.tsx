@@ -35,7 +35,7 @@ export function WindowBar({
     return (
         <Flex className={styles.bar} alignItems="center" justifyContent="space-between" qa="window-bar">
             <Flex gap={2} alignItems="center" className={styles.brand}>
-                <Avatar imgUrl="/assets/brand/boltunya.svg" alt="" size="xs" shape="square" />
+                <Avatar imgUrl="/assets/brand/aigram.svg" alt="" size="xs" shape="square" />
                 <Text>{t('app')}</Text>
             </Flex>
             <Flex alignItems="center" className={styles.controls}>

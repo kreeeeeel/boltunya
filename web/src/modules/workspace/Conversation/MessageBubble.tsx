@@ -1,5 +1,6 @@
 import {Box, Flex, Icon, Text, Tooltip} from '@gravity-ui/uikit';
-import {Check, CheckDouble, Sparkles, TrashBin} from '@gravity-ui/icons';
+import {Check, CheckDouble, Sparkles, TrashBin, EyeSlash} from '@gravity-ui/icons';
+import {useState} from 'react';
 import {useLocale, useTranslations} from 'next-intl';
 import type {Message} from '@/shared/api/client';
 import {isEmojiMessage} from '@/modules/workspace/model/messagePresentation';
@@ -8,21 +9,29 @@ import {RichText} from '@/modules/workspace/RichText/RichText';
 import styles from '@/modules/workspace/Conversation/Conversation.module.css';
 import {TelegramAvatar} from '@/shared/ui/TelegramAvatar/TelegramAvatar';
 import {messagesGrouped} from '@/modules/workspace/model/messagesGrouped';
+import {MessageContextMenu} from '@/modules/messages/MessageContextMenu/MessageContextMenu';
+import type {ContextExclusionChange} from '@/modules/messages/model/ContextExclusionChange';
 export function MessageBubble({
     message,
     nextMessage,
     previousMessage,
     group = message.group,
     replyText,
+    onContextChanged,
+    onDraftRequest,
 }: {
     readonly message: Message;
     readonly nextMessage?: Message;
     readonly previousMessage?: Message;
     readonly group?: boolean;
     readonly replyText?: string;
+    readonly onContextChanged?: (change: ContextExclusionChange) => Promise<void>;
+    readonly onDraftRequest?: () => Promise<void>;
 }) {
     const t = useTranslations();
     const locale = useLocale();
+    const [menu, setMenu] = useState<{x: number; y: number} | null>(null);
+    const [menuInitialized, setMenuInitialized] = useState(false);
     const continues = messagesGrouped(message, nextMessage, group);
     const groupIncoming = group && !message.outgoing;
     const bubble = (
@@ -31,6 +40,12 @@ export function MessageBubble({
             data-message-id={message.id}
             data-message-kind={message.kind}
             data-message-deleted={message.deleted || undefined}
+            data-message-context-excluded={message.contextExcluded || undefined}
+            onContextMenu={(event) => {
+                event.preventDefault();
+                setMenuInitialized(true);
+                setMenu({x: event.clientX, y: event.clientY});
+            }}
             className={`${styles.bubble} ${message.outgoing ? styles.outgoing : styles.incoming} ${message.kind === 'sticker' || isEmojiMessage(message.text) ? styles.stickerBubble : ''} ${isEmojiMessage(message.text) ? styles.emojiBubble : ''} ${message.media ? styles.mediaBubble : ''} ${continues ? styles.grouped : styles.tail}`}
         >
             {groupIncoming && !messagesGrouped(message, previousMessage, group) && (
@@ -54,6 +69,12 @@ export function MessageBubble({
                     entities={message.entities}
                     className={styles.messageText}
                 />
+            )}
+            {message.contextExcluded && (
+                <Text className={styles.contextExcluded} qa="message-context-excluded">
+                    <Icon data={EyeSlash} size={14} />
+                    {t('messageMenu.excluded')}
+                </Text>
             )}
             <Flex justifyContent="flex-end" alignItems="center" gap={1} className={styles.messageMeta}>
                 {message.deleted && (
@@ -86,10 +107,9 @@ export function MessageBubble({
             </Flex>
         </Box>
     );
-    if (!groupIncoming) {
-        return bubble;
-    }
-    return (
+    const content = !groupIncoming ? (
+        bubble
+    ) : (
         <Flex className={styles.groupMessage} alignItems="flex-end" gap={2} qa="group-message">
             <Box className={styles.senderAvatar}>
                 {!continues && (
@@ -103,5 +123,19 @@ export function MessageBubble({
             </Box>
             {bubble}
         </Flex>
+    );
+    return (
+        <>
+            {content}
+            {menuInitialized && (
+                <MessageContextMenu
+                    message={message}
+                    position={menu}
+                    onClose={() => setMenu(null)}
+                    onExcludedChanged={onContextChanged ?? (async () => {})}
+                    onDraftRequest={onDraftRequest}
+                />
+            )}
+        </>
     );
 }

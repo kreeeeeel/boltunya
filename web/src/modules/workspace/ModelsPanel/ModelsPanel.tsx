@@ -10,9 +10,18 @@ import {DownloadButton} from '@/modules/workspace/ModelsPanel/DownloadButton';
 import {defaultRule} from '@/shared/api/client';
 import type {Reply} from '@/shared/api/client';
 import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
+import {ProfileModelCards} from '@/modules/workspace/ModelsPanel/ProfileModelCards';
+import {useModelProfiles} from '@/modules/settings/model/useModelProfiles';
 
-export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}: ModelsPanelProps) {
+export function ModelsPanel({
+    engine,
+    defaultModel,
+    defaultModelProfileId = '',
+    onRefresh,
+    embedded = false,
+}: ModelsPanelProps) {
     const t = useTranslations();
+    const connections = useModelProfiles();
     const locale = useLocale();
     const [busy, setBusy] = useState('');
     const [error, setError] = useState('');
@@ -138,6 +147,10 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
             value.toLocaleLowerCase(locale).includes(query),
         ),
     );
+    const enabledProfiles = connections.profiles.filter((profile) => profile.enabled);
+    const profiles = enabledProfiles.filter((profile) =>
+        [profile.name, profile.model].some((value) => value.toLocaleLowerCase(locale).includes(query)),
+    );
     return (
         <Container className={[styles.root, embedded ? styles.embedded : ''].join(' ')}>
             <Box className={styles.content}>
@@ -252,10 +265,19 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
                         }
                     />
                     <Text color="secondary">
-                        {t('modelSearch.count', {count: models.length, total: engine.models.length})}
+                        {t('modelSearch.count', {
+                            count: models.length + profiles.length,
+                            total: engine.models.length + enabledProfiles.length,
+                        })}
                     </Text>
                 </Flex>
-                {models.length === 0 && (
+                <ProfileModelCards
+                    selected={defaultModelProfileId}
+                    onRefresh={onRefresh}
+                    profiles={profiles}
+                    error={connections.error}
+                />
+                {models.length === 0 && profiles.length === 0 && !connections.loading && (
                     <Flex direction="column" alignItems="center" gap={3} className={styles.empty}>
                         <Text variant="subheader-2">{t('modelSearch.empty')}</Text>
                         <Button view="outlined" onClick={() => setSearch('')}>
@@ -277,7 +299,7 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
                                 qa="model-card"
                                 data-model-id={model.id}
                                 gap={4}
-                                className={`${styles.card} ${model.recommended ? styles.recommended : ''} ${defaultModel === model.id ? styles.selected : ''}`}
+                                className={`${styles.card} ${model.recommended ? styles.recommended : ''} ${!defaultModelProfileId && defaultModel === model.id ? styles.selected : ''}`}
                             >
                                 <Flex alignItems="center" justifyContent="space-between">
                                     <Box className={styles.modelIcon}>
@@ -399,15 +421,25 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
                                 ) : model.installed ? (
                                     <Button
                                         size="l"
-                                        view={defaultModel === model.id ? 'outlined-info' : 'action'}
-                                        disabled={defaultModel === model.id || !!busy}
-                                        loading={busy === model.id || engine.warming === model.id}
+                                        view={
+                                            !defaultModelProfileId && defaultModel === model.id
+                                                ? 'outlined-info'
+                                                : 'action'
+                                        }
+                                        disabled={
+                                            (!defaultModelProfileId && defaultModel === model.id) ||
+                                            !!busy ||
+                                            engine.warming === model.id
+                                        }
                                         aria-busy={busy === model.id || engine.warming === model.id}
                                         onClick={() =>
                                             void action(model.id, async () => {
                                                 dataOrThrow(
                                                     await api.PATCH('/api/settings', {
-                                                        body: {defaultModel: model.id},
+                                                        body: {
+                                                            defaultModel: model.id,
+                                                            defaultModelProfileId: '',
+                                                        },
                                                     }),
                                                 );
                                                 await onRefresh();
@@ -417,10 +449,13 @@ export function ModelsPanel({engine, defaultModel, onRefresh, embedded = false}:
                                             })
                                         }
                                     >
+                                        {(busy === model.id || engine.warming === model.id) && (
+                                            <Loader size="s" />
+                                        )}
                                         {t(
                                             busy === model.id || engine.warming === model.id
                                                 ? 'modelWarming'
-                                                : defaultModel === model.id
+                                                : !defaultModelProfileId && defaultModel === model.id
                                                   ? 'chosen'
                                                   : 'choose',
                                         )}

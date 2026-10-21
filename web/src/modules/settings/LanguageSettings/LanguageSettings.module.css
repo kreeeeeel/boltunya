@@ -1,0 +1,13 @@
+.option {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 10px 16px;
+    height: auto;
+    min-height: 56px;
+    border-radius: 12px;
+}
+
+.flag {
+    object-fit: cover;
+    border-radius: 4px;
+}

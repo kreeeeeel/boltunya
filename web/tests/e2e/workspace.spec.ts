@@ -1,3 +1,4 @@
+import {chooseSettingsSection, toggleTheme, persistTestTheme} from '../fixtures/settings';
 import {expect, test} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
@@ -12,12 +13,26 @@ const launchFile = process.env.TIHO_LAUNCH_FILE ?? join(process.env.LOCALAPPDATA
 test.beforeEach(async ({page}) => {
     const state = structuredClone(workspaceState);
     const histories = new Map<string, Message[]>();
+    let appearance = {mode: 'system', tokens: {}, css: ''};
     let searchConnection = {configured: false, state: 'unchecked'};
     await page.route('**/api/**', async (route) => {
         const request = route.request();
         const path = new URL(request.url()).pathname;
-        const match = path.match(/^\/api\/chats\/([^/]+)\/(messages|rule)$/);
-        if (path === '/api/state') {
+        const parts = path.split('/');
+        const match =
+            parts.length === 5 &&
+            parts[1] === 'api' &&
+            parts[2] === 'chats' &&
+            parts[3] &&
+            ['messages', 'rule'].includes(parts[4])
+                ? [path, parts[3], parts[4]]
+                : null;
+        if (path === '/api/appearance') {
+            if (request.method() === 'PUT') appearance = request.postDataJSON();
+            await route.fulfill({json: appearance});
+        } else if (path === '/api/model-profiles') {
+            await route.fulfill({json: {profiles: [], presets: []}});
+        } else if (path === '/api/state') {
             await route.fulfill({json: state});
         } else if (path === '/api/search/connection') {
             if (request.method() === 'POST') {
@@ -112,11 +127,17 @@ test.beforeEach(async ({page}) => {
 test('chat selection, sending, filtering and saving a rule use the real API flow', async ({page}) => {
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
-    await expect(
-        page.getByText(
-            /Демо|Ваш Telegram. На вашей волне|Telegram подключён|Enter — отправить|Repli · 1.0|Всё на вашем компьютере|ИИ на паузе/,
-        ),
-    ).toHaveCount(0);
+    for (const text of [
+        'Демо',
+        'Ваш Telegram. На вашей волне',
+        'Telegram подключён',
+        'Enter — отправить',
+        'Repli · 1.0',
+        'Всё на вашем компьютере',
+        'ИИ на паузе',
+    ]) {
+        await expect(page.getByText(text, {exact: false})).toHaveCount(0);
+    }
     await page.getByRole('textbox', {name: 'Написать сообщение…'}).fill('Проверка отправки');
     const sent = page.waitForRequest(
         (request) => request.method() === 'POST' && request.url().endsWith('/api/chats/41/messages'),
@@ -133,7 +154,7 @@ test('chat selection, sending, filtering and saving a rule use the real API flow
     await expect(internet).toBeChecked();
     await internet.click();
     await page.getByRole('combobox', {name: 'Модель ИИ', exact: true}).click();
-    await page.getByRole('option', {name: /Gemma 3 · 4B/}).click();
+    await page.getByRole('option', {name: 'Gemma 3 · 4B'}).click();
     const saved = page.waitForRequest(
         (request) => request.method() === 'PUT' && request.url().endsWith('/api/chats/41/rule'),
     );
@@ -164,7 +185,7 @@ test('conversation generation shares event phases and thinking and can be stoppe
     const generation = page.locator('[data-qa="conversation-generation"]');
     await expect(generation).toBeVisible();
     await expect(generation.getByText('Готовит ответ', {exact: true})).toBeVisible();
-    await expect(generation.getByText(/Собеседник спрашивает о встрече/)).toBeVisible();
+    await expect(generation.getByText('Собеседник спрашивает о встрече')).toBeVisible();
     await expect(generation.getByRole('progressbar')).toBeVisible();
     await expect(page.locator('[data-qa="reply-skeleton"]')).toHaveCount(0);
     state.activity[0].thinking = 'Уточняю время встречи по предыдущим сообщениям.';
@@ -185,7 +206,7 @@ test('conversation generation shares event phases and thinking and can be stoppe
     await expect(generation).toBeVisible();
     await expect(generation.getByText('Место в очереди: 1', {exact: true})).toBeVisible();
     await expect(generation.getByRole('progressbar')).toHaveCount(0);
-    await expect(generation.getByText(/Собеседник спрашивает о встрече/)).toHaveCount(0);
+    await expect(generation.getByText('Собеседник спрашивает о встрече')).toHaveCount(0);
 });
 
 test('group history shows author avatars at the end of each sender block', async ({page}) => {
@@ -259,7 +280,7 @@ test('group history shows author avatars at the end of each sender block', async
 test('model search icon is centered with consistent padding in both themes', async ({page}) => {
     await page.locator('[data-qa="nav-models"]').click();
     for (const dark of [false, true]) {
-        if (dark) await page.getByRole('button', {name: 'Сменить тему', exact: true}).click();
+        if (dark) await toggleTheme(page);
         const bounds = await page.locator('[data-qa="model-search"]').evaluate((field) => {
             const outer = field.getBoundingClientRect();
             const icon = field.querySelector('svg')!.getBoundingClientRect();
@@ -280,7 +301,9 @@ test('compact contacts align their two lines and show AI only on the avatar', as
     const rows = page.locator('[data-qa="chat-row"]');
     await expect(rows.first().locator('[data-qa="chat-ai-badge"]')).toBeVisible();
     await expect(rows.nth(2).locator('[data-qa="chat-ai-badge"]')).toHaveCount(0);
-    await expect(rows.getByText(/^(Вручную|Дружелюбно|Деловой)$/)).toHaveCount(0);
+    for (const text of ['Вручную', 'Дружелюбно', 'Деловой']) {
+        await expect(rows.getByText(text, {exact: true})).toHaveCount(0);
+    }
     const geometry = await rows.evaluateAll((items) =>
         items.map((item) => {
             const row = item.getBoundingClientRect();
@@ -313,7 +336,7 @@ test('Telegram uses separate theme backgrounds and does not tile gradient fills'
         'background-image',
         'linear-gradient(45deg, rgb(171, 205, 239), rgb(18, 52, 86))',
     );
-    await page.getByRole('button', {name: 'Сменить тему', exact: true}).click();
+    await toggleTheme(page);
     await expect(wallpaper).toHaveCSS(
         'background-image',
         'linear-gradient(90deg, rgb(17, 34, 51), rgb(51, 68, 85))',
@@ -351,7 +374,7 @@ test('conversation background appears only for an open chat on the chats page', 
     );
     await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
     await expect(wallpaper).toBeAttached();
-    for (const tab of ['models', 'activity', 'metrics', 'flows']) {
+    for (const tab of ['models', 'activity', 'metrics']) {
         await page.locator(`[data-qa="nav-${tab}"]`).click();
         await expect(wallpaper).toHaveCount(0);
     }
@@ -481,14 +504,14 @@ test('default and unavailable wallpapers use a plain theme background', async ({
     await expect(wallpaper).toHaveCSS('background-color', 'rgb(231, 238, 234)');
     await page.getByRole('button', {name: 'Марк Волков', exact: true}).click();
     await expect(wallpaper).toHaveCSS('background-image', 'none');
-    await page.getByRole('button', {name: 'Сменить тему', exact: true}).click();
+    await toggleTheme(page);
     await expect(wallpaper).toHaveCSS('background-color', 'rgb(23, 29, 36)');
     await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
     await expect(wallpaper).toHaveCSS('background-image', 'none');
     await expect(wallpaper).toHaveCSS('background-color', 'rgb(23, 29, 36)');
 });
 
-test('disconnected account explains Болтун and opens the external-label key guide', async ({page}) => {
+test('disconnected account explains Aigram and opens the external-label key guide', async ({page}) => {
     await page.route('**/api/state', (route) =>
         route.fulfill({
             json: {
@@ -500,15 +523,15 @@ test('disconnected account explains Болтун and opens the external-label ke
     );
     await page.reload();
     await expect(page.locator('[data-qa="welcome"]')).toBeVisible();
-    await expect(page.getByRole('heading', {name: 'Болтунья', exact: true})).toBeVisible();
-    await expect(page).toHaveTitle('Болтунья — Telegram');
+    await expect(page.getByRole('heading', {name: 'Aigram', exact: true})).toBeVisible();
+    await expect(page).toHaveTitle('Aigram — Telegram');
     await expect(
         page.locator('[data-qa="chat-row"], [data-qa="workspace-view"], [data-qa^="nav-"]'),
     ).toHaveCount(0);
     await page.evaluate(() => document.fonts.ready);
     await page.screenshot({animations: 'disabled', path: '../docs/resources/welcome.png'});
     await page.getByRole('button', {name: 'Подключить Telegram', exact: true}).click();
-    await expect(page.getByRole('link', {name: /Открыть my.telegram.org/})).toHaveAttribute(
+    await expect(page.getByRole('link', {name: 'Открыть my.telegram.org'})).toHaveAttribute(
         'href',
         'https://my.telegram.org/apps',
     );
@@ -518,7 +541,7 @@ test('disconnected account explains Болтун and opens the external-label ke
         expect(await input.getAttribute('placeholder')).toBeFalsy();
     }
     await page.getByRole('button', {name: 'Продолжить', exact: true}).click();
-    await expect(page.getByText(/Укажите числовой API ID/)).toBeVisible();
+    await expect(page.getByText('Укажите числовой API ID')).toBeVisible();
     await page.screenshot({animations: 'disabled', path: '../docs/resources/telegram-guide.png'});
 });
 
@@ -527,16 +550,15 @@ test('welcome stays readable in both themes and has no model selection before si
     await page.route('**/api/state', (route) => route.fulfill({json: offline}));
     await page.reload();
     await expect(page.getByRole('button', {name: 'Подключить Telegram', exact: true})).toBeVisible();
-    await expect(page.getByText(/Где получить API ID|подскажем при входе|Локальный ИИ/)).toHaveCount(0);
+    for (const text of ['Где получить API ID', 'подскажем при входе', 'Локальный ИИ']) {
+        await expect(page.getByText(text, {exact: false})).toHaveCount(0);
+    }
     await expect(page.getByRole('button', {name: 'Настроить', exact: true})).toHaveCount(0);
     for (const dark of [true, false]) {
-        await page.evaluate(
-            (value) => (document.cookie = `tiho-theme=${value}; Path=/; SameSite=Strict`),
-            dark ? 'dark' : 'light',
-        );
+        await persistTestTheme(page, dark);
         await page.reload();
-        await expect(page.locator('body')).toHaveClass(dark ? /g-root_theme_dark/ : /g-root_theme_light/);
-        await expect(page.getByRole('heading', {name: 'Болтунья', exact: true})).toBeVisible();
+        await expect(page.locator('body')).toContainClass(dark ? 'g-root_theme_dark' : 'g-root_theme_light');
+        await expect(page.getByRole('heading', {name: 'Aigram', exact: true})).toBeVisible();
         const fontSizes = await page
             .locator('[data-qa="welcome"] .g-text')
             .evaluateAll((nodes) => nodes.map((node) => Number.parseFloat(getComputedStyle(node).fontSize)));
@@ -548,7 +570,7 @@ test('welcome stays readable in both themes and has no model selection before si
         });
     }
     await page.setViewportSize({width: 390, height: 844});
-    const brand = page.locator('[data-qa="welcome"]').getByText('Болтунья', {exact: true});
+    const brand = page.locator('[data-qa="welcome"]').getByText('Aigram', {exact: true});
     await expect(brand).toBeInViewport();
     await expect(page.getByRole('button', {name: 'Подключить Telegram', exact: true})).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
@@ -560,8 +582,8 @@ test('welcome stays readable in both themes and has no model selection before si
 
 test('dark/light dialogs follow the active palette and preferences survive reload', async ({page}) => {
     for (const dark of [true, false]) {
-        await page.getByRole('button', {name: 'Сменить тему'}).click();
-        await expect(page.locator('body')).toHaveClass(dark ? /g-root_theme_dark/ : /g-root_theme_light/);
+        await toggleTheme(page);
+        await expect(page.locator('body')).toContainClass(dark ? 'g-root_theme_dark' : 'g-root_theme_light');
         await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
         const palette = await page.locator('.g-modal__content').evaluate((element) => ({
             background: getComputedStyle(element).backgroundColor,
@@ -571,13 +593,14 @@ test('dark/light dialogs follow the active palette and preferences survive reloa
         expect(palette.background).toBe(expected);
         await page.getByRole('button', {name: 'Отмена', exact: true}).click();
     }
-    await page.getByRole('button', {name: 'Сменить тему'}).click();
+    await toggleTheme(page);
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
-    await page.getByText('Язык', {exact: true}).hover();
-    await page.getByRole('menuitem', {name: 'English', exact: true}).click();
+    await page.getByRole('menuitem', {name: 'Язык', exact: true}).click();
+    await page.getByRole('button', {name: 'English', exact: true}).click();
+    await page.keyboard.press('Escape');
     await expect(page.getByRole('textbox', {name: 'Search chats'})).toBeVisible();
     await page.reload();
-    await expect(page.locator('body')).toHaveClass(/g-root_theme_dark/);
+    await expect(page.locator('body')).toContainClass('g-root_theme_dark');
     await expect(page.getByRole('textbox', {name: 'Search chats'})).toBeVisible();
     await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
     await expect(page.locator('[data-qa="message-incoming"]').first()).toBeVisible();
@@ -670,7 +693,6 @@ test('inset chat rows, search icon, readable text and message edges stay aligned
 
 test('plain and Telegram photo backgrounds cover the shell behind opaque controls at every window size', async ({
     page,
-    context,
 }) => {
     await page.route('**/api/media/wallpaper-test', (route) =>
         route.fulfill({
@@ -685,9 +707,7 @@ test('plain and Telegram photo backgrounds cover the shell behind opaque control
         const state = structuredClone(workspaceState);
         state.chats[0].wallpaper = wallpaper;
         await page.route('**/api/state', (route) => route.fulfill({json: state}));
-        await context.addCookies([
-            {name: 'tiho-theme', value: wallpaper ? 'dark' : 'light', url: page.url()},
-        ]);
+        await persistTestTheme(page, Boolean(wallpaper));
         await page.reload();
         await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
         for (const width of [1440, 1000, 480]) {
@@ -847,7 +867,7 @@ test('profile menu saves shared instructions and signs out without a settings pa
         (request) => request.method() === 'PATCH' && request.url().endsWith('/api/settings'),
     );
     await page.getByRole('button', {name: 'Сохранить настройки', exact: true}).click();
-    expect((await patch).postDataJSON()).toEqual({
+    expect((await patch).postDataJSON()).toMatchObject({
         globalPrompt: 'Не назначай встречи без моего подтверждения.',
     });
     await expect(page.getByRole('dialog')).toBeVisible();
@@ -992,7 +1012,7 @@ test('Telegram avatars, photos and static/animated stickers render as media', as
     await expect(page.getByText('Подпись фотографии', {exact: true})).toBeVisible();
     await expect(page.locator('[role="img"][aria-label="Стикер"] svg')).toBeVisible();
     await page.getByRole('button', {name: 'Открыть фотографию', exact: true}).click();
-    await expect(page.getByRole('dialog', {name: 'Фото', exact: true})).toBeVisible();
+    await expect(page.getByRole('dialog', {name: 'Открыть медиа', exact: true})).toBeVisible();
     await page.screenshot({animations: 'disabled', path: '../docs/resources/media.png'});
 });
 
@@ -1047,10 +1067,13 @@ test('settings persist reply pacing, typing, tray and Windows startup options', 
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
     await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
     const dialog = page.getByRole('dialog', {name: 'Настройки', exact: true});
+    await chooseSettingsSection(page, 'replies');
     await dialog.getByRole('switch', {name: 'Показывать «печатает…»'}).click();
+    await chooseSettingsSection(page, 'application');
     await dialog.getByRole('switch', {name: 'При закрытии скрывать в трей'}).click();
     await dialog.getByText('Запускать с Windows', {exact: true}).click();
     await dialog.getByText('Включать ИИ при запуске приложения', {exact: true}).click();
+    await chooseSettingsSection(page, 'replies');
     await dialog.getByRole('slider', {name: 'Общая задержка перед ответом'}).focus();
     await page.keyboard.press('Home');
     await page.keyboard.press('ArrowRight');
@@ -1066,9 +1089,7 @@ test('settings persist reply pacing, typing, tray and Windows startup options', 
     });
     await expect(dialog).toBeVisible();
     await expect(dialog.getByRole('status')).toHaveText('Сохранено');
-    await dialog.locator('.g-dialog-body').evaluate((body) => {
-        body.scrollTop = 0;
-    });
+    await dialog.locator('[data-qa="settings-content-replies"]').evaluate((body) => (body.scrollTop = 0));
     await page.screenshot({path: '../docs/resources/settings-saved.png', animations: 'disabled'});
     await dialog.getByText('Показывать «печатает…»', {exact: true}).click();
     await expect(dialog.getByRole('status')).toHaveCount(0);
@@ -1077,6 +1098,7 @@ test('settings persist reply pacing, typing, tray and Windows startup options', 
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
     await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
     await expect(dialog.getByRole('switch', {name: 'Запускать с Windows'})).toBeChecked();
+    await chooseSettingsSection(page, 'replies');
     await expect(dialog.getByRole('switch', {name: 'Показывать «печатает…»'})).not.toBeChecked();
     await page.screenshot({animations: 'disabled', path: '../docs/resources/settings.png'});
 });
@@ -1093,6 +1115,7 @@ test('failed settings saves preserve edits and a successful retry stays open', a
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
     await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
     const dialog = page.getByRole('dialog', {name: 'Настройки', exact: true});
+    await chooseSettingsSection(page, 'replies');
     const typing = dialog.getByRole('switch', {name: 'Показывать «печатает…»'});
     await typing.click();
     await dialog.getByRole('button', {name: 'Сохранить настройки', exact: true}).click();
@@ -1111,7 +1134,7 @@ test('GPU selection saves a supported device without restarting the running Olla
     const state = structuredClone(workspaceState);
     const engineActions: string[] = [];
     page.on('request', (request) => {
-        if (new URL(request.url()).pathname.match(/^\/api\/engine\/(start|install)$/)) {
+        if (['/api/engine/start', '/api/engine/install'].includes(new URL(request.url()).pathname)) {
             engineActions.push(request.url());
         }
     });
@@ -1132,9 +1155,10 @@ test('GPU selection saves a supported device without restarting the running Olla
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
     await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
     const dialog = page.getByRole('dialog', {name: 'Настройки', exact: true});
+    await chooseSettingsSection(page, 'compute');
     const panel = dialog.locator('[data-qa="compute-device-panel"]');
     await panel.getByRole('combobox', {name: 'Устройство Ollama'}).click();
-    await page.getByRole('option', {name: /NVIDIA GeForce RTX 4070/}).click();
+    await page.getByRole('option', {name: 'NVIDIA GeForce RTX 4070'}).click();
     const save = page.waitForRequest(
         (request) => request.method() === 'PATCH' && request.url().endsWith('/api/settings'),
     );
@@ -1150,17 +1174,18 @@ test('GPU selection saves a supported device without restarting the running Olla
 test('external Ollama device selection explains why its controls are disabled', async ({page}) => {
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
     await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
+    await chooseSettingsSection(page, 'compute');
     const panel = page.locator('[data-qa="compute-device-panel"]');
     await expect(panel.getByRole('combobox', {name: 'Устройство Ollama'})).toBeDisabled();
-    await expect(panel.getByText(/Этой Ollama управляет внешний процесс или сервис/)).toBeVisible();
+    await expect(panel.getByText('Этой Ollama управляет внешний процесс или сервис')).toBeVisible();
 });
 
 test('all writing styles have emoji and rough styles and imitation survive saving', async ({page}) => {
     await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
     await page.getByRole('combobox', {name: 'Стиль общения', exact: true}).click();
-    const rough = page.getByRole('option', {name: /Быдланский/});
-    await expect(rough).toHaveText(/🤬.*Быдланский/);
-    await expect(page.getByRole('option', {name: /Агрессивный/})).toHaveText(/😠.*Агрессивный/);
+    const rough = page.getByRole('option', {name: 'Быдланский'});
+    await expect(rough).toContainText('🤬');
+    await expect(page.getByRole('option', {name: 'Агрессивный'})).toContainText('😠');
     const aligned = await rough.evaluate((option) => {
         const emoji = option.querySelector('[data-qa="style-emoji"]')?.getBoundingClientRect();
         const name = option.querySelector('[data-qa="style-name"]')?.getBoundingClientRect();
@@ -1238,7 +1263,7 @@ test('reply length and delay occupy separate full-width rows and retain their va
 });
 
 test('style option content is centered within every dropdown row in dark theme', async ({page}) => {
-    await page.context().addCookies([{name: 'tiho-theme', value: 'dark', url: page.url()}]);
+    await persistTestTheme(page, true);
     await page.reload();
     await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
     await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
@@ -1306,10 +1331,11 @@ test('profile language submenu includes SVG flags and persists Kazakh and Ukrain
         {profile: 'Мій профіль', menu: 'Мова', label: 'Русский', search: 'Поиск по диалогам', id: 'ru'},
     ]) {
         await page.getByRole('button', {name: item.profile, exact: true}).click();
-        await page.getByRole('menuitem', {name: item.menu, exact: true}).hover();
-        const language = page.getByRole('menuitem', {name: item.label, exact: true});
+        await page.getByRole('menuitem', {name: item.menu, exact: true}).click();
+        const language = page.getByRole('button', {name: item.label, exact: true});
         await expect(language.locator(`img[src="/assets/flags/${item.id}.svg"]`)).toBeVisible();
         await language.click();
+        await page.keyboard.press('Escape');
         await expect(page.getByRole('textbox', {name: item.search})).toBeVisible();
         await page.reload();
         await expect(page.getByRole('textbox', {name: item.search})).toBeVisible();
@@ -1320,7 +1346,8 @@ test('named writing styles can be saved and selected for a conversation', async 
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
     await page.getByRole('menuitem', {name: 'Свои стили', exact: true}).click();
     const dialog = page.getByRole('dialog');
-    expect((await dialog.boundingBox())?.width).toBeLessThanOrEqual(480);
+    expect((await dialog.boundingBox())?.width).toBeGreaterThan(900);
+    expect((await dialog.boundingBox())?.width).toBeLessThan(1200);
     await page.getByRole('button', {name: 'Создать стиль', exact: true}).click();
     await page.getByLabel('Название', {exact: true}).fill('Спокойный');
     await page.getByRole('button', {name: 'Выбрать эмодзи', exact: true}).click();
@@ -1351,7 +1378,7 @@ test('named writing styles can be saved and selected for a conversation', async 
     await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
     await page.getByRole('combobox', {name: 'Стиль общения', exact: true}).click();
     await expect(page.getByRole('option', {name: 'Свой стиль', exact: true})).toHaveCount(0);
-    await page.getByRole('option', {name: /Спокойный/}).click();
+    await page.getByRole('option', {name: 'Спокойный'}).click();
     const rule = page.waitForRequest(
         (request) => request.url().endsWith('/api/chats/41/rule') && request.method() === 'PUT',
     );
@@ -1509,7 +1536,7 @@ test('download progress stays inside its model card and the models page scrolls 
         '78',
     );
     await page.setViewportSize({width: 900, height: 580});
-    const footer = page.getByText(/Скорость измеряется на вашем компьютере и сохраняется/);
+    const footer = page.getByText('Скорость измеряется на вашем компьютере и сохраняется');
     await footer.scrollIntoViewIfNeeded();
     await expect(footer).toBeInViewport();
     const bounds = await footer.boundingBox();
@@ -1666,7 +1693,7 @@ test('tray settings remain accessible before Telegram sign-in', async ({page}) =
         route.fulfill({json: {...workspaceState, telegram: {state: 'disconnected'}, chats: []}}),
     );
     await page.reload();
-    await expect(page.getByRole('heading', {name: 'Болтунья', exact: true})).toBeVisible();
+    await expect(page.getByRole('heading', {name: 'Aigram', exact: true})).toBeVisible();
     await page.evaluate(() => window.dispatchEvent(new Event('boltun-settings')));
     await expect(page.getByRole('dialog', {name: 'Настройки', exact: true})).toBeVisible();
     await page.getByRole('button', {name: 'Отмена', exact: true}).click();
@@ -1707,73 +1734,6 @@ test('resource charts render real API readings and tolerate unavailable GPU', as
     await expect(page.getByText('Сеть · MB/s', {exact: true})).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
     await page.screenshot({path: '../docs/resources/metrics.png', animations: 'disabled'});
-});
-
-test('visual flow draft can be tested without saving or sending messages', async ({page}) => {
-    const saved: unknown[] = [];
-    await page.route('**/api/flows', (route) => route.fulfill({json: []}));
-    await page.route('**/api/flows/*', async (route) => {
-        saved.push(route.request().postDataJSON());
-        await route.fulfill({json: {ok: true}});
-    });
-    await page.route('**/api/flows/*/test', async (route) => {
-        const body = route.request().postDataJSON();
-        expect(body.flow.enabled).toBe(false);
-        expect(body.flow.nodes.map((node: {kind: string}) => node.kind)).toEqual(['command', 'reply']);
-        expect(body.text).toBe('/start');
-        await route.fulfill({json: {text: 'Привет, Тест!'}});
-    });
-    await page.locator('[data-qa="nav-flows"]').click();
-    await expect(page.locator('[data-qa="flow-toolbar"]')).toHaveCount(0);
-    await expect(
-        page.locator('[data-qa="flow-empty"]').getByRole('button', {name: 'Создать сценарий', exact: true}),
-    ).toBeVisible();
-    await page.getByRole('button', {name: 'Создать сценарий', exact: true}).click();
-    await expect(page.locator('.react-flow__node')).toHaveCount(2);
-    for (const qa of ['flow-toolbar', 'flow-palette', 'flow-canvas']) {
-        await expect(page.locator(`[data-qa="${qa}"]`)).toHaveCSS('border-radius', '18px');
-    }
-    await expect(page.locator('[data-qa="flow-inspector"]').locator('..')).toHaveCSS('border-radius', '18px');
-    await expect(page.locator('[data-qa="flow-block"]').first()).toHaveCSS('border-radius', '16px');
-    await expect(page.locator('[data-qa="flow-block"]').first()).toHaveCSS('padding', '18px');
-    await expect(page.getByRole('textbox', {name: 'Тестовое сообщение', exact: true})).toHaveCount(0);
-    await expect(page.getByRole('textbox', {name: 'Текст', exact: true})).toBeVisible();
-    await page.getByRole('button', {name: 'Проверить', exact: true}).click();
-    const testDialog = page.getByRole('dialog', {name: 'Проверка сценария', exact: true});
-    await expect(testDialog).toBeVisible();
-    await testDialog.getByRole('button', {name: 'Проверить', exact: true}).click();
-    await expect(page.getByText('Привет, Тест!', {exact: true})).toBeVisible();
-    expect(saved).toEqual([]);
-    await page.screenshot({path: '../docs/resources/flow-test.png', animations: 'disabled'});
-    await testDialog.locator('.g-dialog-footer').getByRole('button', {name: 'Закрыть', exact: true}).click();
-    await page.setViewportSize({width: 1000, height: 700});
-    await expect(page.getByRole('button', {name: 'Сохранить настройки', exact: true})).toBeInViewport();
-    await page.getByRole('button', {name: 'Сохранить настройки', exact: true}).click();
-    await expect.poll(() => saved.length).toBe(1);
-    await expect(page.getByRole('button', {name: 'Сохранить настройки', exact: true})).toBeEnabled();
-    await expect
-        .poll(async () => {
-            const canvas = await page.locator('[data-qa="flow-canvas"]').boundingBox();
-            const nodes = await page.locator('.react-flow__node').all();
-            const bounds = await Promise.all(nodes.map((node) => node.boundingBox()));
-            return (
-                !!canvas &&
-                bounds.every(
-                    (node) => node && node.x >= canvas.x && node.x + node.width <= canvas.x + canvas.width,
-                )
-            );
-        })
-        .toBe(true);
-    await page.screenshot({path: '../docs/resources/flows.png', animations: 'disabled'});
-    await page.getByRole('button', {name: 'К сценариям', exact: true}).click();
-    const card = page.locator('[data-qa="flow-card"]');
-    await expect(card).toHaveCount(1);
-    await expect(card).toContainText('/start');
-    await expect(card).toContainText('Выключен');
-    await page.screenshot({path: '../docs/resources/flow-library.png', animations: 'disabled'});
-    await expect(page.locator('[data-qa="flow-toolbar"]')).toHaveCount(0);
-    await card.click();
-    await expect(page.locator('.react-flow__node')).toHaveCount(2);
 });
 
 test('group settings support per-chat mention mode and disabled global default', async ({page}) => {
@@ -1882,9 +1842,7 @@ test('global memory and its background interval are accessible from profile sett
         .getByRole('textbox', {name: 'Ваши заметки', exact: true})
         .fill('Предпочитаю короткие сообщения.');
     await page.getByRole('button', {name: 'Сохранить заметки', exact: true}).click();
-    await page.locator('.g-dialog-footer').getByRole('button', {name: 'Закрыть', exact: true}).click();
-    await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
-    await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
+    await chooseSettingsSection(page, 'collection');
     await page.getByRole('combobox', {name: 'Частота обновления памяти', exact: true}).click();
     await page.getByRole('option', {name: 'Каждые 12 ч.', exact: true}).click();
     const patch = page.waitForRequest(
@@ -1987,7 +1945,7 @@ test('context collection opens from communication settings and preserves unsaved
     await settings.getByRole('button', {name: 'Отменить сбор', exact: true}).click();
     await expect(open).toBeVisible();
     await open.click();
-    await dialog.getByRole('radio', {name: /^Вся доступная история/}).click();
+    await dialog.getByRole('radio', {name: 'Вся доступная история'}).click();
     const full = page.waitForRequest(
         (request) => request.method() === 'POST' && request.url().endsWith('/api/memory/41'),
     );
@@ -2014,14 +1972,17 @@ test('download preferences save independently and cache cleanup displays returne
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
     await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
     const dialog = page.getByRole('dialog', {name: 'Настройки', exact: true});
+    await chooseSettingsSection(page, 'media');
     await dialog.locator('label.g-switch').filter({hasText: 'Фотографии'}).click();
     await dialog.locator('label.g-switch').filter({hasText: 'Видео и GIF'}).click();
     await dialog.locator('label.g-switch').filter({hasText: 'Документы и файлы'}).click();
     await dialog.getByRole('combobox', {name: 'Максимальный размер файла', exact: true}).click();
     await page.getByRole('option', {name: '5 МБ', exact: true}).click();
+    await chooseSettingsSection(page, 'cache');
     await expect(dialog.getByText('10 МБ · файлов: 2', {exact: true})).toBeVisible();
     await dialog.getByRole('button', {name: 'Очистить медиакеш', exact: true}).click();
     await expect(dialog.getByText('0 МБ · файлов: 0', {exact: true})).toBeVisible();
+    await chooseSettingsSection(page, 'media');
     const saved = page.waitForRequest(
         (request) => request.method() === 'PATCH' && request.url().endsWith('/api/settings'),
     );
@@ -2134,15 +2095,15 @@ test('global collection can be started from profile with a complete rebuild', as
     });
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
     await page.getByRole('menuitem', {name: 'Общий сбор контекста', exact: true}).click();
-    const dialog = page.getByRole('dialog', {name: 'Общий сбор контекста', exact: true});
+    const dialog = page.getByRole('dialog', {name: 'Настройки', exact: true});
     await expect(dialog.getByText('Диалогов в памяти: 2')).toBeVisible();
-    await dialog.getByRole('radio', {name: /^Вся доступная история/}).click();
+    await dialog.getByRole('radio', {name: 'Вся доступная история'}).click();
     const queued = page.waitForRequest(
         (request) => request.method() === 'POST' && request.url().endsWith('/api/memory/refresh'),
     );
     await dialog.getByRole('button', {name: 'Начать сбор', exact: true}).click();
     expect((await queued).postDataJSON()).toEqual({rebuild: true, immediate: true});
-    await expect(dialog.getByText('В очереди', {exact: true})).toBeVisible();
+    await expect(dialog.getByText('В очереди · Просмотрено сообщений: 0', {exact: true})).toBeVisible();
     expect(document.notes).toBe('Ручной профиль');
 });
 
@@ -2150,8 +2111,9 @@ test('search key controls mask credentials and explain fallback without closing 
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
     await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
     const dialog = page.getByRole('dialog', {name: 'Настройки', exact: true});
+    await chooseSettingsSection(page, 'search');
     const panel = dialog.locator('[data-qa="search-connection"]');
-    await expect(panel.getByText(/Работает без ключей/)).toBeVisible();
+    await expect(panel.getByText('Работает без ключей')).toBeVisible();
     await panel.getByRole('button', {name: 'Дополнительно: резервный поиск Exa', exact: true}).click();
     const key = panel.getByLabel('API-ключ Exa', {exact: true});
     await expect(key).toHaveAttribute('type', 'password');
@@ -2209,7 +2171,7 @@ test('large dialog lists load on scroll, preserve filters and show message autho
     await expect(rows.first()).toContainText('Вы: Сообщение 0');
     await expect(rows.nth(1)).toContainText('Анна: Сообщение 1');
     for (const dark of [false, true]) {
-        if (dark) await page.getByRole('button', {name: 'Сменить тему', exact: true}).click();
+        if (dark) await toggleTheme(page);
         await expect(rows.first().locator('[data-qa="chat-preview-author"]')).toHaveCSS(
             'color',
             dark ? 'rgb(231, 237, 243)' : 'rgb(39, 52, 65)',

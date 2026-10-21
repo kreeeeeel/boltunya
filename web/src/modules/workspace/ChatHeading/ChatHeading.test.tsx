@@ -31,7 +31,7 @@ it('shows the real private username below the title and omits an absent username
     expect(screen.getByText('@anya')).toBeVisible();
     view.unmount();
     mount({kind: 'private', username: ''});
-    expect(screen.queryByText(/^@/)).toBeNull();
+    expect(screen.queryByText((text) => text.startsWith('@'))).toBeNull();
 });
 
 it('copies the username and Telegram link and reports clipboard failures', async () => {
@@ -61,4 +61,28 @@ it('does not invent a member count when Telegram has not provided it', () => {
     mount({kind: 'group', memberCount: null});
     expect(screen.getByText('Группа')).toBeVisible();
     expect(screen.queryByText('0 участников')).toBeNull();
+});
+
+it('shows incoming typing activity in the status line and restores the Telegram username afterwards', () => {
+    const view = mount({
+        kind: 'private',
+        username: 'anya',
+        typingUsers: [{id: 'user:1', name: 'Аня', action: 'typing'}],
+    });
+    expect(screen.getByRole('status')).toHaveTextContent('печатает…');
+    expect(screen.queryByText('@anya')).toBeNull();
+    view.unmount();
+    mount({kind: 'private', username: 'anya', typingUsers: []});
+    expect(screen.getByText('@anya')).toBeVisible();
+});
+
+it('names active group participants and distinguishes uploads from typing', () => {
+    mount({
+        kind: 'supergroup',
+        typingUsers: [
+            {id: 'user:1', name: 'Аня', action: 'uploadPhoto'},
+            {id: 'user:2', name: 'Марк', action: 'uploadPhoto'},
+        ],
+    });
+    expect(screen.getByRole('status')).toHaveTextContent('Аня и Марк отправляют фото…');
 });

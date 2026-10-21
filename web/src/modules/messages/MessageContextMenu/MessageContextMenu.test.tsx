@@ -1,0 +1,77 @@
+import {ThemeProvider} from '@gravity-ui/uikit';
+import {NextIntlClientProvider} from 'next-intl';
+import {fireEvent, render, screen, waitFor} from '@testing-library/react';
+import {expect, it, vi} from 'vitest';
+import {useState} from 'react';
+import {MessageContextMenu} from '@/modules/messages/MessageContextMenu/MessageContextMenu';
+import ru from '@/shared/i18n/ru.json';
+import type {Message} from '@/shared/api/client';
+const mocks = vi.hoisted(() => ({GET: vi.fn(), PUT: vi.fn(), DELETE: vi.fn()}));
+vi.mock('@/shared/api/client', async (original) => ({
+    ...(await original<typeof import('@/shared/api/client')>()),
+    api: mocks,
+}));
+const message: Message = {
+    id: 'opaque-telegram-message-id',
+    chatId: '42',
+    date: 0,
+    outgoing: false,
+    kind: 'text',
+    text: 'Обычный текст',
+};
+function mount(onExcludedChanged = vi.fn(async () => {})) {
+    function Example() {
+        const [position, setPosition] = useState<{x: number; y: number} | null>({x: 100, y: 120});
+        return (
+            <NextIntlClientProvider locale="ru" messages={ru}>
+                <ThemeProvider>
+                    <MessageContextMenu
+                        message={message}
+                        position={position}
+                        onClose={() => setPosition(null)}
+                        onExcludedChanged={onExcludedChanged}
+                    />
+                </ThemeProvider>
+            </NextIntlClientProvider>
+        );
+    }
+    return render(<Example />);
+}
+it('copies the genuine Telegram link fetched on demand without inventing an opaque ID URL', async () => {
+    const copy = vi.fn(async () => {});
+    Object.defineProperty(navigator, 'clipboard', {configurable: true, value: {writeText: copy}});
+    mocks.GET.mockResolvedValue({data: {url: 'https://t.me/c/100/321'}, response: new Response()});
+    mount();
+    expect(mocks.GET).not.toHaveBeenCalled();
+    fireEvent.click(await screen.findByRole('menuitem', {name: ru.messageMenu.copyLink}));
+    await waitFor(() => expect(copy).toHaveBeenCalledWith('https://t.me/c/100/321'));
+    expect(mocks.GET).toHaveBeenCalledWith('/api/chats/{chatId}/messages/{messageId}/link', {
+        params: {path: {chatId: '42', messageId: message.id}},
+    });
+});
+it('uses a nested range action and updates the visible state only after persistence', async () => {
+    mocks.PUT.mockResolvedValue({data: {ok: true}, response: new Response()});
+    const refreshed = vi.fn(async () => {});
+    mount(refreshed);
+    fireEvent.mouseEnter(await screen.findByRole('menuitem', {name: ru.messageMenu.exclude}));
+    fireEvent.click(await screen.findByRole('menuitem', {name: ru.messageMenu.scopes.through}));
+    await waitFor(() =>
+        expect(mocks.PUT).toHaveBeenCalledWith('/api/chats/{chatId}/messages/{messageId}/context', {
+            params: {path: {chatId: '42', messageId: message.id}},
+            body: {scope: 'through', excluded: true},
+        }),
+    );
+    await waitFor(() =>
+        expect(refreshed).toHaveBeenCalledWith({messageId: message.id, scope: 'through', excluded: true}),
+    );
+});
+
+it('keeps context flags unchanged when persistence fails and explains the error', async () => {
+    mocks.PUT.mockRejectedValue(new Error('Сохранение недоступно'));
+    const refreshed = vi.fn(async () => {});
+    mount(refreshed);
+    fireEvent.mouseEnter(await screen.findByRole('menuitem', {name: ru.messageMenu.exclude}));
+    fireEvent.click(await screen.findByRole('menuitem', {name: ru.messageMenu.scopes.message}));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Сохранение недоступно');
+    expect(refreshed).not.toHaveBeenCalled();
+});

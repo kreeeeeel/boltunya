@@ -10,6 +10,7 @@ import {ChatHistoryActions} from '@/modules/workspace/ChatHistoryActions';
 
 export function Inspector({
     chat,
+    modelLabel,
     customStyles,
     onConfigure,
     onEnable,
@@ -51,10 +52,11 @@ export function Inspector({
                         <Flex gap={2} alignItems="center">
                             <Icon data={Thunderbolt} size={17} />
                             <Text className={styles.strong}>
-                                {chat.rule.model
-                                    .replace('qwen3:', 'Qwen 3 · ')
-                                    .replace('qwen2.5:', 'Qwen 2.5 · ')
-                                    .replace('gemma3:', 'Gemma 3 · ')}
+                                {modelLabel ??
+                                    chat.rule.model
+                                        .replace('qwen3:', 'Qwen 3 · ')
+                                        .replace('qwen2.5:', 'Qwen 2.5 · ')
+                                        .replace('gemma3:', 'Gemma 3 · ')}
                             </Text>
                         </Flex>
                         <Text className={styles.caption}>{t('statusOnline')}</Text>

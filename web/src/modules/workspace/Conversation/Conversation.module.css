@@ -111,6 +111,15 @@
     overflow-wrap: anywhere;
 }
 
+.contextExcluded {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--tiho-muted);
+    font-size: 14px;
+    margin: 6px 4px 2px;
+}
+
 .messageMeta {
     float: right;
     margin-left: 10px;

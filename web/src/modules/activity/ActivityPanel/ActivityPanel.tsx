@@ -1,4 +1,4 @@
-import {CirclePause, CirclePlay, TrashBin} from '@gravity-ui/icons';
+import {CirclePause, CirclePlay, Sliders, TrashBin} from '@gravity-ui/icons';
 import {Box, Button, Flex, Icon, Label, Text, Tooltip} from '@gravity-ui/uikit';
 import {useTranslations} from 'next-intl';
 import {useState} from 'react';
@@ -10,20 +10,24 @@ import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
 import type {Activity, ReplyQueue} from '@/shared/api/client';
 import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
 import styles from '@/modules/activity/ActivityPanel/ActivityPanel.module.css';
+import {ParallelSettingsDialog} from '@/modules/activity/ParallelSettingsDialog/ParallelSettingsDialog';
 
 export function ActivityPanel({
     entries,
     queue,
     assistantPaused,
+    maxParallelTasks = 1,
     onRefresh,
 }: {
     readonly entries: Activity[];
     readonly queue?: ReplyQueue;
     readonly assistantPaused: boolean;
+    readonly maxParallelTasks?: number;
     readonly onRefresh: () => Promise<void>;
 }) {
     const t = useTranslations();
     const [selected, setSelected] = useState<string | null>(null);
+    const [parallelOpen, setParallelOpen] = useState(false);
     const [busy, setBusy] = useState('');
     const [error, setError] = useState('');
     async function act(key: string, action: () => Promise<unknown>) {
@@ -97,6 +101,13 @@ export function ActivityPanel({
                                 )}
                             </Flex>
                             <Flex gap={2}>
+                                <Button
+                                    view="flat-secondary"
+                                    aria-label={t('events.parallel.title')}
+                                    onClick={() => setParallelOpen(true)}
+                                >
+                                    <Icon data={Sliders} size={18} />
+                                </Button>
                                 <Button
                                     view="flat-secondary"
                                     disabled={!!busy}
@@ -175,6 +186,13 @@ export function ActivityPanel({
                     key={selected}
                     id={selected}
                     onClose={() => setSelected(null)}
+                    onRefresh={onRefresh}
+                />
+            )}
+            {parallelOpen && (
+                <ParallelSettingsDialog
+                    value={queue?.maxParallelTasks ?? maxParallelTasks}
+                    onClose={() => setParallelOpen(false)}
                     onRefresh={onRefresh}
                 />
             )}

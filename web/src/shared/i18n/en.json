@@ -1,5 +1,5 @@
 {
-    "app": "Болтунья",
+    "app": "Aigram",
     "chats": "Chats",
     "models": "AI models",
     "activity": "Activity",
@@ -127,7 +127,7 @@
     "step1": "1. Get your Telegram keys",
     "step1Text": "Open my.telegram.org, sign in with your phone number, then choose API development tools.",
     "step2": "2. Create an application",
-    "step2Text": "App title: Болтун · Short name: boltundesktop · Platform: Desktop. Other fields can be left empty.",
+    "step2Text": "App title: Aigram · Short name: aigramdesktop · Platform: Desktop. Other fields can be left empty.",
     "step3": "3. Copy API ID and API Hash",
     "step3Text": "Paste them below. These are application keys, not a bot token.",
     "openTelegram": "Open my.telegram.org",
@@ -182,7 +182,7 @@
     "modelSmallDescription": "The lightest model. For short, simple replies.",
     "modelMediumDescription": "Quick replies to simple messages. May miss conversational nuances.",
     "modelLargeDescription": "For Russian dialogue and complex context. Requires more memory.",
-    "welcomeTitle": "Болтунья",
+    "welcomeTitle": "Aigram",
     "welcomeDescription": "Replies in your chosen Telegram conversations, follows the context and adapts to the way you write. You decide who it can reply to, how it sounds and when it responds.",
     "welcomeKeys": "We will show you where to get your API ID and API Hash.",
     "localAi": "Local AI",
@@ -256,7 +256,7 @@
     "welcomeControl": "Replies on your terms",
     "welcomeControlDescription": "You choose the contacts, tone of voice and reply delay.",
     "welcomeSignIn": "Start with Telegram",
-    "welcomeSignInDescription": "Sign in to see your conversations here. Then choose who Болтун can reply to.",
+    "welcomeSignInDescription": "Sign in to see your conversations here. Then choose who Aigram can reply to.",
     "welcomeLocal": "AI models run on your computer. Internet search can be configured for each conversation.",
     "customStyles": "My styles",
     "customStylesHint": "Save a tone of voice and reuse it in any conversation.",
@@ -297,7 +297,7 @@
         "disconnected": "Disconnected",
         "description": "Computer and application resources · last 3 minutes",
         "system": "Computer",
-        "application": "Boltunya",
+        "application": "Aigram",
         "unavailable": "Unavailable",
         "gpuLoad": "GPU utilization",
         "memory": "System memory",
@@ -308,59 +308,6 @@
         "details": "Memory usage",
         "gb": "{value} GiB",
         "note": "Working memory of processes; shared pages may be counted more than once. Network is total computer interface traffic. GPU statistics require NVIDIA drivers."
-    },
-    "flows": {
-        "title": "Workflows",
-        "selectFlow": "Select workflow",
-        "create": "Create workflow",
-        "newFlow": "New workflow",
-        "welcome": "Hi, '{{sender}}'!",
-        "name": "Workflow name",
-        "enabled": "Enabled",
-        "delete": "Delete workflow",
-        "configureBlock": "Configure block",
-        "selectBlock": "Select a block",
-        "agentPrompt": "Agent instructions",
-        "command": "Command or text",
-        "condition": "Phrase to check",
-        "text": "Text",
-        "key": "Data key",
-        "matchMode": "Command matching",
-        "operationLabel": "Data operation",
-        "operation": {
-            "get": "Read",
-            "set": "Save",
-            "delete": "Delete"
-        },
-        "match": {
-            "prefix": "Starts with",
-            "equals": "Exact match",
-            "contains": "Contains"
-        },
-        "kind": {
-            "command": "Command",
-            "agent": "Agent",
-            "reply": "Reply",
-            "store": "Storage",
-            "condition": "Condition"
-        },
-        "branchHint": "Top output: true. Bottom output: false.",
-        "variables": "Variables: '{{message}}', '{{sender}}', '{{reply}}', '{{data.key}}'. Data is isolated per workflow and chat.",
-        "deleteBlock": "Delete block",
-        "connectHint": "Connect one block’s output to another’s input. Workflows start with a command. Groups require permission in conversation settings.",
-        "allChats": "All permitted chats",
-        "chats": "Workflow chats",
-        "testInput": "Test message",
-        "test": "Test",
-        "testHint": "No messages or data writes",
-        "noReply": "Workflow completed without a message",
-        "empty": "Build your own bot",
-        "emptyHint": "Connect commands, AI, conditions and local data.",
-        "testTitle": "Test scenario",
-        "active": "Enabled",
-        "inactive": "Disabled",
-        "back": "Back to workflows",
-        "chatCount": "{count} chats"
     },
     "speed": {
         "fastest": "Very fast",
@@ -380,7 +327,6 @@
     "benchmarkInput": "Reply in one short sentence: how are you?",
     "modelResourceHint": "Context is the model’s maximum capacity listed by Ollama. The app uses an 8,192-token window to limit memory use. Speed depends on your hardware, conversation length and reasoning.",
     "metricsNav": "Resource charts",
-    "flowsNav": "Workflows",
     "modelFamily": {
         "qwen": "Qwen",
         "gemma": "Google Gemma",
@@ -552,7 +498,8 @@
             "generating": "Running",
             "sent": "Sent",
             "cancelled": "Stopped",
-            "error": "Error"
+            "error": "Error",
+            "ready": "Ready"
         },
         "phase": {
             "queued": "Queued",
@@ -566,7 +513,11 @@
             "reply": "Preparing reply",
             "retry": "Refining reply",
             "validating": "Checking reply",
-            "sending": "Sending to Telegram"
+            "sending": "Sending to Telegram",
+            "ready": "Ready",
+            "memory": "Updating context",
+            "waiting-resource": "Waiting for the model resource",
+            "waiting-delivery": "Waiting for delivery to finish"
         },
         "requestTitle": "Sent to model",
         "enableAi": "Enable AI",
@@ -583,7 +534,31 @@
             "remove": "Remove feedback",
             "refreshFailed": "Feedback saved. The events list could not refresh and will update later."
         },
-        "readyResponse": "Generated reply"
+        "readyResponse": "Generated reply",
+        "draft": "Draft",
+        "draftReady": "Draft ready",
+        "memoryReady": "Context updated",
+        "memoryTask": "Memory",
+        "parallel": {
+            "title": "Parallel tasks",
+            "description": "Replies, drafts and memory collection share one queue. Choose how many independent tasks may run at once.",
+            "limit": "Maximum concurrent tasks",
+            "gpuHint": "More tasks do not automatically speed up a single local GPU. Local generation shares model access; parallel API calls also require independent task routing to be enabled.",
+            "load": "Expected resource load",
+            "levels": {
+                "light": "Normal",
+                "medium": "Moderate",
+                "high": "High",
+                "veryHigh": "Very high"
+            },
+            "estimateHint": "This is a qualitative estimate. Usage depends on the model and computer. Readings below are current measurements, not a forecast.",
+            "ram": "Application and Ollama now: {value} RAM",
+            "vram": "GPU now: {used} / {total} VRAM",
+            "metricsUnavailable": "Current resource readings are unavailable."
+        },
+        "memoryDetails": "Context collection history",
+        "taskTime": "Processing time",
+        "memoryPrivacy": "Conversation and memory contents are not recorded in this task history."
     },
     "modelWarming": "Warming up",
     "diagnostics": {
@@ -650,5 +625,223 @@
             "compute": "This GPU is not supported by this Ollama version.",
             "driver": "An NVIDIA driver update is recommended. Ollama will check compatibility."
         }
+    },
+    "settingsCenter": {
+        "groups": {
+            "application": "Application",
+            "assistant": "Assistant",
+            "intelligence": "Intelligence",
+            "memory": "Memory",
+            "appearance": "Appearance",
+            "data": "Data"
+        },
+        "navigation": "Settings navigation",
+        "me": "My profile",
+        "saveHint": "Changes remain in the editor until you save.",
+        "refreshWarning": "Saved. The current view could not refresh; reopen it to update.",
+        "deliveryMode": "Send responses",
+        "delivery": {
+            "reply": "Reply to the incoming message",
+            "send": "Send a separate message",
+            "inherit": "Use application setting"
+        },
+        "sections": {
+            "application": "Application",
+            "replies": "Replies",
+            "prompt": "Global prompt",
+            "styles": "Writing styles",
+            "providers": "Model connections",
+            "routing": "Task routing",
+            "compute": "Compute",
+            "search": "Internet search",
+            "memory": "Shared memory",
+            "collection": "Context collection",
+            "appearance": "Appearance",
+            "language": "Language",
+            "media": "Media downloads",
+            "cache": "Telegram cache",
+            "storage": "File locations"
+        },
+        "descriptions": {
+            "application": "Window behavior, tray and Windows startup.",
+            "replies": "Response pacing and message delivery.",
+            "prompt": "Your instructions for every conversation.",
+            "styles": "Named styles with your own instructions.",
+            "providers": "Local Ollama models and compatible APIs in one place.",
+            "routing": "Use different models for replies, memory, research and images.",
+            "compute": "Choose the device for app-managed Ollama.",
+            "search": "Current information and optional search sources.",
+            "memory": "Facts, preferences and relationships. Writing style is controlled by the selected style and a separate matching option.",
+            "collection": "Update memory from new messages or collect conversation history.",
+            "appearance": "Create a palette and customize the interface.",
+            "language": "Choose your interface language.",
+            "media": "Choose which Telegram files download automatically.",
+            "cache": "Review local media usage and free up space.",
+            "storage": "Open application data, memory and models in Explorer."
+        }
+    },
+    "appearance": {
+        "mode": "Base theme",
+        "modes": {
+            "system": "System",
+            "light": "Light",
+            "dark": "Dark"
+        },
+        "colors": "Color palette",
+        "colorsHint": "Leave a color empty to use the base theme.",
+        "defaultColor": "Default",
+        "tokens": {
+            "accent": "Accent",
+            "background": "Background",
+            "panel": "Panels",
+            "text": "Text",
+            "muted": "Secondary text",
+            "incoming": "Incoming messages",
+            "outgoing": "Outgoing messages",
+            "border": "Dividers"
+        },
+        "css": "Custom CSS",
+        "cssHint": "CSS rules apply only inside the application workspace. No imports, URLs or global at-rules.",
+        "cssScope": "The settings center stays outside custom CSS so you can always reset your theme.",
+        "reset": "Reset theme",
+        "preview": "Preview",
+        "revert": "Revert preview",
+        "invalidTheme": "Invalid theme or CSS is too long.",
+        "invalidColor": "Use a hex color such as #4488ff.",
+        "invalidCss": "Invalid CSS. Check the syntax.",
+        "unsafeCss": "Imports, external resources and global CSS rules are not supported."
+    },
+    "modelProfiles": {
+        "create": "Add connection",
+        "empty": "Add an Ollama endpoint or a compatible API to use your own model.",
+        "back": "Connections",
+        "delete": "Delete connection",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "preset": "Provider preset",
+        "name": "Connection name",
+        "baseUrl": "Base URL",
+        "model": "Model ID",
+        "apiKey": "API key",
+        "keyConfigured": "Key saved",
+        "keyHint": "Leave blank to keep the saved key. The key is stored locally and is never returned to the interface.",
+        "clearKey": "Remove saved key",
+        "profileEnabled": "Enable this connection",
+        "advanced": "Advanced options",
+        "advancedHint": "Blank sampling values use provider defaults. Unsupported options are omitted. A total timeout of 0 allows long reasoning; idle timeout still applies.",
+        "thinking": "Reasoning mode",
+        "thinkingModes": {
+            "default": "Provider default",
+            "enabled": "Enabled",
+            "disabled": "Disabled"
+        },
+        "reasoningEffort": "Reasoning effort",
+        "stop": "Stop sequences · one per line",
+        "capabilities": "Model capabilities",
+        "capabilitiesHint": "Match these options to the chosen model. API profiles can send conversations to an external provider.",
+        "capability": {
+            "streaming": "Streaming",
+            "vision": "Images",
+            "structuredOutput": "Structured output",
+            "reasoning": "Reasoning",
+            "temperature": "Temperature",
+            "topP": "Top P",
+            "topK": "Top K",
+            "penalties": "Penalties"
+        },
+        "tokenLimit": "Token limit API field",
+        "test": "Connection test",
+        "testHint": "Runs a short request with the saved connection. Your provider may charge for this request.",
+        "testAction": "Send test request",
+        "saveBeforeTest": "Save the connection and all changes before testing.",
+        "testMetrics": "{duration} ms · input {input} · output {output} tokens",
+        "refreshFailed": "Saved, but the current view could not refresh.",
+        "options": {
+            "temperature": "Temperature",
+            "topP": "Top P",
+            "topK": "Top K",
+            "presencePenalty": "Presence penalty",
+            "frequencyPenalty": "Frequency penalty",
+            "repeatPenalty": "Repeat penalty",
+            "seed": "Seed",
+            "maxOutputTokens": "Max output tokens",
+            "contextWindow": "Context window",
+            "reasoningTokens": "Reasoning tokens",
+            "connectTimeoutSeconds": "Connection timeout · s",
+            "idleTimeoutSeconds": "Idle timeout · s",
+            "totalTimeoutSeconds": "Total timeout · s (0 = unlimited)",
+            "keepAliveMinutes": "Keep alive · min"
+        }
+    },
+    "modelRouting": {
+        "enabled": "Use task routing",
+        "priorityHint": "An explicit model chosen for a chat takes priority over reply routing. Empty assignments use the primary model.",
+        "primary": "Primary model",
+        "tasks": {
+            "replyProfileId": "Conversation replies",
+            "memoryProfileId": "Memory summaries",
+            "researchProfileId": "Internet research",
+            "visionProfileId": "Image analysis"
+        },
+        "parallel": "Run independent tasks in parallel",
+        "parallelHint": "Parallel tasks may use more memory or API capacity. Tasks that depend on one another still run in sequence."
+    },
+    "chatFeatures": {
+        "delivery": "Send responses",
+        "analyzePhotos": "Analyze incoming photos",
+        "photosHint": "Requires an image-capable model. API models send photos to the selected provider.",
+        "aiStickers": "Allow AI to use stickers",
+        "stickersHint": "The assistant can choose stickers available in your Telegram account."
+    },
+    "messageMenu": {
+        "copyText": "Copy text",
+        "copyLink": "Copy message link",
+        "draft": "Prepare a reply",
+        "exclude": "Exclude from AI context",
+        "restore": "Restore to AI context",
+        "restoreAll": "All excluded messages",
+        "scopes": {
+            "message": "Only this message",
+            "through": "This and all earlier messages",
+            "from": "This and all later messages"
+        },
+        "saving": "Saving…",
+        "failed": "Action could not be completed",
+        "linkUnavailable": "Telegram did not provide a link for this message.",
+        "refreshFailed": "Changes were saved, but history could not refresh. Reopen the conversation.",
+        "excluded": "Excluded from AI context"
+    },
+    "typing": {
+        "group": "{names} {action}",
+        "others": "{count} more",
+        "participant": "Participant",
+        "singular": {
+            "typing": "typing…",
+            "uploadPhoto": "sending a photo…",
+            "uploadVideo": "sending a video…",
+            "uploadDocument": "sending a file…",
+            "recordVoice": "recording a voice message…",
+            "uploadVoice": "sending a voice message…",
+            "recordVideo": "recording a video…",
+            "uploadVideoNote": "sending a video message…",
+            "chooseSticker": "choosing a sticker…",
+            "active": "active…"
+        },
+        "plural": {
+            "typing": "typing…",
+            "uploadPhoto": "sending a photo…",
+            "uploadVideo": "sending a video…",
+            "uploadDocument": "sending a file…",
+            "recordVoice": "recording a voice message…",
+            "uploadVoice": "sending a voice message…",
+            "recordVideo": "recording a video…",
+            "uploadVideoNote": "sending a video message…",
+            "chooseSticker": "choosing a sticker…",
+            "active": "active…"
+        }
+    },
+    "draftQueue": {
+        "cancelled": "Reply preparation was cancelled.",
+        "failed": "Could not prepare a reply."
     }
 }

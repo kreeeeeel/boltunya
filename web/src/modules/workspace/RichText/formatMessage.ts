@@ -1,9 +1,14 @@
 import type {MessageEntity} from '@/shared/api/client';
+import LinkifyIt from 'linkify-it';
+
+const links = new LinkifyIt({fuzzyEmail: false});
 
 export const structuralTypes = new Set(['pre', 'precode', 'quote', 'expandablequote', 'spoiler']);
 
 export function safeLink(value: string): string | undefined {
-    const source = /^(www\.|t\.me\/)/i.test(value) ? 'https://' + value : value;
+    const normalized = value.toLowerCase();
+    const source =
+        normalized.startsWith('www.') || normalized.startsWith('t.me/') ? 'https://' + value : value;
     try {
         const url = new URL(source);
         return ['https:', 'http:', 'mailto:', 'tel:', 'tg:'].includes(url.protocol) ? url.href : undefined;
@@ -16,9 +21,14 @@ export function prepareEntities(text: string, entities: MessageEntity[] = []): M
     const valid = entities.filter(
         (entity) => entity.offset >= 0 && entity.length > 0 && entity.offset + entity.length <= text.length,
     );
-    const urls = Array.from(text.matchAll(/(?:https?:\/\/|www\.|t\.me\/)[^\s<>]+/gi)).flatMap((match) => {
-        const value = match[0].replace(/[.,!?;:]+$/, '');
+    const urls = (links.match(text) ?? []).flatMap((match) => {
+        const value = match.raw;
         const offset = match.index;
+        if (
+            !['http://', 'https://', 'www.', 't.me/'].some((prefix) => value.toLowerCase().startsWith(prefix))
+        ) {
+            return [];
+        }
         const covered = valid.some(
             (entity) =>
                 ['url', 'texturl', 'code', 'pre', 'precode'].includes(entity.type) &&
@@ -58,9 +68,12 @@ export function entityLink(entity: MessageEntity, text: string): string | undefi
         entity.type === 'email'
             ? 'mailto:' + value
             : entity.type === 'phone'
-              ? 'tel:' + value.replace(/[^+\d]/g, '')
+              ? 'tel:' +
+                Array.from(value)
+                    .filter((character) => '+0123456789'.includes(character))
+                    .join('')
               : entity.type === 'mention'
-                ? 'https://t.me/' + value.replace(/^@/, '')
+                ? 'https://t.me/' + (value.startsWith('@') ? value.slice(1) : value)
                 : entity.url || value;
     return safeLink(source);
 }

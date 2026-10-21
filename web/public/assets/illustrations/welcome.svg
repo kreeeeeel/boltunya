@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640" viewBox="0 0 640 640" fill="none">
+  <title>Conversations connected with Aigram</title>
+  <defs>
+    <linearGradient id="panel" x1="162" y1="170" x2="471" y2="442" gradientUnits="userSpaceOnUse"><stop stop-color="#FCFEFF"/><stop offset="1" stop-color="#E7F1F6"/></linearGradient>
+    <linearGradient id="blue" x1="365" y1="130" x2="500" y2="238" gradientUnits="userSpaceOnUse"><stop stop-color="#A5C8FF"/><stop offset="1" stop-color="#759FF2"/></linearGradient>
+    <linearGradient id="tile" x1="12" y1="4" x2="114" y2="128" gradientUnits="userSpaceOnUse"><stop stop-color="#234858"/><stop offset="1" stop-color="#122D3C"/></linearGradient>
+    <linearGradient id="ribbon" x1="29" y1="91" x2="90" y2="34" gradientUnits="userSpaceOnUse"><stop stop-color="#8DE9D4"/><stop offset="1" stop-color="#69C8D5"/></linearGradient>
+    <linearGradient id="fold" x1="70" y1="38" x2="99" y2="94" gradientUnits="userSpaceOnUse"><stop stop-color="#A4C7FF"/><stop offset="1" stop-color="#729CF3"/></linearGradient>
+    <filter id="shadow" x="-40%" y="-40%" width="180%" height="190%"><feDropShadow dy="18" stdDeviation="18" flood-color="#173A50" flood-opacity=".11"/></filter>
+  </defs>
+  <circle cx="320" cy="326" r="221" fill="#78CFCC" fill-opacity=".055"/>
+  <path d="M96 375c-31-86 39-185 144-217m166 6c88 30 143 109 139 173M152 466c85 77 213 77 307 10" stroke="#91B8CC" stroke-opacity=".38" stroke-width="2" stroke-linecap="round" stroke-dasharray="5 12"/>
+  <g transform="rotate(-8 316 325)" filter="url(#shadow)">
+    <rect x="147" y="190" width="346" height="256" rx="33" fill="url(#panel)"/>
+    <path d="M147 250h346" stroke="#D9E6EF" stroke-width="2"/>
+    <circle cx="175" cy="220" r="5" fill="#9EC4C8"/><circle cx="194" cy="220" r="5" fill="#B2C4E2"/><circle cx="213" cy="220" r="5" fill="#C7D9DF"/>
+    <rect x="393" y="215" width="68" height="9" rx="4.5" fill="#CFDFEA"/>
+    <rect x="179" y="285" width="88" height="10" rx="5" fill="#BCD0DB"/>
+    <rect x="179" y="312" width="147" height="10" rx="5" fill="#D0E0E7"/>
+    <rect x="179" y="339" width="120" height="10" rx="5" fill="#D0E0E7"/>
+    <rect x="179" y="390" width="115" height="24" rx="12" fill="#BADFD9"/>
+  </g>
+  <g transform="rotate(8 442 196)" filter="url(#shadow)">
+    <path d="M384 141h114a25 25 0 0 1 25 25v57l-28-13H384a25 25 0 0 1-25-25v-19a25 25 0 0 1 25-25Z" fill="url(#blue)"/>
+    <rect x="384" y="165" width="91" height="8" rx="4" fill="#F9FCFF" fill-opacity=".9"/>
+    <rect x="384" y="183" width="62" height="8" rx="4" fill="#F9FCFF" fill-opacity=".65"/>
+  </g>
+  <g transform="rotate(5 188 415)" filter="url(#shadow)">
+    <path d="M102 364h151a26 26 0 0 1 26 26v35a26 26 0 0 1-26 26H125l-27 15 5-28a26 26 0 0 1-27-26v-22a26 26 0 0 1 26-26Z" fill="#B8E8DE"/>
+    <circle cx="139" cy="407" r="7" fill="#477F88"/><circle cx="174" cy="407" r="7" fill="#477F88"/><circle cx="209" cy="407" r="7" fill="#477F88"/>
+  </g>
+  <g transform="translate(304 260) rotate(8 64 64)" filter="url(#shadow)">
+    <rect width="128" height="128" rx="34" fill="url(#tile)"/>
+    <path d="m25 93 27-59c5-11 19-11 24 0l27 59H81L64 53 47 93H25Z" fill="url(#ribbon)"/>
+    <path d="m64 53 12-19 27 59H81L64 53Z" fill="url(#fold)"/>
+    <path d="M49 71h29a7 7 0 0 1 7 7v12l-12-6H49a6.5 6.5 0 0 1 0-13Z" fill="#F4FFFC"/>
+  </g>
+  <circle cx="124" cy="270" r="9" fill="#89BECC"/><circle cx="502" cy="402" r="12" fill="#ACC7EF"/><circle cx="378" cy="497" r="5" fill="#82BFAF"/>
+</svg>

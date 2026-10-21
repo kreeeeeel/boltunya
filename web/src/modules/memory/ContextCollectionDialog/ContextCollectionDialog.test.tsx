@@ -60,7 +60,7 @@ it.each([false, true])(
         mount();
         await screen.findByText('Просмотрено сообщений: 120');
         if (rebuild) {
-            fireEvent.click(screen.getByRole('radio', {name: new RegExp(ru.context.rebuild)}));
+            fireEvent.click(screen.getByRole('radio', {name: (name) => name.startsWith(ru.context.rebuild)}));
         }
         fireEvent.click(screen.getByRole('button', {name: ru.context.start}));
         await waitFor(() =>
@@ -125,7 +125,7 @@ it('keeps a failed request retryable and displays the API error', async () => {
 it('queues a complete global rebuild through the shared memory endpoint', async () => {
     mount('');
     await screen.findByText(ru.context.globalHint);
-    fireEvent.click(screen.getByRole('radio', {name: new RegExp(ru.context.rebuild)}));
+    fireEvent.click(screen.getByRole('radio', {name: (name) => name.startsWith(ru.context.rebuild)}));
     fireEvent.click(screen.getByRole('button', {name: ru.context.start}));
     await waitFor(() =>
         expect(mocks.POST).toHaveBeenCalledWith('/api/memory/refresh', {

@@ -56,6 +56,19 @@
     border-radius: 8px;
 }
 
+.videoContainer {
+    position: relative;
+}
+
+.expandVideo {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #10131690;
+    color: #fff;
+    border-radius: 10px;
+}
+
 .audio {
     display: block;
     width: 280px;

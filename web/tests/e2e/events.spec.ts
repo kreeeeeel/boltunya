@@ -5,6 +5,7 @@ import {join} from 'node:path';
 import {workspaceState} from '../fixtures/workspace';
 import {activityDetails, testActivity} from '../fixtures/activity';
 import type {components} from '@/shared/api/schema';
+import {persistTestTheme} from '../fixtures/settings';
 
 test.beforeEach(async ({page}) => {
     const state = structuredClone(workspaceState);
@@ -12,12 +13,33 @@ test.beforeEach(async ({page}) => {
     state.replyQueue = {paused: false, queued: 1, running: 1};
     state.settings.paused = false;
     const feedbacks = new Map<string, components['schemas']['ActivityFeedback']>();
+    let appearance = {mode: 'light', tokens: {}, css: ''};
     await page.route('**/api/**', async (route) => {
         const request = route.request();
         const path = new URL(request.url()).pathname;
-        const match = path.match(/^\/api\/activity\/([^/]+)(?:\/(cancel|priority))?$/);
-        const feedbackMatch = path.match(/^\/api\/activity\/([^/]+)\/feedback$/);
-        if (path === '/api/state') {
+        const parts = path.split('/');
+        const item = parts[1] === 'api' && parts[2] === 'activity' && Boolean(parts[3]);
+        const match =
+            item && (parts.length === 4 || (parts.length === 5 && ['cancel', 'priority'].includes(parts[4])))
+                ? [path, parts[3], parts[4]]
+                : null;
+        const feedbackMatch = item && parts.length === 5 && parts[4] === 'feedback' ? [path, parts[3]] : null;
+        if (path === '/api/appearance') {
+            if (request.method() === 'PUT') {
+                appearance = request.postDataJSON();
+            }
+            await route.fulfill({json: appearance});
+        } else if (path === '/api/model-profiles') {
+            await route.fulfill({json: {profiles: [], presets: []}});
+        } else if (path === '/api/metrics') {
+            await route.fulfill({json: []});
+        } else if (path === '/api/settings') {
+            Object.assign(state.settings, request.postDataJSON());
+            if (state.replyQueue) {
+                state.replyQueue.maxParallelTasks = state.settings.maxParallelTasks;
+            }
+            await route.fulfill({json: state.settings});
+        } else if (path === '/api/state') {
             await route.fulfill({json: state});
         } else if (path === '/api/activity/queue') {
             state.replyQueue!.paused = request.postDataJSON().paused;
@@ -265,9 +287,27 @@ test('a generated reply with failed delivery is not labeled as sent to Telegram'
 });
 
 test('dark events use the app palette and readable card sizes', async ({page}) => {
-    await page.context().addCookies([{name: 'tiho-theme', value: 'dark', url: page.url()}]);
+    await persistTestTheme(page, true);
     await page.reload();
     await page.locator('[data-qa="nav-activity"]').click();
     await expect(page.locator('[data-qa="event-running"]')).toHaveCSS('background-color', 'rgb(36, 42, 52)');
     await page.screenshot({path: '../docs/resources/activity-dark.png', animations: 'disabled'});
+});
+
+test('parallel queue settings persist without fabricated resource forecasts', async ({page}) => {
+    await page.getByRole('button', {name: 'Параллельные задачи', exact: true}).click();
+    const dialog = page.getByRole('dialog', {name: 'Параллельные задачи', exact: true});
+    await dialog.getByRole('radio', {name: '4', exact: true}).check();
+    await expect(dialog.getByText('Очень высокая', {exact: true})).toBeVisible();
+    await expect(dialog.getByText('Текущие метрики недоступны.', {exact: true})).toBeVisible();
+    const saved = page.waitForRequest(
+        (request) => request.method() === 'PATCH' && request.url().endsWith('/api/settings'),
+    );
+    await dialog.getByRole('button', {name: 'Сохранить настройки', exact: true}).click();
+    expect((await saved).postDataJSON()).toEqual({maxParallelTasks: 4});
+    await expect(dialog.getByRole('button', {name: 'Сохранено', exact: true})).toBeVisible();
+    await page.screenshot({path: '../docs/resources/parallel-tasks.png', animations: 'disabled'});
+    await dialog.getByRole('button', {name: 'Закрыть', exact: true}).click();
+    await page.getByRole('button', {name: 'Параллельные задачи', exact: true}).click();
+    await expect(page.getByRole('radio', {name: '4', exact: true})).toBeChecked();
 });

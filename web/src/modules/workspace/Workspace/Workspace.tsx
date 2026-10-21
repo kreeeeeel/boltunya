@@ -1,37 +1,19 @@
 'use client';
 
-import {Box, Button, DropdownMenu, Flex, Icon, Text, Tooltip} from '@gravity-ui/uikit';
-import {
-    ArrowRightFromSquare,
-    Clock,
-    Comments,
-    Moon,
-    Sparkles,
-    Globe,
-    Sliders,
-    Xmark,
-    ChartColumn,
-    NodesRight,
-    BookOpen,
-    Books,
-    CircleExclamation,
-} from '@gravity-ui/icons';
+import {Box, Button, Flex, Icon, Text, Tooltip} from '@gravity-ui/uikit';
+import {Clock, Comments, Moon, Sparkles, ChartColumn, CircleExclamation} from '@gravity-ui/icons';
 import {useTranslations} from 'next-intl';
 import {useEffect, useRef, useState} from 'react';
 
 import {ActivityPanel} from '@/modules/activity/ActivityPanel/ActivityPanel';
 import {ChatList} from '@/modules/workspace/ChatList/ChatList';
-import {GlobalPromptDialog} from '@/modules/workspace/GlobalPromptDialog/GlobalPromptDialog';
-import {StylesDialog} from '@/modules/workspace/StylesDialog/StylesDialog';
 import {SettingsDialog} from '@/modules/workspace/SettingsDialog/SettingsDialog';
 import {WindowBar} from '@/modules/workspace/WindowBar/WindowBar';
-import {TelegramAvatar} from '@/shared/ui/TelegramAvatar/TelegramAvatar';
 import {Conversation} from '@/modules/workspace/Conversation/Conversation';
 import {ChatWallpaper} from '@/modules/workspace/ChatWallpaper/ChatWallpaper';
 import {Inspector} from '@/modules/workspace/Inspector/Inspector';
 import {ModelsPanel} from '@/modules/workspace/ModelsPanel/ModelsPanel';
 import {MetricsPanel} from '@/modules/monitoring/MetricsPanel/MetricsPanel';
-import {FlowEditor} from '@/modules/flows/FlowEditor/FlowEditor';
 import {RuleDialog} from '@/modules/workspace/RuleDialog/RuleDialog';
 import {useWorkspace} from '@/modules/workspace/hooks/useWorkspace';
 import {Welcome} from '@/modules/workspace/Welcome/Welcome';
@@ -40,30 +22,38 @@ import styles from '@/modules/workspace/Workspace/Workspace.module.css';
 import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
 import type {Chat, ChatRule} from '@/shared/api/client';
 import {usePreferences} from '@/shared/theme/Preferences';
-import {useLanguageItems} from '@/shared/ui/LanguageMenu/LanguageMenu';
 import {desktopBridge} from '@/shared/desktop/bridge';
 import {MemoryDialog} from '@/modules/memory/MemoryDialog/MemoryDialog';
 import {ContextCollectionDialog} from '@/modules/memory/ContextCollectionDialog/ContextCollectionDialog';
 import {DeletedMessagesDialog} from '@/modules/workspace/DeletedMessagesDialog/DeletedMessagesDialog';
 import {ErrorsPanel} from '@/modules/diagnostics/ErrorsPanel/ErrorsPanel';
 
+import {ProfileMenu} from '@/modules/settings/ProfileMenu/ProfileMenu';
+import type {SettingsSectionId} from '@/modules/settings/model/settingsSections';
+import {useModelProfiles} from '@/modules/settings/model/useModelProfiles';
+import {useQueuedDraft} from '@/modules/workspace/hooks/useQueuedDraft';
+import {applyContextExclusion} from '@/modules/messages/model/applyContextExclusion';
+import type {ContextExclusionChange} from '@/modules/messages/model/ContextExclusionChange';
+
 export function Workspace() {
     const t = useTranslations();
-    const {toggleTheme, theme} = usePreferences();
-    const languageItems = useLanguageItems();
+    const modelProfiles = useModelProfiles();
+    const {theme} = usePreferences();
     const [tab, setTab] = useState('chats');
     const [selected, setSelected] = useState<string | null>(null);
     const selectedChat = useRef<string | null>(null);
-    const [promptOpen, setPromptOpen] = useState(false);
-    const [stylesOpen, setStylesOpen] = useState(false);
-    const [settingsOpen, setSettingsOpen] = useState(false);
+    const [settingsSection, setSettingsSection] = useState<SettingsSectionId | null>(null);
     const [memoryChat, setMemoryChat] = useState<Chat | null | undefined>();
     const [contextChat, setContextChat] = useState<Chat | null | undefined>();
     const [deletedChat, setDeletedChat] = useState<Chat | null>(null);
     useEffect(() => {
-        const open = () => setSettingsOpen(true);
+        const open = () => setSettingsSection('application');
         window.addEventListener('boltun-settings', open);
-        return () => window.removeEventListener('boltun-settings', open);
+        window.addEventListener('aigram-settings', open);
+        return () => {
+            window.removeEventListener('boltun-settings', open);
+            window.removeEventListener('aigram-settings', open);
+        };
     }, []);
     const [editing, setEditing] = useState<Chat | null>(null);
     const [inspector, setInspector] = useState(false);
@@ -73,7 +63,13 @@ export function Workspace() {
         useWorkspace(selected);
     const chats = state?.chats ?? [];
     const chat = chats.find((item) => item.id === selected);
+    const profileId =
+        (chat?.rule.useDefaultModel ?? true)
+            ? state?.settings.defaultModelProfileId
+            : chat?.rule.modelProfileId;
+    const modelLabel = modelProfiles.profiles.find((profile) => profile.id === profileId)?.name;
     const paused = state?.settings.paused ?? true;
+    const queuedDraft = useQueuedDraft(chat?.id, refresh);
     useEffect(() => {
         if (!selected || tab !== 'chats') {
             return;
@@ -131,6 +127,13 @@ export function Workspace() {
         dataOrThrow(
             await api.POST('/api/chats/{chatId}/messages', {params: {path: {chatId: chat.id}}, body: {text}}),
         );
+        await refreshConversation();
+    }
+
+    async function refreshConversation() {
+        if (!chat) {
+            return;
+        }
         const latest = dataOrThrow(
             await api.GET('/api/chats/{chatId}/messages', {params: {path: {chatId: chat.id}}}),
         );
@@ -140,21 +143,18 @@ export function Workspace() {
         await refresh();
     }
 
-    async function draft() {
+    async function updateContextFlags(change: ContextExclusionChange) {
+        if (chat && selectedChat.current === chat.id) {
+            setMessages((previous) => applyContextExclusion(previous, chat.id, change));
+        }
+        await refresh();
+    }
+
+    async function draft(messageId?: string) {
         if (!chat) {
             return '';
         }
-        const last = [...messages].reverse().find((message) => !message.outgoing);
-        const result = dataOrThrow(
-            await api.POST('/api/preview', {
-                body: {
-                    text: last?.text ?? t('testPlaceholder'),
-                    rule: chat.rule,
-                    chatId: chat.id,
-                },
-            }),
-        );
-        return result.text;
+        return queuedDraft(chat.rule, messageId);
     }
 
     function select(id: string) {
@@ -212,7 +212,7 @@ export function Workspace() {
 
     if (state?.telegram.state !== 'ready') {
         return (
-            <Flex direction="column" className={styles.root} qa="workspace-shell">
+            <Flex direction="column" className={styles.root} qa="workspace-shell" data-aigram-css-scope="">
                 <WindowBar state={state} onPause={pause} onError={setActionError} />
                 <Welcome
                     state={state}
@@ -220,10 +220,11 @@ export function Workspace() {
                     error={actionError || error}
                     onRefresh={refresh}
                 />
-                {settingsOpen && state && (
+                {settingsSection !== null && state && (
                     <SettingsDialog
                         settings={state.settings}
-                        onClose={() => setSettingsOpen(false)}
+                        initialSection={settingsSection}
+                        onClose={() => setSettingsSection(null)}
                         onRefresh={refresh}
                     />
                 )}
@@ -232,7 +233,7 @@ export function Workspace() {
     }
 
     return (
-        <Flex direction="column" className={styles.root} qa="workspace-shell">
+        <Flex direction="column" className={styles.root} qa="workspace-shell" data-aigram-css-scope="">
             {tab === 'chats' && chat && (
                 <ChatWallpaper
                     wallpaper={theme === 'dark' ? (chat.darkWallpaper ?? chat.wallpaper) : chat.wallpaper}
@@ -263,7 +264,6 @@ export function Workspace() {
                             {id: 'models', icon: Sparkles},
                             {id: 'activity', icon: Clock},
                             {id: 'metrics', icon: ChartColumn},
-                            {id: 'flows', icon: NodesRight},
                             {id: 'errors', icon: CircleExclamation},
                         ].map((item) => (
                             <Tooltip
@@ -271,7 +271,7 @@ export function Workspace() {
                                 content={t(
                                     item.id === 'errors'
                                         ? 'diagnostics.title'
-                                        : item.id === 'metrics' || item.id === 'flows'
+                                        : item.id === 'metrics'
                                           ? item.id + 'Nav'
                                           : item.id,
                                 )}
@@ -287,7 +287,7 @@ export function Workspace() {
                                     aria-label={t(
                                         item.id === 'errors'
                                             ? 'diagnostics.title'
-                                            : item.id === 'metrics' || item.id === 'flows'
+                                            : item.id === 'metrics'
                                               ? item.id + 'Nav'
                                               : item.id,
                                     )}
@@ -304,76 +304,16 @@ export function Workspace() {
                                 size="l"
                                 view="flat-secondary"
                                 aria-label={t('theme')}
-                                onClick={toggleTheme}
+                                onClick={() => setSettingsSection('appearance')}
                             >
                                 <Icon data={Moon} size={21} />
                             </Button>
                         </Tooltip>
-                        <DropdownMenu
-                            size="l"
-                            popupProps={{placement: 'right-end'}}
-                            renderSwitcher={(props) => (
-                                <Button
-                                    {...props}
-                                    className={styles.profileButton}
-                                    view="flat"
-                                    size="l"
-                                    aria-label={t('profileMenu')}
-                                >
-                                    <TelegramAvatar
-                                        title={state.telegram.name || 'Я'}
-                                        url={state.telegram.avatarUrl}
-                                        size="m"
-                                    />
-                                </Button>
-                            )}
-                            items={[
-                                [
-                                    {
-                                        text: t('settings'),
-                                        iconStart: <Icon data={Sliders} size={18} />,
-                                        action: () => setSettingsOpen(true),
-                                    },
-                                    {
-                                        text: t('customStyles'),
-                                        iconStart: <Icon data={Sparkles} size={18} />,
-                                        action: () => setStylesOpen(true),
-                                    },
-                                    {
-                                        text: t('globalPrompt'),
-                                        iconStart: <Icon data={Sliders} size={18} />,
-                                        action: () => setPromptOpen(true),
-                                    },
-                                    {
-                                        text: t('memory.title'),
-                                        iconStart: <Icon data={BookOpen} size={18} />,
-                                        action: () => setMemoryChat(null),
-                                    },
-                                    {
-                                        text: t('context.globalTitle'),
-                                        iconStart: <Icon data={Books} size={18} />,
-                                        action: () => setContextChat(null),
-                                    },
-                                ],
-                                [
-                                    {
-                                        text: t('language'),
-                                        iconStart: <Icon data={Globe} size={18} />,
-                                        items: languageItems,
-                                    },
-                                    {
-                                        text: t('logout'),
-                                        iconStart: <Icon data={ArrowRightFromSquare} size={18} />,
-                                        action: () => void logout(),
-                                    },
-                                    {
-                                        text: t('quit'),
-                                        iconStart: <Icon data={Xmark} size={18} />,
-                                        theme: 'danger',
-                                        action: () => void stop(),
-                                    },
-                                ],
-                            ]}
+                        <ProfileMenu
+                            telegram={state.telegram}
+                            onSettings={setSettingsSection}
+                            onLogout={() => void logout()}
+                            onQuit={() => void stop()}
                         />
                     </Flex>
                 </Flex>
@@ -392,6 +332,9 @@ export function Workspace() {
                                 <Conversation
                                     key={chat?.id ?? 'empty'}
                                     chat={chat}
+                                    modelLabel={modelLabel}
+                                    onMediaSent={refreshConversation}
+                                    onContextChanged={updateContextFlags}
                                     messages={messages}
                                     activeReply={state?.activity.find(
                                         (item) =>
@@ -427,6 +370,7 @@ export function Workspace() {
                                 <Box className={styles.inspector}>
                                     <Inspector
                                         chat={chat}
+                                        modelLabel={modelLabel}
                                         customStyles={state.settings.customStyles ?? []}
                                         onConfigure={() => setEditing(chat)}
                                         onCollectContext={() => setContextChat(chat)}
@@ -443,17 +387,13 @@ export function Workspace() {
                             <MetricsPanel />
                         </Box>
                     )}
-                    {tab === 'flows' && (
-                        <Box className={styles.panel}>
-                            <FlowEditor chats={chats} />
-                        </Box>
-                    )}
                     {tab === 'errors' && <ErrorsPanel />}
                     {tab === 'models' && !stateLoading && (
                         <Box className={styles.panel}>
                             <ModelsPanel
                                 engine={state?.engine}
                                 defaultModel={state?.settings.defaultModel ?? 'gemma3:4b'}
+                                defaultModelProfileId={state?.settings.defaultModelProfileId}
                                 onRefresh={refresh}
                             />
                         </Box>
@@ -463,18 +403,13 @@ export function Workspace() {
                             entries={state?.activity ?? []}
                             queue={state?.replyQueue}
                             assistantPaused={paused}
+                            maxParallelTasks={state?.settings.maxParallelTasks ?? 1}
                             onRefresh={refresh}
                         />
                     )}
                 </Flex>
             </Flex>
-            {stylesOpen && (
-                <StylesDialog
-                    styles={state.settings.customStyles ?? []}
-                    onClose={() => setStylesOpen(false)}
-                    onRefresh={refresh}
-                />
-            )}
+
             {contextChat !== undefined && (
                 <ContextCollectionDialog
                     key={`context:${contextChat?.id ?? 'global'}`}
@@ -499,17 +434,12 @@ export function Workspace() {
                     onClose={() => setMemoryChat(undefined)}
                 />
             )}
-            {promptOpen && (
-                <GlobalPromptDialog
-                    value={state.settings.globalPrompt ?? ''}
-                    onClose={() => setPromptOpen(false)}
-                    onRefresh={refresh}
-                />
-            )}
-            {settingsOpen && (
+
+            {settingsSection !== null && (
                 <SettingsDialog
                     settings={state.settings}
-                    onClose={() => setSettingsOpen(false)}
+                    initialSection={settingsSection}
+                    onClose={() => setSettingsSection(null)}
                     onRefresh={refresh}
                 />
             )}
@@ -519,6 +449,7 @@ export function Workspace() {
                     chat={editing}
                     engine={state?.engine}
                     defaultModel={state.settings.defaultModel}
+                    defaultModelProfileId={state.settings.defaultModelProfileId}
                     customStyles={state.settings.customStyles ?? []}
                     onClose={() => setEditing(null)}
                     onCollectContext={() => setContextChat(editing)}

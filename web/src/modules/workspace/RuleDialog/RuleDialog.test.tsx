@@ -8,6 +8,9 @@ import {workspaceState} from '@tests/fixtures/workspace';
 import ru from '@/shared/i18n/ru.json';
 
 const preset = {id: 'calm', emoji: '🧊', name: 'Спокойный', instructions: 'Коротко, спокойно и на ты.'};
+vi.mock('@/modules/settings/model/useModelProfiles', () => ({
+    useModelProfiles: () => ({profiles: [], presets: [], error: '', loading: false, refresh: vi.fn()}),
+}));
 
 it('offers named presets without the standalone custom style and saves the reference with personal instructions', async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
@@ -31,7 +34,7 @@ it('offers named presets without the standalone custom style and saves the refer
     );
     fireEvent.click(screen.getByRole('combobox', {name: ru.style}));
     expect(screen.queryByRole('option', {name: ru.custom})).toBeNull();
-    fireEvent.click(await screen.findByRole('option', {name: /Спокойный/}));
+    fireEvent.click(await screen.findByRole('option', {name: (name) => name.includes('Спокойный')}));
     fireEvent.click(screen.getByRole('button', {name: ru.save}));
     await waitFor(() =>
         expect(onSave).toHaveBeenCalledWith(

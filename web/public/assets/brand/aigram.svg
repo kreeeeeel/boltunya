@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none">
+  <title>Aigram</title>
+  <defs>
+    <linearGradient id="tile" x1="12" y1="4" x2="114" y2="128" gradientUnits="userSpaceOnUse"><stop stop-color="#234858"/><stop offset="1" stop-color="#122D3C"/></linearGradient>
+    <linearGradient id="ribbon" x1="29" y1="91" x2="90" y2="34" gradientUnits="userSpaceOnUse"><stop stop-color="#8DE9D4"/><stop offset="1" stop-color="#69C8D5"/></linearGradient>
+    <linearGradient id="fold" x1="70" y1="38" x2="99" y2="94" gradientUnits="userSpaceOnUse"><stop stop-color="#A4C7FF"/><stop offset="1" stop-color="#729CF3"/></linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="34" fill="url(#tile)"/>
+  <rect x="1" y="1" width="126" height="126" rx="33" stroke="#FFF" stroke-opacity=".08" stroke-width="2"/>
+  <path d="m25 93 27-59c5-11 19-11 24 0l27 59H81L64 53 47 93H25Z" fill="url(#ribbon)"/>
+  <path d="m64 53 12-19 27 59H81L64 53Z" fill="url(#fold)"/>
+  <path d="M49 71h29a7 7 0 0 1 7 7v12l-12-6H49a6.5 6.5 0 0 1 0-13Z" fill="#F4FFFC"/>
+</svg>

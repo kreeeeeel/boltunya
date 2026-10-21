@@ -2,6 +2,7 @@ import {expect, test} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import type {AppState, Message} from '@/shared/api/client';
 import {workspaceState} from '../fixtures/workspace';
+import {persistTestTheme} from '../fixtures/settings';
 
 test('documents the workspace using synthetic conversations and verifies the refreshed layout', async ({
     page,
@@ -13,6 +14,7 @@ test('documents the workspace using synthetic conversations and verifies the ref
         {name: 'tiho-theme', value: 'light', url: base},
     ]);
     const state: AppState = structuredClone(workspaceState);
+    let appearance = {mode: 'light', tokens: {}, css: ''};
     const catalog = JSON.parse(
         readFileSync('../backend/src/main/resources/models/catalog.json', 'utf8'),
     ) as AppState['engine']['models'];
@@ -55,7 +57,12 @@ test('documents the workspace using synthetic conversations and verifies the ref
         const path = new URL(route.request().url()).pathname;
         if (path === '/api/state') await route.fulfill({json: state});
         else if (path.endsWith('/messages')) await route.fulfill({json: history});
-        else if (path === '/api/flows') await route.fulfill({json: []});
+        else if (path === '/api/appearance') {
+            if (route.request().method() === 'PUT') {
+                appearance = route.request().postDataJSON();
+            }
+            await route.fulfill({json: appearance});
+        } else if (path === '/api/model-profiles') await route.fulfill({json: {profiles: [], presets: []}});
         else await route.fulfill({status: 400, json: {error: 'Unexpected documentation request'}});
     });
     await page.goto(base);
@@ -71,7 +78,7 @@ test('documents the workspace using synthetic conversations and verifies the ref
         font.declared.split(',')[0].trim().replaceAll('"', ''),
     );
     const controlFonts = await page
-        .locator('.g-button, input, [data-qa="chat-row"] .g-text')
+        .locator('.g-button:visible, input:visible, [data-qa="chat-row"] .g-text:visible')
         .evaluateAll((elements) => [
             ...new Set(elements.map((element) => getComputedStyle(element).fontFamily)),
         ]);
@@ -97,7 +104,7 @@ test('documents the workspace using synthetic conversations and verifies the ref
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({path: '../docs/resources/readme-chat-light.png', animations: 'disabled'});
 
-    await context.addCookies([{name: 'tiho-theme', value: 'dark', url: base}]);
+    await persistTestTheme(page, true);
     await page.reload();
     await page.getByRole('button', {name: 'Anna Miller', exact: true}).click();
     await expect(page.locator('[data-qa="message-ai"]')).toBeVisible();
@@ -116,10 +123,4 @@ test('documents the workspace using synthetic conversations and verifies the ref
     await page.getByRole('button', {name: 'Clear search', exact: true}).click();
     await expect(page.locator('[data-qa="model-card"]')).toHaveCount(catalog.length);
     await page.screenshot({path: '../docs/resources/readme-models.png', animations: 'disabled'});
-
-    await page.locator('[data-qa="nav-flows"]').click();
-    await page.getByRole('button', {name: 'Create workflow', exact: true}).click();
-    await expect(page.locator('.react-flow__node')).toHaveCount(2);
-    await page.waitForTimeout(350);
-    await page.screenshot({path: '../docs/resources/readme-flows.png', animations: 'disabled'});
 });

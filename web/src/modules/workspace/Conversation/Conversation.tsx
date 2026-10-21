@@ -1,5 +1,5 @@
-import {Box, Button, Flex, Icon, Loader, Skeleton, Text, TextArea, Tooltip} from '@gravity-ui/uikit';
-import {ArrowLeft, BookOpen, CircleInfo, PaperPlane, Sliders, Sparkles} from '@gravity-ui/icons';
+import {Box, Button, Flex, Icon, Loader, Text, Tooltip} from '@gravity-ui/uikit';
+import {ArrowLeft, BookOpen, CircleInfo, Sliders} from '@gravity-ui/icons';
 import {useLocale, useTranslations} from 'next-intl';
 import {Fragment, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {messageDay} from '@/modules/workspace/model/messagePresentation';
@@ -12,9 +12,14 @@ import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
 import {ChatHeading} from '@/modules/workspace/ChatHeading/ChatHeading';
 import {ConversationGeneration} from '@/modules/workspace/ConversationGeneration/ConversationGeneration';
 import {MessageBubble} from '@/modules/workspace/Conversation/MessageBubble';
+import {ConversationComposer} from '@/modules/workspace/Conversation/ConversationComposer';
+import {MediaViewerProvider} from '@/modules/media/MediaViewer/MediaViewerProvider';
 
 export function Conversation({
     chat,
+    modelLabel,
+    onMediaSent,
+    onContextChanged,
     messages,
     activeReply,
     onRefresh,
@@ -123,13 +128,18 @@ export function Conversation({
         }
     }
 
-    async function draft() {
+    async function draft(messageId?: string) {
+        if (busy) {
+            return;
+        }
         setBusy('draft');
         setLocalError('');
         try {
-            setText(await onDraft());
+            setText(await onDraft(messageId));
         } catch (cause) {
-            setLocalError(errorMessage(cause));
+            if (!(cause instanceof DOMException && cause.name === 'AbortError')) {
+                setLocalError(errorMessage(cause));
+            }
         } finally {
             setBusy('');
         }
@@ -161,171 +171,146 @@ export function Conversation({
     }
 
     return (
-        <Flex direction="column" className={styles.root}>
-            <Flex
-                qa="conversation-header"
-                alignItems="center"
-                justifyContent="space-between"
-                className={styles.header}
-            >
-                <Flex alignItems="center" className={styles.identity}>
-                    <Button className={styles.back} view="flat" aria-label={t('back')} onClick={onBack}>
-                        <Icon data={ArrowLeft} />
-                    </Button>
-                    <ChatHeading chat={chat} />
-                </Flex>
-                <Flex className={styles.actions} alignItems="center">
-                    <Tooltip content={t('autoNote')}>
-                        <Text className={styles.model}>
-                            {chat.rule.model
-                                .replace('qwen3:', 'Qwen 3 · ')
-                                .replace('qwen2.5:', 'Qwen 2.5 · ')
-                                .replace('gemma3:', 'Gemma 3 · ')}
-                        </Text>
-                    </Tooltip>
-                    <Tooltip content={t('memory.openChat')}>
-                        <Button
-                            className={styles.headerButton}
-                            view="flat-secondary"
-                            aria-label={t('memory.openChat')}
-                            onClick={onMemory}
-                        >
-                            <Icon data={BookOpen} size={19} />
-                        </Button>
-                    </Tooltip>
-                    <Tooltip content={t('configure')}>
-                        <Button
-                            className={styles.headerButton}
-                            view="flat-secondary"
-                            aria-label={t('configure')}
-                            onClick={onConfigure}
-                        >
-                            <Icon data={Sliders} size={19} />
-                        </Button>
-                    </Tooltip>
-                    <Button
-                        className={[styles.inspectorButton, styles.headerButton].join(' ')}
-                        view="flat-secondary"
-                        aria-label={t('inspector')}
-                        onClick={onInspector}
-                    >
-                        <Icon data={CircleInfo} size={20} />
-                    </Button>
-                </Flex>
-            </Flex>
-            <Flex direction="column" className={styles.body} qa="conversation-body">
-                <ScrollArea
-                    viewportRef={scroll}
-                    qa="conversation-messages"
-                    className={styles.messages}
-                    onScroll={() => {
-                        const el = scroll.current;
-                        if (el) {
-                            stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
-                            if (el.scrollTop < 100) {
-                                void earlier();
-                            }
-                        }
-                    }}
+        <MediaViewerProvider messages={messages}>
+            <Flex direction="column" className={styles.root}>
+                <Flex
+                    qa="conversation-header"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    className={styles.header}
                 >
-                    <Flex direction="column" className={styles.messageInner}>
-                        {loadingEarlier && (
-                            <Flex
-                                role="status"
-                                aria-label={t('loadingConversation')}
-                                className={styles.historyLoader}
-                            >
-                                <Loader size="s" />
-                            </Flex>
-                        )}
-                        {messages.map((message, index) => (
-                            <Fragment key={message.id}>
-                                {(index === 0 ||
-                                    messageDay(message.date) !== messageDay(messages[index - 1].date)) && (
-                                    <Text className={styles.date} qa="message-date">
-                                        {messageDay(message.date) === today
-                                            ? t('today')
-                                            : new Date(message.date * 1000).toLocaleDateString(locale, {
-                                                  day: 'numeric',
-                                                  month: 'long',
-                                              })}
-                                    </Text>
-                                )}
-                                <MessageBubble
-                                    message={message}
-                                    nextMessage={messages[index + 1]}
-                                    previousMessage={messages[index - 1]}
-                                    group={
-                                        chat.kind === 'group' || chat.kind === 'supergroup' || message.group
-                                    }
-                                    replyText={messages.find((item) => item.id === message.replyToId)?.text}
-                                />
-                            </Fragment>
-                        ))}
-                        {messages.length === 0 && !error && (
-                            <Text className={styles.noHistory}>{t('noHistory')}</Text>
-                        )}
-                        {activeReply && (
-                            <ConversationGeneration
-                                key={activeReply.id}
-                                entry={activeReply}
-                                onRefresh={onRefresh}
-                            />
-                        )}
+                    <Flex alignItems="center" className={styles.identity}>
+                        <Button className={styles.back} view="flat" aria-label={t('back')} onClick={onBack}>
+                            <Icon data={ArrowLeft} />
+                        </Button>
+                        <ChatHeading chat={chat} />
                     </Flex>
-                </ScrollArea>
-                <Box className={styles.composerArea}>
-                    {(error || localError) && <Text color="danger">{localError || error}</Text>}
-                    <Flex alignItems="flex-end" gap={2} className={styles.composer} qa="message-composer">
-                        <Tooltip content={t('draft')}>
+                    <Flex className={styles.actions} alignItems="center">
+                        <Tooltip content={t('autoNote')}>
+                            <Text className={styles.model}>
+                                {modelLabel ??
+                                    chat.rule.model
+                                        .replace('qwen3:', 'Qwen 3 · ')
+                                        .replace('qwen2.5:', 'Qwen 2.5 · ')
+                                        .replace('gemma3:', 'Gemma 3 · ')}
+                            </Text>
+                        </Tooltip>
+                        <Tooltip content={t('memory.openChat')}>
                             <Button
-                                size="m"
-                                className={styles.composerButton}
+                                className={styles.headerButton}
                                 view="flat-secondary"
-                                loading={busy === 'draft'}
-                                disabled={!!busy}
-                                onClick={() => void draft()}
-                                aria-label={t('draft')}
+                                aria-label={t('memory.openChat')}
+                                onClick={onMemory}
                             >
-                                <Icon data={Sparkles} size={19} />
+                                <Icon data={BookOpen} size={19} />
                             </Button>
                         </Tooltip>
-                        {busy === 'draft' ? (
-                            <Skeleton className={styles.draftSkeleton} height={18} width="65%" />
-                        ) : (
-                            <TextArea
-                                view="clear"
-                                size="l"
-                                className={styles.input}
-                                value={text}
-                                disabled={busy === 'send'}
-                                onUpdate={setText}
-                                minRows={1}
-                                maxRows={5}
-                                placeholder={t('messagePlaceholder')}
-                                controlProps={{'aria-label': t('messagePlaceholder'), maxLength: 4096}}
-                                onKeyDown={(event) => {
-                                    if (event.key === 'Enter' && !event.shiftKey) {
-                                        event.preventDefault();
-                                        void send();
-                                    }
-                                }}
-                            />
-                        )}
+                        <Tooltip content={t('configure')}>
+                            <Button
+                                className={styles.headerButton}
+                                view="flat-secondary"
+                                aria-label={t('configure')}
+                                onClick={onConfigure}
+                            >
+                                <Icon data={Sliders} size={19} />
+                            </Button>
+                        </Tooltip>
                         <Button
-                            view="action"
-                            size="m"
-                            loading={busy === 'send'}
-                            disabled={!text.trim() || !!busy}
-                            onClick={() => void send()}
-                            aria-label={t('send')}
-                            className={styles.composerButton}
+                            className={[styles.inspectorButton, styles.headerButton].join(' ')}
+                            view="flat-secondary"
+                            aria-label={t('inspector')}
+                            onClick={onInspector}
                         >
-                            <Icon data={PaperPlane} size={18} />
+                            <Icon data={CircleInfo} size={20} />
                         </Button>
                     </Flex>
-                </Box>
+                </Flex>
+                <Flex direction="column" className={styles.body} qa="conversation-body">
+                    <ScrollArea
+                        viewportRef={scroll}
+                        qa="conversation-messages"
+                        className={styles.messages}
+                        onScroll={() => {
+                            const el = scroll.current;
+                            if (el) {
+                                stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+                                if (el.scrollTop < 100) {
+                                    void earlier();
+                                }
+                            }
+                        }}
+                    >
+                        <Flex direction="column" className={styles.messageInner}>
+                            {loadingEarlier && (
+                                <Flex
+                                    role="status"
+                                    aria-label={t('loadingConversation')}
+                                    className={styles.historyLoader}
+                                >
+                                    <Loader size="s" />
+                                </Flex>
+                            )}
+                            {messages.map((message, index) => (
+                                <Fragment key={message.id}>
+                                    {(index === 0 ||
+                                        messageDay(message.date) !==
+                                            messageDay(messages[index - 1].date)) && (
+                                        <Text className={styles.date} qa="message-date">
+                                            {messageDay(message.date) === today
+                                                ? t('today')
+                                                : new Date(message.date * 1000).toLocaleDateString(locale, {
+                                                      day: 'numeric',
+                                                      month: 'long',
+                                                  })}
+                                        </Text>
+                                    )}
+                                    <MessageBubble
+                                        message={message}
+                                        onContextChanged={onContextChanged}
+                                        onDraftRequest={
+                                            !message.outgoing ? () => draft(message.id) : undefined
+                                        }
+                                        nextMessage={messages[index + 1]}
+                                        previousMessage={messages[index - 1]}
+                                        group={
+                                            chat.kind === 'group' ||
+                                            chat.kind === 'supergroup' ||
+                                            message.group
+                                        }
+                                        replyText={
+                                            messages.find((item) => item.id === message.replyToId)?.text
+                                        }
+                                    />
+                                </Fragment>
+                            ))}
+                            {messages.length === 0 && !error && (
+                                <Text className={styles.noHistory}>{t('noHistory')}</Text>
+                            )}
+                            {activeReply && (
+                                <ConversationGeneration
+                                    key={activeReply.id}
+                                    entry={activeReply}
+                                    onRefresh={onRefresh}
+                                />
+                            )}
+                        </Flex>
+                    </ScrollArea>
+                    {(error || localError) && (
+                        <Text color="danger" role="alert">
+                            {localError || error}
+                        </Text>
+                    )}
+                    <ConversationComposer
+                        chatId={chat.id}
+                        text={text}
+                        onTextChange={setText}
+                        busy={busy}
+                        onSend={send}
+                        onDraft={() => draft()}
+                        onMediaSent={onMediaSent ?? onRefresh}
+                    />
+                </Flex>
             </Flex>
-        </Flex>
+        </MediaViewerProvider>
     );
 }
