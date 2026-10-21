@@ -6,7 +6,7 @@ DeepSeek R1 retains an explicit reasoning mode and a separate token allowance. [
 
 DeepSeek R1 temperature is constrained to 0.5–0.7, following the [official R1 recommendations](https://github.com/deepseek-ai/DeepSeek-R1#usage-recommendations). Other model families retain their temperature settings. All requests preserve Spring AI's native system/user/assistant messages. Sampling defaults (`top_p`, `top_k`, repetition penalty) come from the installed model instead of a shared override. Events record the actual request. The prompt places learned voice and memory before the selected conversation tone and explicitly gives that tone priority.
 
-Boltunya uses [Spring AI 2.0](https://docs.spring.io/spring-ai/reference/api/chat/ollama-chat.html) as the local inference integration. Google Guice constructs the services; Spring Boot and a Spring application context are not started.
+Aigram uses [Spring AI 2.0](https://docs.spring.io/spring-ai/reference/api/chat/ollama-chat.html) as the local inference integration. Google Guice constructs the services; Spring Boot and a Spring application context are not started.
 
 | Component | Responsibility |
 | --- | --- |

@@ -32,7 +32,7 @@ $env:JAVA_TOOL_OPTIONS='-Djdk.net.unixdomain.tmpdir=C:/tiho-no-unix-sockets'
 $env:TIHO_LIVE_AI='true'
 $env:TIHO_TEST_MODELS='deepseek-r1:8b,gpt-oss:20b'
 $env:TIHO_TEST_CASES='style-rough'
-./gradlew.bat :backend:test --tests 'ru.boltunya.ai.LiveModelQualityTest' --no-daemon
+./gradlew.bat :backend:test --tests 'ru.aigram.ai.LiveModelQualityTest' --no-daemon
 ```
 
 This optional quality test currently fails for the limitation above. Ordinary offline tests skip live inference. Reports are written under `backend/build/reports/`; `TIHO_TRACE_REQUESTS=true` additionally writes the synthetic request trace for local inspection.

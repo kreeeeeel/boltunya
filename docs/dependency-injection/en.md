@@ -1,6 +1,6 @@
 # Dependency injection
 
-The Kotlin base package is `ru.boltunya`. Sources and tests belong to the `backend` module.
+The Kotlin base package is `ru.aigram`. Sources and tests belong to the `backend` module.
 
 The container is Google Guice 7.0.0 with `jakarta.inject`. `Main` creates the launch configuration and injector, then requests `ApplicationRuntime`. Services use `@Inject constructor` for constructor injection. `ApplicationModule` registers application services in `Singleton` scope: stores, models, Telegram and the reply queue share instances within one application launch.
 
@@ -10,5 +10,5 @@ The container is Google Guice 7.0.0 with `jakarta.inject`. `Main` creates the la
 
 Run `gradlew.bat :backend:check`. `ApplicationModuleTest` resolves the complete graph and checks shared instances without authenticating with Telegram or sending messages.
 
-The desktop shell is a separate Electron TypeScript module in `desktop`. Kotlin provides local integrations and HTTP APIs. `scripts/build.ps1` produces a single portable `complie/Болтунья.exe`.
+The desktop shell is a separate Electron TypeScript module in `desktop`. Kotlin provides local integrations and HTTP APIs. `scripts/build.ps1` produces a single portable `complie/Aigram.exe`.
 

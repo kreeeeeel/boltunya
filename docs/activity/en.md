@@ -15,7 +15,7 @@ A newer message in the same conversation replaces its pending reply. Manual repl
 
 ## Details
 
-Open a card to see the incoming message, timeline, delivered reply and every model request, including search planning and retries. Input messages, thinking, raw output and runtime options have separate rounded blocks. Requests also show message roles as supplied to Spring AI, finish reason and provider metrics. A workflow without a model node has no model requests.
+Open a card to see the incoming message, timeline, delivered reply and every model request, including search planning and retries. Input messages, thinking, raw output and runtime options have separate rounded blocks. Requests also show message roles as supplied to Spring AI, finish reason and provider metrics.
 
 Token usage comes from Ollama; completion tokens include reasoning when reported that way. Interrupted requests have no final usage, so the UI does not estimate tokens from chunks. Overall time includes context preparation, search, generation and delivery. Per-request duration, model loading, prompt processing and token speed use provider metadata. Generation progress is indeterminate.
 

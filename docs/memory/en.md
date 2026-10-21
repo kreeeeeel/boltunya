@@ -1,6 +1,6 @@
 # Conversation memory
 
-Boltunya learns a factual owner profile from real outgoing messages: confirmed personal facts, interests, everyday habits and substantive preferences. This profile is shared across conversations. Separate chat summaries retain relationships, important events and private arrangements. Automatic summaries exclude writing style, tone, emoji habits and instructions about how the model should respond. Incremental batches gradually cover available history.
+Aigram learns a factual owner profile from real outgoing messages: confirmed personal facts, interests, everyday habits and substantive preferences. This profile is shared across conversations. Separate chat summaries retain relationships, important events and private arrangements. Automatic summaries exclude writing style, tone, emoji habits and instructions about how the model should respond. Incremental batches gradually cover available history.
 
 The selected conversation style is a separate system instruction after the factual context. Optional punctuation and vocabulary observations come from manual outgoing messages, outside the memory bank, and remain subordinate to that style. Named styles keep their own instructions separate from additional chat instructions.
 
@@ -17,6 +17,7 @@ memory/
     PROFILE.md                   learned account profile
     state.json
     <chatId>/MEMORY.md
+    <chatId>/PARTICIPANTS.json    observed group authors
 ```
 
 The global file is created at startup and combines manual notes with the active account’s learned profile. Profiles are also stored in `memory/<telegramAccountId>/PROFILE.md` and restored when switching accounts. Contact facts stay in individual chat summaries. Chat files are created for chats in use, profile sources and explicit update requests.
@@ -79,3 +80,10 @@ Private headers show the first active Telegram username and omit the line when a
 After a manual start, communication settings replace the collection button with server-owned progress: status, queued chats, position and messages processed during the current pass. Closing the dialog preserves the job. Cancel removes pending work and invalidates unfinished inference; notes and committed summaries remain. Automatic processing resumes after the configured interval or a new manual request. Global cancellation removes all remaining manual jobs. Endpoints: POST /api/memory/{chatId}/cancel and POST /api/memory/cancel.
 
 Dialog rows render in pages of 40 with a Gravity Loader on downward scrolling. Search and filters cover the complete fetched list; a skeleton appears during filter transitions. Outgoing previews show You; group previews use the short sender name. Username controls copy the tag and Telegram link separately.
+
+
+## Group author index
+
+Group memory also keeps a small account-specific author index in `memory/<accountId>/<chatId>/PARTICIPANTS.json`: sender ID, display name, Telegram username and source recency. It is assembled from messages actually observed or fetched for that conversation, using cached Telegram users. It does not fetch the complete member list, download extra histories or generate personality descriptions. Older backfill cannot overwrite identity metadata from newer messages.
+
+The file retains at most 1,000 recent participants. The model receives at most 80 identity records within the memory character budget; message text is not stored in this index. Excluded source messages are omitted, and policy changes also hide previously collected records whose last source was excluded. Account and chat directories remain isolated.

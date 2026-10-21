@@ -1,17 +1,14 @@
-# Иллюстрации «Болтуна»
+# Aigram artwork
 
-Сгенерированы встроенным инструментом imagegen. Все изображения имеют прозрачный фон и сохранены в проекте:
+The visual identity uses folded mint and blue ribbons to form an **A**, with a white conversation bubble as its crossbar. The mark and all three illustrations are original vector artwork maintained as SVG in the repository.
 
-- `web/public/assets/illustrations/welcome.png` — экран входа;
-- `web/public/assets/illustrations/conversations.png` — выбор диалога;
-- `web/public/assets/illustrations/activity.png` — пустой журнал.
+| Asset | Purpose |
+| --- | --- |
+| `web/public/assets/brand/aigram.svg` | Application mark, window bar and favicon |
+| `web/public/assets/illustrations/welcome.svg` | Connected conversations on the sign-in screen |
+| `web/public/assets/illustrations/conversations.svg` | Empty conversation selection |
+| `web/public/assets/illustrations/activity.svg` | Empty activity list |
 
-SVG-логотип: `web/public/assets/brand/boltun.svg`. PNG и ICO для Windows растеризуются из этого SVG при сборке, поэтому значки совпадают.
+Transparent PNG illustrations keep the same filenames as their SVG sources for existing components. `node scripts/render-illustrations.cjs` regenerates them at 1254 × 1254 pixels using Sharp. Change the SVG sources rather than editing generated pixels.
 
-Промпты:
-
-1. Transparent hero illustration for a polished Russian Windows Telegram messaging app named Болтун. Charming premium tactile 3D little songbird, cream body, large warm coral rounded beak, navy eyes, muted teal wings and tail. Floating between two softly rounded conversation bubbles and a cream envelope. Centered square composition, soft studio lighting, matte clay and paper surfaces. No text, logos or background.
-2. Use the same songbird mascot and materials. Bird sitting on a cream envelope and looking attentively toward one mint speech bubble with three navy dots. Calm expectant pose, wings tucked in, centered, full subject visible, generous transparent margins. No text or background.
-3. Use the same songbird mascot and materials. Relaxed half-closed eyes, leaning against two cream envelopes with coral seals. Cozy and calm, centered, generous transparent margins, soft studio lighting. No text or background.
-
-Для второго и третьего изображения первое использовалось как референс.
+`scripts/create-icon.ps1` renders the application mark to a 512-pixel PNG and a Windows ICO containing 16, 24, 32, 48, 64, 128 and 256-pixel images. Both the desktop icon and the updater therefore use the same source artwork. No browser, external image service or image-generation model is required to rebuild these assets.

@@ -40,7 +40,7 @@ The local model processes conversation history on the computer. Search receives 
 - `POST /api/search/check`: check connectivity.
 - `ChatRule.sourceLinks`: `requested`, `always`, `never`; older rules default to `requested`.
 
-All routes use existing local-session and Host/Origin checks. Prompts live in `resources/prompts/ru/research`, regex in `resources/patterns`, stop words in `resources/search/stopwords/<language>.json`, and aliases in `resources/search/aliases.json`. Extend the existing `languages.json` and language-specific files for a new language.
+All routes use existing local-session and Host/Origin checks. Prompts live in `resources/prompts/ru/research`, literal intent vocabularies in `resources/search/intents/<language>.json`, stop words in `resources/search/stopwords/<language>.json`, and aliases in `resources/search/aliases.json`. Extend the existing `languages.json` and language-specific files for a new language.
 
 Tests cover MCP initialization and SSE results, rate-limit instructions, fallback and retry delays, key revisions, DPAPI and non-echoing endpoints, ranking and duplicates, citation policies, conversation preferences and UI failures. Browser tests mock API responses; optional Ollama validation uses synthetic conversations.
 

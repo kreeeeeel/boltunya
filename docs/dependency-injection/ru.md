@@ -1,6 +1,6 @@
 # Внедрение зависимостей
 
-Базовый пакет Kotlin: `ru.boltunya`. Исходники и тесты находятся в модуле `backend`.
+Базовый пакет Kotlin: `ru.aigram`. Исходники и тесты находятся в модуле `backend`.
 
 Контейнер — Google Guice 7.0.0 с `jakarta.inject`. `Main` создаёт конфигурацию запуска и контейнер, затем получает `ApplicationRuntime`. Сервисы с `@Inject constructor` получают зависимости через конструктор. `ApplicationModule` регистрирует их с областью `Singleton`: хранилища, модели, Telegram и очередь ответов используют общие экземпляры в пределах одного запуска.
 
@@ -10,5 +10,5 @@
 
 Проверка: `gradlew.bat :backend:check`. `ApplicationModuleTest` разрешает полный граф и проверяет общие экземпляры, не авторизуется в Telegram и не отправляет сообщения.
 
-Desktop-оболочка находится в отдельном TypeScript-модуле `desktop` и использует Electron. Kotlin отвечает за локальные интеграции и API. `scripts/build.ps1` собирает единый переносимый `complie/Болтунья.exe`.
+Desktop-оболочка находится в отдельном TypeScript-модуле `desktop` и использует Electron. Kotlin отвечает за локальные интеграции и API. `scripts/build.ps1` собирает единый переносимый `complie/Aigram.exe`.
 

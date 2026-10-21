@@ -40,7 +40,7 @@ Exa — необязательный дополнительный резерв. 
 - `POST /api/search/check` — проверка соединения.
 - `ChatRule.sourceLinks` — `requested`, `always`, `never`. Старые правила получают `requested`.
 
-Защита локальной сессией и Host/Origin применяется ко всем маршрутам. Промпты находятся в `resources/prompts/ru/research`, regex — в `resources/patterns`, стоп-слова — в `resources/search/stopwords/<language>.json`, соответствия — в `resources/search/aliases.json`. Новый язык добавляется через существующий `languages.json` и соответствующие языковые файлы.
+Защита локальной сессией и Host/Origin применяется ко всем маршрутам. Промпты находятся в `resources/prompts/ru/research`, словари намерений — в `resources/search/intents/<language>.json`, стоп-слова — в `resources/search/stopwords/<language>.json`, соответствия — в `resources/search/aliases.json`. Новый язык добавляется через существующий `languages.json` и соответствующие языковые файлы.
 
 Проверки покрывают MCP handshake и SSE-ответы, служебный ответ об исчерпании лимита, резервный поиск и задержку повторов, смену ключа, DPAPI и отсутствие ключа в API, сортировку и дубли, режимы ссылок, настройки чата и обработку ошибок интерфейса. Браузерные тесты используют подставные API; необязательная проверка с Ollama использует искусственную переписку.
 
