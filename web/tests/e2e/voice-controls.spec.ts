@@ -73,6 +73,9 @@ async function capture(page: Page, target: Locator, name: string, dark: boolean)
         await expect
             .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
             .toBe(true);
+        if (name === 'manual-voice') {
+            await manualBounds(page);
+        }
         await page.screenshot({
             path: join(proof, `${name}-${dark ? 'dark' : 'light'}-${width}.png`),
             animations: 'disabled',
@@ -85,6 +88,28 @@ async function capture(page: Page, target: Locator, name: string, dark: boolean)
         }
     }
     await page.setViewportSize({width: 1440, height: 900});
+}
+
+async function manualBounds(page: Page) {
+    const dialog = page.getByRole('dialog', {name: ru.voice.manualTitle, exact: true});
+    await expect
+        .poll(() =>
+            dialog.evaluate((modal) => {
+                const bounds = modal.getBoundingClientRect();
+                const controls = Array.from(
+                    modal.querySelectorAll('button, textarea, [role="combobox"], [role="slider"]'),
+                ).map((element) => element.getBoundingClientRect());
+                return {
+                    noHorizontalOverflow: modal.scrollWidth <= modal.clientWidth,
+                    withinViewport:
+                        bounds.left >= 0 && bounds.right <= innerWidth && bounds.height <= innerHeight,
+                    controlsWithinModal: controls
+                        .filter((control) => control.width > 5 && control.height > 5)
+                        .every((control) => control.left >= bounds.left && control.right <= bounds.right),
+                };
+            }),
+        )
+        .toEqual({noHorizontalOverflow: true, withinViewport: true, controlsWithinModal: true});
 }
 
 for (const dark of [false, true]) {
@@ -123,6 +148,13 @@ for (const dark of [false, true]) {
             'manual-voice',
             dark,
         );
+        await page.setViewportSize({width: 640, height: 520});
+        await manualBounds(page);
+        await expect(dialog.getByRole('button', {name: ru.close, exact: true})).toBeInViewport();
+        await expect(
+            dialog.getByRole('button', {name: ru.voice.manualSpeakAndSend, exact: true}),
+        ).toBeInViewport();
+        await page.setViewportSize({width: 1440, height: 900});
         expect(sent).toEqual([]);
         await text.fill('Изменённый текст для отправки.');
         await expect(dialog.locator('audio')).toHaveCount(0);

@@ -14,7 +14,7 @@ export function VoiceComposeDialog(props: VoiceComposeDialogProps) {
     return (
         <Dialog
             open
-            maxWidth="s"
+            contentOverflow="auto"
             hasCloseButton={false}
             className={styles.dialog}
             modalClassName={styles.modal}
