@@ -20,9 +20,9 @@ export class Backend {
         const runtime = this.packaged ? join(this.resources, 'runtime/bin/java.exe') : process.env.JAVA_HOME ? join(process.env.JAVA_HOME, 'bin/java.exe') : 'java.exe';
         const libs = this.packaged ? join(this.resources, 'backend/lib/*') : resolve('../backend/build/install/backend/lib/*');
         const log = createWriteStream(join(this.directory, 'backend.log'), {flags: 'a'});
-        this.process = spawn(runtime, ['-Dfile.encoding=UTF-8', '-Djdk.net.unixdomain.tmpdir=C:/tiho-no-unix-sockets', '-cp', libs, 'ru.boltunya.MainKt', ...(startup ? ['--startup'] : [])], {
+        this.process = spawn(runtime, ['-Dfile.encoding=UTF-8', '-Djdk.net.unixdomain.tmpdir=C:/tiho-no-unix-sockets', '-cp', libs, 'ru.aigram.MainKt', ...(startup ? ['--startup'] : [])], {
             windowsHide: true,
-            env: {...process.env, BOLTUNYA_DATA_DIR: this.directory},
+            env: {...process.env, AIGRAM_DATA_DIR: this.directory, BOLTUNYA_DATA_DIR: this.directory},
             stdio: ['ignore', 'pipe', 'pipe'],
         });
         this.process.stdout?.pipe(log, {end: false});

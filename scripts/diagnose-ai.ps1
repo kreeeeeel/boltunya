@@ -1,9 +1,24 @@
 param(
-    [string]$DataDirectory = $(if ($env:BOLTUNYA_DATA_DIR) { $env:BOLTUNYA_DATA_DIR } elseif ($env:TIHO_DATA_DIR) { $env:TIHO_DATA_DIR } else { Join-Path $env:LOCALAPPDATA 'Tiho' }),
-    [string]$OutputPath = (Join-Path ([Environment]::GetFolderPath('Desktop')) 'boltunya-diagnostics.json'),
+    [string]$DataDirectory = $(if ($env:AIGRAM_DATA_DIR) { $env:AIGRAM_DATA_DIR } elseif ($env:BOLTUNYA_DATA_DIR) { $env:BOLTUNYA_DATA_DIR } elseif ($env:TIHO_DATA_DIR) { $env:TIHO_DATA_DIR } else { Join-Path $env:LOCALAPPDATA 'Tiho' }),
+    [string]$OutputPath = (Join-Path ([Environment]::GetFolderPath('Desktop')) 'aigram-diagnostics.json'),
     [switch]$TestModel
 )
 $ErrorActionPreference = 'Stop'
+
+function Test-AllowedCharacters {
+    param([string]$Value, [string]$Allowed, [int]$Minimum = 1, [int]$Maximum = 256)
+    return $Value.Length -ge $Minimum -and $Value.Length -le $Maximum -and @($Value.ToCharArray() | Where-Object { -not $Allowed.Contains([string]$_) }).Count -eq 0
+}
+
+function Test-ReleaseVersion {
+    param([string]$Value)
+    $separator = $Value.IndexOfAny([char[]]'-+')
+    $core = $(if ($separator -ge 0) { $Value.Substring(0, $separator) } else { $Value })
+    $parts = $core.Split('.')
+    if ($parts.Count -ne 3 -or @($parts | Where-Object { -not (Test-AllowedCharacters $_ '0123456789' 1 10) }).Count -gt 0) { return $false }
+    if ($separator -ge 0 -and -not (Test-AllowedCharacters $Value.Substring($separator + 1) 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-' 1 128)) { return $false }
+    return $true
+}
 
 function Invoke-DiagnosticRequest {
     param([string]$Url, [hashtable]$Headers = @{}, [string]$Body = '', [int]$Timeout = 5)
@@ -26,7 +41,7 @@ function Invoke-DiagnosticRequest {
         if ($_.ErrorDetails.Message) {
             try {
                 $errorBody = $_.ErrorDetails.Message | ConvertFrom-Json
-                if ($errorBody.code -cmatch '^[A-Z_]{1,80}$') { $code = $errorBody.code }
+                if (Test-AllowedCharacters $errorBody.code 'ABCDEFGHIJKLMNOPQRSTUVWXYZ_' 1 80) { $code = $errorBody.code }
             } catch { $code = 'INVALID_ERROR_RESPONSE' }
         }
         return @{ ok = $false; status = $status; code = $code }
@@ -48,8 +63,12 @@ try {
     $report.system.freeMemoryMb = [int][Math]::Round($os.FreePhysicalMemory / 1024)
     $report.system.gpu = @(Get-CimInstance Win32_VideoController | ForEach-Object { $_.Name })
     $report.system.hardwareAvailable = $true
-    $backendProcess = Get-CimInstance Win32_Process -Filter "Name = 'java.exe'" | Where-Object { $_.CommandLine -like '*ru.boltunya.MainKt*' } | Select-Object -First 1
-    if ($backendProcess.ExecutablePath -match 'boltunya-(\d+\.\d+\.\d+)') { $report.application.version = $Matches[1] }
+    $backendProcess = Get-CimInstance Win32_Process -Filter "Name = 'java.exe'" | Where-Object { $_.CommandLine -like '*ru.aigram.MainKt*' } | Select-Object -First 1
+    $releaseDirectory = @(if ($backendProcess.ExecutablePath) { $backendProcess.ExecutablePath.Split([char[]]'\/') | Where-Object { $_.StartsWith('aigram-') -or $_.StartsWith('boltunya-') } | Select-Object -Last 1 })
+    if ($releaseDirectory.Count) {
+        $parts = $releaseDirectory[0].Split('-')
+        if ($parts.Count -ge 2 -and (Test-ReleaseVersion $parts[1])) { $report.application.version = $parts[1] }
+    }
 } catch { $report.findings += 'HARDWARE_INFO_UNAVAILABLE' }
 
 $base = ''
@@ -63,7 +82,7 @@ if (Test-Path -LiteralPath $descriptor) {
         $keyParameter = @($uri.Query.TrimStart('?').Split('&') | Where-Object { $_.StartsWith('key=') })
         if ($keyParameter.Count -ne 1) { throw 'Invalid local descriptor' }
         $key = [Uri]::UnescapeDataString($keyParameter[0].Substring(4))
-        if ($key -notmatch '^[a-zA-Z0-9_-]+$') { throw 'Invalid local descriptor' }
+        if (-not (Test-AllowedCharacters $key 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-' 1 256)) { throw 'Invalid local descriptor' }
         $base = $uri.GetLeftPart([UriPartial]::Authority)
         $headers = @{ Cookie = "tiho=$key" }
         $result = Invoke-DiagnosticRequest "$base/api/state" $headers
@@ -120,7 +139,7 @@ try {
     $report.ollama.localEndpoint = $ollamaUri.Scheme -eq 'http' -and $ollamaUri.Host -in @('127.0.0.1', 'localhost', '[::1]') -and -not $ollamaUri.UserInfo
     if ($report.ollama.localEndpoint) {
         $version = Invoke-DiagnosticRequest "$ollamaUrl/api/version"
-        if ($version.ok -and $version.data.version -match '^\d+\.\d+\.\d+([-+][a-zA-Z0-9.-]+)?$') { $report.ollama.version = $version.data.version }
+        if ($version.ok -and (Test-ReleaseVersion $version.data.version)) { $report.ollama.version = $version.data.version }
         $tags = Invoke-DiagnosticRequest "$ollamaUrl/api/tags"
         if ($tags.ok) {
             $report.ollama.serverModels = @($tags.data.models | ForEach-Object { if ($_.name) { $_.name } elseif ($_.model) { $_.model } } | Sort-Object -Unique)

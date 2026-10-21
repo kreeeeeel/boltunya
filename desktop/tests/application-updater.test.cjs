@@ -34,11 +34,11 @@ test('records only a safe failure code and keeps the previous app launchable', a
     try {
         assert.equal(await updater.run('2.6.17', 'app.exe', false, value => statuses.push(value)), false);
         const text = await readFile(join(directory, 'last-error.json'), 'utf8');
-        assert.doesNotMatch(text, /secret|private path/);
+        assert.ok(!text.includes('secret') && !text.includes('private path'));
         const error = JSON.parse(text);
         assert.equal(error.code, 'UPDATE_CHECK_FAILED');
         assert.equal(error.stage, 'check');
         assert.ok(Number.isFinite(Date.parse(error.failedAt)));
-        assert.match(statuses.at(-1).message, /Не удалось проверить/);
+        assert.ok(statuses.at(-1).message.includes('Не удалось проверить'));
     } finally { await rm(directory, {recursive: true, force: true}); }
 });

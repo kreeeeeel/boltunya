@@ -1,4 +1,5 @@
 import {BrowserWindow, Tray, screen} from 'electron';
+import {APP_NAME} from './brand';
 
 const MENU_WIDTH = 226;
 const MENU_HEIGHT = 146;
@@ -12,7 +13,7 @@ export class TrayController {
     async connect(url: string): Promise<void> {
         if (this.icon) return;
         this.icon = new Tray(this.image);
-        this.icon.setToolTip('Болтунья');
+        this.icon.setToolTip(APP_NAME);
         this.icon.on('double-click', this.open);
         this.menu = new BrowserWindow({
             width: MENU_WIDTH, height: MENU_HEIGHT, frame: false, resizable: false, show: false,

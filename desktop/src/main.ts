@@ -9,8 +9,10 @@ import {UpdateWindow} from './update-window';
 import {ApplicationUpdater} from './application-updater';
 import {ReleaseClient} from './release-client';
 import {PortableUpdate} from './portable-update';
+import {APP_ID, APP_NAME, ICON_FILE} from './brand';
+import {DesktopProfile} from './profile';
+import {MediaViewer} from './media-viewer';
 
-const APP_NAME = 'Болтунья';
 const STATE_INTERVAL_MS = 1500;
 type State = {telegram: {state: string}; settings: {paused: boolean; closeToTray: boolean; launchAtLogin: boolean}};
 let main: BrowserWindow | undefined;
@@ -22,50 +24,52 @@ let backgroundStartup = process.argv.includes('--startup');
 let decidingClose = false;
 let timer: ReturnType<typeof setTimeout> | undefined;
 let updateWindow: UpdateWindow | undefined;
+let mediaViewer: MediaViewer | undefined;
+let portableUpdate: PortableUpdate | undefined;
+let updateConfirmed = false;
+let handlingStartupFailure = false;
+const updateSession = process.argv.find(argument => argument.startsWith('--update-session='))?.slice('--update-session='.length);
 const startupRegistration = new StartupRegistration();
 
+const profile = new DesktopProfile(process.env, app.getPath('appData'));
 app.setName(APP_NAME);
-const isolatedDirectory = process.env.BOLTUNYA_DATA_DIR ?? process.env.TIHO_DATA_DIR;
-if (isolatedDirectory) {
-    const userData = join(isolatedDirectory, 'desktop');
-    mkdirSync(userData, {recursive: true});
-    app.setPath('userData', userData);
-}
+app.setAppUserModelId(APP_ID);
+const userData = profile.userDataDirectory();
+mkdirSync(userData, {recursive: true});
+app.setPath('userData', userData);
 if (!app.requestSingleInstanceLock()) app.quit();
 else {
     app.on('second-instance', (_event, commandLine) => { if (!commandLine.includes('--startup')) show(); });
     app.on('activate', () => show());
-    void app.whenReady().then(start).catch(async error => {
-        dialog.showErrorBox(APP_NAME, error instanceof Error ? error.message : 'Не удалось запустить приложение.');
-        await shutdown();
-    });
+    void app.whenReady().then(start).catch(startupFailure);
 }
 
 function show(): void { if (!main || main.isDestroyed()) return; backgroundStartup = false; if (main.isMinimized()) main.restore(); main.show(); main.focus(); tray?.hide(); }
-function windowState() { return {available: true, maximized: main?.isMaximized() ?? false, visible: main?.isVisible() ?? false, minimized: main?.isMinimized() ?? false}; }
+function windowState() { return {available: true, role: 'main', maximized: main?.isMaximized() ?? false, fullscreen: false, visible: main?.isVisible() ?? false, minimized: main?.isMinimized() ?? false}; }
 
 async function start(): Promise<void> {
-    const directory = process.env.BOLTUNYA_DATA_DIR ?? process.env.TIHO_DATA_DIR ?? join(app.getPath('appData'), '..', 'Local', 'Tiho');
+    const directory = profile.dataDirectory();
     const startup = process.argv.includes('--startup');
     const preload = join(__dirname, 'preload.js');
-    const image = app.isPackaged ? join(process.resourcesPath, 'boltunya.png') : resolve('assets/boltunya.png');
-    let portableUpdate: PortableUpdate | undefined;
-    if (app.isPackaged && process.env.BOLTUNYA_SKIP_UPDATE_CHECK !== 'true') {
+    const image = app.isPackaged ? join(process.resourcesPath, ICON_FILE) : resolve('assets', ICON_FILE);
+    if (app.isPackaged) portableUpdate = new PortableUpdate(join(process.resourcesPath, 'apply-update.ps1'), join(directory, 'desktop', 'updates'));
+    if (process.argv.includes('--updated') && updateSession) await portableUpdate?.started(process.env.PORTABLE_EXECUTABLE_FILE ?? '', updateSession);
+    if (app.isPackaged && (process.env.AIGRAM_SKIP_UPDATE_CHECK ?? process.env.BOLTUNYA_SKIP_UPDATE_CHECK) !== 'true') {
         updateWindow = new UpdateWindow();
         await updateWindow.open(join(__dirname, 'updater-preload.js'), image, app.getVersion());
         const updatesDirectory = join(directory, 'desktop', 'updates');
-        portableUpdate = new PortableUpdate(join(process.resourcesPath, 'apply-update.ps1'), updatesDirectory);
         if (process.argv.includes('--update-failed')) updateWindow?.update({message: 'Не удалось установить обновление. Запускаем предыдущую версию', version: app.getVersion()});
         else if (!process.argv.includes('--updated')) {
-            const updater = new ApplicationUpdater(new ReleaseClient(), portableUpdate, updatesDirectory);
+            const updater = new ApplicationUpdater(new ReleaseClient(), portableUpdate!, updatesDirectory);
             if (await updater.run(app.getVersion(), process.env.PORTABLE_EXECUTABLE_FILE ?? '', startup, value => updateWindow?.update(value))) { await shutdown(); return; }
         } else updateWindow?.update({message: 'Обновление установлено. Запускаем приложение', version: app.getVersion()});
     }
     backend = new Backend(app.isPackaged, process.resourcesPath, directory);
     const url = await backend.start(startup);
-    backend.onExit(() => void shutdown());
+    backend.onExit(() => { if (!updateConfirmed && process.argv.includes('--updated')) void startupFailure(new Error('Updated backend exited before readiness')); else void shutdown(); });
     state = await backend.request<State>('/api/state');
     tray = new TrayController(image, preload, show);
+    mediaViewer = new MediaViewer(preload, image, openExternal);
     main = new BrowserWindow({
         width: 1320, height: 860, minWidth: 880, minHeight: 580, frame: false, show: false,
         fullscreenable: false, backgroundColor: '#f3f5f7', title: APP_NAME, icon: image,
@@ -93,7 +97,11 @@ async function start(): Promise<void> {
     main.webContents.setWindowOpenHandler(({url: target}) => { openExternal(target); return {action: 'deny'}; });
     main.webContents.on('will-navigate', (event, target) => { if (new URL(target).origin !== new URL(url).origin) { event.preventDefault(); openExternal(target); } });
     main.webContents.session.setPermissionRequestHandler((contents, permission, callback) => callback(contents.id === main?.webContents.id && permission === 'clipboard-sanitized-write'));
-    ipcMain.handle('window:state', event => { if (event.sender.id !== main?.webContents.id) return {}; return windowState(); });
+    ipcMain.handle('window:state', event => {
+        if (mediaViewer?.owns(event.sender.id)) return mediaViewer.state();
+        if (event.sender.id !== main?.webContents.id) return {};
+        return windowState();
+    });
     ipcMain.handle('window:sync', async event => { if (event.sender.id === main?.webContents.id) await refresh(url); });
     ipcMain.handle('window:quit', event => { if (event.sender.id === main?.webContents.id) void shutdown(); });
     const activeBackend = backend;
@@ -103,11 +111,19 @@ async function start(): Promise<void> {
         await storage.openLocation(id);
     });
     ipcMain.handle('window:action', (event, action: string) => {
+        if (mediaViewer?.owns(event.sender.id)) { mediaViewer.action(action); return; }
         if (event.sender.id !== main?.webContents.id) return;
         if (action === 'show') show();
         else if (action === 'minimize') main.minimize();
         else if (action === 'maximize') { if (main.isMaximized()) main.unmaximize(); else main.maximize(); }
         else if (action === 'close') main.close();
+    });
+    ipcMain.handle('media:open', async (event, request: unknown) => {
+        if (event.sender.id !== main?.webContents.id) throw new Error('Media viewer cannot be opened from this window');
+        await mediaViewer?.open(new URL(url).origin, request);
+    });
+    ipcMain.handle('media:close', event => {
+        if (event.sender.id === main?.webContents.id || mediaViewer?.owns(event.sender.id)) mediaViewer?.close();
     });
     ipcMain.handle('tray:action', async (event, action: string) => {
         if (!tray?.owns(event.sender.id)) return;
@@ -121,11 +137,20 @@ async function start(): Promise<void> {
     await main.webContents.executeJavaScript("history.replaceState(null, '', location.pathname)");
     await refresh(url);
     if (process.argv.includes('--updated')) {
-        try { await portableUpdate?.confirm(process.env.PORTABLE_EXECUTABLE_FILE ?? ''); }
-        catch (error) { console.error('Could not confirm the running application update:', error instanceof Error ? error.name : 'unknown error'); }
+        if (!await portableUpdate?.confirm(process.env.PORTABLE_EXECUTABLE_FILE ?? '', updateSession)) throw new Error('Could not confirm the running application update');
     }
+    updateConfirmed = true;
     if (!startup) show();
     updateWindow?.close();
+}
+
+async function startupFailure(error: unknown): Promise<void> {
+    if (handlingStartupFailure || quitting) return;
+    handlingStartupFailure = true;
+    console.error('Application startup failed:', error instanceof Error ? error.name : 'unknown error');
+    const recovering = process.argv.includes('--updated') && !updateConfirmed && await portableUpdate?.recover(process.env.PORTABLE_EXECUTABLE_FILE ?? '', updateSession);
+    if (!recovering) dialog.showErrorBox(APP_NAME, error instanceof Error ? error.message : 'Не удалось запустить приложение.');
+    await shutdown();
 }
 
 function openExternal(url: string): void { try { if (['https:', 'http:', 'tg:', 'mailto:', 'tel:'].includes(new URL(url).protocol)) void shell.openExternal(url); } catch { console.error('Rejected malformed external link'); } }
@@ -151,6 +176,7 @@ async function shutdown(): Promise<void> {
     main?.hide();
     updateWindow?.close();
     tray?.close();
+    mediaViewer?.close();
     await backend?.close();
     main?.destroy();
     app.quit();

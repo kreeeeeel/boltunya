@@ -3,7 +3,8 @@ $ErrorActionPreference='Stop'
 $projectRoot=Split-Path -Parent $PSScriptRoot
 Push-Location $projectRoot
 try {
-    if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw 'Version must be major.minor.patch' }
+    $parsedVersion = $null
+    if (-not [Version]::TryParse($Version, [ref]$parsedVersion) -or $parsedVersion.Build -lt 0 -or $parsedVersion.Revision -ge 0 -or $Version.Split('.').Count -ne 3 -or @($Version.Replace('.', '').ToCharArray() | Where-Object { -not '0123456789'.Contains([string]$_) }).Count -gt 0) { throw 'Version must be major.minor.patch' }
     $compileDirectory=if([System.IO.Path]::IsPathRooted($OutputDirectory)) {
         [System.IO.Path]::GetFullPath($OutputDirectory)
     } else {
@@ -17,7 +18,7 @@ try {
         }
     }
     if (-not $SkipChecks) {
-        node.exe --test scripts/tests/diagnose-ai.test.cjs
+        node.exe --test scripts/tests/diagnose-ai.test.cjs scripts/tests/render-icon.test.cjs
         if ($LASTEXITCODE -ne 0) { throw 'Diagnostic script checks failed' }
         npm.cmd run check --prefix web
         if ($LASTEXITCODE -ne 0) { throw 'Frontend checks failed' }
@@ -28,7 +29,7 @@ try {
         & ./gradlew.bat check --no-daemon
         if ($LASTEXITCODE -ne 0) { throw 'Kotlin checks failed' }
     }
-    & ./scripts/create-icon.ps1 -OutputPath (Join-Path $projectRoot 'desktop/assets/boltunya.ico') -PngPath (Join-Path $projectRoot 'desktop/assets/boltunya.png')
+    & ./scripts/create-icon.ps1 -OutputPath (Join-Path $projectRoot 'desktop/assets/aigram.ico') -PngPath (Join-Path $projectRoot 'desktop/assets/aigram.png')
     & ./gradlew.bat :backend:prepareDesktop "-PappVersion=$Version" --no-daemon
     if ($LASTEXITCODE -ne 0) { throw 'Backend and web build failed' }
     $runtime=Join-Path $projectRoot 'build/runtime'
@@ -37,18 +38,18 @@ try {
         & (Join-Path $jdkBin 'jlink.exe') --output $runtime --strip-debug --no-header-files --no-man-pages --add-modules java.base,java.desktop,java.net.http,jdk.httpserver,jdk.crypto.ec,java.logging,java.management,jdk.management,jdk.unsupported,java.naming,java.sql,jdk.charsets
         if ($LASTEXITCODE -ne 0) { throw 'Bundled Java runtime build failed' }
     }
-    $unpackName="boltunya-$Version-" + [guid]::NewGuid().ToString('N').Substring(0,12)
+    $unpackName="aigram-$Version-" + [guid]::NewGuid().ToString('N').Substring(0,12)
     npm.cmd run package --prefix desktop -- --config.extraMetadata.version=$Version "--config.portable.unpackDirName=$unpackName" "--config.directories.output=$compileDirectory" --publish never
     if ($LASTEXITCODE -ne 0) { throw 'Electron portable build failed' }
-    $executable=Join-Path $compileDirectory 'Болтунья.exe'
-    (Get-FileHash -Algorithm SHA256 -LiteralPath $executable).Hash.ToLowerInvariant() + '  Болтунья.exe' | Set-Content -Encoding utf8 (Join-Path $compileDirectory 'SHA256.txt')
+    $executable=Join-Path $compileDirectory 'Aigram.exe'
+    (Get-FileHash -Algorithm SHA256 -LiteralPath $executable).Hash.ToLowerInvariant() + '  Aigram.exe' | Set-Content -Encoding utf8 (Join-Path $compileDirectory 'SHA256.txt')
     if(-not $SkipShortcut) {
         $shortcutShell=New-Object -ComObject WScript.Shell
-        $shortcut=$shortcutShell.CreateShortcut((Join-Path $projectRoot 'Болтунья.lnk'))
+        $shortcut=$shortcutShell.CreateShortcut((Join-Path $projectRoot 'Aigram.lnk'))
         $shortcut.TargetPath=$executable
         $shortcut.WorkingDirectory=$compileDirectory
         $shortcut.IconLocation=$executable + ',0'
-        $shortcut.Description='Болтунья — Telegram'
+        $shortcut.Description='Aigram — Telegram'
         $shortcut.Save()
     }
     Write-Output "Application: $executable"

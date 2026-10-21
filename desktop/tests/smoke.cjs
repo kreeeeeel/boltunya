@@ -3,7 +3,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 (async () => {
  const root=path.resolve(__dirname,'../..'), directory=path.join(root,'build','electron-smoke-'+Date.now());
- const application=await electron.launch({executablePath:process.env.BOLTUNYA_TEST_EXECUTABLE || path.join(root,'complie/win-unpacked/Болтунья.exe'),env:{...process.env,BOLTUNYA_DATA_DIR:directory,BOLTUNYA_OLLAMA_URL:'http://127.0.0.1:1',BOLTUNYA_SKIP_UPDATE_CHECK:'true'},timeout:60000});
+ const application=await electron.launch({executablePath:process.env.AIGRAM_TEST_EXECUTABLE || process.env.BOLTUNYA_TEST_EXECUTABLE || path.join(root,'complie/win-unpacked/Aigram.exe'),env:{...process.env,BOLTUNYA_DATA_DIR:directory,BOLTUNYA_OLLAMA_URL:'http://127.0.0.1:1',BOLTUNYA_SKIP_UPDATE_CHECK:'true'},timeout:60000});
  try {
   const page=await application.firstWindow();
   await page.getByRole('button',{name:'Подключить Telegram',exact:true}).waitFor({timeout:45000});
@@ -43,7 +43,7 @@ const path = require('node:path');
  const startupDirectory=directory+'-startup';
  await fs.mkdir(startupDirectory,{recursive:true});
  await fs.writeFile(path.join(startupDirectory,'settings.json'),JSON.stringify({resumeOnStartup:true}));
- const startupApp=await electron.launch({executablePath:process.env.BOLTUNYA_TEST_EXECUTABLE || path.join(root,'complie/win-unpacked/Болтунья.exe'),args:['--startup'],env:{...process.env,BOLTUNYA_DATA_DIR:startupDirectory,BOLTUNYA_OLLAMA_URL:'http://127.0.0.1:1',BOLTUNYA_SKIP_UPDATE_CHECK:'true'},timeout:60000});
+ const startupApp=await electron.launch({executablePath:process.env.AIGRAM_TEST_EXECUTABLE || process.env.BOLTUNYA_TEST_EXECUTABLE || path.join(root,'complie/win-unpacked/Aigram.exe'),args:['--startup'],env:{...process.env,BOLTUNYA_DATA_DIR:startupDirectory,BOLTUNYA_OLLAMA_URL:'http://127.0.0.1:1',BOLTUNYA_SKIP_UPDATE_CHECK:'true'},timeout:60000});
  try {
   const startupPage=await startupApp.firstWindow();
   await startupPage.getByRole('button',{name:'Подключить Telegram',exact:true}).waitFor({timeout:45000});

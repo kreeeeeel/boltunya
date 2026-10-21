@@ -1,0 +1,11 @@
+const {app, dialog} = require('electron');
+const {join} = require('node:path');
+const {writeFileSync} = require('node:fs');
+const root = process.env.BOLTUNYA_UPDATER_ROOT;
+Object.defineProperty(app, 'isPackaged', {value: true});
+Object.defineProperty(process, 'resourcesPath', {value: join(root, 'desktop/assets')});
+const {Backend} = require(join(root, 'desktop/dist/backend.js'));
+Backend.prototype.start = async () => { throw new Error('Synthetic updated backend startup failure'); };
+Backend.prototype.close = async () => {};
+dialog.showErrorBox = () => writeFileSync(process.env.AIGRAM_SYNTHETIC_DIALOG, 'Unexpected fatal dialog');
+require(join(root, 'desktop/dist/main.js'));

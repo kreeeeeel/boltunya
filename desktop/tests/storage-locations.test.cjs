@@ -15,8 +15,8 @@ test('opens only a fresh allowlisted directory from the authenticated backend', 
         await locations.openLocation('memory');
         assert.deepEqual(opened, [await realpath(directory), await realpath(directory)]);
         assert.equal(requests, 2);
-        await assert.rejects(locations.openLocation('../../Windows'), /Unknown storage/);
-        await assert.rejects(locations.openLocation({id: 'memory'}), /Unknown storage/);
+        await assert.rejects(locations.openLocation('../../Windows'), error => error.message.includes('Unknown storage'));
+        await assert.rejects(locations.openLocation({id: 'memory'}), error => error.message.includes('Unknown storage'));
         assert.equal(requests, 2);
     } finally { await rm(directory, {recursive: true, force: true}); }
 });
@@ -33,7 +33,7 @@ test('rejects external, unavailable, relative and file paths', async () => {
             {path: file, kind: 'directory', openable: true},
         ]) {
             const locations = new StorageLocations(async () => ({locations: [{id: 'memory', ...entry}]}), async () => { throw new Error('Must not open'); });
-            await assert.rejects(locations.openLocation('memory'), /unavailable|not a directory/);
+            await assert.rejects(locations.openLocation('memory'), error => ['unavailable', 'not a directory'].some(text => error.message.includes(text)));
         }
     } finally { await rm(directory, {recursive: true, force: true}); }
 });

@@ -13,6 +13,7 @@ const DOWNLOAD_TIMEOUT_MS = 10 * 60_000;
 const MAX_RELEASE_BYTES = 1_073_741_824;
 const MIN_RELEASE_BYTES = 1_048_576;
 const MAX_REDIRECTS = 5;
+const EXECUTABLE_NAMES = ['Aigram.exe', 'Boltunya.exe'];
 
 type Asset = {name: string; size: number; url: string; browser_download_url: string};
 type Release = {tag_name: string; draft: boolean; prerelease: boolean; assets: Asset[]};
@@ -27,9 +28,9 @@ export class ReleaseClient {
         const response = await this.fetch(`${API_ORIGIN}/repos/${REPOSITORY}/releases/latest`, 'application/vnd.github+json', CHECK_TIMEOUT_MS);
         if (!response.ok) throw new Error(`Update check failed (HTTP ${response.status})`);
         const release = await response.json() as Release;
-        const version = release.tag_name?.replace(/^v/u, '');
+        const version = release.tag_name?.startsWith('v') ? release.tag_name.slice(1) : release.tag_name;
         if (release.draft || release.prerelease || !this.newer(version, currentVersion)) return undefined;
-        const executable = release.assets?.find(asset => asset.name === 'Boltunya.exe');
+        const executable = EXECUTABLE_NAMES.map(name => release.assets?.find(asset => asset.name === name)).find(asset => asset !== undefined);
         const checksum = release.assets?.find(asset => asset.name === 'SHA256.txt');
         if (!executable || !checksum || executable.size < MIN_RELEASE_BYTES || executable.size > MAX_RELEASE_BYTES) throw new Error('Update release is incomplete');
         return {version, executable, checksum};
@@ -40,7 +41,7 @@ export class ReleaseClient {
         if (!checksumResponse.ok) throw new Error(`Update checksum failed (HTTP ${checksumResponse.status})`);
         const checksumText = await checksumResponse.text();
         if (checksumText.length > 16_384) throw new Error('Update checksum is too large');
-        const expected = checksumText.replace(/^\uFEFF/u, '').split(/\r?\n/u).map(line => /^([a-f\d]{64})\s+\*?Boltunya\.exe\s*$/iu.exec(line)).find(Boolean)?.[1]?.toLowerCase();
+        const expected = this.checksum(checksumText, update.executable.name);
         if (!expected) throw new Error('Update checksum is invalid');
         await mkdir(directory, {recursive: true});
         const temporary = join(directory, `${update.version}.download`);
@@ -81,17 +82,37 @@ export class ReleaseClient {
     private assetUrl(asset: Asset): string { return asset.browser_download_url; }
 
     private newer(candidate: string, current: string): boolean {
-        if (!/^\d+\.\d+\.\d+$/u.test(candidate) || !/^\d+\.\d+\.\d+$/u.test(current)) return false;
-        const a = candidate.split('.').map(Number), b = current.split('.').map(Number);
+        const a = this.versionParts(candidate), b = this.versionParts(current);
+        if (!a || !b) return false;
         const different = a.findIndex((part, index) => part !== b[index]);
         return different >= 0 && a[different] > b[different];
+    }
+
+    private versionParts(value: unknown): number[] | undefined {
+        if (typeof value !== 'string') return undefined;
+        const parts = value.split('.');
+        if (parts.length !== 3 || !parts.every(part => part.length > 0 && Array.from(part).every(char => char >= '0' && char <= '9'))) return undefined;
+        const numbers = parts.map(Number);
+        return numbers.every(Number.isSafeInteger) ? numbers : undefined;
+    }
+
+    private checksum(value: string, filename: string): string | undefined {
+        const text = value.startsWith('\uFEFF') ? value.slice(1) : value;
+        return text.split('\n').map(line => {
+            const digest = line.slice(0, 64);
+            if (digest.length !== 64 || !Array.from(digest.toLowerCase()).every(char => char >= '0' && char <= '9' || char >= 'a' && char <= 'f')) return undefined;
+            if (!line[64] || line[64].trim() !== '') return undefined;
+            const remainder = line.slice(64).trim();
+            const name = remainder.startsWith('*') ? remainder.slice(1) : remainder;
+            return name === filename ? digest.toLowerCase() : undefined;
+        }).find(digest => digest !== undefined);
     }
 
     private async fetch(target: string, accept: string, timeout: number, redirects = 0): Promise<Response> {
         const url = new URL(target);
         if (url.protocol !== 'https:' || !DOWNLOAD_HOSTS.has(url.hostname) || url.username || url.password) throw new Error('Update URL is not trusted');
         const response = await this.request(url, {
-            headers: {Accept: accept, 'User-Agent': 'Boltunya-Updater'},
+            headers: {Accept: accept, 'User-Agent': 'Aigram-Updater'},
             signal: AbortSignal.timeout(timeout), redirect: 'manual',
         });
         if ([301, 302, 303, 307, 308].includes(response.status)) {

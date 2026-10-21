@@ -1,9 +1,9 @@
 {
-    "name": "boltunya-desktop",
+    "name": "aigram-desktop",
     "version": "2.6.0",
     "private": true,
-    "description": "Болтунья — Telegram с локальным ИИ",
-    "author": "Boltunya",
+    "description": "Aigram — Telegram с локальным ИИ",
+    "author": "Aigram",
     "main": "dist/main.js",
     "scripts": {
         "build": "tsc",
@@ -12,7 +12,8 @@
         "start": "npm run build && electron .",
         "package": "npm run build && electron-builder --win portable --x64",
         "test:smoke": "node tests/smoke.cjs",
-        "test:updater": "npm run build && node tests/updater-smoke.cjs && node tests/startup-updater-smoke.cjs"
+        "test:updater": "npm run build && node tests/updater-smoke.cjs && node tests/startup-updater-smoke.cjs && node tests/update-recovery-smoke.cjs",
+        "test:media": "npm run build && node tests/media-viewer-smoke.cjs"
     },
     "devDependencies": {
         "electron": "44.7.2",
@@ -21,8 +22,8 @@
         "@types/node": "24.10.0"
     },
     "build": {
-        "appId": "ru.boltunya.desktop",
-        "productName": "Болтунья",
+        "appId": "ru.aigram.desktop",
+        "productName": "Aigram",
         "asar": true,
         "directories": {
             "output": "../complie",
@@ -42,8 +43,8 @@
                 "to": "runtime"
             },
             {
-                "from": "assets/boltunya.png",
-                "to": "boltunya.png"
+                "from": "assets/aigram.png",
+                "to": "aigram.png"
             },
             {
                 "from": "assets/apply-update.ps1",
@@ -59,13 +60,13 @@
             }
         ],
         "win": {
-            "icon": "assets/boltunya.ico",
-            "artifactName": "Болтунья.exe",
+            "icon": "assets/aigram.ico",
+            "artifactName": "Aigram.exe",
             "signAndEditExecutable": true
         },
         "portable": {
             "requestExecutionLevel": "user",
-            "unpackDirName": "boltunya-2.6.0"
+            "unpackDirName": "aigram-2.6.0"
         }
     }
 }
