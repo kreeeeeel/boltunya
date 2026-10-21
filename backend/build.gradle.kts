@@ -1,10 +1,10 @@
 plugins {
-    kotlin("jvm") version "2.3.21"
-    kotlin("plugin.serialization") version "2.3.21"
-    kotlin("plugin.spring") version "2.3.21"
-    id("org.springframework.boot") version "4.1.1"
+    kotlin("jvm")
+    kotlin("plugin.serialization")
+    kotlin("plugin.spring")
+    id("org.springframework.boot")
     application
-    id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 group = "ru.aigram"

@@ -1,0 +1,36 @@
+{
+    "name": "@aigram/api-client",
+    "version": "2.6.0",
+    "description": "Generated Fetch API client for the Aigram local API",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./index.js",
+    "types": "./index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./index.d.ts",
+            "import": "./index.js"
+        }
+    },
+    "files": [
+        "*.js",
+        "*.d.ts",
+        "apis/",
+        "models/",
+        "THIRD_PARTY_NOTICES.md",
+        "OPENAPI-GENERATOR-LICENSE.txt"
+    ],
+    "sideEffects": false,
+    "engines": {
+        "node": ">=22.0.0"
+    },
+    "scripts": {
+        "typecheck": "tsc --project tsconfig.json --noEmit",
+        "build": "node scripts/build.mjs",
+        "pack": "node scripts/pack.mjs",
+        "test:consumer": "node --test tests/package-consumer.test.mjs"
+    },
+    "devDependencies": {
+        "typescript": "5.9.3"
+    }
+}

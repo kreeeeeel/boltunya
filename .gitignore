@@ -14,7 +14,7 @@ launch.url
 build/
 dist/
 .data/
-web/node_modules/
+node_modules/
 web/.next/
 web/out/
 web/playwright-report/
@@ -26,7 +26,6 @@ web/.env*.local
 complie/
 backend/build/
 desktop/dist/
-desktop/node_modules/
 desktop/assets/*.ico
 desktop/assets/*.png
 

@@ -1,0 +1,26 @@
+package {{packageName}}.infrastructure
+
+import java.util.stream.Collectors
+import java.util.stream.StreamSupport
+
+{{#nonPublicApi}}internal {{/nonPublicApi}}{{^nonPublicApi}}{{#explicitApi}}public {{/explicitApi}}{{/nonPublicApi}}typealias MultiValueMap = MutableMap<String,List<String>>
+
+{{#nonPublicApi}}internal {{/nonPublicApi}}{{^nonPublicApi}}{{#explicitApi}}public {{/explicitApi}}{{/nonPublicApi}}fun collectionDelimiter(collectionFormat: String): String = when(collectionFormat) {
+    "csv" -> ","
+    "tsv" -> "\t"
+    "pipe" -> "|"
+    "space" -> " "
+    else -> ""
+}
+
+{{#nonPublicApi}}internal {{/nonPublicApi}}{{^nonPublicApi}}{{#explicitApi}}public {{/explicitApi}}{{/nonPublicApi}}val defaultMultiValueConverter: (item: Any?) -> String = { item -> "$item" }
+
+{{#nonPublicApi}}internal {{/nonPublicApi}}{{^nonPublicApi}}{{#explicitApi}}public {{/explicitApi}}{{/nonPublicApi}}fun <T : Any?> toMultiValue(items: Array<T>, collectionFormat: String, map: (item: T) -> String = defaultMultiValueConverter): List<String>
+        = toMultiValue(items.asIterable(), collectionFormat, map)
+
+{{#nonPublicApi}}internal {{/nonPublicApi}}{{^nonPublicApi}}{{#explicitApi}}public {{/explicitApi}}{{/nonPublicApi}}fun <T : Any?> toMultiValue(items: Iterable<T>, collectionFormat: String, map: (item: T) -> String = defaultMultiValueConverter): List<String> {
+    return when(collectionFormat) {
+        "multi" -> StreamSupport.stream(items.spliterator(), false).map(map).toList()
+        else -> listOf(StreamSupport.stream(items.spliterator(), false).map(map).collect(Collectors.joining(collectionDelimiter(collectionFormat))))
+    }
+}

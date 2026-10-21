@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "lib": ["ES2022", "DOM", "DOM.Iterable"],
+        "module": "ES2022",
+        "moduleResolution": "Bundler",
+        "rootDir": "build/generated/openapi/src",
+        "outDir": "build/dist",
+        "declaration": true,
+        "strict": true,
+        "skipLibCheck": false,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "types": []
+    },
+    "include": ["build/generated/openapi/src/**/*.ts"]
+}

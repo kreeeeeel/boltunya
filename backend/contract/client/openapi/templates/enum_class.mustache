@@ -1,0 +1,68 @@
+import com.fasterxml.jackson.annotation.JsonCreator
+{{#enumUnknownDefaultCase}}
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue
+{{/enumUnknownDefaultCase}}
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonValue
+import kotlin.jvm.JvmStatic
+
+/**
+ * {{{description}}}
+ *
+ * Values: {{#allowableValues}}{{#enumVars}}{{&name}}{{^-last}},{{/-last}}{{/enumVars}}{{/allowableValues}}
+ */
+{{#nonPublicApi}}internal {{/nonPublicApi}}{{^nonPublicApi}}{{#explicitApi}}public {{/explicitApi}}{{/nonPublicApi}}enum class {{classname}}(@get:JsonValue val value: {{{dataType}}}) {
+{{#allowableValues}}{{#enumVars}}
+    {{#enumDescription}}
+    /** {{.}} */
+    {{/enumDescription}}
+    @JsonProperty(value = {{#lambda.doublequote}}{{{value}}}{{/lambda.doublequote}}){{#enumUnknownDefaultCase}}{{#-last}} @JsonEnumDefaultValue{{/-last}}{{/enumUnknownDefaultCase}}
+    {{#isArray}}{{#isList}}{{&name}}(listOf({{{value}}})){{/isList}}{{^isList}}{{&name}}(arrayOf({{{value}}})){{/isList}}{{/isArray}}{{^isArray}}{{#name}}{{^isEmpty}}{{&name}}{{/isEmpty}}{{#isEmpty}}_{{/isEmpty}}{{/name}}({{{value}}}){{/isArray}}{{^-last}},{{/-last}}{{#-last}};{{/-last}}
+{{/enumVars}}{{/allowableValues}}
+
+    override fun toString(): kotlin.String = value{{^isString}}.toString(){{/isString}}
+
+    companion object {
+        fun encode(data: kotlin.Any?): kotlin.String? = if (data is {{classname}}) {
+            "$data"
+        } else {
+            null
+        }
+
+        @JvmStatic
+        @JsonCreator
+        fun decode(data: kotlin.Any?): {{classname}}{{#isNullable}}?{{/isNullable}} {
+            if (data == null) {
+{{#isNullable}}
+                return null
+{{/isNullable}}
+{{^isNullable}}
+                throw IllegalArgumentException("Value for {{classname}} cannot be null")
+{{/isNullable}}
+            }
+            val result = decodeOrNull(data)
+            if (result != null) {
+                return result
+            }
+{{#isNullable}}
+            return null
+{{/isNullable}}
+{{^isNullable}}{{#enumUnknownDefaultCase}}
+            return {{#allowableValues}}{{#enumVars}}{{#-last}}{{&name}}{{/-last}}{{/enumVars}}{{/allowableValues}}
+{{/enumUnknownDefaultCase}}{{^enumUnknownDefaultCase}}
+            throw IllegalArgumentException("Unknown {{classname}} value: $data")
+{{/enumUnknownDefaultCase}}{{/isNullable}}
+        }
+
+        @JvmStatic
+        fun decodeOrNull(data: kotlin.Any?): {{classname}}? {
+            if (data == null) {
+                return null
+            }
+            val normalizedData = "$data".lowercase()
+            return entries.stream().filter { value ->
+                data == value || normalizedData == "$value".lowercase()
+            }.findFirst().orElse(null)
+        }
+    }
+}

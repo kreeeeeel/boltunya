@@ -1,0 +1,20 @@
+/**
+* {{{description}}}
+* Values: {{#allowableValues}}{{#enumVars}}{{&name}}{{^-last}},{{/-last}}{{/enumVars}}{{/allowableValues}}
+*/
+enum class {{classname}}(@get:JsonValue {{#useEnumValueInterface}}override {{/useEnumValueInterface}}val value: {{dataType}}) {{#vendorExtensions.x-kotlin-implements}}{{#-first}}: {{{.}}}{{/-first}}{{^-first}}, {{{.}}}{{/-first}} {{/vendorExtensions.x-kotlin-implements}}{
+{{#allowableValues}}{{#enumVars}}
+    {{&name}}({{{value}}}){{^-last}},{{/-last}}{{/enumVars}}{{/allowableValues}};
+
+    companion object {
+        @JvmStatic
+        @JsonCreator
+        fun forValue(value: {{dataType}}): {{classname}} {
+            val result = entries.stream().filter { it.value == value }.findFirst().orElse(null)
+            if (result == null) {
+                throw IllegalArgumentException("Unexpected value '$value' for enum '{{classname}}'")
+            }
+            return result
+        }
+    }
+}

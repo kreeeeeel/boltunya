@@ -1,0 +1,218 @@
+{
+    "CommunicationStyle": {
+        "kind": "enum",
+        "feature": "chats",
+        "origins": [
+            "ChatRule.properties.style"
+        ]
+    },
+    "ChatGroupReplies": {
+        "kind": "enum",
+        "feature": "chats",
+        "origins": [
+            "ChatRule.properties.groupReplies"
+        ]
+    },
+    "SourceLinksMode": {
+        "kind": "enum",
+        "feature": "chats",
+        "origins": [
+            "ChatRule.properties.sourceLinks"
+        ]
+    },
+    "GroupRepliesMode": {
+        "kind": "enum",
+        "feature": "settings",
+        "origins": [
+            "Settings.properties.groupReplies",
+            "SettingsUpdate.properties.groupReplies"
+        ]
+    },
+    "DefaultDeliveryMode": {
+        "kind": "enum",
+        "feature": "settings",
+        "origins": [
+            "Settings.properties.deliveryMode"
+        ]
+    },
+    "ChatKind": {
+        "kind": "enum",
+        "feature": "chats",
+        "origins": [
+            "Chat.properties.kind"
+        ]
+    },
+    "NullableActivityFeedbackRating": {
+        "kind": "enum",
+        "feature": "activity",
+        "origins": [
+            "Activity.properties.feedbackRating"
+        ]
+    },
+    "ActivityKind": {
+        "kind": "enum",
+        "feature": "activity",
+        "origins": [
+            "Activity.properties.kind"
+        ]
+    },
+    "GlobalDeliveryMode": {
+        "kind": "enum",
+        "feature": "settings",
+        "origins": [
+            "SettingsUpdate.properties.deliveryMode"
+        ]
+    },
+    "WallpaperKind": {
+        "kind": "enum",
+        "feature": "chats",
+        "origins": [
+            "ChatWallpaper.properties.kind"
+        ]
+    },
+    "MemoryCollectionStatus": {
+        "kind": "enum",
+        "feature": "memory",
+        "origins": [
+            "MemoryDocument.properties.status",
+            "MemoryCollectionProgress.properties.status"
+        ]
+    },
+    "SearchConnectionState": {
+        "kind": "enum",
+        "feature": "settings",
+        "origins": [
+            "SearchConnection.properties.state"
+        ]
+    },
+    "DiagnosticSource": {
+        "kind": "enum",
+        "feature": "system",
+        "origins": [
+            "DiagnosticEntry.properties.source"
+        ]
+    },
+    "StorageLocationKind": {
+        "kind": "enum",
+        "feature": "system",
+        "origins": [
+            "StorageLocation.properties.kind"
+        ]
+    },
+    "ComputeDeviceKind": {
+        "kind": "enum",
+        "feature": "models",
+        "origins": [
+            "ComputeDevice.properties.kind"
+        ]
+    },
+    "ComputeDeviceReason": {
+        "kind": "enum",
+        "feature": "models",
+        "origins": [
+            "ComputeDevice.properties.reason"
+        ]
+    },
+    "ComputeDeviceLimitation": {
+        "kind": "enum",
+        "feature": "models",
+        "origins": [
+            "ComputeDeviceStatus.properties.limitation"
+        ]
+    },
+    "ThinkingMode": {
+        "kind": "enum",
+        "feature": "models",
+        "origins": [
+            "ModelProfileOptions.properties.thinking"
+        ]
+    },
+    "TokenLimitParameter": {
+        "kind": "enum",
+        "feature": "models",
+        "origins": [
+            "ModelCapabilities.properties.tokenLimit"
+        ]
+    },
+    "ModelProvider": {
+        "kind": "enum",
+        "feature": "models",
+        "origins": [
+            "ModelProfile.properties.provider",
+            "ModelProfileUpdate.properties.provider",
+            "ModelProviderPreset.properties.provider"
+        ]
+    },
+    "ModelPreset": {
+        "kind": "enum",
+        "feature": "models",
+        "origins": [
+            "ModelProfile.properties.preset",
+            "ModelProfileUpdate.properties.preset"
+        ]
+    },
+    "AppearanceMode": {
+        "kind": "enum",
+        "feature": "settings",
+        "origins": [
+            "AppearanceSettings.properties.mode"
+        ]
+    },
+    "OutgoingMediaKind": {
+        "kind": "enum",
+        "feature": "media",
+        "origins": [
+            "SendMediaRequest.properties.kind"
+        ]
+    },
+    "PreviewJobStatus": {
+        "kind": "enum",
+        "feature": "models",
+        "origins": [
+            "PreviewJob.properties.status"
+        ]
+    },
+    "TypingAction": {
+        "kind": "enum",
+        "feature": "chats",
+        "origins": [
+            "ChatTypingUser.properties.action"
+        ]
+    },
+    "ContextExclusionScope": {
+        "kind": "enum",
+        "feature": "chats",
+        "origins": [
+            "ContextExclusionUpdate.properties.scope"
+        ]
+    },
+    "TokenEncoding": {
+        "kind": "enum",
+        "feature": "models",
+        "origins": [
+            "ModelPromptSettings.properties.tokenEncoding",
+            "PromptBudgetReport.properties.tokenEncoding"
+        ]
+    },
+    "MessageDeletionScope": {
+        "kind": "enum",
+        "feature": "chats",
+        "origins": [
+            "MessageDeletionRequest.properties.scope"
+        ]
+    },
+    "SearchConnectionRequest": {
+        "kind": "request",
+        "feature": "settings",
+        "origins": [
+            "POST /api/search/connection"
+        ]
+    },
+    "QueuePauseRequest": {
+        "kind": "request",
+        "feature": "activity",
+        "origins": [
+            "PATCH /api/activity/queue"
+        ]
+    }
+}
