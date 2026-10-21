@@ -6,7 +6,7 @@ DeepSeek R1 retains an explicit reasoning mode and a separate token allowance. [
 
 DeepSeek R1 temperature is constrained to 0.5–0.7, following the [official R1 recommendations](https://github.com/deepseek-ai/DeepSeek-R1#usage-recommendations). Other model families retain their temperature settings. Application instructions use Spring AI's system role; every Telegram history record uses the user role, including the owner's earlier messages. Sampling defaults (`top_p`, `top_k`, repetition penalty) come from the installed model instead of a shared override. Events record the actual request. The prompt places learned voice and memory before the selected conversation tone and explicitly gives that tone priority.
 
-Aigram uses [Spring AI 2.0](https://docs.spring.io/spring-ai/reference/api/chat/ollama-chat.html) as the local inference integration. Google Guice constructs the services; Spring Boot and a Spring application context are not started.
+Aigram uses [Spring AI 2.0](https://docs.spring.io/spring-ai/reference/api/chat/ollama-chat.html) as the local inference integration. Spring Boot constructs the services with constructor injection. The lifecycle remains explicit; creating the context does not log into Telegram or start inference.
 
 | Component | Responsibility |
 | --- | --- |
@@ -30,7 +30,7 @@ Spring AI exposes native Ollama `thinking` and OpenAI-compatible `reasoning_cont
 
 `ModelInfo.supportsAutomation` distinguishes manual drafts from automatic sending. A known unsuitable model (`qwen3:0.6b` in this release) remains available for previews. Settings, conversation rules and `PersonalReplyGenerator` enforce the restriction before inference, including legacy saved rules.
 
-Source-only follow-ups may omit previously quoted rates; if a rate is included, it must remain exact. A combined request for the rate and source still requires the quote. Live provider tests use the same local clock as the production Guice configuration, including across midnight.
+Source-only follow-ups may omit previously quoted rates; if a rate is included, it must remain exact. A combined request for the rate and source still requires the quote. Live provider tests use the same local clock as the production Spring configuration, including across midnight.
 
 Owned engine shutdown snapshots child process handles before stopping the server, then forces remaining captured children to stop even if their parent has exited. A regression test covers the orphan-process race found during live checks.
 
@@ -40,6 +40,6 @@ The model catalog's maximum context capacities and the inference working window 
 
 Changing the global model affects conversations using `useDefaultModel`. A per-chat choice explicitly disables inheritance; choosing “Default” restores it. Existing rules without this flag follow the global model, removing the previous stale-model behavior.
 
-Tests cover the Guice graph, typed roles and history limits, structured search planning, response extraction, thinking controls, bounded reasoning retries, measurement persistence and download cancellation. Optional live tests use synthetic messages against installed models and public search sources; they send nothing to Telegram.
+Tests cover the Spring dependency graph, typed roles and history limits, structured search planning, response extraction, thinking controls, bounded reasoning retries, measurement persistence and download cancellation. Optional live tests use synthetic messages against installed models and public search sources; they send nothing to Telegram.
 
 `LiveModelQualityTest` runs 20 scenarios on every installed model: 14 conversation, context and factual cases, plus the six built-in writing styles. External facts in this matrix are deterministic fixtures; inference uses the actual local models. Style checks use the same incoming message and a conflicting learned lowercase voice; the business style must retain formal writing. These checks cover observable properties and still require manual review of tone. Results are checkpointed to `backend/build/reports/model-quality.json`, including failures instead of stopping at the first model. Each case has a three-minute deadline, and models are unloaded between groups. Independent live-internet tests exercise real providers. Set `TIHO_LIVE_AI=true` to run the model matrix; `TIHO_TEST_MODELS` and `TIHO_TEST_CASES` restrict diagnostic reruns to comma-separated installed tags and case IDs.

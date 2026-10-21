@@ -5,8 +5,8 @@ Electron owns the frameless native window, tray and startup registration. It sta
 ## Modules
 
 - `desktop/`: backend lifecycle, native window controls, compact Gravity-based tray and cached startup registration.
-- `backend/`: Kotlin under `ru.aigram`, Google Guice constructor injection and explicit singleton bindings. `ApplicationRuntime` starts and closes services and owns the profile lock.
-- `http/`: session checks, routing, input validation, resources and feature-specific endpoints. `SettingKey` validates PATCH value types.
+- `backend/`: Kotlin under `ru.aigram`, Spring Boot constructor injection and singleton components. `ApplicationRuntime` starts and closes services and owns the profile lock.
+- `http/` (temporary until the [contract migration](../migration/en.md)): session checks, routing, input validation, resources and feature-specific endpoints. `SettingKey` validates PATCH value types.
 - `telegram/`: connection state, cache, versioned update handlers, chat directory, history, media/wallpaper mapping and threaded message sending.
 - `ai/`: Spring AI integration, typed conversation context, resource-based model catalog, local model management and personal writing samples; `model/` owns inference and final responses, while `research/` provides web and weather lookup. See [AI services](../ai/en.md).
 - `automation/`: sequential reply queue, debounce, stale-result cancellation, pacing and Telegram flood-wait handling.
@@ -20,7 +20,7 @@ Each Kotlin class has its own file. Prompts, literal language vocabularies, erro
 
 `%LOCALAPPDATA%/Aigram` is the persistent profile; desktop startup safely migrates existing sessions from Tiho. Settings are atomically replaced; credentials use Windows DPAPI. TDLib owns its session database. Existing automated message IDs drive local AI badges and exclusion from personal writing examples.
 
-Ordinary launches pause the queue. Startup resumes it only when explicitly enabled in saved settings. Groups default to disabled and support global/per-chat mention/all overrides. Outgoing messages reply to the source message and forum topic. Local media rendering includes photos, video, audio and stickers; model context includes text/captions, not visual or speech recognition.
+Launches pause the queue unless assistant startup is explicitly enabled in saved settings. Windows startup opens in the tray. Groups default to disabled and support global/per-chat mention/all overrides. Outgoing messages preserve the configured reply/send mode and forum topic. Local media rendering includes photos, video, audio and stickers. Context contains text/captions; optional image analysis sends the latest photograph or album directly to a vision-capable model. Speech recognition is not provided.
 
 Full exit closes the reply queue, HTTP bridge, app-managed Ollama, monitoring and Telegram. External Ollama servers are not terminated. Electron waits for the backend to flush its session before exit.
 

@@ -29,9 +29,8 @@
 Погодные данные предоставляет [Open-Meteo](https://open-meteo.com/) по [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Основной поиск обращается к DuckDuckGo и резервной RSS-выдаче Bing; Exa MCP используется только как дополнительный резерв с ключом пользователя; эти внешние сервисы не входят в поставку приложения. Бесплатный доступ Exa имеет ограничения; собственный ключ относится к учётной записи пользователя Exa.
 
 - [Electron](https://github.com/electron/electron), MIT — окно и системный трей. Уведомления Chromium включены в поставку Electron.
-- [Google Guice](https://github.com/google/guice), Apache-2.0 — внедрение зависимостей.
+- [Spring Boot](https://github.com/spring-projects/spring-boot), Apache-2.0 — жизненный цикл и внедрение зависимостей.
 - [OSHI](https://github.com/oshi/oshi), MIT — мониторинг ресурсов.
-- [React Flow](https://github.com/xyflow/xyflow), MIT — редактор сценариев.
 - [Recharts](https://github.com/recharts/recharts), MIT — графики.
 
 Официальные курсы запрашиваются из XML-сервиса Банка России. Датированные новостные заголовки и описания запрашиваются из публичных RSS РБК и ТАСС; сервисы и их содержимое не входят в поставку приложения.

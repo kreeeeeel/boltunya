@@ -84,7 +84,16 @@ jobs:
           Copy-Item -LiteralPath 'scripts/diagnose-ai.ps1' -Destination "$releaseDirectory/Diagnose-AI.ps1"
           $hash=(Get-FileHash -Algorithm SHA256 -LiteralPath "$releaseDirectory/Aigram.exe").Hash.ToLowerInvariant()
           @("$hash  Aigram.exe", "$hash  Boltunya.exe") | Set-Content -Encoding utf8 "$releaseDirectory/SHA256.txt"
-          gh release create "v$version" "$releaseDirectory/Aigram.exe" "$releaseDirectory/Boltunya.exe" "$releaseDirectory/SHA256.txt" "$releaseDirectory/Diagnose-AI.ps1" --target "$env:GITHUB_SHA" --title "Aigram $version" --generate-notes
+          $changelog=Get-Content -Raw -LiteralPath 'CHANGELOG.md'
+          $entryStart=$changelog.IndexOf('## ', [StringComparison]::Ordinal)
+          if ($entryStart -lt 0) { throw 'CHANGELOG.md has no release entry' }
+          $nextEntry=$changelog.IndexOf("`n## ", $entryStart + 3, [StringComparison]::Ordinal)
+          $entry=if ($nextEntry -lt 0) { $changelog.Substring($entryStart) } else { $changelog.Substring($entryStart, $nextEntry - $entryStart) }
+          if (-not $entry.Contains('### Changed') -and -not $entry.Contains('### Fixed') -and -not $entry.Contains('### Added') -and -not $entry.Contains('### Removed')) { throw 'Release entry must describe actual changes' }
+          $checks="`n`n### Release checks`n`nKotlin, frontend and Electron checks, browser scenarios, native window/tray, updater and media smoke tests passed before publication. Built with JDK 21. Source: $env:GITHUB_SHA. [Verification run](https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID). Download SHA256.txt to verify Aigram.exe; Boltunya.exe is the identical compatibility download.`n"
+          $notesPath=Join-Path $releaseDirectory 'notes.md'
+          Set-Content -Encoding utf8 -LiteralPath $notesPath -Value ($entry.Trim() + $checks)
+          gh release create "v$version" "$releaseDirectory/Aigram.exe" "$releaseDirectory/Boltunya.exe" "$releaseDirectory/SHA256.txt" "$releaseDirectory/Diagnose-AI.ps1" --target "$env:GITHUB_SHA" --title "Aigram $version" --notes-file $notesPath
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $release=gh api "repos/$env:GITHUB_REPOSITORY/releases/tags/v$version" | ConvertFrom-Json
           $exe=$release.assets | Where-Object name -eq 'Aigram.exe'

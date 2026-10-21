@@ -3,11 +3,11 @@
 <p align="center">Telegram, your voice, and the models you choose.</p>
 <p align="center">
   <a href="https://github.com/kreeeeeel/boltunya/actions/workflows/release.yml"><img alt="Windows release" src="https://github.com/kreeeeeel/boltunya/actions/workflows/release.yml/badge.svg"></a>
-  <img alt="Kotlin 2.2" src="https://img.shields.io/badge/Kotlin-2.2-7F52FF?logo=kotlin&logoColor=white">
+  <img alt="Kotlin 2.3" src="https://img.shields.io/badge/Kotlin-2.3-7F52FF?logo=kotlin&logoColor=white">
   <img alt="Electron 44" src="https://img.shields.io/badge/Electron-44-47848F?logo=electron&logoColor=white">
   <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-111111?logo=nextdotjs">
   <img alt="Gravity UI" src="https://img.shields.io/badge/Gravity_UI-7-FFBE5C">
-  <img alt="Google Guice" src="https://img.shields.io/badge/Google_Guice-7-4285F4">
+  <img alt="Spring Boot" src="https://img.shields.io/badge/Spring_Boot-4.1-6DB33F?logo=spring">
   <img alt="Spring AI" src="https://img.shields.io/badge/Spring_AI-2.0-6DB33F?logo=spring">
   <img alt="Ollama" src="https://img.shields.io/badge/Ollama-local_AI-111111?logo=ollama">
   <img alt="Windows x64" src="https://img.shields.io/badge/Windows-x64-0078D4">
@@ -106,7 +106,7 @@ Full exit stops the application-managed Ollama process. An independently managed
 | Directory | Responsibility |
 | --- | --- |
 | `desktop/` | Electron window, isolated preload, native lifecycle, tray and startup |
-| `backend/` | Kotlin/JVM, Google Guice, TDLib, automation, search, memory and local API |
+| `backend/` | Kotlin/JVM, Spring Boot, TDLib, automation, search, memory and local API |
 | `web/` | TypeScript, React, Next.js static export, Gravity UI and generated API types |
 | `.github/workflows/` | Windows checks, portable packaging and GitHub Releases |
 | `docker/` | Development/checking containers; not the signed-in desktop application |
@@ -116,7 +116,7 @@ Full exit stops the application-managed Ollama process. An independently managed
 
 The Kotlin package is `ru.aigram`. Prompts, literal language vocabularies, errors and model metadata live in backend resources. The OpenAPI contract is `backend/contract/api.yaml`; `openapi-typescript` generates the frontend types. The local API uses a private loopback session and Host/Origin checks. The renderer has no Node.js access.
 
-Spring AI's Ollama and OpenAI adapters provide typed requests, structured responses, separate thinking output and inference statistics. Saved connections and optional task routes choose an installed local model or API connection separately for replies, memory, research and vision. See [task routing and image analysis](docs/ai/tasks-en.md). Local tasks share a resource gate, while independent endpoints can run concurrently within the queue limit. `ConversationService` coordinates search and final replies; `ChatCompletionService` owns inference, and `OllamaRuntime` owns local model management. Spring AI `ChatMemory` builds the recent conversation window; the Markdown memory bank retains long-term summaries and owner facts. Guice wires these services without starting a Spring Boot application. See [AI architecture](docs/ai/en.md).
+Spring AI's Ollama and OpenAI adapters provide typed requests, structured responses, separate thinking output and inference statistics. Saved connections and optional task routes choose an installed local model or API connection separately for replies, memory, research and vision. See [task routing and image analysis](docs/ai/tasks-en.md). Local tasks share a resource gate, while independent endpoints can run concurrently within the queue limit. `ConversationService` coordinates search and final replies; `ChatCompletionService` owns inference, and `OllamaRuntime` owns local model management. Spring AI `ChatMemory` builds the recent conversation window; the Markdown memory bank retains long-term summaries and owner facts. Spring Boot wires these services through constructor injection and functional integration configurations. The existing private HTTP bridge remains temporarily during the [contract migration](docs/migration/en.md). See [AI architecture](docs/ai/en.md).
 
 Prompt settings show the selected model’s working context, reserved output budget and estimated space remaining for history. Independent instructions can be saved per model and connection. Oversized mandatory context fails explicitly without silently losing the latest question. [Token budgets and model prompts](docs/ai/prompts-en.md).
 
