@@ -2,6 +2,42 @@
 
 Release versions are assigned by Windows CI. Each GitHub release includes the first dated entry below, the tested source commit and its verification run.
 
+## 2026-10-21 — Spring MVC and functional domain packages
+
+### Changed
+
+- Replaced the private HTTP server and router with embedded Spring MVC controllers implementing all eight generated API groups, typed business components and explicit DTO transformers.
+- Preserved loopback/session protection, Host/Origin checks, static web files, raw uploads, Telegram media ranges and the existing JSON/Markdown profile.
+- Moved 120 domain models into feature packages and removed legacy injection annotations in favor of standard Spring constructors and lazy `ObjectProvider` dependencies.
+- Expanded conditionals through AST refactoring and corrected generated API numeric formats for wide timestamps, byte counts and durations without narrowing values or changing string identifiers.
+- Migrated HTTP integration tests to a real servlet context and added regressions for DTO completeness, binary uploads, strict settings types, security/body limits and failed-refresh cleanup.
+- Switched production web calls to generated `@aigram/api-client` feature operations. Removed `openapi-fetch`, `openapi-typescript` and the schema bridge; Gradle, Windows packaging and Docker generate the same SDK before frontend compilation.
+- Added six request-specific input schemas with the original defaults while keeping complete response models required. Existing URLs and JSON fields are preserved; Kotlin SDK callers use the corresponding input models. Wide numeric formats and the error code now describe the existing runtime values accurately.
+
+### Added
+
+- Restart app-managed Ollama from its model-page card after changing the compute device. External services cannot be restarted by this action. The API exposes restart availability and returns a typed conflict for unowned processes.
+- Consistent status notices for draft preparation and generation failures, with cancellation, dismissal and retry feedback. Long restart labels fit compact windows in both themes.
+
+### Fixed
+
+- Preserved authentication and request limits for decoded and matrix-parameter API paths, including DELETE bodies. Authorization runs before parsing request content.
+- Preserved raw uploads with arbitrary MIME types, including WebP, and legacy requests without a Content-Type header. Removed API routes still return the original structured 404 response.
+- Kept partial chat rules, nested model options, appearance and prompt settings compatible with their previous defaults. Explicit invalid nulls and scalar coercions are rejected at the HTTP boundary.
+- Prevented a completed manual draft error from duplicating its local notice or reviving an older automatic-reply failure after polling.
+
+### Removed
+
+- Removed the private HTTP server, manual router, old endpoint handlers and `ru.aigram.http`. Removed remaining JSR-330 injection imports and dependencies; Spring owns the service graph.
+
+### Verification
+
+- The full Gradle gate passed: 467 Kotlin tests across application, contract and client modules (11 optional live tests skipped), plus eight installed TypeScript SDK tests. This includes real servlet HTTP/security tests, Spring context lifecycle, clean regeneration and AST architecture/style checks.
+- The UI unit suite passed 168 tests; focused reruns after the final form/layout changes covered 21 cases. TypeScript, ESLint, Stylelint and Prettier passed. All 113 browser scenarios, 38 Electron tests and 10 script tests passed.
+- Packaged and launched local Aigram 2.6.31 with bundled Java. Native window/tray/startup, updater recovery/profile migration and media checks passed. The packaged JAR contains nine MVC controllers and no legacy HTTP/injection classes or Guice/JSR-330 libraries. Packaged desktop modules, update helper and backend JAR match the checked artifacts.
+- The actual profile restored Telegram authorization automatically; saved settings and manual memory notes were preserved. Release publication still requires the green Windows workflow and published EXE/SDK checksum verification.
+- No database migration, model download or real Telegram send is required for these tests.
+
 ## 2026-10-21 — Generated contract and HTTP clients
 
 ### Added
