@@ -1,0 +1,76 @@
+package ru.aigram.ai
+
+import jakarta.inject.Inject
+import ru.aigram.domain.ComputeDevice
+import ru.aigram.domain.ComputeDeviceStatus
+import ru.aigram.exception.impl.InvalidOllamaDeviceException
+import ru.aigram.storage.SettingsStore
+import ru.aigram.validation.InputRule
+
+private const val AUTOMATIC_DEVICE = "auto"
+private const val CPU_DEVICE = "cpu"
+
+class OllamaDeviceSelector @Inject constructor(
+    private val settings: SettingsStore,
+    private val discovery: ComputeDeviceDiscovery,
+) {
+    fun selected(): String = settings.get().ollamaDevice
+
+    fun validate(id: String) {
+        if (id == AUTOMATIC_DEVICE || id == CPU_DEVICE) return
+        if (id == selected() && InputRule.GPU_UUID.accepts(id)) return
+        if (discovery.devices().stream().noneMatch {
+                it.id == id && it.selectable
+            }
+        ) {
+            throw InvalidOllamaDeviceException()
+        }
+    }
+
+    fun environment(id: String = selected()): Map<String, String> {
+        if (id == AUTOMATIC_DEVICE) return emptyMap()
+        if (id != CPU_DEVICE && !InputRule.GPU_UUID.accepts(id)) {
+            throw InvalidOllamaDeviceException()
+        }
+        return mapOf(
+            "CUDA_VISIBLE_DEVICES" to if (id == CPU_DEVICE) "-1" else id,
+            "HIP_VISIBLE_DEVICES" to "-1",
+            "ROCR_VISIBLE_DEVICES" to "-1",
+            "GPU_DEVICE_ORDINAL" to "-1",
+            "GGML_VK_VISIBLE_DEVICES" to "-1",
+            "OLLAMA_VULKAN" to "0",
+        )
+    }
+
+    fun status(
+        online: Boolean,
+        local: Boolean,
+        defaultLocal: Boolean,
+        installed: Boolean,
+        managed: Boolean,
+        active: String?,
+    ): ComputeDeviceStatus {
+        val configured = selected()
+        val supported = defaultLocal && installed && (!online || managed)
+        val pending = managed && active != configured
+        val limitation = when {
+            !local -> "remote"
+            !defaultLocal || online && !managed -> "external"
+            !installed -> "missing-runtime"
+            pending || !managed -> "next-start"
+            else -> ""
+        }
+        return ComputeDeviceStatus(
+            configured,
+            if (managed) active else null,
+            managed,
+            supported,
+            pending,
+            limitation,
+            listOf(
+                ComputeDevice(AUTOMATIC_DEVICE, "Auto", "auto"),
+                ComputeDevice(CPU_DEVICE, "CPU", "cpu"),
+            ) + discovery.devices(),
+        )
+    }
+}

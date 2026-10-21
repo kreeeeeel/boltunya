@@ -5,7 +5,7 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
 }
 
-group = "ru.boltunya"
+group = "ru.aigram"
 version = providers.gradleProperty("appVersion").getOrElse("2.6.0")
 
 repositories {
@@ -40,7 +40,7 @@ kotlin {
 }
 
 application {
-    mainClass.set("ru.boltunya.MainKt")
+    mainClass.set("ru.aigram.MainKt")
     applicationDefaultJvmArgs = listOf("-Dfile.encoding=UTF-8")
 }
 
