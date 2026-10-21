@@ -49,7 +49,7 @@ A WAV recording, Python checkpoint or unrelated ONNX model is not a compatible v
 
 ## Storage and verification
 
-Speech assets and working files live under the active Aigram profile's `speech/` directory. The default profile is `%LOCALAPPDATA%/Aigram`; `AIGRAM_DATA_DIR` can select an isolated profile. Models live in `speech/<asset-id>`, generated previews in `speech/generated`, and temporary worker files in `speech/work`. This is separate from Ollama's model directory. Recognition transcripts are held only in memory.
+Speech assets and working files live under the active Aigram profile's `speech/` directory. The default profile is `%LOCALAPPDATA%/Aigram`; `AIGRAM_DATA_DIR` can select an isolated profile. Models live in `speech/<asset-id>`, generated previews in `speech/generated`, and temporary worker files in `speech/work`. This is separate from Ollama's model directory. The recognition cache is kept in memory. Recognized text included in model prompts, and the text entered for voice testing while signed in, can persist in the private local activity history under its retention and cleanup settings.
 
 For isolated real verification, download the pinned test assets into `build/speech-verification` and enable `AIGRAM_LIVE_SPEECH=true`. `LiveSpeechPipelineTest` verifies installation, TTS, Opus encoding/decoding and preservation of the spoken words in Whisper's transcript; punctuation may differ. `LiveSpeechVoicesTest` exercises the catalog voices. `LiveSpeechSettingsTest` uploads a real Piper archive through the local HTTP API, imports it and synthesizes a settings sample without using a conversation model or sending anything to Telegram.
 
