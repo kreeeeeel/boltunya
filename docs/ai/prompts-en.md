@@ -6,7 +6,7 @@ Saved preferences are keyed by model identifier and connection ID in `models/pro
 
 ## Working context
 
-The catalog's maximum context is a model capability, not the amount of memory allocated to every request. Local models default to an 8,192-token working window. You can change it within the catalog maximum in the model prompt editor. API connections take their working context from the connection configuration, so there is one source of truth.
+The catalog's maximum context is a model capability, not the memory allocated to every request. Without an explicit override, known local models start at 8,192 tokens and grow as needed, up to the smaller of 32,768 tokens and their catalog capacity. Unknown local models retain their conservative configured window. You can set an explicit window in the model prompt editor; it is respected without automatic expansion. API connections take their working context from the connection configuration.
 
 Increasing local context can consume substantially more memory. Ollama documents this distinction in its [context-length guide](https://docs.ollama.com/context-length). No model is downloaded or called when editing preferences or checking a prompt budget.
 
@@ -23,7 +23,9 @@ This preview excludes the actual conversation history, memory and images. Runtim
 
 Counting uses the existing Spring AI [JTokkitTokenCountEstimator](https://docs.spring.io/spring-ai/docs/current/api/org/springframework/ai/tokenizer/JTokkitTokenCountEstimator.html). Automatic selection uses O200K for the supported OpenAI/GPT families and CL100K otherwise; either encoding can be selected explicitly. Estimates include a 15% text margin, message overhead and a fixed image allowance. Other model tokenizers and image encoders can differ, so the provider's actual counts remain authoritative.
 
-Before inference, the application preserves every system instruction and the latest message, then removes only older history as needed. The latest message is not silently replaced by a system-only request. If mandatory content plus reserved output cannot fit, generation stops with an explicit required-token estimate and limit. Reduce instructions or output budget, or increase the working context within the model's supported capacity.
+Before inference, optional memory is fitted to the available token budget. Every system instruction, the latest message and all selected album photographs are preserved; older text history may be removed. Automatic native windows grow for the complete request, including the answer and reasoning reserve. Explicit limits remain hard limits. If mandatory content cannot fit, generation stops with a required-token estimate and limit instead of silently discarding the question or part of an album.
+
+Memory collection also sizes each source batch against its effective model, existing summary, instructions and output reserve, including a possible reasoning retry. It does not use a fixed number of messages. A source message is never silently shortened before advancing the checkpoint: an individual message that cannot fit stops collection with an actionable error and retains the checkpoint for retry.
 
 Failures remain visible in the conversation generation block and Events, with a retry-as-draft action. There is no political-topic filter or phrase-repetition classifier. A model can still return an empty answer or apply its own provider policies; Events retains its separate thinking, final output and finish information when available.
 
