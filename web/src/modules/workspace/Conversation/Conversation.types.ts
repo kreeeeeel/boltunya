@@ -1,4 +1,4 @@
-import type {Activity, Chat, Message} from '@/shared/api/client';
+import type {Activity, Chat, Message, MessageEntity, Reply} from '@/shared/api/client';
 import type {ContextExclusionChange} from '@/modules/messages/model/ContextExclusionChange';
 import type {MessageDeletionResult} from '@/modules/messages/MessageDeletionDialog/MessageDeletionDialog.types';
 
@@ -17,8 +17,8 @@ export interface ConversationProps {
     readonly onConfigure: () => void;
     readonly onInspector: () => void;
     readonly onMemory: () => void;
-    readonly onSend: (text: string) => Promise<void>;
-    readonly onDraft: (messageId?: string) => Promise<string>;
+    readonly onSend: (text: string, entities?: MessageEntity[]) => Promise<void>;
+    readonly onDraft: (messageId?: string) => Promise<Reply>;
     readonly onBack: () => void;
     readonly onEarlier: () => Promise<boolean>;
 }

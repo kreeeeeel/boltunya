@@ -3,6 +3,8 @@ import {FaceSmile, File, Paperclip, PaperPlane, Picture, Sparkles, Sticker, Vide
 import {useEffect, useRef, useState} from 'react';
 import {useTranslations} from 'next-intl';
 import {api} from '@/shared/api/client';
+import type {Text as OutgoingText} from '@aigram/api-client';
+import {MessageDraftEditor} from '@/modules/messages/MessageDraftEditor/MessageDraftEditor';
 import {AttachmentDialog} from '@/modules/media/AttachmentDialog/AttachmentDialog';
 import type {AttachmentSelection} from '@/modules/media/AttachmentDialog/AttachmentDialog';
 import {StickerPicker} from '@/modules/media/StickerPicker/StickerPicker';
@@ -20,6 +22,11 @@ export function ConversationComposer({
     onSend,
     onDraft,
     onMediaSent,
+    richDraft,
+    richError = '',
+    onRichChange,
+    onRichError,
+    onRichConsumed,
 }: {
     readonly chatId: string;
     readonly text: string;
@@ -28,18 +35,28 @@ export function ConversationComposer({
     readonly onSend: () => Promise<void>;
     readonly onDraft: () => Promise<void>;
     readonly onMediaSent: () => Promise<void>;
+    readonly richDraft?: {id: string; message: OutgoingText};
+    readonly richError?: string;
+    readonly onRichChange?: (id: string, message: OutgoingText) => void;
+    readonly onRichError?: (id: string) => void;
+    readonly onRichConsumed?: (id: string) => void;
 }) {
     const t = useTranslations();
     const chatUi = useTranslations('chatUi');
     const media = useMediaMessages();
     const [error, setError] = useState('');
     const [selection, setSelection] = useState<AttachmentSelection[]>();
+    const [attachmentDraft, setAttachmentDraft] = useState<typeof richDraft>();
+    const [readyRichId, setReadyRichId] = useState<string>();
     const [kind, setKind] = useState<AttachmentKind>('media');
     const [stickers, setStickers] = useState(false);
     const files = useRef<HTMLInputElement>(null);
     const input = useRef<HTMLTextAreaElement>(null);
     const [stickerAnchor, setStickerAnchor] = useState<HTMLButtonElement | null>(null);
     const urls = useRef(new Set<string>());
+    const richTooLong = !!richDraft && Array.from(text).length > MAX_MESSAGE_LENGTH;
+    const sendDisabled =
+        busy === 'send' || !!richError || richTooLong || (!!richDraft && readyRichId !== richDraft.id);
     useEffect(() => {
         const values = urls.current;
         return () => values.forEach(URL.revokeObjectURL);
@@ -84,6 +101,28 @@ export function ConversationComposer({
                     {error}
                 </Text>
             )}
+            {(richError || richTooLong) && (
+                <Text color="danger" role="alert">
+                    {richError || t('messageEdit.tooLong', {max: MAX_MESSAGE_LENGTH})}
+                </Text>
+            )}
+            {richDraft && (
+                <Box className={styles.richDraft}>
+                    <MessageDraftEditor
+                        key={richDraft.id}
+                        initialMessage={richDraft.message}
+                        draftId={richDraft.id}
+                        ariaLabel={t('messagePlaceholder')}
+                        disabled={busy === 'send' || !!richError}
+                        onChange={(message) => {
+                            setReadyRichId(richDraft.id);
+                            onRichChange?.(richDraft.id, message);
+                        }}
+                        onError={() => onRichError?.(richDraft.id)}
+                        onSubmit={sendDisabled ? undefined : onSend}
+                    />
+                </Box>
+            )}
             <Flex alignItems="center" gap={1} className={styles.composer} qa="message-composer">
                 <Box
                     as="input"
@@ -112,6 +151,7 @@ export function ConversationComposer({
                                 return {file, preview};
                             }),
                         );
+                        setAttachmentDraft(richDraft);
                         event.stopPropagation();
                     }}
                 />
@@ -139,7 +179,7 @@ export function ConversationComposer({
                             {...props}
                             className={styles.composerButton}
                             view="flat-secondary"
-                            disabled={busy === 'send'}
+                            disabled={busy === 'send' || !!richError}
                             aria-label={media.attach}
                         >
                             <Icon data={Paperclip} size={20} />
@@ -158,34 +198,40 @@ export function ConversationComposer({
                         <Icon data={Sparkles} size={19} />
                     </Button>
                 </Tooltip>
-                <TextArea
-                    controlRef={input}
-                    view="clear"
-                    size="l"
-                    className={styles.input}
-                    value={text}
-                    disabled={busy === 'send'}
-                    onUpdate={onTextChange}
-                    minRows={1}
-                    maxRows={5}
-                    placeholder={t('messagePlaceholder')}
-                    controlProps={{'aria-label': t('messagePlaceholder'), maxLength: MAX_MESSAGE_LENGTH}}
-                    onKeyDown={(event) => {
-                        if (event.key === 'Enter' && !event.shiftKey) {
-                            event.preventDefault();
-                            void onSend();
-                        }
-                    }}
-                />
-                <EmojiPicker
-                    value=""
-                    trigger={<Icon data={FaceSmile} size={20} />}
-                    className={styles.composerButton}
-                    disabled={busy === 'send'}
-                    placement="top-end"
-                    returnFocus={false}
-                    onUpdate={insertEmoji}
-                />
+                {richDraft ? (
+                    <Box className={styles.input} />
+                ) : (
+                    <TextArea
+                        controlRef={input}
+                        view="clear"
+                        size="l"
+                        className={styles.input}
+                        value={text}
+                        disabled={busy === 'send'}
+                        onUpdate={onTextChange}
+                        minRows={1}
+                        maxRows={5}
+                        placeholder={t('messagePlaceholder')}
+                        controlProps={{'aria-label': t('messagePlaceholder'), maxLength: MAX_MESSAGE_LENGTH}}
+                        onKeyDown={(event) => {
+                            if (event.key === 'Enter' && !event.shiftKey) {
+                                event.preventDefault();
+                                void onSend();
+                            }
+                        }}
+                    />
+                )}
+                {!richDraft && (
+                    <EmojiPicker
+                        value=""
+                        trigger={<Icon data={FaceSmile} size={20} />}
+                        className={styles.composerButton}
+                        disabled={busy === 'send'}
+                        placement="top-end"
+                        returnFocus={false}
+                        onUpdate={insertEmoji}
+                    />
+                )}
                 <Button
                     ref={setStickerAnchor}
                     className={styles.composerButton}
@@ -200,7 +246,7 @@ export function ConversationComposer({
                     view="action"
                     size="m"
                     loading={busy === 'send'}
-                    disabled={!text.trim() || busy === 'send'}
+                    disabled={!text.trim() || sendDisabled}
                     onClick={() => void onSend()}
                     aria-label={t('send')}
                     className={styles.composerButton}
@@ -213,8 +259,14 @@ export function ConversationComposer({
                     chatId={chatId}
                     selection={selection}
                     kind={kind}
+                    initialCaption={attachmentDraft?.message}
                     onClose={closeAttachments}
-                    onSent={onMediaSent}
+                    onSent={async () => {
+                        if (attachmentDraft) {
+                            onRichConsumed?.(attachmentDraft.id);
+                        }
+                        await onMediaSent();
+                    }}
                 />
             )}
             {stickers && (

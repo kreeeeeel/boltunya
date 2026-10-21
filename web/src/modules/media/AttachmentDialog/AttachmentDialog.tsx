@@ -1,6 +1,9 @@
 import {Box, Button, Dialog, Flex, Icon, Progress, Text, TextArea} from '@gravity-ui/uikit';
 import {File as FileIcon, Xmark} from '@gravity-ui/icons';
 import {useEffect, useRef, useState} from 'react';
+import {useTranslations} from 'next-intl';
+import type {Text as OutgoingText} from '@aigram/api-client';
+import {MessageDraftEditor} from '@/modules/messages/MessageDraftEditor/MessageDraftEditor';
 import {api, errorMessage} from '@/shared/api/client';
 import {useMediaMessages} from '@/modules/media/i18n/messages';
 import {uploadFile} from '@/modules/media/model/uploads';
@@ -16,16 +19,23 @@ export function AttachmentDialog({
     kind,
     onClose,
     onSent,
+    initialCaption,
 }: {
     readonly chatId: string;
     readonly selection: AttachmentSelection[];
     readonly kind: AttachmentKind;
     readonly onClose: () => void;
     readonly onSent: () => Promise<void>;
+    readonly initialCaption?: OutgoingText;
 }) {
     const t = useMediaMessages();
+    const common = useTranslations();
     const [items, setItems] = useState(selection);
-    const [caption, setCaption] = useState('');
+    const [caption, setCaption] = useState<OutgoingText>(() => initialCaption ?? {text: ''});
+    const [richId] = useState(() => (initialCaption?.entities?.length ? crypto.randomUUID() : undefined));
+    const [richReady, setRichReady] = useState(!richId);
+    const [formattingFailed, setFormattingFailed] = useState(false);
+    const captionTooLong = Array.from(caption.text).length > 1024;
     const [busy, setBusy] = useState(false);
     const [sending, setSending] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -53,7 +63,7 @@ export function AttachmentDialog({
             onClose();
             return;
         }
-        if (busy || !items.length) {
+        if (busy || !items.length || formattingFailed || captionTooLong || !richReady) {
             return;
         }
         setBusy(true);
@@ -81,7 +91,8 @@ export function AttachmentDialog({
                 sendMediaRequest: {
                     uploadIds: items.map((item) => uploaded.current.get(item.file)!.id),
                     kind,
-                    caption,
+                    caption: caption.text,
+                    ...(caption.entities?.length ? {captionEntities: caption.entities} : {}),
                 },
             });
             delivered.current = true;
@@ -164,15 +175,36 @@ export function AttachmentDialog({
                             </Box>
                         ))}
                     </Box>
-                    <TextArea
-                        value={caption}
-                        onUpdate={setCaption}
-                        disabled={busy || sent}
-                        minRows={2}
-                        maxRows={4}
-                        placeholder={t.caption}
-                        controlProps={{maxLength: 1024, 'aria-label': t.caption}}
-                    />
+                    {richId ? (
+                        <MessageDraftEditor
+                            initialMessage={caption}
+                            draftId={richId}
+                            ariaLabel={t.caption}
+                            disabled={busy || sent || formattingFailed}
+                            onChange={(message) => {
+                                setCaption(message);
+                                setRichReady(true);
+                            }}
+                            onError={() => setFormattingFailed(true)}
+                        />
+                    ) : (
+                        <TextArea
+                            value={caption.text}
+                            onUpdate={(text) => setCaption({text})}
+                            disabled={busy || sent}
+                            minRows={2}
+                            maxRows={4}
+                            placeholder={t.caption}
+                            controlProps={{maxLength: 1024, 'aria-label': t.caption}}
+                        />
+                    )}
+                    {(formattingFailed || captionTooLong) && (
+                        <Text role="alert" color="danger">
+                            {formattingFailed
+                                ? common('formattedDraftError')
+                                : common('messageEdit.tooLong', {max: 1024})}
+                        </Text>
+                    )}
                     {busy && (
                         <Flex direction="column" gap={2}>
                             <Text>{sending ? t.sending : t.uploading}</Text>
@@ -190,7 +222,9 @@ export function AttachmentDialog({
                 textButtonApply={sent ? t.close : t.send}
                 textButtonCancel={t.cancel}
                 loading={busy}
-                propsButtonApply={{disabled: !items.length || busy}}
+                propsButtonApply={{
+                    disabled: !items.length || busy || formattingFailed || captionTooLong || !richReady,
+                }}
                 propsButtonCancel={{disabled: sending}}
                 onClickButtonApply={() => void send()}
                 onClickButtonCancel={() => {

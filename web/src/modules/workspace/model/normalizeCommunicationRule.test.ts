@@ -36,10 +36,20 @@ it('migrates an unnamed or removed custom selection without losing personal inst
 });
 
 it('normalizes legacy proactive defaults without changing explicit per-chat choices', () => {
-    const legacy = {...defaultRule, proactiveMode: undefined, proactiveIntervalMinutes: undefined};
+    const legacy = {
+        ...defaultRule,
+        proactiveMode: undefined,
+        proactiveIntervalMinutes: undefined,
+        proactiveMessageMode: undefined,
+        proactiveText: undefined,
+        replyInterruptionMode: undefined,
+    };
     expect(normalizeCommunicationRule(legacy, [])).toMatchObject({
         proactiveMode: 'inherit',
         proactiveIntervalMinutes: 0,
+        proactiveMessageMode: 'ai',
+        proactiveText: '',
+        replyInterruptionMode: 'inherit',
     });
     const configured = {...defaultRule, proactiveMode: 'enabled' as const, proactiveIntervalMinutes: 90};
     expect(normalizeCommunicationRule(configured, [])).toBe(configured);

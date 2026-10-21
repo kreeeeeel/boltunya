@@ -117,3 +117,45 @@ it('keeps conversation support in a separate section and saves its draft after n
         ),
     );
 });
+
+it('preserves the opt-in formatting draft across navigation and saves without closing', async () => {
+    mocks.settings.mockResolvedValue({ok: true});
+    const close = vi.fn();
+    render(
+        <NextIntlClientProvider locale="ru" messages={ru}>
+            <ThemeProvider>
+                <SettingsCenter
+                    settings={workspaceState.settings}
+                    initialSection="replies"
+                    onClose={close}
+                    onRefresh={async () => {}}
+                />
+            </ThemeProvider>
+        </NextIntlClientProvider>,
+    );
+    expect(screen.getByRole('switch', {name: ru.formatReplies})).not.toBeChecked();
+    fireEvent.click(screen.getByRole('switch', {name: ru.formatReplies}));
+    fireEvent.click(screen.getByRole('combobox', {name: ru.replyInterruption.title}));
+    fireEvent.click(await screen.findByRole('option', {name: ru.replyInterruption.options.finish}));
+    fireEvent.click(screen.getByRole('menuitem', {name: ru.settingsCenter.sections.application}));
+    fireEvent.click(screen.getByRole('menuitem', {name: ru.settingsCenter.sections.replies}));
+    expect(screen.getByRole('switch', {name: ru.formatReplies})).toBeChecked();
+    expect(screen.getByRole('combobox', {name: ru.replyInterruption.title})).toHaveTextContent(
+        ru.replyInterruption.options.finish,
+    );
+    const region = screen.getByRole('region', {name: ru.settingsCenter.sections.replies});
+    fireEvent.click(within(region).getByRole('button', {name: ru.save}));
+    await waitFor(() =>
+        expect(mocks.settings).toHaveBeenCalledWith(
+            expect.objectContaining({
+                settingsUpdate: expect.objectContaining({
+                    formatReplies: true,
+                    replyProcessingMode: 'finish',
+                }),
+            }),
+        ),
+    );
+    expect(await within(region).findByRole('button', {name: ru.saved})).toBeVisible();
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(close).not.toHaveBeenCalled();
+});

@@ -242,6 +242,10 @@
     "replyDelaySeconds": "Delay before replying",
     "replyIntervalSeconds": "Interval between sends",
     "showTyping": "Show typing status",
+    "formatReplies": "Apply formatting",
+    "formatRepliesHint": "Bold, italics, spoilers and other styles in AI replies.",
+    "formattedDraftError": "The editor could not preserve formatting. Generate a new draft before sending.",
+    "formattedDraftLoading": "Preparing the editor…",
     "closeToTray": "Close window to system tray",
     "launchAtLogin": "Launch with Windows",
     "resumeOnStartup": "Enable AI when the app starts",
@@ -917,9 +921,25 @@
         "warming": "Warming up the model…",
         "updating": "Updating status…"
     },
+    "replyInterruption": {
+        "title": "Handling new messages",
+        "hints": {
+            "inherit": "Uses the global message handling mode from assistant settings.",
+            "replace": "Cancels the current reply and starts a new one using the latest messages.",
+            "finish": "Finishes the current reply, then combines messages received during generation into one follow-up reply.",
+            "each": "Finishes the current reply, then answers each new message in order. The queue is bounded when traffic is high."
+        },
+        "mode": "New messages during a reply",
+        "options": {
+            "inherit": "Use global settings",
+            "replace": "Restart the reply",
+            "finish": "Finish and combine new messages",
+            "each": "Each message in order"
+        }
+    },
     "proactive": {
         "title": "Keep the conversation going",
-        "hint": "In AI-enabled chats, it can write after a pause, then wait for a human reply.",
+        "hint": "The global setting applies to chats with automatic replies. You can enable initiative independently in a chat’s settings — after sending a message, the assistant waits for a human reply.",
         "mode": "Initiative in this chat",
         "modes": {
             "inherit": "Use global settings",
@@ -930,7 +950,17 @@
         "unit": "Interval unit",
         "minutes": "Minutes",
         "hours": "Hours",
-        "inheritInterval": "Use the global interval"
+        "inheritInterval": "Use the global interval",
+        "messageMode": "Message type",
+        "messageModes": {"ai": "AI reply", "text": "Custom text"},
+        "messageText": "Message text",
+        "messageTextHint": "Sends this text after a pause. Automatic replies do not need to be enabled in this chat.",
+        "activeChatsTitle": "Chats with initiative",
+        "emptyChats": "Initiative is not enabled in any available chat yet.",
+        "listInterval": "Wait: {minutes} min",
+        "configureChat": "Configure {name}",
+        "loadMore": "Show more",
+        "saveBeforeChat": "Save the global changes before opening a chat’s settings."
     },
     "modelFilters": {
         "label": "Model type",

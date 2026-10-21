@@ -5,6 +5,8 @@ export function createSettingsDraft(settings: AppState['settings']) {
         replyDelaySeconds: settings.replyDelaySeconds ?? 3,
         replyIntervalSeconds: settings.replyIntervalSeconds ?? 3,
         showTyping: settings.showTyping ?? true,
+        formatReplies: settings.formatReplies ?? false,
+        replyProcessingMode: settings.replyProcessingMode ?? 'replace',
         ignoreAssistantTasks: settings.ignoreAssistantTasks ?? true,
         memoryEnabled: settings.memoryEnabled ?? true,
         memoryIntervalHours: settings.memoryIntervalHours ?? 6,

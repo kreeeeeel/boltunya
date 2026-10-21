@@ -61,4 +61,7 @@ export const defaultRule: ChatRule = {
     useMemory: true,
     proactiveMode: 'inherit',
     proactiveIntervalMinutes: 0,
+    proactiveMessageMode: 'ai',
+    proactiveText: '',
+    replyInterruptionMode: 'inherit',
 };

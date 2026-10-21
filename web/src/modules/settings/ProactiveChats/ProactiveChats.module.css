@@ -1,0 +1,17 @@
+.row {
+    min-width: 0;
+    padding: 12px;
+    border-radius: 14px;
+    background: var(--g-color-base-generic);
+}
+
+.identity {
+    min-width: 0;
+    flex: 1;
+}
+
+.title {
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 600;
+}

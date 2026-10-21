@@ -109,3 +109,82 @@ it('saves the proactive mode and a chat-specific interval without closing the di
     );
     expect(onClose).not.toHaveBeenCalled();
 });
+
+it('configures a fixed initiative text without enabling automatic replies', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const chat = structuredClone(workspaceState.chats[0]);
+    chat.rule.enabled = false;
+    render(
+        <NextIntlClientProvider locale="ru" messages={ru}>
+            <ThemeProvider>
+                <RuleDialog
+                    chat={chat}
+                    customStyles={[]}
+                    engine={workspaceState.engine}
+                    defaultModel={workspaceState.settings.defaultModel}
+                    onClose={vi.fn()}
+                    onCollectContext={vi.fn()}
+                    onDeleted={vi.fn()}
+                    onSave={onSave}
+                />
+            </ThemeProvider>
+        </NextIntlClientProvider>,
+    );
+    expect(screen.queryByRole('textbox', {name: ru.proactive.messageText})).toBeNull();
+    fireEvent.click(screen.getByRole('combobox', {name: ru.proactive.messageMode}));
+    fireEvent.click(await screen.findByRole('option', {name: ru.proactive.messageModes.text}));
+    fireEvent.change(screen.getByRole('textbox', {name: ru.proactive.messageText}), {
+        target: {value: 'Как прошёл день?'},
+    });
+    fireEvent.click(screen.getByRole('combobox', {name: ru.proactive.mode}));
+    fireEvent.click(await screen.findByRole('option', {name: ru.proactive.modes.enabled}));
+    expect(screen.getByRole('switch', {name: ru.enableAi})).not.toBeChecked();
+    fireEvent.click(screen.getByRole('button', {name: ru.save}));
+    await waitFor(() =>
+        expect(onSave).toHaveBeenCalledWith(
+            expect.objectContaining({
+                enabled: false,
+                proactiveMode: 'enabled',
+                proactiveMessageMode: 'text',
+                proactiveText: 'Как прошёл день?',
+            }),
+        ),
+    );
+});
+
+it.each(['finish', 'each'] as const)(
+    'saves the %s interruption policy without enabling automatic replies',
+    async (mode) => {
+        const onSave = vi.fn().mockResolvedValue(undefined);
+        const chat = structuredClone(workspaceState.chats[0]);
+        chat.rule.enabled = false;
+        render(
+            <NextIntlClientProvider locale="ru" messages={ru}>
+                <ThemeProvider>
+                    <RuleDialog
+                        chat={chat}
+                        customStyles={[]}
+                        engine={workspaceState.engine}
+                        defaultModel={workspaceState.settings.defaultModel}
+                        onClose={vi.fn()}
+                        onCollectContext={vi.fn()}
+                        onDeleted={vi.fn()}
+                        onSave={onSave}
+                    />
+                </ThemeProvider>
+            </NextIntlClientProvider>,
+        );
+        expect(screen.getByRole('combobox', {name: ru.replyInterruption.mode})).toHaveTextContent(
+            ru.replyInterruption.options.inherit,
+        );
+        fireEvent.click(screen.getByRole('combobox', {name: ru.replyInterruption.mode}));
+        fireEvent.click(await screen.findByRole('option', {name: ru.replyInterruption.options[mode]}));
+        expect(screen.getByRole('switch', {name: ru.enableAi})).not.toBeChecked();
+        fireEvent.click(screen.getByRole('button', {name: ru.save}));
+        await waitFor(() =>
+            expect(onSave).toHaveBeenCalledWith(
+                expect.objectContaining({enabled: false, replyInterruptionMode: mode}),
+            ),
+        );
+    },
+);

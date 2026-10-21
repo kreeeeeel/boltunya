@@ -13,6 +13,8 @@ it('defaults proactive conversation to off and stores the selected interval in m
         const [value, setValue] = useState(createSettingsDraft(workspaceState.settings));
         return (
             <ProactiveSettings
+                chats={[]}
+                settings={workspaceState.settings}
                 value={value}
                 onUpdate={(next) => {
                     changed(next);

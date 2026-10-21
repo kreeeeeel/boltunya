@@ -18,6 +18,7 @@ import {DraftPreparationError} from '@/modules/workspace/model/DraftPreparationE
 import {StatusNotice} from '@/shared/ui/StatusNotice/StatusNotice';
 import {MessageEditDialog} from '@/modules/messages/MessageEditDialog/MessageEditDialog';
 import type {Message} from '@/shared/api/client';
+import type {Text as OutgoingText} from '@aigram/api-client';
 
 export function Conversation({
     chat,
@@ -46,7 +47,10 @@ export function Conversation({
         const timer = setInterval(() => setToday(messageDay(Date.now() / 1000)), 60000);
         return () => clearInterval(timer);
     }, []);
-    const [text, setText] = useState('');
+    const [input, setInput] = useState<{message: OutgoingText; richId?: string}>({message: {text: ''}});
+    const text = input.message.text;
+    const [richFailure, setRichFailure] = useState<{id: string; message: string}>();
+    const richError = richFailure && richFailure.id === input.richId ? richFailure.message : '';
     const [busy, setBusy] = useState<'send' | 'draft' | ''>('');
     const [localError, setLocalError] = useState('');
     const [editedMessage, setEditedMessage] = useState<Message>();
@@ -138,15 +142,19 @@ export function Conversation({
     }, [chat?.id, messages, activeReply?.id, activeReply?.thinking, activeReply?.phase]);
 
     async function send() {
-        if (!text.trim() || busy) {
+        if (!text.trim() || busy || richError) {
             return;
         }
         setBusy('send');
         setLocalError('');
         setDraftNotice(undefined);
         try {
-            await onSend(text.trim());
-            setText('');
+            if (input.richId) {
+                await onSend(text, input.message.entities ?? []);
+            } else {
+                await onSend(text.trim());
+            }
+            setInput({message: {text: ''}});
             stick.current = true;
         } catch (cause) {
             setLocalError(errorMessage(cause));
@@ -163,7 +171,11 @@ export function Conversation({
         setLocalError('');
         setDraftNotice(undefined);
         try {
-            setText(await onDraft(messageId));
+            const result = await onDraft(messageId);
+            setInput({
+                message: {text: result.text, entities: result.entities ?? []},
+                ...(result.entities?.length ? {richId: crypto.randomUUID()} : {}),
+            });
         } catch (cause) {
             if (!(cause instanceof DOMException && cause.name === 'AbortError')) {
                 setDraftNotice({
@@ -357,7 +369,20 @@ export function Conversation({
                     <ConversationComposer
                         chatId={chat.id}
                         text={text}
-                        onTextChange={setText}
+                        onTextChange={(text) => setInput({message: {text}})}
+                        richDraft={input.richId ? {id: input.richId, message: input.message} : undefined}
+                        richError={richError}
+                        onRichChange={(id, message) =>
+                            setInput((previous) =>
+                                previous.richId === id ? {...previous, message} : previous,
+                            )
+                        }
+                        onRichError={(id) => setRichFailure({id, message: t('formattedDraftError')})}
+                        onRichConsumed={(id) =>
+                            setInput((previous) =>
+                                previous.richId === id ? {message: {text: ''}} : previous,
+                            )
+                        }
                         busy={busy}
                         onSend={send}
                         onDraft={() => draft()}

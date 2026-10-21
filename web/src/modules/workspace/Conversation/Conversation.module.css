@@ -176,6 +176,10 @@
     flex-shrink: 0;
 }
 
+.richDraft {
+    margin-bottom: 8px;
+}
+
 .composer {
     padding: 4px 6px;
     background: var(--tiho-panel);

@@ -19,7 +19,7 @@ import {Welcome} from '@/modules/workspace/Welcome/Welcome';
 import {mergeMessages, mergeRecentMessages} from '@/modules/workspace/model/mergeMessages';
 import styles from '@/modules/workspace/Workspace/Workspace.module.css';
 import {api, errorMessage} from '@/shared/api/client';
-import type {Chat, ChatRule} from '@/shared/api/client';
+import type {Chat, ChatRule, MessageEntity} from '@/shared/api/client';
 import {usePreferences} from '@/shared/theme/Preferences';
 import {desktopBridge} from '@/shared/desktop/bridge';
 import {MemoryDialog} from '@/modules/memory/MemoryDialog/MemoryDialog';
@@ -128,13 +128,13 @@ export function Workspace() {
             setActionError(errorMessage(cause));
         }
     }
-    async function send(text: string) {
+    async function send(text: string, entities?: MessageEntity[]) {
         if (!chat) {
             return;
         }
         await api.chats.send({
             chatId: chat.id,
-            text: {text},
+            text: {text, ...(entities?.length ? {entities} : {})},
         });
         await refreshConversation();
     }
@@ -171,7 +171,7 @@ export function Workspace() {
     }
     async function draft(messageId?: string) {
         if (!chat) {
-            return '';
+            throw new DOMException('Aborted', 'AbortError');
         }
         return queuedDraft(chat.rule, messageId);
     }
@@ -459,6 +459,12 @@ export function Workspace() {
                     initialSection={settingsSection}
                     onClose={() => setSettingsSection(null)}
                     onRefresh={refresh}
+                    chats={state.chats}
+                    telegramUserId={state.telegram.userId}
+                    onConfigureChat={(chat) => {
+                        setSettingsSection(null);
+                        setEditing(chat);
+                    }}
                 />
             )}
             {editing && (

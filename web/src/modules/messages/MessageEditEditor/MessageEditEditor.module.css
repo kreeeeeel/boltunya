@@ -42,6 +42,17 @@
     background: transparent;
 }
 
+.compact .toolbar {
+    padding: 4px;
+}
+
+.compact :global(.ProseMirror) {
+    min-height: 54px;
+    max-height: 180px;
+    padding: 8px 10px;
+    line-height: 1.45;
+}
+
 .linkForm {
     padding: 10px 12px;
     border-bottom: 1px solid var(--tiho-line);

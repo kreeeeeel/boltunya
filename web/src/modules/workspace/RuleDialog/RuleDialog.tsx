@@ -29,6 +29,7 @@ import {normalizeCommunicationRule} from '@/modules/workspace/model/normalizeCom
 import {useModelProfiles} from '@/modules/settings/model/useModelProfiles';
 import {PromptBudgetNotice} from '@/modules/settings/PromptBudgetNotice/PromptBudgetNotice';
 import {ProactiveInterval} from '@/modules/settings/ProactiveInterval/ProactiveInterval';
+import {RichText} from '@/modules/workspace/RichText/RichText';
 export function RuleDialog({
     chat,
     engine,
@@ -159,6 +160,35 @@ export function RuleDialog({
                                 }
                             />
                         )}
+                        <Text>{t('proactive.messageMode')}</Text>
+                        <Select
+                            size="l"
+                            width="max"
+                            value={[rule.proactiveMessageMode ?? 'ai']}
+                            options={(['ai', 'text'] as const).map((value) => ({
+                                value,
+                                content: t('proactive.messageModes.' + value),
+                            }))}
+                            aria-label={t('proactive.messageMode')}
+                            onUpdate={([proactiveMessageMode]) => {
+                                if (proactiveMessageMode === 'ai' || proactiveMessageMode === 'text') {
+                                    setRule({...rule, proactiveMessageMode});
+                                }
+                            }}
+                        />
+                        {rule.proactiveMessageMode === 'text' && (
+                            <Flex direction="column" gap={2}>
+                                <Text>{t('proactive.messageText')}</Text>
+                                <TextArea
+                                    value={rule.proactiveText ?? ''}
+                                    onUpdate={(proactiveText) => setRule({...rule, proactiveText})}
+                                    minRows={3}
+                                    maxRows={8}
+                                    controlProps={{'aria-label': t('proactive.messageText'), maxLength: 4096}}
+                                />
+                                <Text color="secondary">{t('proactive.messageTextHint')}</Text>
+                            </Flex>
+                        )}
                     </Flex>
                     {chat.kind && chat.kind !== 'private' && (
                         <Box>
@@ -178,6 +208,32 @@ export function RuleDialog({
                             />
                         </Box>
                     )}
+                    <Flex direction="column" gap={2}>
+                        <Text>{t('replyInterruption.mode')}</Text>
+                        <Select
+                            size="l"
+                            width="max"
+                            value={[rule.replyInterruptionMode ?? 'inherit']}
+                            options={(['inherit', 'replace', 'finish', 'each'] as const).map((value) => ({
+                                value,
+                                content: t('replyInterruption.options.' + value),
+                            }))}
+                            aria-label={t('replyInterruption.mode')}
+                            onUpdate={([replyInterruptionMode]) => {
+                                if (
+                                    replyInterruptionMode === 'inherit' ||
+                                    replyInterruptionMode === 'replace' ||
+                                    replyInterruptionMode === 'finish' ||
+                                    replyInterruptionMode === 'each'
+                                ) {
+                                    setRule({...rule, replyInterruptionMode});
+                                }
+                            }}
+                        />
+                        <Text color="secondary">
+                            {t('replyInterruption.hints.' + (rule.replyInterruptionMode ?? 'inherit'))}
+                        </Text>
+                    </Flex>
                     <Box>
                         <Text className={styles.label}>{t('style')}</Text>
                         <Select
@@ -449,7 +505,7 @@ export function RuleDialog({
                         )}
                         {result && busy !== 'test' && (
                             <Box className={styles.result}>
-                                <Text>{result.text}</Text>
+                                <RichText text={result.text} entities={result.entities} />
                                 <Text className={styles.hint}>
                                     {t('latency', {
                                         ms: result.durationMs,

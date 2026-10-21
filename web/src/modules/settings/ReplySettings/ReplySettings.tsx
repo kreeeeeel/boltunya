@@ -27,6 +27,38 @@ export function ReplySettings({value, onUpdate}: SettingsDraftSectionProps) {
             <Switch checked={value.showTyping} onUpdate={(showTyping) => onUpdate({...value, showTyping})}>
                 {t('showTyping')}
             </Switch>
+            <Flex direction="column" gap={2}>
+                <Text>{t('replyInterruption.title')}</Text>
+                <Select
+                    size="l"
+                    width="max"
+                    value={[value.replyProcessingMode]}
+                    options={(['replace', 'finish', 'each'] as const).map((mode) => ({
+                        value: mode,
+                        content: t('replyInterruption.options.' + mode),
+                    }))}
+                    aria-label={t('replyInterruption.title')}
+                    onUpdate={([replyProcessingMode]) => {
+                        if (
+                            replyProcessingMode === 'replace' ||
+                            replyProcessingMode === 'finish' ||
+                            replyProcessingMode === 'each'
+                        ) {
+                            onUpdate({...value, replyProcessingMode});
+                        }
+                    }}
+                />
+                <Text color="secondary">{t('replyInterruption.hints.' + value.replyProcessingMode)}</Text>
+            </Flex>
+            <Flex direction="column" gap={2}>
+                <Switch
+                    checked={value.formatReplies}
+                    onUpdate={(formatReplies) => onUpdate({...value, formatReplies})}
+                >
+                    {t('formatReplies')}
+                </Switch>
+                <Text color="secondary">{t('formatRepliesHint')}</Text>
+            </Flex>
             <Box>
                 <Switch
                     checked={value.ignoreAssistantTasks}

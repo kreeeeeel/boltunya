@@ -3,7 +3,7 @@ import {Box, Button, Dialog, Flex, Icon, Select, Text} from '@gravity-ui/uikit';
 import {useTranslations} from 'next-intl';
 import {useState} from 'react';
 import {api, errorMessage} from '@/shared/api/client';
-import type {AppState, Engine} from '@/shared/api/client';
+import type {AppState, Chat, Engine} from '@/shared/api/client';
 import {desktopBridge} from '@/shared/desktop/bridge';
 import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
 import {SettingsNavigation} from '@/modules/settings/SettingsNavigation/SettingsNavigation';
@@ -34,17 +34,27 @@ export function SettingsCenter({
     initialSection = 'application',
     onClose,
     onRefresh,
+    chats = [],
+    telegramUserId,
+    onConfigureChat,
 }: {
     readonly settings: AppState['settings'];
     readonly engine?: Engine;
     readonly initialSection?: SettingsSectionId;
     readonly onClose: () => void;
     readonly onRefresh: () => Promise<void>;
+    readonly chats?: Chat[];
+    readonly telegramUserId?: string;
+    readonly onConfigureChat?: (chat: Chat) => void;
 }) {
     const t = useTranslations();
     const [section, setSection] = useState<SettingsSectionId>(initialSection);
     const [visited, setVisited] = useState<SettingsSectionId[]>([initialSection]);
     const [value, setValue] = useState(() => createSettingsDraft(settings));
+    const [savedFingerprint, setSavedFingerprint] = useState(() =>
+        JSON.stringify(createSettingsDraft(settings)),
+    );
+    const dirty = JSON.stringify(value) !== savedFingerprint;
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [warning, setWarning] = useState('');
@@ -72,6 +82,7 @@ export function SettingsCenter({
                 settingsUpdate: value,
             });
             feedback.markSaved();
+            setSavedFingerprint(JSON.stringify(value));
             void onRefresh().catch(() => setWarning(t('settingsCenter.refreshWarning')));
             const desktop = desktopBridge();
             if (desktop) {
@@ -140,7 +151,16 @@ export function SettingsCenter({
             >
                 {id === 'application' && <ApplicationSettings {...common} />}
                 {id === 'replies' && <ReplySettings {...common} />}
-                {id === 'proactive' && <ProactiveSettings {...common} />}
+                {id === 'proactive' && (
+                    <ProactiveSettings
+                        {...common}
+                        chats={chats}
+                        settings={settings}
+                        ownerId={telegramUserId}
+                        configureDisabled={busy || dirty}
+                        onConfigureChat={onConfigureChat}
+                    />
+                )}
                 {id === 'prompt' && (
                     <PromptSettings
                         {...common}

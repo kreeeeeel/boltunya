@@ -3,8 +3,24 @@ import {useTranslations} from 'next-intl';
 
 import type {SettingsDraftSectionProps} from '@/modules/settings/model/SettingsDraftSectionProps';
 import {ProactiveInterval} from '@/modules/settings/ProactiveInterval/ProactiveInterval';
+import {ProactiveChats} from '@/modules/settings/ProactiveChats/ProactiveChats';
+import type {AppState, Chat} from '@/shared/api/client';
 
-export function ProactiveSettings({value, onUpdate}: SettingsDraftSectionProps) {
+export function ProactiveSettings({
+    value,
+    onUpdate,
+    chats,
+    settings,
+    ownerId,
+    configureDisabled,
+    onConfigureChat,
+}: SettingsDraftSectionProps & {
+    readonly chats: Chat[];
+    readonly settings: AppState['settings'];
+    readonly ownerId?: string;
+    readonly configureDisabled?: boolean;
+    readonly onConfigureChat?: (chat: Chat) => void;
+}) {
     const t = useTranslations('proactive');
 
     return (
@@ -24,6 +40,13 @@ export function ProactiveSettings({value, onUpdate}: SettingsDraftSectionProps) 
                     onUpdate={(proactiveIntervalMinutes) => onUpdate({...value, proactiveIntervalMinutes})}
                 />
             </Flex>
+            <ProactiveChats
+                chats={chats}
+                settings={settings}
+                ownerId={ownerId}
+                disabled={configureDisabled}
+                onConfigure={onConfigureChat}
+            />
         </Flex>
     );
 }

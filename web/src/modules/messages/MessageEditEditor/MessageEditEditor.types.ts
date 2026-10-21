@@ -12,6 +12,7 @@ export interface MessageEditEditorProps {
     ariaLabel: string;
     disabled?: boolean;
     autoFocus?: boolean;
+    compact?: boolean;
 }
 
 export type MessageEditMark = Omit<MessageEditEntity, 'offset' | 'length'> & {entityId: string};

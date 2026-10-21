@@ -5,6 +5,7 @@ import {expect, it, vi} from 'vitest';
 import {useQueuedDraft} from '@/modules/workspace/hooks/useQueuedDraft';
 import {defaultRule} from '@/shared/api/client';
 import ru from '@/shared/i18n/ru.json';
+import type {Reply} from '@/shared/api/client';
 const mocks = vi.hoisted(() => ({enqueuePreviewJob: vi.fn(), previewJob: vi.fn(), cancelActivity: vi.fn()}));
 vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
@@ -40,11 +41,11 @@ it('uses the shared queue, polls progress and returns only a ready draft', async
         .mockResolvedValueOnce(reply('ready', 'Короткий ответ'));
     try {
         const view = renderHook(() => useQueuedDraft('42', refresh), {wrapper});
-        let output: Promise<string>;
+        let output: Promise<Reply>;
         await act(async () => {
             output = view.result.current(defaultRule, '99');
             await vi.advanceTimersByTimeAsync(1500);
-            expect(await output).toBe('Короткий ответ');
+            expect(await output).toMatchObject({text: 'Короткий ответ', durationMs: 100});
         });
         expect(mocks.enqueuePreviewJob).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -58,6 +59,19 @@ it('uses the shared queue, polls progress and returns only a ready draft', async
     } finally {
         vi.useRealTimers();
     }
+});
+
+it('preserves the actual Telegram entities in a ready generated draft', async () => {
+    const result = {
+        text: 'Привет',
+        entities: [{offset: 0, length: 6, type: 'bold'}],
+        durationMs: 100,
+        tokensPerSecond: 10,
+    };
+    mocks.enqueuePreviewJob.mockResolvedValue({...reply('ready'), result});
+    const view = renderHook(() => useQueuedDraft('42', async () => {}), {wrapper});
+    expect(await view.result.current(defaultRule)).toEqual(result);
+    view.unmount();
 });
 it('stops polling on navigation without cancelling the queued job', async () => {
     vi.useFakeTimers();

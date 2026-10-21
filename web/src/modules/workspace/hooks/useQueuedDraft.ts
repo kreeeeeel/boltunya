@@ -27,7 +27,7 @@ export function useQueuedDraft(chatId: string | undefined, onRefresh: () => Prom
     useEffect(() => () => pending.current?.abort(), [chatId]);
     async function run(rule: ChatRule, messageId?: string) {
         if (!chatId) {
-            return '';
+            throw new DOMException('Aborted', 'AbortError');
         }
         pending.current?.abort();
         const controller = new AbortController();
@@ -62,7 +62,7 @@ export function useQueuedDraft(chatId: string | undefined, onRefresh: () => Prom
             if (job.status === 'error' || !job.result?.text) {
                 throw new DraftPreparationError(job.error || t('failed'), 'error');
             }
-            return job.result.text;
+            return job.result;
         } finally {
             if (pending.current === controller) {
                 pending.current = null;

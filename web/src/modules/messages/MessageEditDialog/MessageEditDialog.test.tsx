@@ -1,8 +1,9 @@
 import {ThemeProvider, TextArea} from '@gravity-ui/uikit';
 import {NextIntlClientProvider} from 'next-intl';
-import {fireEvent, render, screen, waitFor} from '@testing-library/react';
+import {act, fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {useState} from 'react';
 import {beforeEach, expect, it, vi} from 'vitest';
+import '@/modules/messages/MessageEditEditor/MessageEditEditor';
 import {MessageEditDialog} from '@/modules/messages/MessageEditDialog/MessageEditDialog';
 import type {MessageEditEditorProps} from '@/modules/messages/MessageEditEditor/MessageEditEditor.types';
 import type {MessageEditOptions} from '@aigram/api-client';
@@ -55,7 +56,7 @@ beforeEach(() => {
     mocks.editMessage.mockResolvedValue({...message, text: 'Original updated', editedAt: 100});
 });
 
-function mount(value = message, onUpdated = vi.fn(), onClose = vi.fn()) {
+async function mount(value = message, onUpdated = vi.fn(), onClose = vi.fn()) {
     render(
         <NextIntlClientProvider locale="ru" messages={ru}>
             <ThemeProvider>
@@ -63,6 +64,9 @@ function mount(value = message, onUpdated = vi.fn(), onClose = vi.fn()) {
             </ThemeProvider>
         </NextIntlClientProvider>,
     );
+    await act(async () => {
+        await vi.dynamicImportSettled();
+    });
     return {onUpdated, onClose};
 }
 
@@ -74,7 +78,7 @@ it('patches the confirmed message once, stays open and refreshes entity referenc
                 resolveRefresh = resolve;
             }),
     );
-    const {onUpdated, onClose} = mount();
+    const {onUpdated, onClose} = await mount();
     const input = await screen.findByRole('textbox', {name: ru.messageEdit.titleText});
     fireEvent.change(input, {target: {value: 'Original updated'}});
     fireEvent.click(screen.getByRole('button', {name: ru.messageEdit.save}));
@@ -100,7 +104,7 @@ it('allows removing a media caption and preserves exact whitespace on a later ed
     mocks.messageEditOptions
         .mockResolvedValueOnce({...options, kind: 'caption', entities: []})
         .mockResolvedValue({...options, text: '', kind: 'caption', entities: [], revision: 'b'.repeat(64)});
-    mount({...message, kind: 'photo'});
+    await mount({...message, kind: 'photo'});
     const input = await screen.findByRole('textbox', {name: ru.messageEdit.titleCaption});
     fireEvent.change(input, {target: {value: ''}});
     fireEvent.click(screen.getByRole('button', {name: ru.messageEdit.save}));
@@ -128,7 +132,7 @@ it('keeps a conflicting draft until an explicit discard and reload', async () =>
     mocks.editMessage.mockRejectedValue(
         new ApiRequestError('Internal backend detail', 409, 'MESSAGE_EDIT_CONFLICT'),
     );
-    mount();
+    await mount();
     const input = await screen.findByRole('textbox', {name: ru.messageEdit.titleText});
     fireEvent.change(input, {target: {value: 'Unsaved draft'}});
     fireEvent.click(screen.getByRole('button', {name: ru.messageEdit.save}));
@@ -157,7 +161,7 @@ it('distinguishes a confirmed edit from a failed refresh and only retries the re
     mocks.messageEditOptions
         .mockResolvedValueOnce(options)
         .mockRejectedValueOnce(new Error('Private transport detail'));
-    const {onUpdated} = mount();
+    const {onUpdated} = await mount();
     const input = await screen.findByRole('textbox', {name: ru.messageEdit.titleText});
     fireEvent.change(input, {target: {value: 'Original updated'}});
     fireEvent.click(screen.getByRole('button', {name: ru.messageEdit.save}));
@@ -176,7 +180,7 @@ it('distinguishes a confirmed edit from a failed refresh and only retries the re
 });
 
 it('asks before Escape discards changes and never mutates Telegram on cancellation', async () => {
-    const {onClose} = mount();
+    const {onClose} = await mount();
     const input = await screen.findByRole('textbox', {name: ru.messageEdit.titleText});
     fireEvent.change(input, {target: {value: 'My draft'}});
     fireEvent.keyDown(document, {key: 'Escape', code: 'Escape'});
@@ -205,7 +209,7 @@ it('asks before Escape discards changes and never mutates Telegram on cancellati
 
 it('allows emoji exactly at the Telegram code point limit', async () => {
     mocks.messageEditOptions.mockResolvedValue({...options, text: 'Hi', entities: [], maxLength: 4});
-    mount();
+    await mount();
     const input = await screen.findByRole('textbox', {name: ru.messageEdit.titleText});
     fireEvent.change(input, {target: {value: '🙂🙂🙂🙂'}});
     expect(screen.getByText('4 / 4')).toBeVisible();
