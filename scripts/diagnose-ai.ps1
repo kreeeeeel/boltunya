@@ -1,5 +1,5 @@
 param(
-    [string]$DataDirectory = $(if ($env:AIGRAM_DATA_DIR) { $env:AIGRAM_DATA_DIR } elseif ($env:BOLTUNYA_DATA_DIR) { $env:BOLTUNYA_DATA_DIR } elseif ($env:TIHO_DATA_DIR) { $env:TIHO_DATA_DIR } else { Join-Path $env:LOCALAPPDATA 'Tiho' }),
+    [string]$DataDirectory = $(if ($env:AIGRAM_DATA_DIR) { $env:AIGRAM_DATA_DIR } elseif ($env:BOLTUNYA_DATA_DIR) { $env:BOLTUNYA_DATA_DIR } elseif ($env:TIHO_DATA_DIR) { $env:TIHO_DATA_DIR } else { Join-Path $env:LOCALAPPDATA 'Aigram' }),
     [string]$OutputPath = (Join-Path ([Environment]::GetFolderPath('Desktop')) 'aigram-diagnostics.json'),
     [switch]$TestModel
 )

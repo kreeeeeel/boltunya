@@ -31,17 +31,22 @@ let handlingStartupFailure = false;
 const updateSession = process.argv.find(argument => argument.startsWith('--update-session='))?.slice('--update-session='.length);
 const startupRegistration = new StartupRegistration();
 
-const profile = new DesktopProfile(process.env, app.getPath('appData'));
+const profile = new DesktopProfile(process.env, app.getPath('appData'), process.argv);
 app.setName(APP_NAME);
 app.setAppUserModelId(APP_ID);
-const userData = profile.userDataDirectory();
-mkdirSync(userData, {recursive: true});
-app.setPath('userData', userData);
-if (!app.requestSingleInstanceLock()) app.quit();
-else {
-    app.on('second-instance', (_event, commandLine) => { if (!commandLine.includes('--startup')) show(); });
-    app.on('activate', () => show());
-    void app.whenReady().then(start).catch(startupFailure);
+try {
+    profile.prepare();
+    const userData = profile.userDataDirectory();
+    mkdirSync(userData, {recursive: true});
+    app.setPath('userData', userData);
+    if (!app.requestSingleInstanceLock()) app.quit();
+    else {
+        app.on('second-instance', (_event, commandLine) => { if (!commandLine.includes('--startup')) show(); });
+        app.on('activate', () => show());
+        void app.whenReady().then(start).catch(startupFailure);
+    }
+} catch (error) {
+    void app.whenReady().then(() => { dialog.showErrorBox(APP_NAME, error instanceof Error ? error.message : 'Не удалось перенести профиль приложения.'); app.quit(); });
 }
 
 function show(): void { if (!main || main.isDestroyed()) return; backgroundStartup = false; if (main.isMinimized()) main.restore(); main.show(); main.focus(); tray?.hide(); }
