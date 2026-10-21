@@ -22,6 +22,7 @@ export function MessageBubble({
     onDraftRequest,
     onMenuOpenChange,
     onDeleted,
+    onEditRequest,
 }: {
     readonly message: Message;
     readonly nextMessage?: Message;
@@ -32,6 +33,7 @@ export function MessageBubble({
     readonly onDraftRequest?: () => Promise<void>;
     readonly onMenuOpenChange?: (messageId: string, open: boolean) => void;
     readonly onDeleted?: (result: MessageDeletionResult) => Promise<void>;
+    readonly onEditRequest?: (message: Message) => void;
 }) {
     const t = useTranslations();
     const chatUi = useTranslations('chatUi');
@@ -121,6 +123,15 @@ export function MessageBubble({
                         minute: '2-digit',
                     })}
                 </Text>
+                {!!message.editedAt && (
+                    <Tooltip
+                        content={t('messageEdit.editedAt', {
+                            date: new Date(message.editedAt * 1000).toLocaleString(locale),
+                        })}
+                    >
+                        <Text qa="message-edited">{t('messageEdit.edited')}</Text>
+                    </Tooltip>
+                )}
                 {message.outgoing && <Icon data={message.read ? CheckDouble : Check} size={16} />}
             </Flex>
         </Box>
@@ -182,6 +193,7 @@ export function MessageBubble({
                     onExcludedChanged={onContextChanged ?? (async () => {})}
                     onDraftRequest={onDraftRequest}
                     onDeleted={onDeleted}
+                    onEditRequest={onEditRequest}
                     onDialogOpenChange={(open) => onMenuOpenChange?.(message.id, open)}
                 />
             )}

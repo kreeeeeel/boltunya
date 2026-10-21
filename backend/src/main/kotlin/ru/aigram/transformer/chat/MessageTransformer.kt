@@ -30,6 +30,7 @@ fun ChatMessage.toContract(): Message = Message(
     contextExcluded = contextExcluded,
     senderUsername = senderUsername,
     mediaAlbumId = mediaAlbumId,
+    editedAt = editedAt,
 )
 
 private fun MessageEntity.toContract(): ContractMessageEntity = ContractMessageEntity(

@@ -123,6 +123,8 @@ paths:
         $ref: ./operations/chats.yaml#/chatsByChatIdMessagesByMessageIdDeletion
     /api/chats/{chatId}/messages/{messageId}:
         $ref: ./operations/chats.yaml#/chatsByChatIdMessagesByMessageId
+    /api/chats/{chatId}/messages/{messageId}/edit:
+        $ref: ./operations/chats.yaml#/chatsByChatIdMessagesByMessageIdEdit
 components:
     schemas:
         ChatRule:
@@ -281,6 +283,16 @@ components:
             $ref: ./models/chats/MessageDeletionRequest.yaml#/MessageDeletionRequest
         MessageDeletionResult:
             $ref: ./models/chats/MessageDeletionResult.yaml#/MessageDeletionResult
+        MessageEditKind:
+            $ref: ./models/chats/MessageEditKind.yaml#/MessageEditKind
+        MessageEditEntityKind:
+            $ref: ./models/chats/MessageEditEntityKind.yaml#/MessageEditEntityKind
+        MessageEditEntity:
+            $ref: ./models/chats/MessageEditEntity.yaml#/MessageEditEntity
+        MessageEditOptions:
+            $ref: ./models/chats/MessageEditOptions.yaml#/MessageEditOptions
+        MessageEditRequest:
+            $ref: ./models/chats/MessageEditRequest.yaml#/MessageEditRequest
         CommunicationStyle:
             $ref: ./models/chats/CommunicationStyle.yaml#/CommunicationStyle
         ChatGroupReplies:

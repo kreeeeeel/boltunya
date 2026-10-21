@@ -24,4 +24,22 @@ class WritingStyleStoreTest {
         restored.clear()
         assertTrue(WritingStyleStore(directory).update("42", emptyList()).isEmpty())
     }
+
+    @Test
+    fun `new owner text replaces an old sample by identity and editing forgets only the affected message`() {
+        val store = WritingStyleStore(directory)
+        val first = ChatMessage("1", "42", "Original", true, 10)
+        val second = ChatMessage("2", "42", "Second", true, 11)
+        val otherChat = ChatMessage("3", "43", "Other chat", true, 12)
+        store.update("42", listOf(first, second))
+        store.update("43", listOf(otherChat))
+        val edited = first.copy(text = "  Edited\n")
+
+        assertEquals(listOf(edited, second), store.update("42", listOf(edited)))
+        store.forget("42", setOf("1"))
+        val reopened = WritingStyleStore(directory)
+        assertEquals(listOf(second), reopened.update("42", emptyList()))
+        assertEquals(listOf(otherChat), reopened.update("43", emptyList()))
+        assertEquals(listOf(second), reopened.update("42", listOf(edited.copy(automated = true))))
+    }
 }

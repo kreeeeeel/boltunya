@@ -1,5 +1,5 @@
 import {Box, Dialog, DropdownMenu, Icon, Portal, Text} from '@gravity-ui/uikit';
-import {Copy, Link, EyeSlash, ArrowRotateLeft, Sparkles, TrashBin} from '@gravity-ui/icons';
+import {Copy, Link, EyeSlash, ArrowRotateLeft, Sparkles, TrashBin, Pencil} from '@gravity-ui/icons';
 import {useState} from 'react';
 import {useTranslations} from 'next-intl';
 import {api, errorMessage} from '@/shared/api/client';
@@ -20,6 +20,7 @@ export interface MessageContextMenuProps {
     readonly messageLink?: string;
     readonly onDeleted?: (result: MessageDeletionResult) => Promise<void>;
     readonly onDialogOpenChange?: (open: boolean) => void;
+    readonly onEditRequest?: (message: Message) => void;
 }
 export function MessageContextMenu({
     message,
@@ -30,9 +31,11 @@ export function MessageContextMenu({
     messageLink,
     onDeleted,
     onDialogOpenChange,
+    onEditRequest,
 }: MessageContextMenuProps) {
     const t = useTranslations('messageMenu');
     const common = useTranslations();
+    const edit = useTranslations('messageEdit');
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [deleting, setDeleting] = useState(false);
@@ -134,6 +137,22 @@ export function MessageContextMenu({
                                               iconStart: <Icon data={Sparkles} size={17} />,
                                               disabled: busy,
                                               action: () => void action(onDraftRequest),
+                                          },
+                                      ]
+                                    : []),
+                                ...(onEditRequest &&
+                                message.outgoing &&
+                                !message.deleted &&
+                                ['text', 'photo', 'video'].includes(message.kind)
+                                    ? [
+                                          {
+                                              text: edit('action'),
+                                              iconStart: <Icon data={Pencil} size={17} />,
+                                              disabled: busy,
+                                              action: () => {
+                                                  onClose();
+                                                  onEditRequest(message);
+                                              },
                                           },
                                       ]
                                     : []),

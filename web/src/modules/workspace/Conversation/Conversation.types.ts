@@ -8,6 +8,7 @@ export interface ConversationProps {
     readonly onMediaSent?: () => Promise<void>;
     readonly onContextChanged?: (change: ContextExclusionChange) => Promise<void>;
     readonly onMessageDeleted?: (result: MessageDeletionResult) => Promise<void>;
+    readonly onMessageUpdated?: (message: Message) => void;
     readonly messages: Message[];
     readonly activeReply?: Activity;
     readonly onRefresh: () => Promise<void>;

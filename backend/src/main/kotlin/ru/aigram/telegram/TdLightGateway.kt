@@ -15,6 +15,8 @@ import ru.aigram.domain.chat.ChatSummary
 import ru.aigram.domain.chat.MessageDeletionOptions
 import ru.aigram.domain.chat.MessageDeletionResult
 import ru.aigram.domain.chat.MessageDeletionScope
+import ru.aigram.domain.chat.MessageEditOptions
+import ru.aigram.domain.chat.MessageEditRequest
 import ru.aigram.domain.media.ChatGallery
 import ru.aigram.domain.media.MediaFile
 import ru.aigram.domain.media.OutgoingMedia
@@ -70,6 +72,7 @@ class TdLightGateway(
     private val galleries: TelegramGalleryService,
     private val links: TelegramMessageLinks,
     private val deletion: TelegramMessageDeletion,
+    private val editing: TelegramMessageEditing,
 ) : TelegramGateway {
     private val closed = AtomicBoolean()
     private var factory: SimpleTelegramClientFactory? = null
@@ -115,6 +118,10 @@ class TdLightGateway(
         deletion.options(chatId, messageId)
     override fun deleteMessage(chatId: String, messageId: String, scope: MessageDeletionScope): MessageDeletionResult =
         deletion.delete(chatId, messageId, scope)
+    override fun messageEditOptions(chatId: String, messageId: String): MessageEditOptions =
+        editing.options(chatId, messageId)
+    override fun editMessage(chatId: String, messageId: String, request: MessageEditRequest): ChatMessage =
+        editing.edit(chatId, messageId, request)
     override fun sendSticker(chatId: String, stickerId: String, replyToId: String, topicId: Int): String =
         stickerService.send(chatId, stickerId, replyToId, topicId)
 

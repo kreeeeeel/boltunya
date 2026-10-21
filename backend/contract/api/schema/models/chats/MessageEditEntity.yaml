@@ -1,0 +1,34 @@
+MessageEditEntity:
+    type: object
+    description: An original Telegram entity reference or an explicitly added formatting mark. Ranges use UTF-16 code units.
+    required:
+        - offset
+        - length
+        - kind
+    properties:
+        offset:
+            type: integer
+            minimum: 0
+        length:
+            type: integer
+            minimum: 1
+        kind:
+            $ref: ./MessageEditEntityKind.yaml#/MessageEditEntityKind
+        sourceIndex:
+            type: integer
+            nullable: true
+            minimum: 0
+            description: Required for existing entities; indexes the original entity array protected by revision. Its full Telegram type and metadata stay on the server.
+        typeHint:
+            type: string
+            default: ''
+            readOnly: true
+            description: Display hint for an existing entity; never used to reconstruct its Telegram type.
+        url:
+            type: string
+            default: ''
+            maxLength: 65536
+        language:
+            type: string
+            default: ''
+            maxLength: 256

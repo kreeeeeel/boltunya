@@ -9,6 +9,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.time.Clock
+import java.util.stream.Collectors
 
 private const val MESSAGE_ID_SHIFT = 20
 private const val MESSAGES_PER_BUCKET = 128
@@ -17,6 +18,54 @@ private const val MESSAGES_PER_BUCKET = 128
 class MessageArchiveStore(directory: Path, private val clock: Clock) {
     private val root = directory.resolve("history")
     private val json = Json { ignoreUnknownKeys = true }
+    private val mutationVersions = mutableMapOf<Path, Long>()
+
+    @Synchronized
+    fun version(account: String, chat: String): Long {
+        if (account.isEmpty()) {
+            return 0
+        }
+        return mutationVersions[folder(account, chat)] ?: 0
+    }
+
+    @Synchronized
+    fun recordEdited(account: String, messages: List<ChatMessage>) {
+        if (account.isEmpty() || messages.isEmpty()) {
+            return
+        }
+        messages.stream().map { it.chatId }.distinct().forEach { chat ->
+            val key = folder(account, chat)
+            mutationVersions[key] = (mutationVersions[key] ?: 0) + 1
+        }
+        record(account, messages)
+    }
+
+    @Synchronized
+    fun recordPage(
+        account: String,
+        chat: String,
+        messages: List<ChatMessage>,
+        capturedVersion: Long,
+    ): List<ChatMessage> {
+        if (account.isEmpty() || messages.isEmpty()) {
+            return messages
+        }
+        if (messages.stream().anyMatch { it.chatId != chat }) {
+            throw InvalidHistoryIdentifierException()
+        }
+
+        val folder = folder(account, chat)
+        if (version(account, chat) == capturedVersion) {
+            record(account, messages)
+        }
+        // A changed epoch makes the whole native snapshot stale, including same-second edits.
+        // Unknown entries are returned for this page but only a fresh read may persist them.
+        val retained = messages.stream().map { bucket(it.id) }.distinct()
+            .flatMap { read(folder.resolve("$it.json")).values.stream() }
+            .collect(Collectors.toMap({ it.id }, { it }))
+        val deleted = read(folder.resolve("deleted.json"))
+        return messages.stream().map { message -> deleted[message.id] ?: retained[message.id] ?: message }.toList()
+    }
 
     @Synchronized
     fun record(account: String, messages: List<ChatMessage>) {
@@ -33,12 +82,15 @@ class MessageArchiveStore(directory: Path, private val clock: Clock) {
                 val next = previous.toMutableMap()
                 batch.stream().forEach { message ->
                     val tombstone = deleted[message.id]
+                    val archived = previous[message.id]
                     val retained = if (tombstone != null) {
                         if (tombstone.date > 0) {
                             tombstone
                         } else {
                             message.copy(deleted = true, deletedAt = tombstone.deletedAt)
                         }
+                    } else if (archived != null && archived.editedAt > message.editedAt) {
+                        archived
                     } else {
                         message
                     }

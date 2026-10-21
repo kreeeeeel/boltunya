@@ -399,6 +399,19 @@
             "property": "default",
             "after": "message",
             "reason": "Retain the existing ContextExclusionUpdate scope default on the named enum definition so the pinned Kotlin generator emits a nonnullable MESSAGE constructor default. Fully expanded request wire semantics are unchanged."
+        },
+        {
+            "model": "Message",
+            "property": "editedAt",
+            "reason": "Optional Unix-second edit timestamp defaults to zero; all other original fields and requirements are unchanged."
+        },
+        {
+            "path": "/api/chats/{chatId}/messages/{messageId}/edit",
+            "methods": [
+                "get",
+                "put"
+            ],
+            "reason": "Add fresh revision-protected lossless Telegram editing with opaque original entity references and explicit new formatting marks."
         }
     ],
     "paths": {},
@@ -407,7 +420,7 @@
         "POST /api/telegram/connect": "f54221a800fa7bcafa0cd05aca431371d62513d5a6fe87582050cfa966f9291f",
         "POST /api/telegram/submit": "5a41a66b7dea0a0ba7a11b9bb7d56f0e3dccbed36850139d49ba9df862d3b5d4",
         "POST /api/telegram/logout": "ffed244966b19049d612013ff5a8942c164fb2c829d077c3d2866ab11149f27d",
-        "GET /api/chats/{chatId}/messages": "6102acf3857fc5260dd60ca5122eb7310e0bb4053d6242ef1f30ac3da6f3cd5f",
+        "GET /api/chats/{chatId}/messages": "616e327bf6d644aaab077c5e55666fc0e571416e543cb1962860df50002cadcc",
         "POST /api/chats/{chatId}/messages": "0ce6c8e47eb5fb00bfada3ffd64775c4e2527f680d73be75e5d59fef8018a13c",
         "PUT /api/chats/{chatId}/rule": "6546e3a961b508352f7faaea81539ea65373d3a60e62b576bdb4e8840a55af81",
         "PATCH /api/settings": "005052274c8f2e820e18a1317ace04f87c29056cc3750597b0392dee071b47a3",
@@ -419,7 +432,7 @@
         "GET /api/media/{fileId}": "ccc4114ed4734e1bfc6607b09892a215d3a21484cb58b75495a8a75bc9a26f8e",
         "POST /api/telegram/restore": "55f37fc92e3c6801a0e4609a6f9ac153613e559caf06b47f197966b328d580b9",
         "GET /api/metrics": "d76e5bda433886e328a08ace2e270d42673a92355b037c73aa5fb2bf7a202bdc",
-        "GET /api/chats/{chatId}/deleted": "956abd8635a8760283dc725f69556871ad68574fc50d30c78baa4394b6ebd106",
+        "GET /api/chats/{chatId}/deleted": "09b5dc30265ea51cbf49397ebe3b1c88a70a2555fdcb067c20efb4b21bd69836",
         "GET /api/search/connection": "124aa773fa6bbe7c18253198bd54cecc0669203011745e03aa3a8336e309f903",
         "POST /api/search/connection": "d393161d6eec987eba36d9085bd20d8de4045ff2f8d3de8f0ace7b7486ebdba8",
         "DELETE /api/search/connection": "194251b5a1f16ec5106144da69ffd5f66340cc110b92d5b463aec25c35e70699",
@@ -454,7 +467,7 @@
         "GET /api/chats/{chatId}/messages/{messageId}/link": "3edde7bce314a80919cd0485901aa24cf3bcfbcfe3d132d24b4ea80b98957878",
         "PUT /api/chats/{chatId}/messages/{messageId}/context": "1dc9bc2414e1facc2dde34f8db1df137e872f1e5c26598e057621de1d5b60716",
         "DELETE /api/chats/{chatId}/context-exclusions": "ae1602b1aae9f69480f14c2989e1940c24ff40b2360d721e04581ac45bf8b664",
-        "GET /api/chats/{chatId}/gallery": "b69fe0cdde52cb34e58f3c061e90129711feb33087370bb6efce6efe76a20e29",
+        "GET /api/chats/{chatId}/gallery": "38891a558c5e38911cf379ede80d6d9c7d900dfa798afea64ebcc67f96435760",
         "POST /api/chats/{chatId}/attachments": "11737941868658e4acba705e693916db4da38bd6f7a5fb5e7050dd28f5503041",
         "POST /api/chats/{chatId}/stickers": "c17ed81de7c4b678c9ed850ee14b1c303a263936677a73d086c692e5a560ad7d",
         "GET /api/activity/history": "7493e8e30da88664ce32512e9fea5fd83230ce2256db23a30c505adc54f0e432",
@@ -467,7 +480,7 @@
     },
     "schemas": {
         "Chat": "1f843b50e0bc1293df0191a90212d483c2bb765adbb389aa3781dcb7a14c7d50",
-        "Message": "4d43bbf84c367921313f5b2ecb302efbc0c418b6104f905673b83dfc68c58627",
+        "Message": "f1337eb151ac3d7f1374bd6c34f0fc63d17e13eed1d69bea588076f0a23c8f50",
         "Activity": "d563cf3739360ccaa756911d48b5d079159672a4a66260f3d5b4ed0823807d85",
         "Error": "bbce6ad737e6cc0b480393f6d89e967c6a66fb154106d1918130454a7310f5a7",
         "Reply": "4d46267c9f85b25e55e73819427e662e205da9b81af5229cb30f692a68d8bb2e",
@@ -475,7 +488,7 @@
         "MetricSample": "daff2a68bfd28783eea2e9cc95b7b00fb3e98496ef1e1347f259e53f9e6723b5",
         "ActivityDetails": "5129ad36a0dd989af590ad2b16d19da4572a94046dc4f7230486b76fd01d44ed",
         "PreviewJob": "9e3883f3c41036751c7e1871c0dd7b461fb8d290535b76340c9de65cc7b9d90c",
-        "ChatGallery": "21b14d6378f1daffa8882f0135a7b44f2c420d9af4ba28338c2305b9ecea637b",
+        "ChatGallery": "cbb2257437da309f338601e0021b985875fea497cd30f140d2e062224abcadf1",
         "ContextExclusionUpdate": "bd2bdbb99ada98eaa39b7db75fab8abd32fe62678c2c3a03184caa143f13e6ce",
         "ActivityHistoryPage": "50df819509facfbdf0cb207d39330bf88481d5819261728223e8d175f3dc3765",
         "Engine": "9f2021c8ca0d0fe4c4306131ef98722b80c9b4fa0bd1cb4d5b58310f36178493",
@@ -496,10 +509,13 @@
     },
     "additions": {
         "paths": {
-            "/api/engine/restart": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+            "/api/engine/restart": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "/api/chats/{chatId}/messages/{messageId}/edit": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
         },
         "operations": {
-            "POST /api/engine/restart": "32fbefbdd9a356a2043a287cb814386864865556f13bd939ff270b2cd055a56a"
+            "POST /api/engine/restart": "32fbefbdd9a356a2043a287cb814386864865556f13bd939ff270b2cd055a56a",
+            "GET /api/chats/{chatId}/messages/{messageId}/edit": "5e9d193cb0267038341910a4f4e375fe16e0d0974c991b51fc536759664291c5",
+            "PUT /api/chats/{chatId}/messages/{messageId}/edit": "3b189403bf5bcf848ba3ca3da587bc6cf2ecd25840c588b30eb67e41abd001da"
         },
         "schemas": {
             "ChatRuleInput": "3633a87fc4327c38f4ae8ee93c5002b7d69a3706f886d7370390c0e69476f818",
@@ -507,7 +523,12 @@
             "ModelCapabilitiesInput": "e7b326ba312e8f9b3a6a6adcd14380722da78d08d6db5a3c6c0766cf96759e86",
             "ModelPromptSettingsInput": "481950c771b9cb107fe90cfa674104e6036b9f56cc514f0a9f26b8c019750c6c",
             "AppearanceSettingsInput": "be735b50d13438a65021323a908baf9cc78332ef702d639eff6804c96c0d97af",
-            "ActivityHistorySettingsInput": "ded29e7ec2cdaacc126ea59e08ce59663af5dc8d5e97f7132be8b513eb8767d9"
+            "ActivityHistorySettingsInput": "ded29e7ec2cdaacc126ea59e08ce59663af5dc8d5e97f7132be8b513eb8767d9",
+            "MessageEditKind": "4f553604f024efe69328cfe8927ab93b0c7c3f94ad1044aef6d0ea9463d4c40e",
+            "MessageEditEntityKind": "a662861d4f82c49ff0a3216ed8c6d7736206eb49f559b3853f752820efbb9486",
+            "MessageEditEntity": "0f58b82649d5b50c6194782582405600189b32160783d454632960066f395ef8",
+            "MessageEditOptions": "5b416ede65660905eca1841e14c6862ecc11c55549e442c739e40d1640cfb18e",
+            "MessageEditRequest": "62baf61393547fe41bdd921afb3dc8aec9e92ff65ec845f6faef33be7fd6a965"
         }
     }
 }

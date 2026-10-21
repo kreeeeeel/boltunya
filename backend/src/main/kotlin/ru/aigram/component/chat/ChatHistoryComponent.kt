@@ -5,6 +5,7 @@ import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.MessageLink
 import ru.aigram.domain.media.ChatGallery
 import ru.aigram.exception.impl.ChatNotFoundException
+import ru.aigram.exception.impl.ChatUnavailableException
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.ContextExclusionStore
 import ru.aigram.storage.MessageArchiveStore
@@ -25,10 +26,14 @@ class ChatHistoryComponent(
 ) {
     fun history(chatId: String, before: String?): List<ChatMessage> {
         val cursor = before?.toLongOrNull() ?: 0
-        val current = telegram.history(chatId, HISTORY_PAGE_SIZE, cursor)
         val owner = telegram.status().userId
-        archive.record(owner, current)
-        val messages = archive.merge(owner, chatId, current, cursor, HISTORY_PAGE_SIZE)
+        val version = archive.version(owner, chatId)
+        val current = telegram.history(chatId, HISTORY_PAGE_SIZE, cursor)
+        if (telegram.status().userId != owner) {
+            throw ChatUnavailableException()
+        }
+        val retained = archive.recordPage(owner, chatId, current, version)
+        val messages = archive.merge(owner, chatId, retained, cursor, HISTORY_PAGE_SIZE)
             .stream().map(::decorate).toList()
         return exclusions.decorate(owner, messages)
     }
@@ -44,13 +49,20 @@ class ChatHistoryComponent(
     }
 
     fun gallery(chatId: String, around: String): ChatGallery {
-        val page = telegram.gallery(chatId, around)
         val owner = telegram.status().userId
-        archive.record(owner, page.messages)
-        return page.copy(messages = exclusions.decorate(owner, page.messages.stream().map(::decorate).toList()))
+        val version = archive.version(owner, chatId)
+        val page = telegram.gallery(chatId, around)
+        if (telegram.status().userId != owner) {
+            throw ChatUnavailableException()
+        }
+        val retained = archive.recordPage(owner, chatId, page.messages, version)
+        return page.copy(messages = exclusions.decorate(owner, retained.stream().map(::decorate).toList()))
     }
 
     fun link(chatId: String, messageId: String): MessageLink = MessageLink(telegram.messageLink(chatId, messageId))
+
+    fun present(message: ChatMessage): ChatMessage =
+        exclusions.decorate(telegram.status().userId, listOf(decorate(message))).single()
 
     private fun decorate(message: ChatMessage): ChatMessage =
         policy.decorate(message.copy(automated = automated.contains(message.chatId, message.id)), media)

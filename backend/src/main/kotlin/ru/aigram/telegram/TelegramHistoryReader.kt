@@ -4,6 +4,7 @@ import it.tdlight.client.SimpleTelegramClient
 import it.tdlight.jni.TdApi
 import org.springframework.stereotype.Component
 import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.exception.impl.ChatUnavailableException
 import ru.aigram.storage.MessageArchiveStore
 import java.util.concurrent.TimeUnit
 
@@ -17,12 +18,17 @@ class TelegramHistoryReader(
     private val cache: TelegramCache,
     private val archive: MessageArchiveStore,
 ) {
-    fun read(client: SimpleTelegramClient, chatId: Long, limit: Int, before: Long): List<ChatMessage> =
-        page(client, chatId, limit.coerceIn(1, MAX_PAGE_SIZE), before, 0).stream().map(mapper::map).sorted(
-            compareBy {
-                it.id.toLong()
-            },
-        ).toList().also { archive.record(cache.ownId.takeIf { it != 0L }?.toString().orEmpty(), it) }
+    fun read(client: SimpleTelegramClient, chatId: Long, limit: Int, before: Long): List<ChatMessage> {
+        val owner = cache.ownId
+        val account = owner.takeIf { it != 0L }?.toString().orEmpty()
+        val version = archive.version(account, chatId.toString())
+        val messages = page(client, chatId, limit.coerceIn(1, MAX_PAGE_SIZE), before, 0).stream()
+            .map(mapper::map).sorted(compareBy { it.id.toLong() }).toList()
+        if (cache.ownId != owner) {
+            throw ChatUnavailableException()
+        }
+        return archive.recordPage(account, chatId.toString(), messages, version)
+    }
 
     private fun page(
         client: SimpleTelegramClient,

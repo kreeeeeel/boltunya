@@ -6,6 +6,7 @@ import ru.aigram.component.chat.ChatCommunicationComponent
 import ru.aigram.component.chat.ChatHistoryComponent
 import ru.aigram.component.chat.ContextExclusionComponent
 import ru.aigram.component.chat.MessageDeletionComponent
+import ru.aigram.component.chat.MessageEditingComponent
 import ru.aigram.component.media.MediaSendingComponent
 import ru.aigram.contract.api.ChatsApi
 import ru.aigram.contract.dto.ChatGallery
@@ -15,6 +16,8 @@ import ru.aigram.contract.dto.Message
 import ru.aigram.contract.dto.MessageDeletionOptions
 import ru.aigram.contract.dto.MessageDeletionRequest
 import ru.aigram.contract.dto.MessageDeletionResult
+import ru.aigram.contract.dto.MessageEditOptions
+import ru.aigram.contract.dto.MessageEditRequest
 import ru.aigram.contract.dto.MessageLink
 import ru.aigram.contract.dto.Ok
 import ru.aigram.contract.dto.SendMediaRequest
@@ -32,7 +35,19 @@ class ChatController(
     private val exclusions: ContextExclusionComponent,
     private val deletion: MessageDeletionComponent,
     private val media: MediaSendingComponent,
+    private val editing: MessageEditingComponent,
 ) : ChatsApi {
+    override fun messageEditOptions(chatId: String, messageId: String): ResponseEntity<MessageEditOptions> =
+        ResponseEntity.ok(editing.options(chatId, messageId).toContract())
+
+    override fun editMessage(
+        chatId: String,
+        messageId: String,
+        messageEditRequest: MessageEditRequest,
+    ): ResponseEntity<Message> = ResponseEntity.ok(
+        editing.edit(chatId, messageId, messageEditRequest.toDomain()).toContract(),
+    )
+
     override fun chatGallery(chatId: String, around: String): ResponseEntity<ChatGallery> =
         ResponseEntity.ok(history.gallery(chatId, around).toContract())
 

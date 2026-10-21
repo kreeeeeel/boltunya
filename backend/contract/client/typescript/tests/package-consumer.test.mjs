@@ -69,7 +69,7 @@ after(() => {
     rmSync(consumer, { recursive: true, force: true });
 });
 
-test("the installed tarball exposes all 74 operations in eight API groups and compiles typed imports", () => {
+test("the installed tarball exposes all 76 operations in eight API groups and compiles typed imports", () => {
     const apis = Object.values(sdk).filter(
         (value) =>
             typeof value === "function" &&
@@ -84,7 +84,7 @@ test("the installed tarball exposes all 74 operations in eight API groups and co
             ).length,
         0,
     );
-    assert.equal(operationCount, 74);
+    assert.equal(operationCount, 76);
     assert.equal(typeof sdk.ModelsApi.prototype.restartEngine, "function");
     copyFileSync(
         join(directory, "tests/consumer/consumer.ts"),
@@ -103,6 +103,61 @@ test("the installed tarball exposes all 74 operations in eight API groups and co
         ],
         { cwd: consumer, stdio: "pipe" },
     );
+});
+
+test("message edits keep exact text, UTF-16 ranges and opaque entity references in the installed SDK", async () => {
+    const chatId = "-1009007199254740993555";
+    const messageId = "9007199254740993999";
+    const revision = "b".repeat(64);
+    const text = "  😀 **literal**\n\nlink...\n";
+    const entities = [
+        { offset: 2, length: 2, kind: "existing", sourceIndex: 0, typeHint: "customemoji" },
+        {
+            offset: 18,
+            length: 4,
+            kind: "texturl",
+            sourceIndex: null,
+            url: "https://example.org/a?x=1&y=2",
+        },
+    ];
+    const options = { text, entities, revision, kind: "caption", maxLength: 1024 };
+    const updated = {
+        id: messageId,
+        chatId,
+        text,
+        outgoing: true,
+        date: 1792578000,
+        kind: "photo",
+        editedAt: 1792578010,
+    };
+    const requests = [];
+    const api = new sdk.ChatsApi(
+        new sdk.Configuration({
+            basePath: "http://127.0.0.1:9000",
+            fetchApi: async (url, init) => {
+                requests.push({ url, init });
+                return Response.json(init.method === "GET" ? options : updated);
+            },
+        }),
+    );
+
+    assert.deepEqual(await api.messageEditOptions({ chatId, messageId }), options);
+    const request = { text, entities, revision };
+    assert.deepEqual(
+        await api.editMessage({ chatId, messageId, messageEditRequest: request }),
+        updated,
+    );
+    assert.equal(requests.length, 2);
+    requests.forEach(({ url }) =>
+        assert.equal(
+            url,
+            `http://127.0.0.1:9000/api/chats/${chatId}/messages/${messageId}/edit`,
+        ),
+    );
+    assert.equal(requests[0].init.method, "GET");
+    assert.equal(requests[0].init.body, undefined);
+    assert.equal(requests[1].init.method, "PUT");
+    assert.deepEqual(JSON.parse(requests[1].init.body), request);
 });
 
 test("the typed model client exposes the approved app-managed engine restart operation", async () => {

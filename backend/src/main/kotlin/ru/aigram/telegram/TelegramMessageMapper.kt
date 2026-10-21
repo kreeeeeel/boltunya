@@ -84,6 +84,7 @@ class TelegramMessageMapper(
             media,
             entities.map(formatted),
             mediaAlbumId = message.mediaAlbumId.takeIf { it != 0L }?.toString().orEmpty(),
+            editedAt = message.editDate.toLong(),
         )
     }
 

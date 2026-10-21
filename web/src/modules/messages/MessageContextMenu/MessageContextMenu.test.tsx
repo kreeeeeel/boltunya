@@ -33,7 +33,11 @@ const message: Message = {
     kind: 'text',
     text: 'Обычный текст',
 };
-function mount(onExcludedChanged = vi.fn(async () => {})) {
+function mount(
+    onExcludedChanged = vi.fn(async () => {}),
+    target = message,
+    onEditRequest?: (value: Message) => void,
+) {
     function Example() {
         const [position, setPosition] = useState<{
             x: number;
@@ -43,10 +47,11 @@ function mount(onExcludedChanged = vi.fn(async () => {})) {
             <NextIntlClientProvider locale="ru" messages={ru}>
                 <ThemeProvider>
                     <MessageContextMenu
-                        message={message}
+                        message={target}
                         position={position}
                         onClose={() => setPosition(null)}
                         onExcludedChanged={onExcludedChanged}
+                        onEditRequest={onEditRequest}
                     />
                 </ThemeProvider>
             </NextIntlClientProvider>
@@ -54,6 +59,25 @@ function mount(onExcludedChanged = vi.fn(async () => {})) {
     }
     return render(<Example />);
 }
+
+it('opens editing only after the owner explicitly selects the action', async () => {
+    const edit = vi.fn();
+    const own = {...message, outgoing: true};
+    mount(undefined, own, edit);
+    expect(edit).not.toHaveBeenCalled();
+    fireEvent.click(await screen.findByRole('menuitem', {name: ru.messageEdit.action}));
+    expect(edit).toHaveBeenCalledWith(own);
+});
+
+it.each([
+    {...message, outgoing: false},
+    {...message, outgoing: true, deleted: true},
+    {...message, outgoing: true, kind: 'sticker'},
+])('does not offer editing for an incoming deleted or unsupported message', async (value) => {
+    mount(undefined, value, vi.fn());
+    await screen.findByRole('menuitem', {name: ru.messageMenu.copyText});
+    expect(screen.queryByRole('menuitem', {name: ru.messageEdit.action})).toBeNull();
+});
 it('copies the genuine Telegram link fetched on demand without inventing an opaque ID URL', async () => {
     const copy = vi.fn(async () => {});
     Object.defineProperty(navigator, 'clipboard', {configurable: true, value: {writeText: copy}});

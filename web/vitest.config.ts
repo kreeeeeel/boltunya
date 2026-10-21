@@ -4,6 +4,13 @@ import {fileURLToPath} from 'node:url';
 export default defineConfig({
     resolve: {
         alias: {
+            // These addons have no conditional exports; their CJS entry creates a second PM runtime.
+            'prosemirror-autocomplete': fileURLToPath(
+                new URL('./node_modules/prosemirror-autocomplete/dist/esm/index.js', import.meta.url),
+            ),
+            'prosemirror-codemark': fileURLToPath(
+                new URL('./node_modules/prosemirror-codemark/dist/esm/index.js', import.meta.url),
+            ),
             '@aigram/api-client': fileURLToPath(
                 new URL(
                     '../backend/contract/client/typescript/build/generated/openapi/src/index.ts',
@@ -19,6 +26,6 @@ export default defineConfig({
         environment: 'jsdom',
         include: ['src/**/*.test.{ts,tsx}'],
         setupFiles: ['./tests/setup.ts'],
-        server: {deps: {inline: [/@gravity-ui/, /@bem-react/]}},
+        server: {deps: {inline: [/@gravity-ui/, /@bem-react/, /prosemirror-/]}},
     },
 });

@@ -5,6 +5,8 @@ import ru.aigram.domain.chat.ChatSummary
 import ru.aigram.domain.chat.MessageDeletionOptions
 import ru.aigram.domain.chat.MessageDeletionResult
 import ru.aigram.domain.chat.MessageDeletionScope
+import ru.aigram.domain.chat.MessageEditOptions
+import ru.aigram.domain.chat.MessageEditRequest
 import ru.aigram.domain.media.ChatGallery
 import ru.aigram.domain.media.MediaFile
 import ru.aigram.domain.media.OutgoingMedia
@@ -14,6 +16,7 @@ import ru.aigram.domain.telegram.TelegramCredentials
 import ru.aigram.domain.telegram.TelegramStatus
 import ru.aigram.exception.impl.MediaUnavailableException
 import ru.aigram.exception.impl.MessageDeletionNotAllowedException
+import ru.aigram.exception.impl.MessageEditNotAllowedException
 
 interface TelegramGateway : AutoCloseable {
     fun status(): TelegramStatus
@@ -35,6 +38,10 @@ interface TelegramGateway : AutoCloseable {
         throw MessageDeletionNotAllowedException()
     fun deleteMessage(chatId: String, messageId: String, scope: MessageDeletionScope): MessageDeletionResult =
         throw MessageDeletionNotAllowedException()
+    fun messageEditOptions(chatId: String, messageId: String): MessageEditOptions =
+        throw MessageEditNotAllowedException()
+    fun editMessage(chatId: String, messageId: String, request: MessageEditRequest): ChatMessage =
+        throw MessageEditNotAllowedException()
     fun sendSticker(chatId: String, stickerId: String, replyToId: String = "", topicId: Int = 0): String =
         throw MediaUnavailableException()
     fun logout()

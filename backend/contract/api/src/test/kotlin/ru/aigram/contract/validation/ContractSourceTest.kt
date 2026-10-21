@@ -28,6 +28,14 @@ private val REQUEST_MODELS = setOf(
     "AppearanceSettingsInput",
     "ActivityHistorySettingsInput",
 )
+private val MESSAGE_EDIT_MODELS = setOf(
+    "MessageEditKind",
+    "MessageEditEntityKind",
+    "MessageEditEntity",
+    "MessageEditOptions",
+    "MessageEditRequest",
+)
+private const val MESSAGE_EDIT_PATH = "/api/chats/{chatId}/messages/{messageId}/edit"
 
 class ContractSourceTest {
     @TempDir
@@ -41,11 +49,14 @@ class ContractSourceTest {
         val additions = corrections.getValue("additions").jsonObject
         val extras = fixture("extracted-models.json")
         val audit = ContractWireAudit(document)
-        val actual = audit.snapshot(expected.getValue("schemas").jsonObject.keys + REQUEST_MODELS)
+        val actual = audit.snapshot(expected.getValue("schemas").jsonObject.keys + REQUEST_MODELS + MESSAGE_EDIT_MODELS)
         assertEquals(expected.getValue("root"), actual.getValue("root"), "Root metadata or session security changed")
-        assertEquals(setOf("/api/engine/restart"), additions.getValue("paths").jsonObject.keys)
-        assertEquals(setOf("POST /api/engine/restart"), additions.getValue("operations").jsonObject.keys)
-        assertEquals(REQUEST_MODELS, additions.getValue("schemas").jsonObject.keys)
+        assertEquals(setOf("/api/engine/restart", MESSAGE_EDIT_PATH), additions.getValue("paths").jsonObject.keys)
+        assertEquals(
+            setOf("POST /api/engine/restart", "GET $MESSAGE_EDIT_PATH", "PUT $MESSAGE_EDIT_PATH"),
+            additions.getValue("operations").jsonObject.keys,
+        )
+        assertEquals(REQUEST_MODELS + MESSAGE_EDIT_MODELS, additions.getValue("schemas").jsonObject.keys)
         listOf("paths", "operations", "schemas").stream().forEach { group ->
             val old = expected.getValue(group).jsonObject
             val current = actual.getValue(group).jsonObject
@@ -60,17 +71,54 @@ class ContractSourceTest {
                 assertEquals(corrected, hash, "Wire semantics changed for $group: $name")
             }
         }
-        assertEquals(60, document.getValue("paths").jsonObject.size)
-        assertEquals(74, audit.operations().size)
+        assertEquals(61, document.getValue("paths").jsonObject.size)
+        assertEquals(76, audit.operations().size)
         assertEquals(
-            expected.getValue("schemas").jsonObject.keys + extras.keys + REQUEST_MODELS,
+            expected.getValue("schemas").jsonObject.keys + extras.keys + REQUEST_MODELS + MESSAGE_EDIT_MODELS,
             document.getValue("components").jsonObject.getValue("schemas").jsonObject.keys,
         )
-        assertEquals(114, document.getValue("components").jsonObject.getValue("schemas").jsonObject.size)
+        assertEquals(119, document.getValue("components").jsonObject.getValue("schemas").jsonObject.size)
         assertFalse(Files.exists(Path.of("../api.yaml")), "The old duplicate contract must not remain")
         Files.walk(Path.of("schema")).use { files ->
-            assertEquals(123L, files.filter { Files.isRegularFile(it) && it.toString().endsWith(".yaml") }.count())
+            assertEquals(128L, files.filter { Files.isRegularFile(it) && it.toString().endsWith(".yaml") }.count())
         }
+    }
+
+    @Test
+    fun `message edits require a revision and preserve opaque entities without a markdown round trip`() {
+        val document = ContractSource(Path.of("schema")).load()
+        val schemas = document.getValue("components").jsonObject.getValue("schemas").jsonObject
+        val operation = document.getValue("paths").jsonObject.getValue(MESSAGE_EDIT_PATH).jsonObject
+        assertEquals("messageEditOptions", operation.getValue("get").jsonObject["operationId"]?.jsonPrimitive?.content)
+        assertEquals("editMessage", operation.getValue("put").jsonObject["operationId"]?.jsonPrimitive?.content)
+
+        val request = schemas.getValue("MessageEditRequest").jsonObject
+        assertEquals(
+            setOf("text", "entities", "revision"),
+            request.getValue("required").jsonArray.stream().map { it.jsonPrimitive.content }.toList().toSet(),
+        )
+        val properties = request.getValue("properties").jsonObject
+        val revision = properties.getValue("revision").jsonObject
+        assertEquals(JsonPrimitive(64), revision["minLength"])
+        assertEquals(JsonPrimitive(64), revision["maxLength"])
+        assertFalse(properties.getValue("text").jsonObject.containsKey("minLength"), "Empty captions must remain valid")
+
+        val entity = schemas.getValue("MessageEditEntity").jsonObject.getValue("properties").jsonObject
+        assertEquals(JsonPrimitive(0), entity.getValue("offset").jsonObject["minimum"])
+        assertEquals(JsonPrimitive(1), entity.getValue("length").jsonObject["minimum"])
+        assertEquals(JsonPrimitive(true), entity.getValue("sourceIndex").jsonObject["nullable"])
+        assertEquals(JsonPrimitive(true), entity.getValue("typeHint").jsonObject["readOnly"])
+        val kinds = schemas.getValue("MessageEditEntityKind").jsonObject.getValue("enum").jsonArray
+        assertTrue(kinds.contains(JsonPrimitive("existing")), "Unknown Telegram entity types must not be lost")
+        assertTrue(
+            kinds.containsAll(listOf(JsonPrimitive("texturl"), JsonPrimitive("spoiler"), JsonPrimitive("quote"))),
+        )
+
+        val message = schemas.getValue("Message").jsonObject
+        assertFalse(message.getValue("required").jsonArray.contains(JsonPrimitive("editedAt")))
+        val edited = message.getValue("properties").jsonObject.getValue("editedAt").jsonObject
+        assertEquals(JsonPrimitive("int64"), edited["format"])
+        assertEquals(JsonPrimitive(0), edited["default"])
     }
 
     @Test

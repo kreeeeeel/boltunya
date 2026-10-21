@@ -18,6 +18,7 @@ import ru.aigram.telegram.TelegramInteraction
 import ru.aigram.telegram.TelegramMediaSender
 import ru.aigram.telegram.TelegramMediaStore
 import ru.aigram.telegram.TelegramMessageDeletion
+import ru.aigram.telegram.TelegramMessageEditing
 import ru.aigram.telegram.TelegramMessageLinks
 import ru.aigram.telegram.TelegramMessageSender
 import ru.aigram.telegram.TelegramStickerService
@@ -64,8 +65,9 @@ class TelegramConfiguration {
         galleries: TelegramGalleryService,
         links: TelegramMessageLinks,
         deletion: TelegramMessageDeletion,
+        editing: TelegramMessageEditing,
     ): TdLightGateway = TdLightGateway(
         directory, settings, credentials, interaction, media, chats, history, cache, connection, updates,
-        loader, sender, prefetch, mediaSender, stickers, galleries, links, deletion,
+        loader, sender, prefetch, mediaSender, stickers, galleries, links, deletion, editing,
     )
 }

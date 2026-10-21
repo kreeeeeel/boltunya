@@ -1,0 +1,11 @@
+.body {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.notice {
+    align-items: flex-start;
+    border-radius: 12px;
+    padding: 12px;
+    background: var(--g-color-base-simple-hover);
+}

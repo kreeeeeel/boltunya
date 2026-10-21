@@ -1,3 +1,110 @@
+chatsByChatIdMessagesByMessageIdEdit:
+    get:
+        operationId: messageEditOptions
+        summary: Get fresh editable text and lossless Telegram entity references for an owned message
+        parameters:
+            - name: chatId
+              in: path
+              required: true
+              schema:
+                  type: string
+            - name: messageId
+              in: path
+              required: true
+              schema:
+                  type: string
+        responses:
+            '200':
+                description: Fresh owned message content after checking Telegram editing permission
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/chats/MessageEditOptions.yaml#/MessageEditOptions
+            '400':
+                description: Invalid chat or message identifier
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Local session authentication failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '409':
+                description: Message cannot be edited or Telegram connection changed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Telegram could not provide the editable message
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        tags:
+            - chats
+    put:
+        operationId: editMessage
+        summary: Edit owned text or a photo/video caption without converting it to Markdown
+        parameters:
+            - name: chatId
+              in: path
+              required: true
+              schema:
+                  type: string
+            - name: messageId
+              in: path
+              required: true
+              schema:
+                  type: string
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: ../models/chats/MessageEditRequest.yaml#/MessageEditRequest
+        responses:
+            '200':
+                description: Confirmed edited message, retaining local AI and context metadata
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/chats/Message.yaml#/Message
+            '400':
+                description: Invalid content, formatting range or Telegram length limit
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '401':
+                description: Local session authentication failed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '409':
+                description: Message changed since opening the editor, is no longer editable or the account changed
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '429':
+                description: Telegram requested a delay before another edit
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Telegram rejected or failed to confirm the edit; formatting is never retried as plain text
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+        tags:
+            - chats
 chatsByChatIdMessages:
     get:
         operationId: history

@@ -1,12 +1,19 @@
-import {useCallback, useEffect, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import {mergeRecentMessages} from '@/modules/workspace/model/mergeMessages';
 import {shareSnapshot} from '@/modules/workspace/model/shareSnapshot';
 import {api, errorMessage} from '@/shared/api/client';
 import type {AppState, Message} from '@/shared/api/client';
 import {desktopBridge} from '@/shared/desktop/bridge';
+import {applyUpdatedMessage} from '@/modules/workspace/model/applyUpdatedMessage';
 export function useWorkspace(chatId: string | null) {
     const [state, setState] = useState<AppState | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
+    const mutation = useRef(0);
+    const historyVersion = useCallback(() => mutation.current, []);
+    const updateMessage = useCallback((updated: Message) => {
+        mutation.current += 1;
+        setMessages((previous) => applyUpdatedMessage(previous, updated));
+    }, []);
     const [error, setError] = useState('');
     const [historyStatus, setHistoryStatus] = useState({chatId, resolved: false, error: ''});
     if (historyStatus.chatId !== chatId) {
@@ -54,16 +61,21 @@ export function useWorkspace(chatId: string | null) {
         let active = true;
         let timer: ReturnType<typeof setTimeout>;
         async function pollHistory() {
+            const version = mutation.current;
             try {
                 const result = await api.chats.history({
                     chatId: chatId ?? '',
                 });
-                if (active) {
-                    setMessages((previous) => shareSnapshot(previous, mergeRecentMessages(previous, result)));
+                if (active && version === mutation.current) {
+                    setMessages((previous) =>
+                        version === mutation.current
+                            ? shareSnapshot(previous, mergeRecentMessages(previous, result))
+                            : previous,
+                    );
                     setHistoryStatus({chatId, resolved: true, error: ''});
                 }
             } catch (cause) {
-                if (active) {
+                if (active && version === mutation.current) {
                     setHistoryStatus({chatId, resolved: true, error: errorMessage(cause)});
                 }
             } finally {
@@ -87,5 +99,7 @@ export function useWorkspace(chatId: string | null) {
         historyLoading: chatId !== null && !historyStatus.resolved,
         refresh,
         setMessages,
+        updateMessage,
+        historyVersion,
     };
 }

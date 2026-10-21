@@ -5,11 +5,20 @@ export function mergeMessages(previous: Message[], current: Message[]): Message[
     current.forEach((message) => {
         const key = `${message.chatId}:${message.id}`;
         const previousMessage = merged.get(key);
-        merged.set(
-            key,
+        const next =
             previousMessage?.deleted && !message.deleted
                 ? {...message, deleted: true, deletedAt: previousMessage.deletedAt}
-                : message,
+                : message;
+        merged.set(
+            key,
+            previousMessage?.editedAt && previousMessage.editedAt > (message.editedAt ?? 0)
+                ? {
+                      ...next,
+                      text: previousMessage.text,
+                      entities: previousMessage.entities,
+                      editedAt: previousMessage.editedAt,
+                  }
+                : next,
         );
     });
     return [...merged.values()].sort(
@@ -25,11 +34,14 @@ export function mergeRecentMessages(previous: Message[], current: Message[]): Me
     const oldest = current.reduce((left, right) =>
         compareIdentifiers(left.id, right.id) <= 0 ? left : right,
     );
+    const currentIds = new Set(current.map((message) => message.id));
     return mergeMessages(
         previous.filter(
             (message) =>
                 message.chatId === oldest.chatId &&
-                (message.deleted || compareIdentifiers(message.id, oldest.id) < 0),
+                (message.deleted ||
+                    currentIds.has(message.id) ||
+                    compareIdentifiers(message.id, oldest.id) < 0),
         ),
         current,
     );

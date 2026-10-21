@@ -73,3 +73,18 @@ it('supports opening message actions with the keyboard context-menu shortcut', a
     expect(await screen.findByRole('menuitem', {name: ru.messageMenu.copyText})).toBeVisible();
     expect(changed).toHaveBeenCalledWith('123', true);
 });
+
+it('shows the Telegram edited marker without replacing AI or context metadata', () => {
+    const view = render(
+        <NextIntlClientProvider locale="ru" messages={ru}>
+            <ThemeProvider>
+                <MessageBubble message={{...message, automated: true, editedAt: 100}} />
+            </ThemeProvider>
+        </NextIntlClientProvider>,
+    );
+    expect(view.container.querySelector('[data-qa="message-edited"]')).toHaveTextContent(
+        ru.messageEdit.edited,
+    );
+    expect(screen.getByLabelText(ru.aiMessage)).toBeVisible();
+    expect(screen.getByLabelText(ru.messageMenu.excluded)).toBeVisible();
+});

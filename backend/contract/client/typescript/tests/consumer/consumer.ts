@@ -5,6 +5,8 @@ import {
     SystemApi,
     type ConfigurationParameters,
     type Ok,
+    type MessageEditOptions,
+    type MessageEditRequest,
 } from "@aigram/api-client";
 
 const settings: ConfigurationParameters = {
@@ -56,4 +58,17 @@ export function canRestartEngine(
 
 export async function restartLocalEngine(): Promise<Ok> {
     return models.restartEngine();
+}
+
+export async function editCaption(): Promise<string> {
+    const chatId = "-1009007199254740993555";
+    const messageId = "9007199254740993999";
+    const original: MessageEditOptions = await chats.messageEditOptions({chatId, messageId});
+    const messageEditRequest: MessageEditRequest = {
+        text: `${original.text}\nAn exact new line`,
+        entities: original.entities,
+        revision: original.revision,
+    };
+    const updated = await chats.editMessage({chatId, messageId, messageEditRequest});
+    return updated.text;
 }

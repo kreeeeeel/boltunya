@@ -57,8 +57,18 @@ export function Workspace() {
     const [inspector, setInspector] = useState(false);
     const [actionError, setActionError] = useState('');
     const [quit, setQuit] = useState(false);
-    const {state, messages, error, historyError, stateLoading, historyLoading, refresh, setMessages} =
-        useWorkspace(selected);
+    const {
+        state,
+        messages,
+        error,
+        historyError,
+        stateLoading,
+        historyLoading,
+        refresh,
+        setMessages,
+        updateMessage,
+        historyVersion,
+    } = useWorkspace(selected);
     const chats = state?.chats ?? [];
     const chat = chats.find((item) => item.id === selected);
     const profileId =
@@ -132,11 +142,14 @@ export function Workspace() {
         if (!chat) {
             return;
         }
+        const version = historyVersion();
         const latest = await api.chats.history({
             chatId: chat.id,
         });
         setMessages((previous) =>
-            selectedChat.current === chat.id ? mergeRecentMessages(previous, latest) : previous,
+            selectedChat.current === chat.id && version === historyVersion()
+                ? mergeRecentMessages(previous, latest)
+                : previous,
         );
         await refresh();
     }
@@ -174,6 +187,7 @@ export function Workspace() {
         if (!chat || messages.length === 0) {
             return false;
         }
+        const version = historyVersion();
         const page = await api.chats.history({
             chatId: chat.id,
             before: messages[0].id,
@@ -181,8 +195,13 @@ export function Workspace() {
         if (selectedChat.current !== chat.id) {
             return false;
         }
+        if (version !== historyVersion()) {
+            return true;
+        }
         setMessages((previous) =>
-            selectedChat.current === chat.id ? mergeMessages(previous, page) : previous,
+            selectedChat.current === chat.id && version === historyVersion()
+                ? mergeMessages(previous, page)
+                : previous,
         );
         return page.some((message) => !messages.some((existing) => existing.id === message.id));
     }
@@ -336,6 +355,7 @@ export function Workspace() {
                                     onMediaSent={refreshConversation}
                                     onContextChanged={updateContextFlags}
                                     onMessageDeleted={messageDeleted}
+                                    onMessageUpdated={updateMessage}
                                     messages={messages}
                                     activeReply={visibleChatActivity(state.activity, selected)}
                                     onRefresh={refresh}

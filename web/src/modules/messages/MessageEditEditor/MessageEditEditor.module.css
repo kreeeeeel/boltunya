@@ -1,0 +1,103 @@
+.root {
+    min-width: 0;
+    border: 2px solid var(--tiho-line);
+    border-radius: 12px;
+    background: var(--tiho-panel);
+    overflow: hidden;
+}
+
+.toolbar {
+    padding: 8px;
+    border-bottom: 1px solid var(--tiho-line);
+}
+
+.separator {
+    width: 1px;
+    height: 20px;
+    background: var(--tiho-line);
+    margin: 0 4px;
+}
+
+.root :global(.ProseMirror) {
+    min-height: 144px;
+    max-height: 340px;
+    overflow-y: auto;
+    padding: 12px 14px;
+    color: var(--g-color-text-primary);
+    font-family: var(--g-font-family-sans);
+    font-size: 15px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    outline: none;
+    user-select: text;
+}
+
+.root :global(.ProseMirror p) {
+    margin: 0;
+}
+
+.root :global(.g-md-editor-component) {
+    border: 0;
+    background: transparent;
+}
+
+.linkForm {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--tiho-line);
+}
+
+.url {
+    min-width: 160px;
+    flex: 1;
+}
+
+.mark {
+    white-space: inherit;
+}
+
+.bold {
+    font-weight: 700;
+}
+
+.italic {
+    font-style: italic;
+}
+
+.underline {
+    text-decoration: underline;
+}
+
+.strike {
+    text-decoration: line-through;
+}
+
+.code,
+.pre,
+.precode {
+    font-family: var(--g-font-family-monospace);
+    background: var(--g-color-base-generic);
+    border-radius: 3px;
+}
+
+.spoiler {
+    background: var(--g-color-base-generic-accent);
+    border-radius: 3px;
+}
+
+.quote,
+.expandablequote {
+    background: var(--g-color-base-selection);
+    box-shadow: -2px 0 0 var(--g-color-text-brand);
+}
+
+.texturl {
+    color: var(--g-color-text-link);
+    text-decoration: underline;
+}
+
+.atom {
+    display: inline;
+    border-radius: 3px;
+    background: var(--g-color-base-generic);
+}

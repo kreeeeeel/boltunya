@@ -16,6 +16,8 @@ import {ConversationComposer} from '@/modules/workspace/Conversation/Conversatio
 import {MediaViewerProvider} from '@/modules/media/MediaViewer/MediaViewerProvider';
 import {DraftPreparationError} from '@/modules/workspace/model/DraftPreparationError';
 import {StatusNotice} from '@/shared/ui/StatusNotice/StatusNotice';
+import {MessageEditDialog} from '@/modules/messages/MessageEditDialog/MessageEditDialog';
+import type {Message} from '@/shared/api/client';
 
 export function Conversation({
     chat,
@@ -23,6 +25,7 @@ export function Conversation({
     onMediaSent,
     onContextChanged,
     onMessageDeleted,
+    onMessageUpdated,
     messages,
     activeReply,
     onRefresh,
@@ -46,6 +49,7 @@ export function Conversation({
     const [text, setText] = useState('');
     const [busy, setBusy] = useState<'send' | 'draft' | ''>('');
     const [localError, setLocalError] = useState('');
+    const [editedMessage, setEditedMessage] = useState<Message>();
     const [draftNotice, setDraftNotice] = useState<{status: 'cancelled' | 'error'; description: string}>();
     const [hasEarlier, setHasEarlier] = useState(true);
     const [loadingEarlier, setLoadingEarlier] = useState(false);
@@ -62,6 +66,15 @@ export function Conversation({
         }
     }, []);
     const anchor = useRef<{id: string; top: number; first: string} | null>(null);
+
+    useEffect(() => {
+        if (!editedMessage) {
+            return;
+        }
+        const messageId = editedMessage.id;
+        menuOpenChanged(messageId, true);
+        return () => menuOpenChanged(messageId, false);
+    }, [editedMessage, menuOpenChanged]);
 
     useLayoutEffect(() => {
         const area = scroll.current;
@@ -286,6 +299,7 @@ export function Conversation({
                                         message={message}
                                         onContextChanged={onContextChanged}
                                         onDeleted={onMessageDeleted}
+                                        onEditRequest={onMessageUpdated ? setEditedMessage : undefined}
                                         onMenuOpenChange={menuOpenChanged}
                                         onDraftRequest={
                                             !message.outgoing ? () => draft(message.id) : undefined
@@ -351,6 +365,14 @@ export function Conversation({
                     />
                 </Flex>
             </Flex>
+            {editedMessage && onMessageUpdated && (
+                <MessageEditDialog
+                    key={`${editedMessage.chatId}:${editedMessage.id}`}
+                    message={editedMessage}
+                    onUpdated={onMessageUpdated}
+                    onClose={() => setEditedMessage(undefined)}
+                />
+            )}
         </MediaViewerProvider>
     );
 }

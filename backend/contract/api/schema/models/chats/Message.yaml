@@ -62,3 +62,9 @@ Message:
             type: string
         mediaAlbumId:
             type: string
+        editedAt:
+            type: integer
+            format: int64
+            default: 0
+            minimum: 0
+            description: Telegram edit date in Unix seconds; zero means the message has not been edited.

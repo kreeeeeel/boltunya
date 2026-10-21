@@ -4,6 +4,25 @@ import {mergeMessages, mergeRecentMessages} from '@/modules/workspace/model/merg
 import type {Message} from '@/shared/api/client';
 
 describe('History pagination', () => {
+    it('retains newer confirmed edit content when an older snapshot arrives while refreshing read flags', () => {
+        const updated: Message = {
+            id: '123',
+            chatId: '42',
+            date: 1,
+            outgoing: true,
+            kind: 'text',
+            text: 'Edited',
+            entities: [{offset: 0, length: 6, type: 'bold'}],
+            editedAt: 100,
+        };
+        const stale = {...updated, text: 'Original', entities: [], editedAt: 99, read: true};
+
+        expect(mergeRecentMessages([updated], [stale])[0]).toEqual({...updated, read: true});
+        expect(mergeMessages([updated], [{...stale, text: 'Newer edit', editedAt: 101}])[0].text).toBe(
+            'Newer edit',
+        );
+    });
+
     it('keeps earlier pages, replaces edits and orders large Telegram identifiers safely', () => {
         const message = (id: string, text: string): Message => ({
             id,

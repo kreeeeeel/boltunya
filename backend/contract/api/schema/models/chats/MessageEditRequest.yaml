@@ -1,0 +1,20 @@
+MessageEditRequest:
+    type: object
+    required:
+        - text
+        - entities
+        - revision
+    properties:
+        text:
+            type: string
+            maxLength: 65536
+            description: Exact plain text; never trimmed or interpreted as Markdown. Empty captions are allowed.
+        entities:
+            type: array
+            maxItems: 1024
+            items:
+                $ref: ./MessageEditEntity.yaml#/MessageEditEntity
+        revision:
+            type: string
+            minLength: 64
+            maxLength: 64

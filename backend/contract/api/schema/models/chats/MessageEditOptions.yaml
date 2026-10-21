@@ -1,0 +1,26 @@
+MessageEditOptions:
+    type: object
+    description: Fresh editable content of an owned message. Original entities must be retained as references, including types unknown to the renderer.
+    required:
+        - text
+        - entities
+        - revision
+        - kind
+        - maxLength
+    properties:
+        text:
+            type: string
+        entities:
+            type: array
+            items:
+                $ref: ./MessageEditEntity.yaml#/MessageEditEntity
+        revision:
+            type: string
+            minLength: 64
+            maxLength: 64
+        kind:
+            $ref: ./MessageEditKind.yaml#/MessageEditKind
+        maxLength:
+            type: integer
+            minimum: 1
+            description: Current message_text_length_max or message_caption_length_max reported by Telegram.

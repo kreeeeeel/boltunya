@@ -167,6 +167,11 @@ class TelegramUpdateHandler(
                 history.edited(it)
             }
         }
+        builder.addUpdateHandler(TdApi.UpdateMessageEdited::class.java) {
+            if (connection.version == version) {
+                history.edited(it)
+            }
+        }
         builder.addUpdateHandler(TdApi.UpdateMessageSendSucceeded::class.java) {
             if (connection.version == version) {
                 delivery.succeeded(cache.ownId.toString(), it.message.chatId, it.oldMessageId, it.message.id)

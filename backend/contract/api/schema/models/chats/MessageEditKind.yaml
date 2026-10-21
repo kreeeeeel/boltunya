@@ -1,0 +1,5 @@
+MessageEditKind:
+    type: string
+    enum:
+        - text
+        - caption

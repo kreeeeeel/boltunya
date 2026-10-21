@@ -36,6 +36,7 @@ class MessageTransformerTest {
             contextExcluded = true,
             senderUsername = "alice",
             mediaAlbumId = "9007199254740995",
+            editedAt = 4_000_000_002L,
         )
 
         val result = source.toContract()
@@ -49,6 +50,7 @@ class MessageTransformerTest {
         assertEquals(source.senderUsername, result.senderUsername)
         assertEquals(source.senderAvatarUrl, result.senderAvatarUrl)
         assertEquals(source.mediaAlbumId, result.mediaAlbumId)
+        assertEquals(source.editedAt, result.editedAt)
         assertEquals(source.replyToId, result.replyToId)
         assertEquals(source.replyText, result.replyText)
         assertEquals(source.deletedAt, result.deletedAt)

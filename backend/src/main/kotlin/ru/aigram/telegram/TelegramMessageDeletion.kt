@@ -41,13 +41,14 @@ class TelegramMessageDeletion(
                 client.send(request).get(MESSAGE_DELETION_TIMEOUT_SECONDS, TimeUnit.SECONDS),
             )
             val deletion = policy.deletionRequest(id, messageId, scope, permissions)
+            val version = archive.version(account, chatId)
             val original = client.send(TdApi.GetMessage(id, request.messageId))
                 .get(MESSAGE_DELETION_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             if (service.readyClient() !== client || service.status().userId != account) {
                 throw TelegramDeleteFailedException()
             }
             // Retain the exact message before Telegram can emit the permanent-delete update.
-            archive.record(account, listOf(view.map(original)))
+            archive.recordPage(account, chatId, listOf(view.map(original)), version)
             if (service.readyClient() !== client || service.status().userId != account) {
                 throw TelegramDeleteFailedException()
             }

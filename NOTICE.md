@@ -11,6 +11,8 @@
 | Hibernate Validator | Apache-2.0 — https://github.com/hibernate/hibernate-validator |
 | Next.js, React | MIT — https://github.com/vercel/next.js , https://github.com/facebook/react |
 | Gravity UI | MIT — https://github.com/gravity-ui/uikit |
+| Gravity Markdown Editor / ProseMirror | MIT — https://github.com/gravity-ui/markdown-editor , https://github.com/ProseMirror/prosemirror |
+| highlight.js / lowlight | BSD-3-Clause / MIT — https://github.com/highlightjs/highlight.js , https://github.com/wooorm/lowlight |
 | next-intl | MIT — https://github.com/amannn/next-intl |
 | openapi-typescript / openapi-fetch | MIT — https://github.com/openapi-ts/openapi-typescript |
 | jsoup | MIT — https://jsoup.org/ |

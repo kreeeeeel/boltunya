@@ -1,0 +1,15 @@
+MessageEditEntityKind:
+    type: string
+    enum:
+        - existing
+        - bold
+        - italic
+        - underline
+        - strike
+        - code
+        - pre
+        - precode
+        - texturl
+        - spoiler
+        - quote
+        - expandablequote

@@ -28,4 +28,5 @@ data class ChatMessage(
     val contextExcluded: Boolean = false,
     val senderUsername: String = "",
     val mediaAlbumId: String = "",
+    val editedAt: Long = 0,
 )

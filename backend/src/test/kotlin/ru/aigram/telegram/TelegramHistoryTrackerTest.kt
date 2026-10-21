@@ -23,6 +23,7 @@ import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.MessageArchiveStore
 import ru.aigram.storage.SettingsStore
+import ru.aigram.storage.WritingStyleStore
 import java.nio.file.Path
 import java.time.Clock
 import kotlin.test.assertEquals
@@ -103,6 +104,7 @@ class TelegramHistoryTrackerTest {
                             replies
                         },
                         testBeanProvider { memory },
+                        WritingStyleStore(directory),
                     )
                 val ownerBefore = bank.read("")
                 tracker.deleted("100", 44, listOf(124))
