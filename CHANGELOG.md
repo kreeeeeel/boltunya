@@ -2,6 +2,24 @@
 
 Release versions are assigned by Windows CI. Each GitHub release includes the first dated entry below, the tested source commit and its verification run.
 
+## 2026-10-21 — Extension-based DTO mapping
+
+### Changed
+
+- Replaced all 21 injectable transformer classes with stateless top-level Kotlin extension functions in their existing feature packages.
+- Controllers call `value.toContract()` and `value.toDomain()` directly. Nested mappings reuse extensions instead of constructing or injecting mapping services.
+- Kept business operations under Spring constructor injection; mapping functions have no bean registration or lifecycle.
+
+### Verification
+
+- Retained the existing mapping assertions for defaults, nullable fields, large identifiers and byte counts, media metadata, context exclusions and model configuration.
+- Added an AST architecture check rejecting classes, objects, non-extension functions, retained state and Spring imports in production transformer packages. The real Spring context also asserts that no transformer bean is registered.
+- The full Gradle quality gate passed: 468 Kotlin tests (11 optional live tests skipped), eight installed TypeScript SDK tests, real servlet compatibility/security, contract generation, formatting and the new architecture checks.
+
+### Compatibility
+
+- API paths, generated contracts, JSON fields and persistent profiles are unchanged. Telegram authorization, settings and memory do not require migration.
+
 ## 2026-10-21 — Spring MVC and functional domain packages
 
 ### Changed

@@ -4,7 +4,7 @@
 
 The canonical contract is [`backend/contract/api/schema/api.yaml`](../../backend/contract/api/schema/api.yaml). It describes 60 paths, 74 operations and 114 named schemas. Operation documents live in `schema/operations/`; reusable models and enums live in `schema/models/`. Relative references connect these files.
 
-Spring Boot owns dependency injection and the embedded servlet server. Feature controllers implement all eight generated Spring MVC interfaces; components reuse application services and explicit transformers map generated DTOs to feature domain models. The previous `ru.aigram.http` server/router has been removed. The web application calls the generated feature operations from `@aigram/api-client`; its workspace alias resolves the canonical generated SDK source. The previous `openapi-fetch` transport, separate type generator and schema bridge have been removed.
+Spring Boot owns dependency injection and the embedded servlet server. Feature controllers implement all eight generated Spring MVC interfaces; components reuse application services and stateless top-level extension functions map generated DTOs to feature domain models without Spring beans. The previous `ru.aigram.http` server/router has been removed. The web application calls the generated feature operations from `@aigram/api-client`; its workspace alias resolves the canonical generated SDK source. The previous `openapi-fetch` transport, separate type generator and schema bridge have been removed.
 
 ## Modules
 

@@ -25,7 +25,7 @@ Publication is verified against the pushed source commit, green [Windows Actions
 
 Usage and compatibility details: [API clients](../api-client/en.md). The Kotlin SDK uses the generator's supported Jackson 2 WebClient codecs on Spring 7; the generated Spring API uses Boot 4/Jackson 3.
 
-## Current checkpoint — Spring MVC and functional domain packages
+## Completed checkpoint — Spring MVC and functional domain packages
 
 - [x] Implement all eight generated interfaces with feature controllers, business components and explicit domain/DTO transformers. There is no JSON-object endpoint adapter between the generated API and application services.
 - [x] Replace the private HTTP server/router with Spring Boot's loopback servlet server. Retain the local session cookie and descriptor URL, Host/Origin checks, static Next.js files, bounded JSON/raw uploads, media byte ranges and compressed sticker responses.
@@ -41,6 +41,17 @@ Usage and compatibility details: [API clients](../api-client/en.md). The Kotlin 
 
 The server and web consumer now share the generated contract end to end: Spring MVC implements its interfaces, and frontend production calls use the feature operations from `@aigram/api-client`. Its workspace alias resolves generated SDK source. The temporary `openapi-fetch`/`openapi-typescript` path and schema bridge are removed. Gradle generates the SDK before `buildWeb`; the Windows build script does the same before npm checks, and the Docker web image has a JDK contract-generation stage. Standalone npm commands run `sdk:check` and require prior canonical Gradle generation; there is no second frontend schema.
 
+The completed migration was published in [v2.6.33](https://github.com/kreeeeeel/boltunya/releases/tag/v2.6.33), source `e9c76b9`. Windows CI passed, including 178 UI unit tests and 113 browser scenarios. The published EXE and SDK matched their SHA-256 checksums; the downloaded EXE launched with the existing Telegram authorization, settings and manual memory notes preserved.
+
+## Current checkpoint — stateless mapping extensions
+
+- [x] Replace all 21 transformer classes with top-level receiver extension functions; remove their Spring annotations and constructor injection from all consumers.
+- [x] Preserve mapping defaults, nullability, identifiers, nested collections and feature package boundaries; retain existing regression assertions.
+- [x] Enforce extension-only production transformer files with an AST check and verify that the real Spring context registers no mapping bean.
+- [x] Pass the full Kotlin quality gate: 468 Kotlin tests (11 optional live tests skipped), eight installed TypeScript SDK tests, real HTTP compatibility/security tests, mapping regressions, formatting and the AST architecture check.
+
+Release completion still requires Windows CI, packaging and verification of the published EXE/SDK. The exact release/source, checksums and actual-profile launch result are recorded in the GitHub Release and local `complie/VERIFICATION.md`.
+
 ## Required verification
 
 Run `:backend:check`, generated-contract validation and clean generation when introduced, web/desktop checks, browser scenarios and isolated native Electron/tray/updater/media tests. Test profile locking, context startup/close, shared queue identity, memory scheduling and local API security. Preserve actual authorization and notes; never use real Telegram sends or download models for tests. Every published release needs a changelog, green Windows CI, matching tag/source commit and an EXE whose SHA-256 matches the release checksum.
@@ -48,7 +59,7 @@ Run `:backend:check`, generated-contract validation and clean generation when in
 ## Backlog after migration verification
 
 1. **Feedback-based local quality comparisons.** Add an opt-in replay set built from user-approved rated replies, complementing the existing synthetic model matrix. Compare factual accuracy, adherence to the selected tone, time to first token and token usage on the same inputs; replay must never send Telegram messages or automatically train a model. Ratings and traces already exist; this curated comparison workflow does not.
-2. **Edit messages from the conversation.** Add explicit editing of the owner's sent text and media captions through TDLib, with permission checks and visible edit errors. Incoming Telegram edits are already tracked; the missing feature is an outgoing edit action and editor, rather than another history-refresh mechanism.
+2. **Edit messages from the conversation.** Add explicit editing of the owner's sent text and media captions through TDLib, with permission checks and visible edit errors. Incoming Telegram edits are already tracked; the missing feature is an outgoing edit action and editor, rather than another history-refresh mechanism. Read-only API research confirmed that `GetMarkdownText`/`ParseMarkdown` keep unsupported formatting as entity metadata: a plain string must not discard it. The editor must preserve those entities, current link previews and caption placement, recheck Telegram edit permission before saving and use Telegram's configured text/caption limits. This feature remains unimplemented while the human-requested mapping refactor is completed.
 
 These are follow-up candidates, not part of this migration's implementation or release gate.
 
