@@ -23,6 +23,7 @@ data class ChatMemoryState(
     val processedMessages: Long = 0,
     val updatedAt: Long = 0,
     val recentUpdatedAt: Long = 0,
+    val automaticAttemptAt: Long = 0,
     val generation: Long = 0,
     val changeVersion: Long = 0,
 )

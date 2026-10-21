@@ -33,10 +33,11 @@ class TelegramHistoryTrackerTest {
     @TempDir lateinit var directory: Path
 
     @Test
-    fun `permanent deletion retains content clears preview and rebuilds context only once preserving manual notes`() {
+    fun `permanent deletion invalidates only affected facts and preserves unrelated collection progress and notes`() {
         val clock = Clock.systemUTC()
         val settings = SettingsStore(directory)
         settings.saveRule("42", ChatRule(enabled = true))
+        settings.saveRule("43", ChatRule(enabled = true))
         val telegram = MemoryTelegramGateway()
         val bank = MemoryStore(directory, ResourceCatalog())
         bank.activate("100")
@@ -52,6 +53,28 @@ class TelegramHistoryTrackerTest {
             ),
         )
         bank.edit("42", "Manual note", bank.read("42").revision)
+        bank.edit("", "Manual owner note", bank.read("").revision)
+        bank.observe("43", 456)
+        val unrelated = bank.state("43") ?: error("Missing unrelated memory state")
+        assertTrue(
+            bank.commit(
+                unrelated,
+                bank.read("43").documentRevision,
+                "Unrelated fact",
+                unrelated.copy(
+                    headId = 456,
+                    backfillBeforeId = 100,
+                    backfillComplete = true,
+                    dirty = false,
+                    requested = false,
+                    ownerMemoryVersion = 1,
+                    updatedAt = 1234,
+                    recentUpdatedAt = 1234,
+                ),
+            ),
+        )
+        val unrelatedState = bank.state("43")
+        val unrelatedDocument = bank.read("43")
         val automated = AutomatedReplyStore(directory)
         val processor = MemoryProcessor(
             telegram,
@@ -73,7 +96,7 @@ class TelegramHistoryTrackerTest {
             ).use { memory ->
                 val tracker = TelegramHistoryTracker(archive, cache, mapper, Provider { replies }, Provider { memory })
                 val ownerBefore = bank.read("")
-                tracker.deleted("100", 43, listOf(124))
+                tracker.deleted("100", 44, listOf(124))
                 assertEquals(ownerBefore, bank.read(""))
                 tracker.deleted("100", 42, listOf(123))
                 val deleted = archive.find("100", "42", "123") ?: error("Missing tombstone")
@@ -83,6 +106,10 @@ class TelegramHistoryTrackerTest {
                 assertEquals("", bank.read("42").summary)
                 assertEquals("", bank.read("").summary)
                 assertEquals("Manual note", bank.read("42").notes)
+                assertEquals("Manual owner note", bank.read("").notes)
+                assertEquals(unrelatedState, bank.state("43"))
+                assertEquals(unrelatedDocument, bank.read("43"))
+                assertTrue(telegram.reads.isEmpty())
                 val revision = bank.read("42").documentRevision
                 tracker.deleted("100", 42, listOf(123))
                 assertEquals(revision, bank.read("42").documentRevision)

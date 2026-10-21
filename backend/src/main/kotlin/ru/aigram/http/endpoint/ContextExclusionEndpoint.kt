@@ -46,7 +46,5 @@ class ContextExclusionEndpoint @Inject constructor(
     private fun changed(chatId: String) {
         replies.invalidateContext(chatId)
         memory.invalidateContext(chatId)
-        // Owner facts can originate in any tracked conversation. Rebuild those sources, preserving manual notes.
-        memory.refresh(rebuild = true)
     }
 }

@@ -66,6 +66,15 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
     fun state(chatId: String): ChatMemoryState? = states[chatId]
 
     @Synchronized
+    fun recordAutomaticAttempt(previous: ChatMemoryState, attemptedAt: Long): ChatMemoryState? {
+        val current = states[previous.chatId] ?: return null
+        if (accountId != previous.accountId || current.generation != previous.generation) return null
+        val next = current.copy(automaticAttemptAt = maxOf(current.automaticAttemptAt, attemptedAt))
+        persist(next)
+        return next
+    }
+
+    @Synchronized
     fun read(chatId: String): StoredMemory {
         val path = file(chatId)
         if (Files.exists(path) && Files.size(path) > MAX_DOCUMENT_BYTES) throw MemoryTooLargeException()
@@ -199,15 +208,22 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
                 ownerSource = current.ownerSource,
                 changeVersion = current.changeVersion,
                 factsVersion = FACTUAL_MEMORY_VERSION,
+                automaticAttemptAt = maxOf(current.automaticAttemptAt, next.automaticAttemptAt),
             ),
         )
         return true
     }
 
     @Synchronized
-    fun cancelCollection(chatId: String) {
+    fun cancelCollection(chatId: String, attemptedAt: Long = 0) {
         val previous = states[chatId] ?: return
-        persist(previous.copy(requested = false, generation = previous.generation + 1))
+        persist(
+            previous.copy(
+                requested = false,
+                generation = previous.generation + 1,
+                automaticAttemptAt = maxOf(previous.automaticAttemptAt, attemptedAt),
+            ),
+        )
     }
 
     @Synchronized
@@ -224,6 +240,9 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
                 requested = true,
                 generation =
                 previous.generation + 1,
+                updatedAt = previous.updatedAt,
+                recentUpdatedAt = previous.recentUpdatedAt,
+                automaticAttemptAt = previous.automaticAttemptAt,
             ),
         )
     }

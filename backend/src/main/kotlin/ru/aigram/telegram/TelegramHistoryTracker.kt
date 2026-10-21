@@ -71,7 +71,6 @@ class TelegramHistoryTracker @Inject constructor(
             if (ids.stream().anyMatch { it == chat.lastMessage?.id }) chat.lastMessage = null
         }
         replies.get().invalidateContext(chatId.toString())
-        val coordinator = memory.get()
-        if (coordinator.invalidateContext(chatId.toString())) coordinator.refresh(rebuild = true)
+        memory.get().invalidateContext(chatId.toString())
     }
 }

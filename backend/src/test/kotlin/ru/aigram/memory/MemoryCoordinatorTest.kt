@@ -404,6 +404,7 @@ class MemoryCoordinatorTest {
                 queueProvider = Provider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 coordinator.tick()
+                clock.advance(Duration.ofHours(settings.get().memoryIntervalHours.toLong()))
                 coordinator.tick()
                 coordinator.tick()
                 assertEquals(setOf("42"), telegram.reads.map { it.first }.toSet())

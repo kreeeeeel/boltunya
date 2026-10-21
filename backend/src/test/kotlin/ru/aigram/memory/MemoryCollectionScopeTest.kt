@@ -14,6 +14,7 @@ import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.SettingsStore
 import java.nio.file.Path
 import java.time.Clock
+import java.util.concurrent.TimeUnit
 import java.util.stream.IntStream
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -31,7 +32,7 @@ class MemoryCollectionScopeTest {
         MemoryModelServer().use { server ->
             coordinator(settings, telegram, store, server.start().runtime).use { memory ->
                 memory.refresh()
-                IntStream.range(0, 8).forEach { memory.tick() }
+                finishCollection(memory, store, setOf("42", "46"))
                 assertEquals(setOf("42", "46"), store.states().map { it.chatId }.toSet())
                 assertEquals(setOf("42", "46"), telegram.reads.map { it.first }.toSet())
                 assertTrue(store.state("42")?.backfillComplete == true)
@@ -49,8 +50,8 @@ class MemoryCollectionScopeTest {
         MemoryModelServer().use { server ->
             coordinator(settings, telegram, store, server.start().runtime).use { memory ->
                 memory.refresh()
-                IntStream.range(0, 14).forEach { memory.tick() }
                 val expected = setOf("42", "43", "44", "45", "46")
+                finishCollection(memory, store, expected)
                 assertEquals(expected, store.states().map { it.chatId }.toSet())
                 assertEquals(expected, telegram.reads.map { it.first }.toSet())
                 assertTrue(store.states().all { it.backfillComplete })
@@ -72,7 +73,7 @@ class MemoryCollectionScopeTest {
                 assertTrue(store.state("44")?.requested == true)
                 settings.update { it.copy(memoryCollectionScope = MemoryCollectionScope.AI_ENABLED) }
                 memory.refresh()
-                IntStream.range(0, 10).forEach { memory.tick() }
+                finishCollection(memory, store, setOf("42", "46"))
                 assertEquals(setOf("42", "46"), telegram.reads.map { it.first }.toSet())
                 assertEquals(0L, store.state("43")?.processedMessages)
                 assertEquals(0L, store.state("44")?.processedMessages)
@@ -88,16 +89,33 @@ class MemoryCollectionScopeTest {
         MemoryModelServer().use { server ->
             coordinator(settings, telegram, store, server.start().runtime).use { memory ->
                 memory.refresh()
-                IntStream.range(0, 8).forEach { memory.tick() }
+                finishCollection(memory, store, setOf("42", "46"))
                 assertEquals(setOf("42", "46"), telegram.reads.map { it.first }.toSet())
                 telegram.reads.clear()
                 settings.update { it.copy(memoryCollectionScope = MemoryCollectionScope.ALL_ALLOWED) }
                 memory.refresh()
-                IntStream.range(0, 10).forEach { memory.tick() }
+                finishCollection(memory, store, setOf("43", "44", "45"))
                 assertEquals(setOf("43", "44", "45"), telegram.reads.map { it.first }.toSet())
                 assertFalse(telegram.reads.any { it.first == "47" || it.first == "48" })
             }
         }
+    }
+
+    private fun finishCollection(memory: MemoryCoordinator, store: MemoryStore, expected: Set<String>) {
+        assertTrue(
+            IntStream.range(0, 300).anyMatch {
+                memory.tick()
+                if (expected.all { store.state(it)?.backfillComplete == true } &&
+                    !memory.document("").collection.active
+                ) {
+                    true
+                } else {
+                    TimeUnit.MILLISECONDS.sleep(10)
+                    false
+                }
+            },
+            "Explicit collection must finish for every eligible conversation",
+        )
     }
 
     private fun settings(): SettingsStore {

@@ -159,37 +159,26 @@ class MemoryCoordinator @Inject constructor(
         if (closed || !attach()) return
         if (immediate) collections.removeIf { !pending(it) && processing != it.chatId }
         if (chatId == null) {
-            refreshConfigured(true)
-            if (rebuild || immediate) {
-                val selected = store.states().filter(::automaticallyAllowed)
-                if (rebuild) store.rebuildOwner()
-                selected.stream().forEach { state ->
-                    cancelledUntil.remove(state.chatId)
-                    if (rebuild) {
-                        store.rebuild(
-                            state.chatId,
-                            manual = false,
-                        )
-                    } else {
-                        store.observe(state.chatId, request = true)
-                    }
-                    failures.remove(state.chatId)
-                    errors.remove(state.chatId)
-                    if (immediate) {
-                        collections.removeIf { it.chatId == state.chatId }
-                        collections.add(
-                            MemoryCollectionRequest(
-                                state.chatId,
-                                rebuild,
-                                store.state(state.chatId)?.processedMessages ?: 0,
-                            ),
-                        )
-                    }
-                }
-                if (immediate && selected.isNotEmpty()) {
-                    scheduleNext()
-                }
+            refreshConfigured()
+            val selected = store.states().filter(::automaticallyAllowed).filter {
+                rebuild || immediate || hasWork(it)
             }
+            if (rebuild) store.rebuildOwner()
+            selected.stream().forEach { state ->
+                cancelledUntil.remove(state.chatId)
+                if (rebuild) {
+                    store.rebuild(state.chatId, manual = false)
+                } else {
+                    store.observe(state.chatId, request = true)
+                }
+                failures.remove(state.chatId)
+                errors.remove(state.chatId)
+                collections.removeIf { it.chatId == state.chatId }
+                collections.add(
+                    MemoryCollectionRequest(state.chatId, rebuild, store.state(state.chatId)?.processedMessages ?: 0),
+                )
+            }
+            if (immediate && selected.isNotEmpty()) scheduleNext()
         } else {
             cancelledUntil.remove(chatId)
             readDirectory()
@@ -212,6 +201,7 @@ class MemoryCoordinator @Inject constructor(
         if (closed || !attach()) return false
         if (store.state(chatId) == null && store.read(chatId).summary.isBlank()) return false
         cancel(chatId)
+        store.rebuildOwner()
         store.rebuild(chatId, manual = false)
         store.cancelCollection(chatId)
         return true
@@ -280,7 +270,8 @@ class MemoryCoordinator @Inject constructor(
         val document = store.read(chatId)
         val state = store.state(chatId)
         val all = store.states()
-        val active = all.filter { allowed(it) && !suspended(it.chatId) }
+        val now = clock.instant().epochSecond
+        val active = all.filter { scheduled(it, now) || it.chatId == queuedChat && outstanding.get().isNotEmpty() }
         val enabled = settings.get().memoryEnabled && (chatId.isEmpty() || settings.rule(chatId).useMemory)
         val status = when {
             !enabled -> MemoryStatus.DISABLED
@@ -293,10 +284,9 @@ class MemoryCoordinator @Inject constructor(
             chatId.isEmpty() && all.isNotEmpty() -> MemoryStatus.READY
             processing == chatId && chatId.isNotEmpty() && queueMemoryPosition() == 0 -> MemoryStatus.PROCESSING
             errors.containsKey(chatId) -> MemoryStatus.ERROR
-            waitingModel && (state?.dirty == true || state?.backfillComplete == false) -> MemoryStatus.WAITING_MODEL
-            state != null && allowed(
-                state,
-            ) && (!state.backfillComplete || state.dirty || state.requested) -> MemoryStatus.QUEUED
+            waitingModel && state != null && scheduled(state, now) -> MemoryStatus.WAITING_MODEL
+            state != null && (scheduled(state, now) || queuedChat == chatId && outstanding.get().isNotEmpty()) ->
+                MemoryStatus.QUEUED
             document.summary.isNotBlank() -> MemoryStatus.READY
             else -> MemoryStatus.IDLE
         }
@@ -318,7 +308,7 @@ class MemoryCoordinator @Inject constructor(
         try {
             if (!attach()) return
             if (startup || now - lastRefresh >= CONFIG_REFRESH_SECONDS) {
-                refreshConfigured(startup)
+                refreshConfigured()
                 startup = false
                 lastRefresh = now
             }
@@ -327,11 +317,7 @@ class MemoryCoordinator @Inject constructor(
             collections.removeIf { store.state(it.chatId) == null || suspended(it.chatId) }
             val priority = collections.firstOrNull(::pending)?.chatId
             val selected = store.states().stream().filter { state ->
-                allowed(state) && !suspended(state.chatId) && now >= (failures[state.chatId] ?: 0) &&
-                    (
-                        !state.backfillComplete || state.deltaTargetId != 0L || state.requested ||
-                            state.dirty && now - state.recentUpdatedAt >= interval
-                        )
+                scheduled(state, now)
             }.sorted(
                 compareBy<ChatMemoryState> { if (it.chatId == priority) 0 else 1 }.thenBy {
                     if (it.requested || it.deltaTargetId != 0L ||
@@ -367,6 +353,7 @@ class MemoryCoordinator @Inject constructor(
             if (!outstanding.compareAndSet("", id)) return
             completion.set(finished)
             queuedChat = selected.chatId
+            var automaticStarted = false
             val request = MemoryQueueTask(
                 id, selected.chatId, selected.accountId, chat?.title ?: "", chat?.avatarUrl.orEmpty(), model, explicit,
                 canStart = { !inference.foregroundBusy(memoryTarget?.executionGroup ?: "shared") },
@@ -377,13 +364,19 @@ class MemoryCoordinator @Inject constructor(
                     ) {
                         throw ReplyCancelledException()
                     }
-                    val current = store.state(selected.chatId) ?: throw ReplyCancelledException()
+                    var current = store.state(selected.chatId) ?: throw ReplyCancelledException()
 
                     fun canContinue(): Boolean = !closed && !Thread.currentThread().isInterrupted &&
                         !suspended(current.chatId) && settings.get().memoryEnabled && allowed(current) &&
                         current.accountId == selected.accountId && telegram.status().userId == selected.accountId
 
-                    if (!canContinue()) throw ReplyCancelledException()
+                    if (!canContinue() || !hasWork(current)) throw ReplyCancelledException()
+                    if (!explicit && !automaticStarted) {
+                        val startedAt = clock.instant().epochSecond
+                        if (!automaticDue(current, startedAt)) throw ReplyCancelledException()
+                        current = store.recordAutomaticAttempt(current, startedAt) ?: throw ReplyCancelledException()
+                        automaticStarted = true
+                    }
                     val currentInterval = TimeUnit.HOURS.toSeconds(settings.get().memoryIntervalHours.toLong())
                     val recent = current.headId == 0L || current.deltaTargetId != 0L || current.requested ||
                         current.dirty && clock.instant().epochSecond - current.recentUpdatedAt >= currentInterval
@@ -451,9 +444,10 @@ class MemoryCoordinator @Inject constructor(
     }
 
     private fun suspendCollection(chatId: String) {
+        val cancelledAt = clock.instant().epochSecond
         cancelledUntil[chatId] =
-            clock.instant().epochSecond + TimeUnit.HOURS.toSeconds(settings.get().memoryIntervalHours.toLong())
-        store.cancelCollection(chatId)
+            cancelledAt + TimeUnit.HOURS.toSeconds(settings.get().memoryIntervalHours.toLong())
+        store.cancelCollection(chatId, attemptedAt = cancelledAt)
         failures.remove(chatId)
         errors.remove(chatId)
         collections.removeIf { it.chatId == chatId }
@@ -483,17 +477,31 @@ class MemoryCoordinator @Inject constructor(
         return chats
     }
 
-    private fun refreshConfigured(onStartup: Boolean) {
+    private fun refreshConfigured() {
         val chats = readDirectory()
         chats.stream().filter { chat ->
             val rule = settings.rule(chat.id)
             collectionAllowed(chat.id, rule, chat.kind != "private")
         }.forEach { chat ->
             val id = chat.lastMessageId.toLongOrNull() ?: 0
-            val previous = store.state(chat.id)
-            store.observe(chat.id, id, request = onStartup && (previous == null || id > previous.headId))
+            store.observe(chat.id, id)
         }
     }
+
+    private fun automaticDue(state: ChatMemoryState, now: Long): Boolean {
+        val previous = maxOf(state.automaticAttemptAt, state.updatedAt, state.recentUpdatedAt)
+        val interval = TimeUnit.HOURS.toSeconds(settings.get().memoryIntervalHours.toLong())
+        return previous == 0L || now - previous >= interval
+    }
+
+    private fun scheduled(state: ChatMemoryState, now: Long): Boolean {
+        if (!allowed(state) || suspended(state.chatId) || now < (failures[state.chatId] ?: 0)) return false
+        val explicit = collections.stream().anyMatch { it.chatId == state.chatId && pending(it) }
+        return hasWork(state) && (explicit || automaticDue(state, now))
+    }
+
+    private fun hasWork(state: ChatMemoryState): Boolean =
+        !state.backfillComplete || state.deltaTargetId != 0L || state.requested || state.dirty
 
     private fun automaticallyAllowed(state: ChatMemoryState): Boolean {
         val rule = settings.rule(state.chatId)

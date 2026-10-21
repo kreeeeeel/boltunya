@@ -16,6 +16,49 @@ class MemoryStoreTest {
     @TempDir lateinit var directory: Path
 
     @Test
+    fun `automatic attempt survives stale successful commits rebuilds and restarts without invalidating snapshots`() {
+        val store = store()
+        store.observe("42", 10)
+        store.edit("42", "Manual note", store.read("42").revision)
+        val previous = store.state("42") ?: error("Missing state")
+        val revision = store.read("42").documentRevision
+        val attempted = store.recordAutomaticAttempt(previous, 100000) ?: error("Missing attempt")
+        assertEquals(previous.generation, attempted.generation)
+        assertEquals(previous.changeVersion, attempted.changeVersion)
+        assertTrue(
+            store.commit(
+                previous,
+                revision,
+                "Collected fact",
+                previous.copy(headId = 10, updatedAt = 100010, recentUpdatedAt = 100010, ownerMemoryVersion = 1),
+            ),
+        )
+        val restored = store()
+        assertEquals(100000L, restored.state("42")?.automaticAttemptAt)
+        restored.rebuild("42", manual = false)
+        val rebuilt = store()
+        assertEquals(100000L, rebuilt.state("42")?.automaticAttemptAt)
+        assertEquals(100010L, rebuilt.state("42")?.updatedAt)
+        assertEquals(100010L, rebuilt.state("42")?.recentUpdatedAt)
+        assertEquals("Manual note", rebuilt.read("42").notes)
+        assertEquals("", rebuilt.read("42").summary)
+    }
+
+    @Test
+    fun `stale cancelled and other account jobs cannot record an automatic attempt`() {
+        val store = store()
+        store.observe("42", 10)
+        val previous = store.state("42") ?: error("Missing state")
+        store.cancelCollection("42")
+        assertEquals(null, store.recordAutomaticAttempt(previous, 100000))
+        assertEquals(0L, store.state("42")?.automaticAttemptAt)
+        store.activate("200")
+        store.observe("42", 10)
+        assertEquals(null, store.recordAutomaticAttempt(previous, 100000))
+        assertEquals(0L, store.state("42")?.automaticAttemptAt)
+    }
+
+    @Test
     fun `global profile preserves manual notes across restarts and isolates account profiles`() {
         val store = store()
         store.observe("42", 10)

@@ -349,7 +349,7 @@
         "enabled": "Update memory in the background",
         "interval": "Memory update interval",
         "hours": "Every {count} h",
-        "scheduleHint": "Starts with up to eight recent private chats and AI-enabled conversations. History is processed in batches; new messages are added at the chosen interval. Replies take priority.",
+        "scheduleHint": "The chosen interval applies to each conversation, including new messages and older history. Manual collection runs without waiting for this interval. Replies take priority.",
         "globalHint": "Facts about you, interests and preferences are collected from your own messages and available across conversations. AI replies are excluded. Tone is controlled by the selected style and the separate writing style setting.",
         "chatHint": "Facts about the contact, your relationship, agreements and events from available history. Deep analysis runs gradually and resumes after restart. The selected style controls the tone.",
         "notes": "Your notes",
