@@ -18,6 +18,7 @@ Release versions are assigned by Windows CI. Each GitHub release includes the fi
 - Remove the profile dropdown's outer border. Keep speech downloads and voice-draft controls contained in compact and wide windows, with four-language labels and both themes.
 - Bind generated recordings to their owner and chat, protect repeat sends, preserve uncertain native uploads and expire ordinary old previews. Stop the owned speech worker on cancellation; avoid passing private text on command lines or logging native speech output.
 - Buffer compressed model archives during extraction and check cancellation beneath the buffer, including skipped entries. A manual reply to a voice note with recognition disabled reports the missing opt-in instead of answering a placeholder.
+- Synchronize native profile-migration verification with actual update confirmation and graceful process exit. Check pending and confirmed states separately, retaining strict cleanup and profile-preservation assertions on slower CI disks.
 
 ### Verification and limitations
 
