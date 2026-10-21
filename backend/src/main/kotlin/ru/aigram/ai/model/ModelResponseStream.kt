@@ -13,6 +13,8 @@ import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicReference
 
 private val MODEL_INACTIVITY_TIMEOUT = Duration.ofMinutes(10)
+private const val THINKING = "thinking"
+private const val REASONING_CONTENT = "reasoningContent"
 
 /** Active local inference may run as long as needed; only a stalled stream times out. */
 class ModelResponseStream(private val inactivityTimeout: Duration = MODEL_INACTIVITY_TIMEOUT) {
@@ -42,9 +44,12 @@ class ModelResponseStream(private val inactivityTimeout: Duration = MODEL_INACTI
                 generation.set(chunk.result?.metadata)
             }
             text.append(chunk.result?.output?.text.orEmpty())
-            thinking.append(chunk.result?.output?.metadata?.get("thinking") as? String ?: "")
-            val cumulativeReasoning = chunk.result?.output?.metadata?.get("reasoningContent") as? String
-            if (cumulativeReasoning != null) reasoning.set(cumulativeReasoning)
+            thinking.append(
+                chunk.result?.output?.metadata?.get(THINKING) as? String
+                    ?: chunk.result?.metadata?.get<Any>(THINKING) as? String ?: "",
+            )
+            val cumulativeReasoning = chunk.result?.output?.metadata?.get(REASONING_CONTENT) as? String
+            if (!cumulativeReasoning.isNullOrEmpty()) reasoning.set(cumulativeReasoning)
             refusal.append(chunk.result?.output?.metadata?.get("refusal") as? String ?: "")
             attempt?.append(chunk)
         }.onErrorMap(TimeoutException::class.java) { EngineUnavailableException(it) }.blockLast()
@@ -55,7 +60,7 @@ class ModelResponseStream(private val inactivityTimeout: Duration = MODEL_INACTI
                     AssistantMessage.builder().content(text.toString())
                         .properties(
                             mapOf(
-                                "thinking" to (thinking.toString() + reasoning.get()),
+                                THINKING to (thinking.toString() + reasoning.get()),
                                 "refusal" to refusal.toString(),
                             ),
                         ).build(),

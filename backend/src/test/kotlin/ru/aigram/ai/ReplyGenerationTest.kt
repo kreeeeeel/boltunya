@@ -54,8 +54,10 @@ class ReplyGenerationTest {
             val body = Json.parseToJsonElement(String(exchange.requestBody.readAllBytes())).jsonObject
             assertFalse(body.containsKey("format"))
             val messages = body["messages"]?.jsonArray.orEmpty()
-            assertTrue(
-                messages.last().jsonObject["content"]?.jsonPrimitive?.content.orEmpty().endsWith("Привет! Как дела?"),
+            assertEquals(
+                "Привет! Как дела?",
+                Json.parseToJsonElement(messages.last().jsonObject["content"]?.jsonPrimitive?.content.orEmpty())
+                    .jsonObject["message"]?.jsonPrimitive?.content,
             )
             calls.incrementAndGet()
             val bytes = """{"message":{"content":"Привет! Всё хорошо, а у тебя?"}}""".toByteArray()

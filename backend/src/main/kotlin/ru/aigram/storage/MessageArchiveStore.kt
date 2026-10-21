@@ -52,10 +52,11 @@ class MessageArchiveStore @Inject constructor(directory: Path, private val clock
     }
 
     @Synchronized
-    fun delete(account: String, chat: String, ids: List<Long>, permanent: Boolean, fromCache: Boolean) {
-        if (account.isEmpty() || !permanent || fromCache || ids.isEmpty()) return
+    fun delete(account: String, chat: String, ids: List<Long>, permanent: Boolean, fromCache: Boolean): Boolean {
+        if (account.isEmpty() || !permanent || fromCache || ids.isEmpty()) return false
         val folder = folder(account, chat)
         val deleted = read(folder.resolve("deleted.json"))
+        if (ids.stream().allMatch { deleted.containsKey(it.toString()) }) return false
         ids.groupBy { bucket(it.toString()) }.entries.stream().forEach { (bucket, batch) ->
             val path = folder.resolve("$bucket.json")
             val originals = read(path)
@@ -69,6 +70,7 @@ class MessageArchiveStore @Inject constructor(directory: Path, private val clock
             if (originals.isNotEmpty()) write(path, originals)
         }
         write(folder.resolve("deleted.json"), deleted)
+        return true
     }
 
     @Synchronized

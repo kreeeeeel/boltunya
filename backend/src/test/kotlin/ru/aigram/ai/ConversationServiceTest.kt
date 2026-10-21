@@ -174,7 +174,10 @@ class ConversationServiceTest {
             val client = AiTestServices("http://127.0.0.1:${server.address.port}")
             val result = client.reply(
                 ChatRule(internetAccess = false),
-                listOf(ChatMessage("1", "42", "Как дела?", false, 0)),
+                listOf(
+                    ChatMessage("1", "42", "Привет", true, 1, senderName = "Owner", senderId = "user:100"),
+                    ChatMessage("2", "42", "Как дела?", false, 2, senderName = "Anna", senderId = "user:200"),
+                ),
             )
             val body = Json.parseToJsonElement(requestBody).jsonObject
             assertEquals("false", body["think"]?.jsonPrimitive?.content)
@@ -182,8 +185,13 @@ class ConversationServiceTest {
             val incoming = body["messages"]?.jsonArray?.last()?.jsonObject?.get(
                 "content",
             )?.jsonPrimitive?.content.orEmpty()
-            assertTrue(incoming.contains("Собеседник"))
-            assertTrue(incoming.endsWith("Как дела?"))
+            assertEquals("Как дела?", Json.parseToJsonElement(incoming).jsonObject["message"]?.jsonPrimitive?.content)
+            val history = body["messages"]?.jsonArray.orEmpty().drop(1)
+            assertTrue(history.all { it.jsonObject["role"]?.jsonPrimitive?.content == "user" })
+            val owner = Json.parseToJsonElement(history.first().jsonObject["content"]?.jsonPrimitive?.content.orEmpty())
+                .jsonObject
+            assertEquals("true", owner["owner"]?.jsonPrimitive?.content)
+            assertEquals("user:100", owner["senderId"]?.jsonPrimitive?.content)
             assertEquals("Привет!", result.text)
             assertEquals(100.0, result.tokensPerSecond)
         } finally {

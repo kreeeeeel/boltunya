@@ -4,13 +4,16 @@ import ru.aigram.domain.ChatGallery
 import ru.aigram.domain.ChatMessage
 import ru.aigram.domain.ChatSummary
 import ru.aigram.domain.MediaFile
+import ru.aigram.domain.MessageDeletionOptions
+import ru.aigram.domain.MessageDeletionResult
+import ru.aigram.domain.MessageDeletionScope
 import ru.aigram.domain.OutgoingMedia
 import ru.aigram.domain.StickerCatalog
 import ru.aigram.domain.StickerItem
 import ru.aigram.domain.TelegramCredentials
 import ru.aigram.domain.TelegramStatus
-import ru.aigram.exception.InvalidInputException
 import ru.aigram.exception.impl.MediaUnavailableException
+import ru.aigram.exception.impl.MessageDeletionNotAllowedException
 
 interface TelegramGateway : AutoCloseable {
     fun status(): TelegramStatus
@@ -28,6 +31,10 @@ interface TelegramGateway : AutoCloseable {
     fun stickerSet(id: String): List<StickerItem> = throw MediaUnavailableException()
     fun gallery(chatId: String, around: String): ChatGallery = throw MediaUnavailableException()
     fun messageLink(chatId: String, messageId: String): String = throw MediaUnavailableException()
+    fun messageDeletionOptions(chatId: String, messageId: String): MessageDeletionOptions =
+        throw MessageDeletionNotAllowedException()
+    fun deleteMessage(chatId: String, messageId: String, scope: MessageDeletionScope): MessageDeletionResult =
+        throw MessageDeletionNotAllowedException()
     fun sendSticker(chatId: String, stickerId: String, replyToId: String = "", topicId: Int = 0): String =
         throw MediaUnavailableException()
     fun logout()

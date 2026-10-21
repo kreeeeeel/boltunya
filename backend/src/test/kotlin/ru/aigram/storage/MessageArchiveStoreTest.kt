@@ -71,4 +71,17 @@ class MessageArchiveStoreTest {
         assertEquals(original.text, store.deleted("100", "42").single().text)
         assertTrue(store.deleted("100", "42").single().deleted)
     }
+
+    @Test
+    fun `duplicate permanent updates are idempotent including unknown tombstones`() {
+        val store = store()
+        val original = message(1)
+        assertTrue(store.delete("100", "42", listOf(original.id.toLong()), true, false))
+        assertFalse(store.delete("100", "42", listOf(original.id.toLong()), true, false))
+        store.record("100", listOf(original))
+        val deleted = store.find("100", "42", original.id)
+        assertFalse(store.delete("100", "42", listOf(original.id.toLong()), true, false))
+        assertEquals(deleted, store.find("100", "42", original.id))
+        assertTrue(store.delete("101", "42", listOf(original.id.toLong()), true, false))
+    }
 }

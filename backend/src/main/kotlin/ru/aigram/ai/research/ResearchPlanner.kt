@@ -27,7 +27,7 @@ private const val MAX_RESEARCH_MESSAGE_CHARACTERS = 800
 
 class ResearchPlanner(
     private val clock: Clock = Clock.systemDefaultZone(),
-    private val authors: MessageContextFormatter = MessageContextFormatter(resources),
+    private val authors: MessageContextFormatter = MessageContextFormatter(),
     private val terms: ResearchTerms = ResearchTerms(resources),
     private val words: ResearchWords = ResearchWords(),
 ) {

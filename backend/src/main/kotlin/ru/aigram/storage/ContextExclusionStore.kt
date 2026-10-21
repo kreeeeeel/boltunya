@@ -24,8 +24,15 @@ class ContextExclusionStore @Inject constructor(directory: Path) {
     }
 
     fun forInference(ownerId: String, messages: List<ChatMessage>): List<ChatMessage> =
-        decorate(ownerId, messages).filterNot { it.contextExcluded }.map { message ->
-            if (message.replyToId.isNotBlank() && rules(ownerId, message.chatId).excludes(message.replyToId)) {
+        decorate(ownerId, messages).filterNot { it.contextExcluded || it.deleted }.map { message ->
+            if (message.replyToId.isNotBlank() && (
+                    rules(ownerId, message.chatId).excludes(message.replyToId) ||
+                        messages.stream().anyMatch {
+                            it.chatId == message.chatId && it.id == message.replyToId &&
+                                it.deleted
+                        }
+                    )
+            ) {
                 message.copy(replyText = "")
             } else {
                 message

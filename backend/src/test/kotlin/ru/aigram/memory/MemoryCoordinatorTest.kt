@@ -314,7 +314,7 @@ class MemoryCoordinatorTest {
         settings.saveRule("42", ChatRule(enabled = true))
         val telegram = MemoryTelegramGateway()
         telegram.messages =
-            (1..200).map { ChatMessage("$it", "42", "Длинное сообщение ".repeat(80), false, it.toLong()) }
+            (1..600).map { ChatMessage("$it", "42", "Длинное сообщение ".repeat(80), false, it.toLong()) }
         val store = MemoryStore(directory, ResourceCatalog())
         val clock = AdvancingClock(Instant.ofEpochSecond(100000))
         val processor =
@@ -347,14 +347,18 @@ class MemoryCoordinatorTest {
                 coordinator.tick()
                 coordinator.tick()
                 clock.advance(Duration.ofHours(5))
-                val next = ChatMessage("201", "42", "Новый факт", false, 201)
+                val next = ChatMessage("601", "42", "Новый факт", false, 601)
                 telegram.messages = telegram.messages + next
                 coordinator.observe(next)
                 coordinator.tick()
-                assertEquals(200L, store.state("42")?.headId)
+                assertEquals(600L, store.state("42")?.headId)
+                val backfillCursor = store.state("42")?.backfillBeforeId
+                assertTrue(store.state("42")?.backfillComplete == false)
                 clock.advance(Duration.ofHours(1))
                 coordinator.tick()
-                assertEquals(201L, store.state("42")?.headId)
+                assertEquals(601L, store.state("42")?.headId)
+                assertEquals(backfillCursor, store.state("42")?.backfillBeforeId)
+                assertEquals("42" to 0L, telegram.reads.last())
                 assertTrue(store.state("42")?.backfillComplete == false)
             }
         }

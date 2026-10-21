@@ -51,6 +51,7 @@ private const val MESSAGE_DEBOUNCE_MS = 800L
 private const val QUEUE_TICK_MS = 100L
 private const val FAILURE_BACKOFF_SECONDS = 30L
 private const val STYLE_HISTORY_MESSAGES = 100
+private const val MIN_VISION_HISTORY_MESSAGES = 20
 private const val MAX_WORKERS = 4
 private const val MAX_PENDING_JOBS = 1000
 
@@ -428,7 +429,10 @@ class ReplyCoordinator(
             tracing.capture(job.trace) {
                 val history = telegram.history(
                     message.chatId,
-                    if (rule.matchMyStyle) STYLE_HISTORY_MESSAGES else rule.contextMessages,
+                    maxOf(
+                        if (rule.matchMyStyle) STYLE_HISTORY_MESSAGES else rule.contextMessages,
+                        if (rule.analyzePhotos) MIN_VISION_HISTORY_MESSAGES else rule.contextMessages,
+                    ),
                 )
                 val context = if (job.proactive != null || history.stream().anyMatch { it.id == message.id }) {
                     history
@@ -598,8 +602,7 @@ class ReplyCoordinator(
             val cancelled = job.cancelled.get() || exception is ReplyCancelledException ||
                 Thread.currentThread().isInterrupted
             failure = when {
-                exception is BackgroundInferenceDeferredException ->
-                    BackgroundInferenceDeferredException()
+                exception is BackgroundInferenceDeferredException -> exception
                 cancelled -> ReplyCancelledException()
                 else -> exception
             }
@@ -623,7 +626,10 @@ class ReplyCoordinator(
             synchronized(gate) {
                 active.remove(job.id)
                 if (deferred && !closed && !job.cancelled.get()) {
-                    job.readyAt = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(QUEUE_TICK_MS)
+                    val retryDelay = (failure as? BackgroundInferenceDeferredException)?.retryDelayMillis
+                        ?: QUEUE_TICK_MS
+                    job.readyAt =
+                        System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(retryDelay.coerceAtLeast(QUEUE_TICK_MS))
                     pending[job.id] = job
                 } else {
                     deferred = false

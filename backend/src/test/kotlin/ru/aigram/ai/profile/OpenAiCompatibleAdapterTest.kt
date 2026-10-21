@@ -24,6 +24,39 @@ class OpenAiCompatibleAdapterTest {
     @TempDir lateinit var directory: Path
 
     @Test
+    fun `non streaming compatible reasoning alias is separated from final content`() {
+        val response = """
+            {
+              "id":"test","object":"chat.completion","created":1,"model":"stub",
+              "choices":[{"index":0,"message":{"role":"assistant","content":"Final answer",
+              "reasoning":"Private provider analysis"},"finish_reason":"stop"}],
+              "usage":{"prompt_tokens":4,"completion_tokens":2,"total_tokens":6}
+            }
+        """.trimIndent()
+        OpenAiStubServer(response, false).start().use { server ->
+            ProfileAiTestServices(directory).use { services ->
+                val profile = services.profiles.save(
+                    null,
+                    ModelProfileUpdate(
+                        "Synthetic",
+                        ModelProvider.OPENAI_COMPATIBLE,
+                        baseUrl = server.baseUrl,
+                        model = "stub",
+                        capabilities = ModelCapabilities(streaming = false),
+                    ),
+                )
+                val result = services.completion.generate(
+                    ChatRule(modelProfileId = profile.id, useDefaultModel = false),
+                    listOf(UserMessage("Synthetic")),
+                )
+                assertEquals("Final answer", result.text)
+                assertEquals("Private provider analysis", result.thinking)
+                assertEquals(1, server.requests.get())
+            }
+        }
+    }
+
+    @Test
     fun `streams reasoning separately and reads final usage without duplicating cumulative reasoning`() {
         val stream = """
             data: {"id":"test","object":"chat.completion.chunk","created":1,"model":"stub","choices":[{"index":0,"delta":{"role":"assistant","reasoning_content":"Think "},"finish_reason":null}]}

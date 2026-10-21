@@ -158,15 +158,7 @@ class TelegramUpdateHandler @Inject constructor(
         }
         builder.addUpdateHandler(TdApi.UpdateDeleteMessages::class.java) { update ->
             if (connection.version != version) return@addUpdateHandler
-            try {
-                history.deleted(update)
-            } finally {
-                if (update.isPermanent &&
-                    !update.fromCache
-                ) {
-                    replies.get().onDeleted(update.chatId.toString(), update.messageIds.map(Long::toString).toSet())
-                }
-            }
+            history.deleted(update)
         }
         builder.addUpdateHandler(TdApi.UpdateAuthorizationState::class.java) { update ->
             if (connection.version != version) return@addUpdateHandler

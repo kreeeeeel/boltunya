@@ -39,6 +39,7 @@ private const val WORK_INTERVAL_SECONDS = 15L
 private const val ERROR_RETRY_SECONDS = 300L
 private const val CONFIG_REFRESH_SECONDS = 60L
 private const val SHUTDOWN_TIMEOUT_SECONDS = 5L
+private const val NO_PROGRESS_RETRY_MILLIS = 10000L
 
 class MemoryCoordinator @Inject constructor(
     private val store: MemoryStore,
@@ -207,12 +208,13 @@ class MemoryCoordinator @Inject constructor(
     }
 
     @Synchronized
-    fun invalidateContext(chatId: String) {
-        if (closed || !attach()) return
-        if (store.state(chatId) == null && store.read(chatId).summary.isBlank()) return
+    fun invalidateContext(chatId: String): Boolean {
+        if (closed || !attach()) return false
+        if (store.state(chatId) == null && store.read(chatId).summary.isBlank()) return false
         cancel(chatId)
         store.rebuild(chatId, manual = false)
         store.cancelCollection(chatId)
+        return true
     }
 
     @Synchronized
@@ -246,7 +248,8 @@ class MemoryCoordinator @Inject constructor(
         val queue = requests.filter { pending(it) || processing == it.chatId && !suspended(it.chatId) }
         val selected = queue.filter { chatId.isEmpty() || it.chatId == chatId }
         if (selected.isEmpty()) return MemoryCollectionProgress()
-        val running = selected.any { it.chatId == processing } && queueMemoryPosition() == 0
+        val workerPosition = queueMemoryPosition()
+        val running = selected.any { it.chatId == processing } && workerPosition == 0
         val status = when {
             running -> MemoryStatus.PROCESSING
             selected.any { errors.containsKey(it.chatId) } -> MemoryStatus.ERROR
@@ -256,7 +259,7 @@ class MemoryCoordinator @Inject constructor(
         return MemoryCollectionProgress(
             active = true,
             status = status,
-            queuedChats = queue.count { it.chatId != processing },
+            queuedChats = queue.count { it.chatId != processing || workerPosition > 0 },
             queuePosition = when {
                 running -> 0
                 selected.any { it.chatId == queuedChat } && outstanding.get().isNotEmpty() ->
@@ -357,9 +360,6 @@ class MemoryCoordinator @Inject constructor(
                 true
             }
             if (waitingModel) return
-            val recent =
-                selected.headId == 0L || selected.deltaTargetId != 0L || selected.requested ||
-                    selected.dirty && now - selected.recentUpdatedAt >= interval
             val explicit = collections.stream().anyMatch { it.chatId == selected.chatId && pending(it) }
             val chat = telegram.chats().stream().filter { it.id == selected.chatId }.findFirst().orElse(null)
             val id = UUID.randomUUID().toString()
@@ -377,10 +377,20 @@ class MemoryCoordinator @Inject constructor(
                     ) {
                         throw ReplyCancelledException()
                     }
-                    processor.process(selected, model, recent) {
-                        !closed && !Thread.currentThread().isInterrupted && !suspended(selected.chatId) &&
-                            settings.get().memoryEnabled && allowed(selected) &&
-                            telegram.status().userId == selected.accountId
+                    val current = store.state(selected.chatId) ?: throw ReplyCancelledException()
+
+                    fun canContinue(): Boolean = !closed && !Thread.currentThread().isInterrupted &&
+                        !suspended(current.chatId) && settings.get().memoryEnabled && allowed(current) &&
+                        current.accountId == selected.accountId && telegram.status().userId == selected.accountId
+
+                    if (!canContinue()) throw ReplyCancelledException()
+                    val currentInterval = TimeUnit.HOURS.toSeconds(settings.get().memoryIntervalHours.toLong())
+                    val recent = current.headId == 0L || current.deltaTargetId != 0L || current.requested ||
+                        current.dirty && clock.instant().epochSecond - current.recentUpdatedAt >= currentInterval
+
+                    if (!processor.process(current, model, recent, ::canContinue)) {
+                        if (!canContinue()) throw ReplyCancelledException()
+                        throw BackgroundInferenceDeferredException(NO_PROGRESS_RETRY_MILLIS)
                     }
                 },
                 userCancelled = { suspendCollection(selected.chatId) },

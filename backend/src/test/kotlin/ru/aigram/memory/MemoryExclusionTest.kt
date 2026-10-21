@@ -19,6 +19,17 @@ class MemoryExclusionTest {
     @TempDir lateinit var directory: Path
 
     @Test
+    fun `deleted archive entries remain cursors without returning their facts to rebuilt memory`() {
+        val messages = listOf(
+            ChatMessage("1", "42", "Deleted owner fact", true, 1, deleted = true),
+            ChatMessage("2", "42", "Retained fact", false, 2),
+        )
+        val batch = MemoryBatchBuilder(AutomatedReplyStore(directory)).select(messages)
+        assertEquals(messages, batch.messages)
+        assertEquals(listOf("Retained fact"), batch.sources.map { it.text })
+    }
+
+    @Test
     fun `keeps excluded messages as pagination cursors while excluding every summary source`() {
         val messages = IntStream.rangeClosed(1, 100).mapToObj { id ->
             ChatMessage("$id", "42", "Excluded fact", true, id.toLong(), contextExcluded = true)

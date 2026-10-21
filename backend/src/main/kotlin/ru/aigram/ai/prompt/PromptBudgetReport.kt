@@ -16,4 +16,5 @@ data class PromptBudgetReport(
     val preferences: ModelPromptSettings,
     val estimated: Boolean = true,
     val includesHistory: Boolean = false,
+    val automaticContext: Boolean = false,
 )

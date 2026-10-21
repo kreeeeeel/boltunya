@@ -82,6 +82,7 @@ class TelegramMessageMapper @Inject constructor(
             kind,
             media,
             entities.map(formatted),
+            mediaAlbumId = message.mediaAlbumId.takeIf { it != 0L }?.toString().orEmpty(),
         )
     }
 

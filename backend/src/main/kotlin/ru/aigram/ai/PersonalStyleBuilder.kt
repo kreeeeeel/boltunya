@@ -12,7 +12,10 @@ private const val MIN_STYLE_SAMPLES = 3
 class PersonalStyleBuilder @Inject constructor() {
     fun build(history: List<ChatMessage>): String {
         val samples = history.asReversed().stream()
-            .filter { it.outgoing && !it.automated && !it.contextExcluded && it.kind == "text" && it.text.isNotBlank() }
+            .filter {
+                it.outgoing && !it.automated && !it.contextExcluded && !it.deleted && it.kind == "text" &&
+                    it.text.isNotBlank()
+            }
             .map { it.text.trim() }
             .filter { it.length <= MAX_SAMPLE_CHARACTERS }
             .distinct().limit(MAX_STYLE_SAMPLES).toList()

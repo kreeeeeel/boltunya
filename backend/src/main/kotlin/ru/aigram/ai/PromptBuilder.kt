@@ -2,11 +2,13 @@ package ru.aigram.ai
 
 import kotlinx.serialization.json.Json
 import org.springframework.ai.chat.memory.MessageWindowChatMemory
-import org.springframework.ai.chat.messages.AssistantMessage
 import org.springframework.ai.chat.messages.Message
 import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
 import org.springframework.ai.content.Media
+import ru.aigram.ai.profile.ProfileContextBudget
+import ru.aigram.ai.profile.ResolvedModelTarget
+import ru.aigram.ai.prompt.PromptTokenEstimator
 import ru.aigram.ai.research.ResearchContext
 import ru.aigram.ai.research.ResearchLinkPolicy
 import ru.aigram.domain.ChatMessage
@@ -18,6 +20,7 @@ import java.time.Clock
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.stream.Collectors
+import java.util.stream.IntStream
 
 private const val MAX_MESSAGE_CHARACTERS = 1200
 private const val MAX_CONTEXT_CHARACTERS = 12000
@@ -28,6 +31,8 @@ private const val MEMORY_CONTEXT_OVERHEAD = 500
 private const val MIN_RECENT_CONTEXT_CHARACTERS = 2400
 private const val MAX_EXTERNAL_CONTEXT_CHARACTERS = 5500
 private const val MIN_RESEARCH_CONTEXT_CHARACTERS = 400
+private const val MEMORY_BUDGET_SEARCH_STEPS = 16
+private const val RECENT_HISTORY_RESERVE_TOKENS = 256
 
 private val resources = ResourceCatalog()
 
@@ -35,7 +40,9 @@ class PromptBuilder(
     private val clock: Clock = Clock.systemDefaultZone(),
     private val personalStyle: PersonalStyleBuilder = PersonalStyleBuilder(),
     private val links: ResearchLinkPolicy = ResearchLinkPolicy(),
-    private val authors: MessageContextFormatter = MessageContextFormatter(resources),
+    private val authors: MessageContextFormatter = MessageContextFormatter(),
+    private val tokens: PromptTokenEstimator = PromptTokenEstimator(),
+    private val budget: ProfileContextBudget = ProfileContextBudget(),
 ) {
     fun build(
         rule: ChatRule,
@@ -45,6 +52,8 @@ class PromptBuilder(
         styleHistory: List<ChatMessage> = history,
         memory: MemoryContext = MemoryContext(),
         images: Map<String, List<Media>> = emptyMap(),
+        inputTarget: ResolvedModelTarget? = null,
+        reservedOutputTokens: Int = rule.maxTokens,
     ): List<Message> {
         val style = CommunicationStyle.entries.firstOrNull { it.key == rule.style } ?: CommunicationStyle.FRIENDLY
         val tone = if (style == CommunicationStyle.CUSTOM && rule.resolvedStyleInstructions.isNotBlank()) {
@@ -106,17 +115,18 @@ class PromptBuilder(
                     MIN_RESEARCH_CONTEXT_CHARACTERS
                 ).coerceAtLeast(0),
         )
-        val longTerm = if (memory.isEmpty() || memoryBudget == 0) {
+        fun memoryContent(characters: Int): String = if (memory.isEmpty() || characters <= MEMORY_CONTEXT_OVERHEAD) {
             ""
         } else {
             resources.prompt(
                 "ru/memory/context",
                 mapOf(
                     "memory" to
-                        Json.encodeToString(memory.limited((memoryBudget - MEMORY_CONTEXT_OVERHEAD).coerceAtLeast(0))),
+                        Json.encodeToString(memory.limited(characters - MEMORY_CONTEXT_OVERHEAD)),
                 ),
             )
         }
+        val longTerm = memoryContent(memoryBudget)
         val externalBudget =
             minOf(
                 MAX_EXTERNAL_CONTEXT_CHARACTERS,
@@ -131,41 +141,68 @@ class PromptBuilder(
         } else {
             researchContent(Json.encodeToString(links.forPrompt(rule, history, research)).take(externalBudget))
         }
+        val latest = history.lastOrNull {
+            !it.contextExcluded && !it.deleted && (it.text.isNotBlank() || images[it.id].orEmpty().isNotEmpty())
+        }
+        val fittedMemory = if (inputTarget == null || longTerm.isBlank()) {
+            longTerm
+        } else {
+            val latestCost = history.stream().filter {
+                !it.contextExcluded && !it.deleted && (it.id == latest?.id || images[it.id].orEmpty().isNotEmpty())
+            }.mapToInt {
+                tokens.estimate(
+                    UserMessage.builder()
+                        .text(authors.content(it, if (it.id == latest?.id) Int.MAX_VALUE else MAX_MESSAGE_CHARACTERS))
+                        .media(images[it.id].orEmpty()).build(),
+                    inputTarget.model,
+                    inputTarget.tokenEncoding,
+                )
+            }.sum()
+            val available = budget.maximum(inputTarget) - reservedOutputTokens - latestCost -
+                RECENT_HISTORY_RESERVE_TOKENS
+            var low = 0
+            var high = memoryBudget
+            IntStream.range(0, MEMORY_BUDGET_SEARCH_STEPS).forEach {
+                if (low < high) {
+                    val middle = (low + high + 1) / 2
+                    val text = listOf(baseSystem, memoryContent(middle), external, selectedStyle)
+                        .filter(String::isNotBlank).joinToString("\n\n")
+                    if (tokens.estimate(SystemMessage(text), inputTarget.model, inputTarget.tokenEncoding) <=
+                        available
+                    ) {
+                        low = middle
+                    } else {
+                        high = middle - 1
+                    }
+                }
+            }
+            memoryContent(low)
+        }
         val system = listOf(
             baseSystem,
-            longTerm,
+            fittedMemory,
             external,
             selectedStyle,
         ).filter(String::isNotBlank).joinToString("\n\n")
-        val latest = history.lastOrNull {
-            !it.contextExcluded && (it.text.isNotBlank() || images[it.id].orEmpty().isNotEmpty())
-        }
         val candidates = history.asReversed().stream()
-            .filter { !it.contextExcluded }
+            .filter { !it.contextExcluded && !it.deleted }
             .filter { it.text.isNotBlank() || images[it.id].orEmpty().isNotEmpty() }
             .map { message ->
                 val limit = if (message.id == latest?.id) Int.MAX_VALUE else MAX_MESSAGE_CHARACTERS
-                val text = if (!message.outgoing) {
-                    authors.content(message, limit)
-                } else {
-                    message.text.take(limit)
-                }
-                if (message.outgoing) {
-                    AssistantMessage.builder().content(text).build()
-                } else {
-                    UserMessage.builder().text(text).media(images[message.id].orEmpty()).build()
-                }
+                UserMessage.builder().text(authors.content(message, limit)).media(images[message.id].orEmpty()).build()
             }.collect(Collectors.toList()).asReversed()
 
         var characters = 0
         var selectedMessages = 0
         val contextBudget = minOf(MAX_CONTEXT_CHARACTERS, MAX_PROMPT_CHARACTERS - system.length)
-        val selected = candidates.asReversed().stream().takeWhile {
+        val selected = candidates.asReversed().stream().filter {
+            val latestMessage = selectedMessages++ == 0
+            val media = it.media.isNotEmpty()
             characters += it.toString().length
-            selectedMessages++ == 0 || characters <= contextBudget
+            media || latestMessage || characters <= contextBudget
         }.collect(Collectors.toList()).asReversed()
 
-        val context = MessageWindowChatMemory.builder().maxMessages(rule.contextMessages + 1).build()
+        val context = MessageWindowChatMemory.builder().maxMessages(rule.contextMessages + images.size + 1).build()
         val conversationId = history.lastOrNull()?.chatId?.ifBlank { "preview" } ?: "preview"
         context.add(conversationId, listOf(SystemMessage(system)) + selected)
         return context.get(conversationId)

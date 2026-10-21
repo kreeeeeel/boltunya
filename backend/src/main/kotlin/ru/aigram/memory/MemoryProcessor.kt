@@ -46,13 +46,17 @@ class MemoryProcessor @Inject constructor(
             page
         }
         if (recent && page.size != fetched.size && candidates.isEmpty()) return false
-        val batch = batches.select(candidates)
+        val owner = store.read("")
+        val batch = batches.select(candidates) { sources ->
+            val owned = sources.filter { it.speaker == MemorySpeaker.OWNER && it.text.isNotBlank() }
+            summarizer.fits(model, previous.facts(), sources) &&
+                (owned.isEmpty() || ownerSummarizer.fitsOwner(model, owner.facts(), owned))
+        }
         if (!unchanged(state, policyRevision)) return false
         val ownerSources = batch.sources.filter { it.speaker == MemorySpeaker.OWNER && it.text.isNotBlank() }
         val ownerUpdate = if (ownerSources.isEmpty()) {
             null
         } else {
-            val owner = store.read("")
             OwnerMemoryUpdate(owner, ownerSummarizer.summarizeOwner(model, owner.facts(), ownerSources))
         }
         if (!unchanged(state, policyRevision)) return false

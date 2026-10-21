@@ -69,6 +69,34 @@ class ChatCompletionService @Inject constructor(
     fun modelName(rule: ChatRule, task: ModelTask = ModelTask.REPLY): String =
         targets?.resolve(task, rule)?.model ?: rule.model
 
+    fun promptTarget(rule: ChatRule, task: ModelTask = ModelTask.REPLY): ResolvedModelTarget {
+        val original = targets?.resolve(task, rule)
+            ?: ResolvedModelTarget(
+                model = rule.model,
+                baseUrl = "http://localhost",
+                remote = false,
+                automaticContext = true,
+            )
+        return promptSettings?.configure(original) ?: original
+    }
+
+    fun reservedTokens(target: ResolvedModelTarget, outputTokens: Int): Int = if (target.profileId.isEmpty()) {
+        outputTokens + policies.get(target.model).reasoningTokens
+    } else {
+        contextBudget.reserve(target, outputTokens)
+    }
+
+    fun fitsSummary(model: String, instruction: String, data: String): Boolean {
+        val target = promptTarget(ChatRule(model = model), ModelTask.MEMORY)
+        val messages = listOf(SystemMessage(instruction), UserMessage(data))
+        val reserve = if (target.profileId.isEmpty()) {
+            MEMORY_RESPONSE_TOKENS + if (policies.get(target.model).reasoningTokens > 0) MAX_REASONING_TOKENS else 0
+        } else {
+            reservedTokens(target, MEMORY_RESPONSE_TOKENS)
+        }
+        return contextBudget.fits(target, messages, reserve)
+    }
+
     fun instructions(rule: ChatRule, globalPrompt: String, task: ModelTask = ModelTask.REPLY): String {
         val target = targets?.resolve(task, rule) ?: return globalPrompt
         val text = promptSettings?.get(target)?.instructions.orEmpty()
@@ -130,8 +158,9 @@ class ChatCompletionService @Inject constructor(
         if (messages.stream().anyMatch { it is UserMessage && it.media.isNotEmpty() } && !target.capabilities.vision) {
             throw ModelCapabilityUnavailableException()
         }
-        val options = profileOptions.build(target, maxTokens, schema)
-        val context = contextBudget.select(target, messages, maxTokens)
+        val configured = contextBudget.configure(target, messages, contextBudget.reserve(target, maxTokens))
+        val options = profileOptions.build(configured, maxTokens, schema)
+        val context = contextBudget.select(configured, messages, maxTokens)
         // Serialize an allowlist, never Spring API options (which may contain the API key).
         val safeOptions = mapper.writeValueAsString(
             mapOf(
@@ -184,7 +213,7 @@ class ChatCompletionService @Inject constructor(
         maxTokens: Int,
         configured: ResolvedModelTarget?,
     ): ModelCompletion {
-        val target = configured ?: ResolvedModelTarget(model = rule.model, baseUrl = "http://localhost", remote = false)
+        val target = configured ?: promptTarget(rule)
         val policy = policies.get(rule.model)
         val first = call(rule, messages, schema, maxTokens, policy, policy.reasoningTokens, target)
         val result = if (first.finishReason == "length") {
@@ -216,13 +245,14 @@ class ChatCompletionService @Inject constructor(
         reasoningTokens: Int,
         target: ResolvedModelTarget,
     ): ModelCompletion {
-        val context = contextBudget.select(target, messages, maxTokens, maxTokens + reasoningTokens)
+        val configured = contextBudget.configure(target, messages, maxTokens + reasoningTokens)
+        val context = contextBudget.select(configured, messages, maxTokens, maxTokens + reasoningTokens)
         runtime.track(rule.model)
         val temperature = (if (schema != null) 0.0 else rule.creativity / 100.0)
             .coerceIn(policy.minimumTemperature, policy.maximumTemperature)
         val options = OllamaChatOptions.builder().model(rule.model)
             .temperature(temperature)
-            .numPredict(maxTokens + reasoningTokens).numCtx(target.options.contextWindow).keepAlive(KEEP_ALIVE)
+            .numPredict(maxTokens + reasoningTokens).numCtx(configured.options.contextWindow).keepAlive(KEEP_ALIVE)
         when (policy.thinking) {
             ThinkingMode.DISABLED -> options.thinkOption(ThinkOption.ThinkBoolean.DISABLED)
             ThinkingMode.ENABLED -> options.thinkOption(ThinkOption.ThinkBoolean.ENABLED)

@@ -55,7 +55,7 @@ class PromptEndpoint @Inject constructor(
         val original = targets.resolve(ModelTask.REPLY, rule)
         val selected = request.preferences ?: preferences.get(original)
         validate(selected, original)
-        val target = preferences.configure(original, selected)
+        val configured = preferences.configure(original, selected)
         val global = request.globalPrompt ?: settings.get().globalPrompt
         val ownerInstructions = if (selected.instructions.isBlank()) {
             global
@@ -65,18 +65,20 @@ class PromptEndpoint @Inject constructor(
                 mapOf("instructions" to selected.instructions),
             )
         }
-        val system = prompts.build(rule, emptyList(), ownerInstructions).filterIsInstance<SystemMessage>()
-            .stream().mapToInt { tokens.estimate(it, target.model, target.tokenEncoding) }.sum()
-        val reserve = if (target.profileId.isEmpty()) {
-            rule.maxTokens + policies.get(target.model).reasoningTokens
+        val messages = prompts.build(rule, emptyList(), ownerInstructions).filterIsInstance<SystemMessage>()
+        val reserve = if (configured.profileId.isEmpty()) {
+            rule.maxTokens + policies.get(configured.model).reasoningTokens
         } else {
-            budget.reserve(target, rule.maxTokens)
+            budget.reserve(configured, rule.maxTokens)
         }
+        val target = budget.configure(configured, messages, reserve)
+        val system = messages.stream().mapToInt { tokens.estimate(it, target.model, target.tokenEncoding) }.sum()
         return PromptBudgetReport(
             target.model, target.profileId, target.options.contextWindow, maximum(target), system, reserve,
             (target.options.contextWindow - system - reserve).coerceAtLeast(0),
             system + reserve < target.options.contextWindow,
             tokens.encoding(target.model, target.tokenEncoding), selected,
+            automaticContext = target.automaticContext,
         )
     }
 
@@ -90,8 +92,7 @@ class PromptEndpoint @Inject constructor(
     }
 
     private fun maximum(target: ResolvedModelTarget): Int = if (target.profileId.isEmpty()) {
-        models.models.stream().filter { it.id == target.model }.findFirst()
-            .map { it.contextTokens }.orElse(target.options.contextWindow)
+        models.info(target.model)?.contextTokens?.takeIf { it > 0 } ?: target.options.contextWindow
     } else {
         target.options.contextWindow
     }

@@ -64,6 +64,7 @@ class ModelTargetResolver @Inject constructor(
         model = id,
         baseUrl = configuration.ollamaUrl,
         remote = !local(configuration.ollamaUrl),
+        automaticContext = true,
         capabilities = ModelCapabilities(
             vision = catalog.info(id)?.supportsVision == true,
             structuredOutput = true,

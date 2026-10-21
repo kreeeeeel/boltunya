@@ -55,6 +55,7 @@ class TelegramMessageMapperTest {
         val message = TdApi.Message().apply {
             id = 100
             chatId = 42
+            mediaAlbumId = 777
             content = TdApi.MessagePhoto().apply {
                 this.photo = photo
                 caption = TdApi.FormattedText("Подпись", emptyArray())
@@ -62,6 +63,7 @@ class TelegramMessageMapperTest {
         }
         val mapped = mapper.map(message)
         assertEquals("photo", mapped.kind)
+        assertEquals("777", mapped.mediaAlbumId)
         assertEquals("Подпись", mapped.text)
         assertEquals(2, assertNotNull(mapped.media).fileId)
         assertEquals(1280, mapped.media.width)

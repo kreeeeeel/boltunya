@@ -26,4 +26,5 @@ data class ChatMessage(
     val deletedAt: Long = 0,
     val contextExcluded: Boolean = false,
     val senderUsername: String = "",
+    val mediaAlbumId: String = "",
 )

@@ -100,7 +100,11 @@ class ConversationService @Inject constructor(
                 0.0,
             )
         }
-        val baseMessages = prompts.build(rule, history, modelPrompt, research, styleHistory, memory, images)
+        val inputTarget = completion.promptTarget(rule, task)
+        val reservedTokens = completion.reservedTokens(inputTarget, rule.maxTokens)
+        val baseMessages = prompts.build(
+            rule, history, modelPrompt, research, styleHistory, memory, images, inputTarget, reservedTokens,
+        )
         val messages = if (stickers.isEmpty()) baseMessages else mediaPlanner.messages(baseMessages, stickers)
         val replySchema = if (stickers.isEmpty()) null else mediaPlanner.schema(stickers)
         fun read(text: String) = if (stickers.isEmpty()) ModelReplyPlan(text) else mediaPlanner.read(text, stickers)
@@ -118,6 +122,8 @@ class ConversationService @Inject constructor(
                 styleHistory,
                 memory,
                 images,
+                inputTarget,
+                reservedTokens,
             )
             val precision = resources.prompt(
                 "ru/research/retry-precision",

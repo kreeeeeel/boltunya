@@ -15,6 +15,9 @@ import ru.aigram.domain.ChatGallery
 import ru.aigram.domain.ChatMessage
 import ru.aigram.domain.ChatSummary
 import ru.aigram.domain.MediaFile
+import ru.aigram.domain.MessageDeletionOptions
+import ru.aigram.domain.MessageDeletionResult
+import ru.aigram.domain.MessageDeletionScope
 import ru.aigram.domain.OutgoingMedia
 import ru.aigram.domain.StickerCatalog
 import ru.aigram.domain.StickerItem
@@ -66,6 +69,7 @@ class TdLightGateway @Inject constructor(
     private val stickerService: TelegramStickerService,
     private val galleries: TelegramGalleryService,
     private val links: TelegramMessageLinks,
+    private val deletion: TelegramMessageDeletion,
 ) : TelegramGateway {
     private var factory: SimpleTelegramClientFactory? = null
 
@@ -102,6 +106,10 @@ class TdLightGateway @Inject constructor(
     override fun stickerSet(id: String): List<StickerItem> = stickerService.set(id)
     override fun gallery(chatId: String, around: String): ChatGallery = galleries.gallery(chatId, around)
     override fun messageLink(chatId: String, messageId: String): String = links.link(chatId, messageId)
+    override fun messageDeletionOptions(chatId: String, messageId: String): MessageDeletionOptions =
+        deletion.options(chatId, messageId)
+    override fun deleteMessage(chatId: String, messageId: String, scope: MessageDeletionScope): MessageDeletionResult =
+        deletion.delete(chatId, messageId, scope)
     override fun sendSticker(chatId: String, stickerId: String, replyToId: String, topicId: Int): String =
         stickerService.send(chatId, stickerId, replyToId, topicId)
 

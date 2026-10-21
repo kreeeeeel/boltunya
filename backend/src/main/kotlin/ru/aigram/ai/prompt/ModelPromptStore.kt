@@ -35,6 +35,7 @@ class ModelPromptStore @Inject constructor(directory: Path) {
     fun configure(target: ResolvedModelTarget, preferences: ModelPromptSettings): ResolvedModelTarget = target.copy(
         options = target.options.copy(contextWindow = preferences.contextWindow ?: target.options.contextWindow),
         tokenEncoding = preferences.tokenEncoding,
+        automaticContext = target.profileId.isEmpty() && preferences.contextWindow == null,
     )
 
     @Synchronized

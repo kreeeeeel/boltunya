@@ -3561,6 +3561,166 @@
           }
         }
       }
+    },
+    "/api/chats/{chatId}/messages/{messageId}/deletion": {
+      "get": {
+        "operationId": "messageDeletionOptions",
+        "parameters": [
+          {
+            "name": "chatId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageDeletionOptions"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chats/{chatId}/messages/{messageId}": {
+      "delete": {
+        "operationId": "deleteMessage",
+        "parameters": [
+          {
+            "name": "chatId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageDeletionResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageDeletionRequest"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3990,6 +4150,9 @@
             "type": "boolean"
           },
           "senderUsername": {
+            "type": "string"
+          },
+          "mediaAlbumId": {
             "type": "string"
           }
         }
@@ -6433,6 +6596,9 @@
           },
           "includesHistory": {
             "type": "boolean"
+          },
+          "automaticContext": {
+            "type": "boolean"
           }
         }
       },
@@ -6452,6 +6618,56 @@
           "enabled"
         ],
         "description": "Default: inherit."
+      },
+      "MessageDeletionOptions": {
+        "type": "object",
+        "required": [
+          "canDeleteForSelf",
+          "canDeleteForEveryone"
+        ],
+        "properties": {
+          "canDeleteForSelf": {
+            "type": "boolean"
+          },
+          "canDeleteForEveryone": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MessageDeletionRequest": {
+        "type": "object",
+        "required": [
+          "scope"
+        ],
+        "properties": {
+          "scope": {
+            "type": "string",
+            "enum": [
+              "self",
+              "everyone"
+            ]
+          }
+        }
+      },
+      "MessageDeletionResult": {
+        "type": "object",
+        "required": [
+          "chatId",
+          "messageId",
+          "deletedAt"
+        ],
+        "properties": {
+          "chatId": {
+            "type": "string"
+          },
+          "messageId": {
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
       }
     },
     "securitySchemes": {

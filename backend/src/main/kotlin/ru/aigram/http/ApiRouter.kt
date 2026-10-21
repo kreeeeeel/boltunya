@@ -23,6 +23,7 @@ import ru.aigram.http.endpoint.DraftEndpoint
 import ru.aigram.http.endpoint.EngineEndpoint
 import ru.aigram.http.endpoint.MediaEndpoint
 import ru.aigram.http.endpoint.MemoryEndpoint
+import ru.aigram.http.endpoint.MessageDeletionEndpoint
 import ru.aigram.http.endpoint.ModelProfilesEndpoint
 import ru.aigram.http.endpoint.PreviewEndpoint
 import ru.aigram.http.endpoint.PromptEndpoint
@@ -39,6 +40,7 @@ private const val ACTION_SEGMENT = 4
 private const val ITEM_SEGMENTS = 4
 private const val ACTION_SEGMENTS = 5
 private const val MESSAGE_LINK_SEGMENTS = 7
+private const val MESSAGE_ITEM_SEGMENTS = 6
 private const val MESSAGE_ID_SEGMENT = 5
 private const val MESSAGE_ACTION_SEGMENT = 6
 private const val MEDIA_PREFIX = "/api/media/"
@@ -70,6 +72,7 @@ class ApiRouter @Inject constructor(
     private val uploads: UploadEndpoint,
     private val exclusions: ContextExclusionEndpoint,
     private val prompts: PromptEndpoint,
+    private val deletions: MessageDeletionEndpoint,
 ) : AutoCloseable {
     fun handle(exchange: HttpExchange) {
         val path = exchange.requestURI.path
@@ -171,6 +174,17 @@ class ApiRouter @Inject constructor(
 
     private fun dynamic(exchange: HttpExchange, method: HttpMethod, body: JsonObject): JsonElement {
         val parts = exchange.requestURI.path.split('/')
+        if (parts.size == MESSAGE_LINK_SEGMENTS && parts[RESOURCE_SEGMENT] == "chats" &&
+            parts[ACTION_SEGMENT] == "messages" && parts[MESSAGE_ACTION_SEGMENT] == "deletion" &&
+            method == HttpMethod.GET
+        ) {
+            return json.encodeToJsonElement(deletions.options(parts[ID_SEGMENT], parts[MESSAGE_ID_SEGMENT]))
+        }
+        if (parts.size == MESSAGE_ITEM_SEGMENTS && parts[RESOURCE_SEGMENT] == "chats" &&
+            parts[ACTION_SEGMENT] == "messages" && method == HttpMethod.DELETE
+        ) {
+            return json.encodeToJsonElement(deletions.delete(parts[ID_SEGMENT], parts[MESSAGE_ID_SEGMENT], body))
+        }
         if (parts.size == MESSAGE_LINK_SEGMENTS && parts[RESOURCE_SEGMENT] == "chats" &&
             parts[ACTION_SEGMENT] == "messages" && parts[MESSAGE_ACTION_SEGMENT] == "context" &&
             method == HttpMethod.PUT

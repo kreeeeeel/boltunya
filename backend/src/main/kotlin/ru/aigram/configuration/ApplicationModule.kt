@@ -86,6 +86,7 @@ import ru.aigram.http.endpoint.DraftEndpoint
 import ru.aigram.http.endpoint.EngineEndpoint
 import ru.aigram.http.endpoint.MediaEndpoint
 import ru.aigram.http.endpoint.MemoryEndpoint
+import ru.aigram.http.endpoint.MessageDeletionEndpoint
 import ru.aigram.http.endpoint.ModelProfilesEndpoint
 import ru.aigram.http.endpoint.PreviewEndpoint
 import ru.aigram.http.endpoint.PromptEndpoint
@@ -136,6 +137,8 @@ import ru.aigram.telegram.TelegramMediaContent
 import ru.aigram.telegram.TelegramMediaDeliveryTracker
 import ru.aigram.telegram.TelegramMediaSender
 import ru.aigram.telegram.TelegramMediaStore
+import ru.aigram.telegram.TelegramMessageDeletion
+import ru.aigram.telegram.TelegramMessageDeletionPolicy
 import ru.aigram.telegram.TelegramMessageLinks
 import ru.aigram.telegram.TelegramMessageMapper
 import ru.aigram.telegram.TelegramMessageSender
@@ -181,6 +184,9 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
             TelegramTypingStore::class.java,
             TelegramGalleryService::class.java,
             TelegramMessageLinks::class.java,
+            TelegramMessageDeletion::class.java,
+            TelegramMessageDeletionPolicy::class.java,
+            MessageDeletionEndpoint::class.java,
             TelegramStickerService::class.java,
             TelegramStickerRegistry::class.java,
             TdLightGateway::class.java,
@@ -334,7 +340,9 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
         personalStyle: PersonalStyleBuilder,
         links: ResearchLinkPolicy,
         authors: MessageContextFormatter,
-    ): PromptBuilder = PromptBuilder(clock, personalStyle, links, authors)
+        tokens: PromptTokenEstimator,
+        budget: ProfileContextBudget,
+    ): PromptBuilder = PromptBuilder(clock, personalStyle, links, authors, tokens, budget)
 
     @Provides @Singleton
     fun researcher(

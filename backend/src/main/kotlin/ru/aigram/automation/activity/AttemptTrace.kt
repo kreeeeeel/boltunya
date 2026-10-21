@@ -16,7 +16,7 @@ class AttemptTrace(private val request: ActivityAttempt, private val retainConte
         response.append(chunk.result?.output?.text.orEmpty())
         thinking.append(chunk.result?.output?.metadata?.get("thinking") as? String ?: "")
         val cumulativeReasoning = chunk.result?.output?.metadata?.get("reasoningContent") as? String
-        if (cumulativeReasoning != null) {
+        if (!cumulativeReasoning.isNullOrEmpty()) {
             thinking.setLength(0)
             thinking.append(cumulativeReasoning)
         }

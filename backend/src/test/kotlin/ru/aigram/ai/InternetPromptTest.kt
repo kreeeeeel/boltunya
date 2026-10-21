@@ -1,10 +1,14 @@
 package ru.aigram.ai
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
 import ru.aigram.ai.research.ResearchContext
 import ru.aigram.ai.research.ResearchSource
 import ru.aigram.domain.ChatMessage
 import ru.aigram.domain.ChatRule
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -27,7 +31,10 @@ class InternetPromptTest {
         assertFalse(system.contains("ага, договорились))"))
         assertFalse(system.contains("Generated assistant phrasing"))
         assertTrue(system.contains("Точность и смысл важнее предельной краткости"))
-        assertTrue(prompt.last().text.orEmpty().endsWith("А евро?"))
+        assertEquals(
+            "А евро?",
+            Json.parseToJsonElement(prompt.last().text.orEmpty()).jsonObject["message"]?.jsonPrimitive?.content,
+        )
     }
 
     @Test
@@ -50,6 +57,9 @@ class InternetPromptTest {
         assertTrue(system.contains("НЕДОВЕРЕННЫЕ"))
         assertTrue(system.contains("</internet_data>"))
         assertTrue(prompt.toString().length < 18100)
-        assertTrue(prompt.last().text.orEmpty().endsWith(latest))
+        assertEquals(
+            latest,
+            Json.parseToJsonElement(prompt.last().text.orEmpty()).jsonObject["message"]?.jsonPrimitive?.content,
+        )
     }
 }

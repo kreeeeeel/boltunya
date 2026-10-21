@@ -17,6 +17,18 @@ class ContextExclusionStoreTest {
     @TempDir lateinit var directory: Path
 
     @Test
+    fun `deleted archive entries and their known quotes never enter inference`() {
+        val messages = listOf(
+            ChatMessage("1", "42", "Deleted fact", true, 1, deleted = true),
+            ChatMessage("2", "42", "Retained reply", false, 2, replyToId = "1", replyText = "Deleted fact"),
+        )
+        val inference = ContextExclusionStore(directory).forInference("100", messages)
+        assertEquals(listOf("2"), inference.map { it.id })
+        assertEquals("", inference.single().replyText)
+        assertEquals("Deleted fact", messages.first().text)
+    }
+
+    @Test
     fun `persists account-scoped ordered exclusion and restoration ranges`() {
         val store = ContextExclusionStore(directory)
         val messages = (1..7).map { ChatMessage("$it", "42", "Original message $it", false, it.toLong()) }

@@ -7,6 +7,8 @@ import java.time.Duration
 
 private const val EVALUATION_DURATION = "eval-duration"
 private const val TOTAL_DURATION = "total-duration"
+private const val THINKING = "thinking"
+private const val REASONING_CONTENT = "reasoningContent"
 private val THINKING_TAGS = listOf("<think>", "<thinking>", "<reasoning>")
 
 class ModelReplyReader @Inject constructor() {
@@ -23,9 +25,15 @@ class ModelReplyReader @Inject constructor() {
         val tokens = response.metadata.usage.completionTokens
         val speed = if (evaluation > 0) tokens * 1e9 / evaluation else 0.0
         val duration = response.metadata.get<Duration>(TOTAL_DURATION)?.toMillis() ?: elapsedMs
+        val thinking = (generation?.output?.metadata?.get(THINKING) as? String)
+            .orEmpty().ifEmpty {
+                (generation?.metadata?.get<Any>(THINKING) as? String).orEmpty()
+            }.ifEmpty {
+                (generation?.output?.metadata?.get(REASONING_CONTENT) as? String).orEmpty()
+            }
         return ModelCompletion(
             text, duration, speed, generation?.metadata?.finishReason.orEmpty(),
-            generation?.output?.text.orEmpty(), generation?.output?.metadata?.get("thinking") as? String ?: "",
+            generation?.output?.text.orEmpty(), thinking,
             response.metadata.usage.promptTokens, tokens,
             response.metadata.get<Duration>("load-duration")?.toMillis() ?: 0,
             response.metadata.get<Duration>("prompt-eval-duration")?.toMillis() ?: 0,

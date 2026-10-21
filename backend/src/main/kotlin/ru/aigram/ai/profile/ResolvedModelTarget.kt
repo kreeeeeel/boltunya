@@ -13,4 +13,5 @@ data class ResolvedModelTarget(
     val options: ModelProfileOptions = ModelProfileOptions(),
     val executionGroup: String = "shared",
     val tokenEncoding: TokenEncoding = TokenEncoding.AUTO,
+    val automaticContext: Boolean = false,
 )

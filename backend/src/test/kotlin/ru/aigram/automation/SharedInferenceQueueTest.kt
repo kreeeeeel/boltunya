@@ -9,6 +9,7 @@ import ru.aigram.domain.ActivityKind
 import ru.aigram.domain.ChatRule
 import ru.aigram.domain.ReplyResult
 import ru.aigram.exception.impl.BackgroundInferenceDeferredException
+import ru.aigram.exception.impl.ReplyCancelledException
 import ru.aigram.storage.SettingsStore
 import java.nio.file.Path
 import java.util.UUID
@@ -164,6 +165,36 @@ class SharedInferenceQueueTest {
             assertEquals(1, completed.get())
             assertEquals(1, queue.activities().size)
             assertTrue(queue.details(task.id).steps.any { it.phase == "waiting-resource" })
+        }
+    }
+
+    @Test
+    fun `cancelling a delayed memory retry finishes once without running the source again`() {
+        val runs = AtomicInteger()
+        val finished = AtomicInteger()
+        val failure = AtomicReference<Throwable?>()
+        ReplyCoordinator(SettingsStore(directory), FakeTelegramGateway()) { _, _ ->
+            ReplyResult("auto", 0, 0.0)
+        }.use { queue ->
+            val task = memory(action = {
+                runs.incrementAndGet()
+                throw BackgroundInferenceDeferredException(750)
+            }, completed = {
+                failure.set(it)
+                finished.incrementAndGet()
+            })
+            queue.enqueueMemory(task)
+            await {
+                runs.get() == 1 && queue.details(task.id).entry.status == "queued" &&
+                    queue.memoryQueuePosition(task.id) > 0
+            }
+            queue.cancel(task.id)
+            TimeUnit.MILLISECONDS.sleep(1000)
+            assertEquals(1, runs.get())
+            assertEquals(1, finished.get())
+            assertTrue(failure.get() is ReplyCancelledException)
+            assertEquals("cancelled", queue.details(task.id).entry.status)
+            assertEquals(0, queue.queue().queued)
         }
     }
 
