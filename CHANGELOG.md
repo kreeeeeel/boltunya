@@ -2,6 +2,34 @@
 
 Release versions are assigned by Windows CI. Each GitHub release includes the first dated entry below, the tested source commit and its verification run.
 
+## 2026-10-21 — Local speech recognition and voice replies
+
+### Added
+
+- Add optional local voice-note recognition through Whisper tiny and synthesis through Piper, using the official sherpa-onnx Java API in an isolated CPU worker. Add explicit, cancellable, SHA-256-verified downloads for the Windows runtime and Russian/English voices, with upstream license information.
+- Add Assistant voice settings: incoming recognition, text/always/random/voice-to-voice replies, probability, model selection and speech rate. Existing chat permissions and the shared bounded queue remain authoritative; speech starts disabled.
+- Add manual Text/Voice generation, a playable voice draft and editable transcript. Editing invalidates old audio; resynthesis queues the exact corrected text without asking the conversation model to rewrite it. The regular composer draft stays intact.
+- Send native Telegram OGG/Opus voice notes with duration, packed waveform, reply target and topic. Show recognition and synthesis phases in events. Extend the canonical contract and generated Kotlin/TypeScript clients with typed speech operations and settings.
+- Add real voice testing directly in settings: speak exact entered text with the currently selected voice/rate, even before saving, with queue state, cancellation and playback. Preview-only audio cannot be sent to Telegram, and no conversation model is called.
+- Add a consistent Refresh/Explorer/Import toolbar and user-provided sherpa-onnx VITS/Piper voice packages. Validate bounded archives and required sidecars, reject paths/links/executables, preserve notices, and publish model files and their local registry atomically. Imported voices survive restart and appear in the normal selector.
+
+### Fixed
+
+- Remove the profile dropdown's outer border. Keep speech downloads and voice-draft controls contained in compact and wide windows, with four-language labels and both themes.
+- Bind generated recordings to their owner and chat, protect repeat sends, preserve uncertain native uploads and expire ordinary old previews. Stop the owned speech worker on cancellation; avoid passing private text on command lines or logging native speech output.
+- Buffer compressed model archives during extraction and check cancellation beneath the buffer, including skipped entries. A manual reply to a voice note with recognition disabled reports the missing opt-in instead of answering a placeholder.
+
+### Verification and limitations
+
+- The latest real settings HTTP check passed with a 21 MB Piper upload, import, synthesis and playable audio in 15.782 s. The pinned-installation → Russian synthesis → Opus encode/decode → Whisper cycle passed in 36.130 s, preserving spoken words; punctuation may differ. All three curated voices passed installation/synthesis verification in 34.490 s. These are complete test timings, not latency guarantees.
+- The final Gradle gate completed with 619 Kotlin cases, zero failures and 14 skips (12 unrelated opt-in AI/network/memory cases and two Windows symlink-privilege cases). All 12 installed SDK tests, 257 full UI tests, 39 Electron tests and 10 script tests passed; a final focused run passed 16 tests across four files, including three new hook regressions. Codec, native-send and HTTP regressions cover cancellation, owner isolation, ranges, strict settings and duplicate delivery.
+- The earlier intermittent Ruslan installation error did not recur in standalone/final all-voice verification; its cause remains undetermined, and test-only diagnostics were added. The full browser run passed 135 scenarios, and all eight final voice scenarios passed after the last heading/hook changes.
+- The actual unpacked Aigram 2.6.39 passed the new packaged speech smoke in 44.259 s: real API synthesis (10.850 s), settings synthesis/playback (10.011 s), Ogg audio and advancing playback, zero model-inference/unexpected requests, no signed-in Telegram account or chats, unchanged unsaved preferences and removal of the backend session descriptor. Synthetic evidence is retained in `build/speech-verification/packaged-proof/run-KslmQb`.
+- Windows CI publication, source/tag and downloaded EXE/SDK checksum verification, testing the published executable and restarting the actual profile remain required. The local unpacked result does not verify a published release; its separate result must be recorded in the release notes and local `complie/VERIFICATION.md`.
+- Settings use real local synthesis, upload and import operations. Synthetic conversations and prepared browser audio are browser test fixtures. No Telegram messages were sent to people during verification; recurring enhancement automation remains paused.
+- Initial speech support recognizes the latest relevant incoming voice note and reuses session transcripts. Historical bulk transcription and durable-memory transcription are not included. CPU speed and transcription quality depend on hardware, language and recording quality; ten-minute/25 MiB input limits apply.
+- Speech runtime and model weights remain separate optional downloads. Voice datasets carry different terms, including non-commercial or unspecified licenses; review the model card before use. Bundled codec libraries and separately installed speech assets include notices and source/build references.
+
 ## 2026-10-21 — Reliable reply output and configurable idle messages
 
 ### Added

@@ -74,7 +74,7 @@ These are follow-up candidates, not part of this migration's implementation or r
 
 Compatibility references: [Spring AI versions](https://docs.spring.io/spring-ai/reference/getting-started.html), [Boot requirements](https://docs.spring.io/spring-boot/system-requirements.html), [Boot Kotlin support](https://docs.spring.io/spring-boot/reference/features/kotlin.html), [Kotlin/Gradle compatibility](https://kotlinlang.org/docs/gradle-configure-project.html).
 
-## Current manual checkpoint — reply output and idle configuration
+## Published manual checkpoint — reply output and idle configuration
 
 The recurring improvement automation is paused at the user's request. This manually requested release fixes history-envelope leakage, adds opt-in native formatting and makes idle follow-ups configurable per chat, with a global active-chat directory. No unrelated enhancement starts while this request is active.
 
@@ -84,6 +84,26 @@ The recurring improvement automation is paused at the user's request. This manua
 - [x] Add global/per-chat restart, finish-and-combine and sequential-each policies, with bounded FIFO, anchored history and exact TDLib automated-send provenance. Preserve manual owner cancellation and account/context safeguards.
 - [x] Pass the full local gate: 548 Kotlin tests (12 optional live skipped), 10 installed SDK tests, 232 UI tests, 38 Electron tests, 10 script tests, formatting/type/lint checks and the optimized web build. Verify all 127 browser scenarios across full/focused runs and inspect light/dark/compact screenshots.
 - [x] Verify three synthetic cases on the installed `deepseek-r1:8b`: ordinary replies, native formatting and unrelated participant relevance. Save timing-only evidence without prompts or responses.
-- [ ] Publish through Windows CI; verify native packaging/updater/media gates, tag/source, EXE/SDK checksums and actual-profile restart. Record the release result in its notes and local `complie/VERIFICATION.md`.
+- [x] Publish through Windows CI; verify native packaging/updater/media gates, tag/source, EXE/SDK checksums and actual-profile restart. Record the release result in its notes and local `complie/VERIFICATION.md`.
 
-Details: [reply formatting](../messages/en.md#optional-ai-reply-formatting), [idle messages](../ai/conversation-support-en.md). The next step is validation and publication of this bounded manual release, not automatic feature work.
+Details: [reply formatting](../messages/en.md#optional-ai-reply-formatting), [idle messages](../ai/conversation-support-en.md). This bounded manual checkpoint is published; recurring automatic feature work remains paused.
+
+Published checkpoint: [v2.6.38](https://github.com/kreeeeeel/boltunya/releases/tag/v2.6.38), source `54cba94`. Windows CI and asset hashes passed; the downloaded EXE restored Telegram authorization, existing settings and manual memory notes in the actual profile.
+
+## Current manual checkpoint — local voice messages
+
+The recurring enhancement automation remains paused. Work is limited to the requested speech feature and profile-menu correction.
+
+- [x] Add the single speech contract, generated transports, strict opt-in settings and model selection.
+- [x] Implement curated downloads, isolated recognition/synthesis, OGG/Opus conversion and native Telegram voice delivery through the shared reply queue.
+- [x] Verify the real pinned-asset installation → Piper → Opus → Whisper pipeline in an isolated test directory (36.130 s). Preserve the spoken words while allowing Whisper's punctuation to differ. Preserve actual Telegram data and Ollama models.
+- [x] Implement editable voice drafts and four-language settings. Add real settings synthesis with current unsaved voice/rate, shared-queue progress, cancellation and playback, without a conversation-model call or Telegram send. Remove the profile-menu border.
+- [x] Add Refresh/Explorer/Import controls, bounded compatible Piper archive import, retained notices and a persistent local voice selector. Verify the real settings HTTP upload/import/audio flow with a 21 MB package (15.782 s).
+- [x] Pass standalone/final all-voice verification for Irina, Ruslan and Amy (34.490 s). The earlier intermittent Ruslan error did not recur; its cause remains undetermined, with test-only diagnostics added.
+- [x] Pass the final backend gate: 619 Kotlin cases, zero failures and 14 skips; 12 SDK tests. Pass 257 full UI tests plus 16 focused tests across four files covering three new hook regressions, 39 Electron tests and 10 script tests. The fixed closed-queue regressions are included.
+- [x] Verify all 135 browser scenarios before the final collapsed-heading/preview-hook changes.
+- [x] Pass all eight final voice browser scenarios after the last changes (`build/speech-browser-last.log`).
+- [x] Run real packaged speech on the local unpacked Aigram 2.6.39 (44.259 s): API and settings synthesis, actual playback, no model inference, signed out, unchanged preferences and clean shutdown. Retain the isolated evidence in `build/speech-verification/packaged-proof/run-KslmQb`. [Commands and limits](../speech/runtime-en.md#optional-packaged-speech-smoke).
+- [ ] Publish, verify Windows CI, EXE/SDK SHA-256 and source tag, then launch the published EXE with the existing profile. Record exact evidence rather than treating a push as a completed release.
+
+Details and current limitations: [voice messages](../speech/en.md), [runtime](../speech/runtime-en.md). Speech remains off until explicitly enabled. The integrated settings test cannot send Telegram messages. The local unpacked build is verified; Windows publication, downloaded-asset verification and the actual-profile restart still require separate evidence in the release notes and local `complie/VERIFICATION.md`.
