@@ -101,6 +101,7 @@ class PersonalReplyGenerator(
                     )
                 },
             ),
+            ownerId = owner,
         )
         val attachments = images.build(resolved, context)
         if (attachments.isEmpty()) {

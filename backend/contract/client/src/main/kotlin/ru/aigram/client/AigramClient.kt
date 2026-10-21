@@ -7,6 +7,7 @@ import ru.aigram.client.generated.api.MediaClientGenerated
 import ru.aigram.client.generated.api.MemoryClientGenerated
 import ru.aigram.client.generated.api.ModelsClientGenerated
 import ru.aigram.client.generated.api.SettingsClientGenerated
+import ru.aigram.client.generated.api.SpeechClientGenerated
 import ru.aigram.client.generated.api.SystemClientGenerated
 import ru.aigram.client.generated.api.TelegramClientGenerated
 import java.net.http.HttpClient
@@ -20,6 +21,7 @@ class AigramClient internal constructor(client: WebClient, private val transport
     val memory = MemoryClientGenerated(client)
     val models = ModelsClientGenerated(client)
     val settings = SettingsClientGenerated(client)
+    val speech = SpeechClientGenerated(client)
     val system = SystemClientGenerated(client)
     val telegram = TelegramClientGenerated(client)
     private val closed = AtomicBoolean()

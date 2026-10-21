@@ -78,6 +78,17 @@ class SpeechEndpointTest {
                 ).statusCode(),
             )
             assertEquals(400, request(base, "/api/speech/drafts", "POST", """{"chatId":"42","text":""}""").statusCode())
+            Stream.of(
+                """{"chatId":"42","text":"Text","modelId":null}""",
+                """{"chatId":"42","text":"Text","modelId":""}""",
+                """{"chatId":"42","text":"Text","modelId":" "}""",
+                """{"chatId":"42","text":"Text","speed":null}""",
+                """{"chatId":"42","text":"Text","speed":0.49}""",
+                """{"chatId":"42","text":"Text","speed":2.01}""",
+                """{"chatId":"42","text":"Text","speed":"1.0"}""",
+            ).forEach { body ->
+                assertEquals(400, request(base, "/api/speech/drafts", "POST", body).statusCode(), body)
+            }
             assertTrue(gateway.sentVoices.isEmpty())
         }
 

@@ -3,8 +3,10 @@ package ru.aigram.memory
 import org.springframework.stereotype.Component
 import ru.aigram.domain.memory.ChatMemoryState
 import ru.aigram.domain.memory.MemoryBatch
+import ru.aigram.domain.memory.MemorySource
 import ru.aigram.domain.memory.MemorySpeaker
 import ru.aigram.domain.memory.OwnerMemoryUpdate
+import ru.aigram.speech.reply.SpeechInputContext
 import ru.aigram.storage.ContextExclusionStore
 import ru.aigram.telegram.TelegramGateway
 import java.time.Clock
@@ -22,6 +24,7 @@ class MemoryProcessor(
     private val ownerSummarizer: OwnerMemorySummarizer,
     private val exclusions: ContextExclusionStore? = null,
     private val roster: ParticipantRosterStore? = null,
+    private val speech: SpeechInputContext? = null,
 ) {
     fun process(state: ChatMemoryState, model: String, recent: Boolean, canCommit: () -> Boolean = { true }): Boolean {
         val policyRevision = exclusions?.revision(state.accountId, state.chatId)
@@ -56,11 +59,15 @@ class MemoryProcessor(
             return false
         }
         val owner = store.read("")
-        val batch = batches.select(candidates) { sources ->
+        val fits: (List<MemorySource>) -> Boolean = { sources ->
             val owned = sources.filter { it.speaker == MemorySpeaker.OWNER && it.text.isNotBlank() }
             summarizer.fits(model, previous.facts(), sources) &&
                 (owned.isEmpty() || ownerSummarizer.fitsOwner(model, owner.facts(), owned))
         }
+        val selected = batches.select(candidates, fits)
+        val prepared = speech?.prepare(selected.messages, rejectDisabledVoice = false, ownerId = state.accountId)
+            ?: selected.messages
+        val batch = batches.select(prepared, fits)
         if (!unchanged(state, policyRevision)) {
             return false
         }

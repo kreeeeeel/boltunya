@@ -4,11 +4,12 @@ import org.springframework.stereotype.Component
 import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.automation.ReplyDeliveryPolicy
 import ru.aigram.domain.ai.PreviewJob
-import ru.aigram.domain.ai.ReplyResult
 import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.media.MediaFile
+import ru.aigram.domain.speech.SpeechAssetKind
 import ru.aigram.exception.impl.ChatNotFoundException
 import ru.aigram.exception.impl.InvalidSpeechRequestException
+import ru.aigram.speech.SpeechAssetCatalog
 import ru.aigram.speech.reply.VoiceDraftStore
 import ru.aigram.speech.reply.VoiceReplyService
 import ru.aigram.storage.SettingsStore
@@ -25,17 +26,25 @@ class SpeechReplyComponent(
     private val delivery: ReplyDeliveryPolicy,
     private val voices: VoiceReplyService,
     private val drafts: VoiceDraftStore,
+    private val catalog: SpeechAssetCatalog,
 ) {
-    fun enqueue(chatId: String, text: String): PreviewJob {
+    fun enqueue(chatId: String, text: String, modelId: String? = null, speed: Double? = null): PreviewJob {
         ensureChat(chatId)
         if (text.isBlank() || text.length > MAX_VOICE_TEXT) {
             throw InvalidSpeechRequestException()
         }
         val preferences = settings.get()
         val ownerId = telegram.status().userId
-        voices.ensureReady(preferences)
-        return replies.enqueueDraft(chatId, preferences.voiceSynthesisModel) {
-            voices.compose(ReplyResult(text, 0, 0.0, preferences.voiceSynthesisModel), chatId, ownerId, preferences)
+        val selectedModel = modelId ?: preferences.voiceSynthesisModel
+        val selectedSpeed = speed ?: preferences.voiceSpeechRate
+        if (!selectedSpeed.isFinite() || selectedSpeed !in 0.5..2.0 ||
+            selectedModel.isBlank() || selectedModel.length > 120
+        ) {
+            throw InvalidSpeechRequestException()
+        }
+        catalog.model(selectedModel, SpeechAssetKind.SYNTHESIS)
+        return replies.enqueueDraft(chatId, selectedModel) {
+            voices.draft(text, chatId, ownerId, selectedModel, selectedSpeed)
         }
     }
 

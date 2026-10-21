@@ -59,6 +59,9 @@ class VoiceReplyService(
     fun sample(text: String, modelId: String, speed: Double, ownerId: String): ReplyResult =
         synthesize(ReplyResult(text, 0, 0.0, modelId), "", ownerId, modelId, speed, true) { true }
 
+    fun draft(text: String, chatId: String, ownerId: String, modelId: String, speed: Double): ReplyResult =
+        synthesize(ReplyResult(text, 0, 0.0, modelId), chatId, ownerId, modelId, speed, false) { true }
+
     private fun synthesize(
         result: ReplyResult,
         chatId: String,

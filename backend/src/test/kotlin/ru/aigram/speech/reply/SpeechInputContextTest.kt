@@ -11,7 +11,9 @@ import ru.aigram.speech.SpeechEngine
 import ru.aigram.speech.SpeechProcessExecutor
 import ru.aigram.speech.codec.AudioCodec
 import ru.aigram.speech.speechCatalog
+import ru.aigram.storage.CredentialStore
 import ru.aigram.storage.SettingsStore
+import ru.aigram.telegram.TelegramConnectionState
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.test.assertEquals
@@ -68,6 +70,7 @@ class SpeechInputContextTest {
                     SpeechEngine(directory, catalog, process),
                     AudioCodec(directory),
                     ReplyTraceScope(),
+                    TelegramConnectionState(CredentialStore(directory)),
                 ),
             )
         }

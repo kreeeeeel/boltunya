@@ -9,3 +9,14 @@ VoiceDraftRequest:
             type: string
             minLength: 1
             maxLength: 4096
+        modelId:
+            type: string
+            minLength: 1
+            maxLength: 120
+            description: Optional voice model for this draft only; omission uses the current global model.
+        speed:
+            type: number
+            format: double
+            minimum: 0.5
+            maximum: 2.0
+            description: Optional speaking rate for this draft only; omission uses the current global rate.

@@ -458,6 +458,16 @@
     {
       "feature": "speech",
       "compatibility": "Optional local voice settings, reply audio metadata and manual draft output preserve existing text defaults and strict PATCH absence semantics. New authenticated speech routes only accept curated asset IDs or owner-scoped draft IDs."
+    },
+    {
+      "model": "VoiceDraftRequest",
+      "property": "modelId",
+      "reason": "Allow an optional installed synthesis model for one manual voice draft without changing global settings; omission retains global selection and explicit null remains invalid."
+    },
+    {
+      "model": "VoiceDraftRequest",
+      "property": "speed",
+      "reason": "Allow an optional per-request finite synthesis rate from 0.5 to 2.0; omission captures the global rate, without changing global settings."
     }
   ],
   "paths": {},
@@ -574,7 +584,7 @@
       "GET /api/speech": "0be11e5f16ae20a28db2068527a731e2692ffe9d72b8586eb598b92152725b0f",
       "POST /api/speech/assets/{assetId}/install": "4c8699e71c71b3e6f9d21e11acd6d149018d8535858e6c0364ededc68f96061f",
       "DELETE /api/speech/assets/{assetId}/install": "fc5adf0d7c5d556e68a153136515b76b9f46e82a344586378a59e6cec130fc7d",
-      "POST /api/speech/drafts": "76db2a0f8c105ebce59d515a610ae34d20d078de3c2c85a3b441bc3b1695a48f",
+      "POST /api/speech/drafts": "e6e684f6d5271aed86e93638517c546ee023e89e797c90100d5c5d0d425557af",
       "GET /api/speech/audio/{voiceId}": "9d7ae803708ba7258d3c82d4bb08f167f4ac63eb1029853ecf7a313bcb5eef89",
       "POST /api/chats/{chatId}/voice": "2fd894499dcea06807a1716cf8643c4f6cbe690026c51dd32b974fbedba02f1f",
       "POST /api/speech/preview": "43dfc014682cc5b41e891f981251e63cbac52bda7face910353d999b3d7757d8",
@@ -603,7 +613,7 @@
       "SpeechDownload": "a4b0617e74cd0d2cec560666344f35e73813fd1348cb1c46f1966852ccf530e2",
       "SpeechDownloadPhase": "efec4f2ac43b9d1448a67cf937bd4cbe8ffbd4ac8d8df147c9b4a672a7b85620",
       "SpeechState": "f0b9b7db7fef849f5ac962c6b32a66edf70d57e9f25542186b0382ca44a57d64",
-      "VoiceDraftRequest": "837e3ead90e9a6d9239dfbe73dfd21b75e0ff6d9a92ccc962d76f00e4bd83254",
+      "VoiceDraftRequest": "b50bfadcdcf658050a8b80871a0b430fc688e506a2256e2baf2983cbc81155e8",
       "VoiceSendRequest": "4f5ce02b987a746d4688fd43ae61ddf44b54df243d650d18c97fe09328e24e9c",
       "SpeechPreviewRequest": "c4159ee7614bb05ae3d0aede4ec8722c4ab0ec21ee664b5ad33ce5fab59fbbd4",
       "SpeechModelImportRequest": "52709af0a97b4ffaa246c0121b3ceae1236bac34f34f59b9d3c93e4a3557b209"

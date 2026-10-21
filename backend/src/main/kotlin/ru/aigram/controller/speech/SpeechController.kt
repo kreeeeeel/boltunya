@@ -64,7 +64,14 @@ class SpeechController(
     }
 
     override fun enqueueVoiceDraft(voiceDraftRequest: VoiceDraftRequest): ResponseEntity<PreviewJob> =
-        ResponseEntity.ok(replies.enqueue(voiceDraftRequest.chatId, voiceDraftRequest.text).toContract())
+        ResponseEntity.ok(
+            replies.enqueue(
+                voiceDraftRequest.chatId,
+                voiceDraftRequest.text,
+                voiceDraftRequest.modelId,
+                voiceDraftRequest.speed,
+            ).toContract(),
+        )
 
     override fun speechAudio(voiceId: String): ResponseEntity<Resource> = media.respond(replies.audio(voiceId), request)
 
