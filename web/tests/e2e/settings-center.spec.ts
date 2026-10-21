@@ -9,6 +9,48 @@ import type {components} from '../../src/shared/api/schema';
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
 import ru from '../../src/shared/i18n/ru.json';
+import type {Locator} from '@playwright/test';
+
+async function expectCompactMemoryActions(actions: Locator) {
+    await expect(actions.getByRole('button')).toHaveCount(4);
+    await expect
+        .poll(async () =>
+            Number((await actions.getByRole('button').first().boundingBox())!.height.toFixed(2)),
+        )
+        .toBe(32);
+    await expect(actions).toHaveCSS('display', 'flex');
+    await expect(actions).toHaveCSS('flex-wrap', 'wrap');
+    await expect(actions).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    const geometry = await actions.evaluate((toolbar) => {
+        const bounds = toolbar.getBoundingClientRect();
+        const parent = toolbar.parentElement!.getBoundingClientRect();
+        return {
+            width: bounds.width,
+            parentWidth: parent.width,
+            buttons: [...toolbar.querySelectorAll('button')].map((button) => {
+                const rect = button.getBoundingClientRect();
+                const text = button.querySelector('.g-button__text')!.getBoundingClientRect();
+                return {
+                    height: rect.height,
+                    width: rect.width,
+                    left: rect.left - bounds.left,
+                    right: rect.right - bounds.right,
+                    textOverflow: text.right - rect.right,
+                    top: rect.top - bounds.top,
+                };
+            }),
+        };
+    });
+    expect(geometry.width).toBeLessThanOrEqual(geometry.parentWidth);
+    geometry.buttons.forEach((button) => {
+        expect(button.height).toBe(32);
+        expect(button.width).toBeLessThan(geometry.parentWidth - 16);
+        expect(button.left).toBeGreaterThanOrEqual(-1);
+        expect(button.right).toBeLessThanOrEqual(1);
+        expect(button.textOverflow).toBeLessThanOrEqual(0);
+    });
+    return geometry;
+}
 test.beforeEach(async ({page}) => {
     const state = structuredClone(workspaceState);
     let appearance: components['schemas']['AppearanceSettings'] = {mode: 'light', tokens: {}, css: ''};
@@ -399,18 +441,7 @@ for (const dark of [false, true]) {
         await expect(explorer).toHaveCSS('border-width', '0px');
         await explorer.click();
         await expect(page.locator('html')).toHaveAttribute('data-opened-storage', 'memory');
-        await expect(memoryActions).toHaveCSS('border-radius', '14px');
-        const actionSizes = await memoryActions
-            .getByRole('button')
-            .evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().height));
-        expect(new Set(actionSizes).size).toBe(1);
-        const memoryGeometry = await memoryActions.evaluate((toolbar) => ({
-            width: toolbar.getBoundingClientRect().width,
-            parentWidth: toolbar.parentElement!.getBoundingClientRect().width,
-            columns: getComputedStyle(toolbar).gridTemplateColumns.split(' ').length,
-        }));
-        expect(memoryGeometry.width).toBe(memoryGeometry.parentWidth);
-        expect(memoryGeometry.columns).toBe(2);
+        await expectCompactMemoryActions(memoryActions);
         await page.screenshot({
             path: `../docs/resources/settings-memory-${dark ? 'dark' : 'light'}.png`,
             animations: 'disabled',
@@ -492,3 +523,85 @@ test('model additions save separately, preserve drafts and display token estimat
         'Shared wording',
     );
 });
+
+for (const dark of [false, true]) {
+    test(`memory actions stay compact and wrap in both memory windows in ${dark ? 'dark' : 'light'} theme`, async ({
+        page,
+    }) => {
+        if (dark) {
+            await persistTestTheme(page, true);
+            await page.reload();
+            await page.getByRole('button', {name: ru.profileMenu, exact: true}).click();
+            await page.getByRole('menuitem', {name: ru.settings, exact: true}).click();
+        }
+        const document = {
+            chatId: '',
+            notes: 'Ручная заметка',
+            summary: 'Факты о встречах и договорённостях.',
+            revision: 'synthetic',
+            updatedAt: 1792578000,
+            processedMessages: 240,
+            backfillComplete: true,
+            status: 'ready',
+            error: '',
+            trackedChats: 3,
+            relativePath: 'memory/100/MEMORY.md',
+        };
+        await page.route('**/api/memory', (route) => route.fulfill({json: document}));
+        await page.route('**/api/memory/41', (route) => route.fulfill({json: {...document, chatId: '41'}}));
+        await page.evaluate(() => {
+            window.aigramDesktop = {
+                state: async () => ({available: true, maximized: false, visible: true, minimized: false}),
+                sync: async () => {},
+                quit: async () => {},
+                action: async () => {},
+                onState: () => () => {},
+                openStorageLocation: () =>
+                    new Promise<void>((resolve) => {
+                        window.addEventListener('test-memory-open-complete', () => resolve(), {once: true});
+                    }),
+            };
+        });
+        await chooseSettingsSection(page, 'memory');
+        const actions = page.locator('[data-qa="memory-actions"]');
+        await expectCompactMemoryActions(actions);
+        const explorer = actions.getByRole('button', {name: ru.storageLocations.open, exact: true});
+        const initial = (await explorer.boundingBox())!;
+        await explorer.click();
+        await expect(explorer).toBeDisabled();
+        const loading = (await explorer.boundingBox())!;
+        expect({width: loading.width, height: loading.height}).toEqual({
+            width: initial.width,
+            height: initial.height,
+        });
+        await page.evaluate(() => window.dispatchEvent(new Event('test-memory-open-complete')));
+        await expect(explorer).toBeEnabled();
+        await page.setViewportSize({width: 420, height: 800});
+        const narrow = await expectCompactMemoryActions(actions);
+        expect(new Set(narrow.buttons.map((button) => button.top)).size).toBeGreaterThan(1);
+        await actions.scrollIntoViewIfNeeded();
+        await page.screenshot({
+            path: `../docs/resources/memory-actions-narrow-${dark ? 'dark' : 'light'}.png`,
+            animations: 'disabled',
+        });
+        await page.setViewportSize({width: 1440, height: 900});
+        await page
+            .getByRole('dialog', {name: ru.settings, exact: true})
+            .getByRole('button', {name: ru.close, exact: true})
+            .click();
+        await page.getByRole('button', {name: workspaceState.chats[0].title, exact: true}).click();
+        await page.getByRole('button', {name: ru.memory.openChat, exact: true}).click();
+        const chatMemory = page.getByRole('dialog', {
+            name: ru.memory.chatTitle.replace('{name}', workspaceState.chats[0].title),
+            exact: true,
+        });
+        await expectCompactMemoryActions(chatMemory.locator('[data-qa="memory-actions"]'));
+        await page.screenshot({
+            path: `../docs/resources/memory-dialog-${dark ? 'dark' : 'light'}.png`,
+            animations: 'disabled',
+        });
+        await page.setViewportSize({width: 420, height: 800});
+        const chatNarrow = await expectCompactMemoryActions(chatMemory.locator('[data-qa="memory-actions"]'));
+        expect(new Set(chatNarrow.buttons.map((button) => button.top)).size).toBeGreaterThan(1);
+    });
+}

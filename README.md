@@ -45,7 +45,7 @@ The chat list uses two-line previews and a small AI badge on enabled conversatio
   <tr><td><img src="docs/resources/settings-center.png" alt="Unified settings navigation"></td><td><img src="docs/resources/model-connections.png" alt="Configurable model connections"></td></tr>
   <tr><td><img src="docs/resources/appearance-editor.png" alt="Workspace theme editor"></td><td><img src="docs/resources/parallel-tasks.png" alt="Shared inference queue limits"></td></tr>
   <tr><td><img src="docs/resources/history-dark.png" alt="Persistent event history"></td><td><img src="docs/resources/settings-language-light.png" alt="Language selection with native names"></td></tr>
-  <tr><td><img src="docs/resources/model-connections-empty-dark.png" alt="Adding the first model connection"></td><td><img src="docs/resources/settings-memory-dark.png" alt="Shared memory and matching full-width controls"></td></tr>
+  <tr><td><img src="docs/resources/model-connections-empty-dark.png" alt="Adding the first model connection"></td><td><img src="docs/resources/settings-memory-dark.png" alt="Shared memory with compact actions"></td></tr>
 </table>
 
 ## Get started

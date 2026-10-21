@@ -57,3 +57,52 @@ it.each(['42', ''])(
         expect(screen.getByRole('textbox')).toHaveValue('Unsaved notes');
     },
 );
+
+it('retains Explorer label and the same button while opening the folder', async () => {
+    let resolveOpen: (() => void) | undefined;
+    open.mockImplementationOnce(
+        () =>
+            new Promise<void>((resolve) => {
+                resolveOpen = resolve;
+            }),
+    );
+    const memory = {
+        document: {
+            chatId: '',
+            notes: '',
+            summary: 'Facts',
+            revision: 'one',
+            updatedAt: 0,
+            processedMessages: 0,
+            backfillComplete: true,
+            status: 'ready' as const,
+            error: '',
+            trackedChats: 1,
+            relativePath: 'memory/100/MEMORY.md',
+        },
+        notes: '',
+        setNotes: vi.fn(),
+        error: '',
+        busy: false,
+        reload: vi.fn(),
+        save: vi.fn(),
+        refresh: vi.fn(),
+        cancel: vi.fn(),
+    };
+    render(
+        <NextIntlClientProvider locale="ru" messages={ru}>
+            <ThemeProvider>
+                <MemoryContent memory={memory} />
+            </ThemeProvider>
+        </NextIntlClientProvider>,
+    );
+    const explorer = screen.getByRole('button', {name: ru.storageLocations.open});
+    const label = explorer.textContent;
+    fireEvent.click(explorer);
+    await waitFor(() => expect(explorer).toBeDisabled());
+    expect(explorer.textContent).toBe(label);
+    expect(screen.getByRole('button', {name: ru.memory.refresh})).toBeEnabled();
+    resolveOpen?.();
+    await waitFor(() => expect(explorer).toBeEnabled());
+    expect(screen.getByRole('button', {name: ru.storageLocations.open})).toBe(explorer);
+});

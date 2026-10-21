@@ -110,44 +110,44 @@ export function MemoryContent({
                         <Box className={styles.actions} qa="memory-actions">
                             <Button
                                 view="flat-secondary"
-                                size="l"
+                                size="m"
                                 className={styles.action}
                                 disabled={memory.busy || document.status === 'disabled'}
                                 onClick={() => void memory.refresh()}
                             >
-                                <Icon data={ArrowRotateRight} size={18} />
+                                <Icon data={ArrowRotateRight} size={16} />
                                 {t('memory.refresh')}
                             </Button>
                             <Button
                                 view="flat-secondary"
-                                size="l"
+                                size="m"
                                 className={styles.action}
                                 disabled={memory.busy || document.status === 'disabled'}
                                 onClick={() => void memory.refresh(true)}
                             >
-                                <Icon data={ArrowsRotateRight} size={18} />
+                                <Icon data={ArrowsRotateRight} size={16} />
                                 {t('memory.rebuild')}
                             </Button>
                             <Button
                                 view="flat-secondary"
-                                size="l"
+                                size="m"
                                 className={styles.action}
                                 disabled={memory.busy}
                                 onClick={() => void memory.reload()}
                             >
-                                <Icon data={FileArrowUp} size={18} />
+                                <Icon data={FileArrowUp} size={16} />
                                 {t('memory.reload')}
                             </Button>
                             {desktopBridge() && (
                                 <Button
                                     view="flat-secondary"
-                                    size="l"
+                                    size="m"
                                     className={styles.action}
                                     disabled={memory.busy || folderBusy}
                                     loading={folderBusy}
                                     onClick={() => void openFolder()}
                                 >
-                                    <Icon data={FolderOpen} size={18} />
+                                    <Icon data={FolderOpen} size={16} />
                                     {t('storageLocations.open')}
                                 </Button>
                             )}
