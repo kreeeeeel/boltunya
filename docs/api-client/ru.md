@@ -2,9 +2,13 @@
 
 [English version](en.md)
 
-Единственный исходный контракт — [`backend/contract/api/schema/api.yaml`](../../backend/contract/api/schema/api.yaml). Он описывает 59 путей, 73 операции и 108 именованных схем. Операции находятся в `schema/operations/`, общие модели и перечисления — в `schema/models/`. Файлы связаны относительными ссылками.
+Единственный исходный контракт — [`backend/contract/api/schema/api.yaml`](../../backend/contract/api/schema/api.yaml). Он описывает 60 путей, 74 операции и 114 именованных схем. Операции находятся в `schema/operations/`, общие модели и перечисления — в `schema/models/`. Файлы связаны относительными ссылками.
 
-Spring Boot сейчас управляет зависимостями приложения. Запросы по-прежнему обслуживает сервер `ru.aigram.http`. Сгенерированные интерфейсы Spring MVC компилируются как отдельная библиотека контракта; их реализация и замена существующего роутера относятся к следующему этапу миграции. Веб-интерфейс пока использует `openapi-fetch` с типами из этого же контракта.
+Spring Boot управляет зависимостями и встроенным servlet-сервером. Контроллеры по функциям реализуют все восемь сгенерированных интерфейсов Spring MVC; компоненты используют сервисы приложения, а явные transformer связывают generated DTO с domain-моделями. Предыдущий сервер и роутер `ru.aigram.http` удалены. Веб-интерфейс вызывает generated-операции по функциям из `@aigram/api-client`; workspace alias использует SDK, созданный из единого контракта. Прежние транспорт `openapi-fetch`, отдельный генератор типов и промежуточный schema-файл удалены.
+
+Шесть отдельных входных схем сохраняют прежние значения по умолчанию для правил чата, параметров и возможностей подключённой модели, промптов, оформления и хранения событий. В ответах все необходимые поля остаются обязательными. Kotlin-клиенты передают соответствующую модель `*Input`. Имена операций, URL и JSON-полей сохранены; PATCH по-прежнему различает отсутствие поля и недопустимый явный `null`. Значения по умолчанию, включая пустые вложенные объекты, создаёт генератор. Проверяемый маркер `x-kotlin-empty-default` компенсирует потерю таких метаданных в закреплённой версии генератора.
+
+Добавлена операция `POST /api/engine/restart`. Она перезапускает только процесс Ollama, которым управляет Aigram; для внешнего сервиса возвращается типизированный конфликт. Двоичные загрузки принимают произвольный Content-Type, включая WebP; ответы сервера сохраняют потоковую передачу ресурсов и byte ranges.
 
 ## Модули
 
@@ -40,6 +44,19 @@ Spring Boot сейчас управляет зависимостями прил�
 Цепочка TypeScript: `validateContract` → `generateClient` → `npmCi` → `typecheckClient` → `compileClient` → `packageClient` → `consumerSmoke`. Генерация очищает предыдущий результат. `npmCi` устанавливает закреплённый компилятор с отключёнными lifecycle-скриптами. Smoke-тест устанавливает готовый архив в изолированный временный npm-проект без обращения к реестру, компилирует настоящие типизированные импорты и проверяет сгенерированные запросы через подставную реализацию Fetch.
 
 Исправления сгенерированного кода вносятся в схему, настройки генератора или сохранённые шаблоны. Файлы внутри `build/` можно пересоздать.
+
+### Веб-интерфейс в монорепозитории
+
+Production-запросы UI вызывают generated-клиенты по функциям через workspace alias `@aigram/api-client`, который указывает на `backend/contract/client/typescript/build/generated/openapi/src/index.ts`. Сборка компилирует эти исходники в веб-приложение; отдельный архив SDK предназначен и для внешних потребителей.
+
+Gradle-задача `buildWeb` зависит от `:backend:contract:client:typescript:generateClient`, а `scripts/build.ps1` генерирует клиент перед npm-проверками. Для самостоятельной работы с вебом сначала запустите канонический генератор из корня:
+
+```powershell
+.\gradlew.bat :backend:contract:client:typescript:generateClient --no-daemon
+npm.cmd run check --prefix web
+```
+
+Предварительная проверка `sdk:check` сообщает об отсутствующем SDK перед dev, build, typecheck и unit-тестами. Она не создаёт отдельную схему или клиент только из типов. Docker-сборка веба запускает тот же Gradle-генератор на JDK 21 перед Node.js-этапом.
 
 ## Пакет TypeScript
 
@@ -115,7 +132,7 @@ export function createApi(basePath: string, sessionToken: () => string) {
 
 ## Kotlin-клиент
 
-Внутри этой Gradle-сборки подключается `project(":backend:contract:client")`. Публичная фабрика — [`AigramClientFactory.create(URI, Provider<String>)`](../../backend/contract/client/src/main/kotlin/ru/aigram/client/configuration/AigramClientFactory.kt). Она требует HTTP- или HTTPS-origin без пользовательских данных, дополнительного пути, query-параметров и fragment.
+Внутри этой Gradle-сборки подключается `project(":backend:contract:client")`. Публичная фабрика — [`AigramClientFactory.create(URI, () -> String)`](../../backend/contract/client/src/main/kotlin/ru/aigram/client/configuration/AigramClientFactory.kt). Она требует HTTP- или HTTPS-origin без пользовательских данных, дополнительного пути, query-параметров и fragment.
 
 Фабрика — явная точка входа библиотеки. Потребитель может зарегистрировать её в своём DI-контейнере; модуль не создаёт bean клиента приложения автоматически. Бинарные операции с медиа используют `ByteArray` для байтов ответа.
 
@@ -124,12 +141,11 @@ export function createApi(basePath: string, sessionToken: () => string) {
 `AigramClient` предоставляет `activity`, `chats`, `media`, `memory`, `models`, `settings`, `system` и `telegram`. Сгенерированные операции возвращают Reactor `Mono`. Обёртка владеет JDK HTTP-транспортом и должна закрываться. Пример блокирующего вызова для CLI:
 
 ```kotlin
-import jakarta.inject.Provider
 import ru.aigram.client.configuration.AigramClientFactory
 import ru.aigram.client.generated.model.Message
 import java.net.URI
 
-fun history(origin: URI, token: Provider<String>): List<Message>? =
+fun history(origin: URI, token: () -> String): List<Message>? =
     AigramClientFactory().create(origin, token).use { client ->
         client.chats.history(
             chatId = "-1009007199254740993555",
@@ -138,7 +154,7 @@ fun history(origin: URI, token: Provider<String>): List<Message>? =
     }
 ```
 
-Реактивный потребитель может продолжить цепочку `Mono` и закрыть клиент после её завершения. Provider сессии вызывается при каждой подписке/запросе, поэтому смена токена не требует нового клиента. Некорректное значение сессии отклоняется до отправки. Фабрика отключает перенаправления и не добавляет автоматические повторы. HTTP-ошибки передаются по правилам WebClient через `WebClientResponseException`. Отсутствующее обязательное тело ответа вызывает `IllegalStateException` вместо подстановки выдуманного пустого результата.
+Реактивный потребитель может продолжить цепочку `Mono` и закрыть клиент после её завершения. Функция получения сессии вызывается при каждой подписке/запросе, поэтому смена токена не требует нового клиента. Некорректное значение сессии отклоняется до отправки. Фабрика отключает перенаправления и не добавляет автоматические повторы. HTTP-ошибки передаются по правилам WebClient через `WebClientResponseException`. Отсутствующее обязательное тело ответа вызывает `IllegalStateException` вместо подстановки выдуманного пустого результата.
 
 ### Совместимость Jackson
 

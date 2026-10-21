@@ -2,9 +2,9 @@
 
 [Русская версия](ru.md)
 
-The canonical contract is [`backend/contract/api/schema/api.yaml`](../../backend/contract/api/schema/api.yaml). It describes 59 paths, 73 operations and 108 named schemas. Operation documents live in `schema/operations/`; reusable models and enums live in `schema/models/`. Relative references connect these files.
+The canonical contract is [`backend/contract/api/schema/api.yaml`](../../backend/contract/api/schema/api.yaml). It describes 60 paths, 74 operations and 114 named schemas. Operation documents live in `schema/operations/`; reusable models and enums live in `schema/models/`. Relative references connect these files.
 
-Spring Boot currently manages application dependencies. The existing `ru.aigram.http` server still serves requests. Generated Spring MVC interfaces are compiled contract artifacts; implementing them and replacing the existing router is a separate migration step. The web application currently uses `openapi-fetch` with types generated from this same contract.
+Spring Boot owns dependency injection and the embedded servlet server. Feature controllers implement all eight generated Spring MVC interfaces; components reuse application services and explicit transformers map generated DTOs to feature domain models. The previous `ru.aigram.http` server/router has been removed. The web application calls the generated feature operations from `@aigram/api-client`; its workspace alias resolves the canonical generated SDK source. The previous `openapi-fetch` transport, separate type generator and schema bridge have been removed.
 
 ## Modules
 
@@ -18,6 +18,10 @@ Spring Boot currently manages application dependencies. The existing `ru.aigram.
 All three generators use OpenAPI Generator **7.25.0**. JVM modules use JDK **21** and Kotlin **2.3.21**. The TypeScript module requires Node.js **22 or newer** and pins TypeScript **5.9.3** in its own lockfile.
 
 The eight groups are `activity`, `chats`, `media`, `memory`, `models`, `settings`, `system` and `telegram`. IDs declared as strings remain strings, including Telegram IDs larger than JavaScript's safe integer range. Named enums retain their wire values. The TypeScript error model is named `ApiError` to avoid a language-name collision; this does not change the JSON error shape.
+
+Six dedicated input schemas preserve the existing constructor defaults for chat rules, model profile options/capabilities, model prompts, appearance and event-history settings. Responses keep their complete, required fields. Kotlin callers now pass the corresponding `*Input` model for those requests. Existing operation names, URLs and JSON field names remain stable; PATCH still distinguishes an absent field from an invalid explicit `null`. Schema defaults, including empty nested objects, are generated rather than filled through a JSON bridge. The reviewed `x-kotlin-empty-default` marker works around missing empty-object metadata in the pinned generator and is validated against the canonical default.
+
+`POST /api/engine/restart` is the additional operation. It restarts only an Ollama process owned by Aigram; an external service returns a typed conflict instead of being stopped. Binary uploads accept arbitrary content types, including WebP, while server responses continue to stream resources and byte ranges.
 
 ## Validation and generation
 
@@ -40,6 +44,19 @@ Compile and verify the contract libraries and installable SDK:
 The TypeScript chain is `validateContract` → `generateClient` → `npmCi` → `typecheckClient` → `compileClient` → `packageClient` → `consumerSmoke`. Generation cleans its previous output. `npmCi` installs the locked compiler with lifecycle scripts disabled. The smoke test installs the resulting tarball into an isolated temporary npm project in offline mode, compiles real typed imports and exercises generated requests with a mock Fetch implementation.
 
 Change the schema, generator configuration or checked-in templates when fixing generated code. Files under `build/` are disposable outputs.
+
+### Web workspace
+
+Production UI calls use the generated feature clients through the `@aigram/api-client` workspace alias, which resolves `backend/contract/client/typescript/build/generated/openapi/src/index.ts`. The build compiles these sources into the web application; the distributed tarball remains available for external consumers.
+
+Gradle's `buildWeb` depends on `:backend:contract:client:typescript:generateClient`, and `scripts/build.ps1` generates it before npm checks. For standalone web development, first run the canonical generator from the repository root:
+
+```powershell
+.\gradlew.bat :backend:contract:client:typescript:generateClient --no-daemon
+npm.cmd run check --prefix web
+```
+
+The web `sdk:check` preflight reports a missing generated SDK before development, build, type checking or unit tests. It does not generate a separate schema or type-only client. The Docker web build runs the same Gradle generator in a JDK 21 stage before the Node.js frontend build.
 
 ## TypeScript package
 
@@ -115,7 +132,7 @@ Session acquisition belongs to the application or integrating caller. Keep token
 
 ## Kotlin client
 
-Within this Gradle build, depend on `project(":backend:contract:client")`. The public factory is [`AigramClientFactory.create(URI, Provider<String>)`](../../backend/contract/client/src/main/kotlin/ru/aigram/client/configuration/AigramClientFactory.kt). It requires an HTTP or HTTPS origin without user information, an extra path, query parameters or a fragment.
+Within this Gradle build, depend on `project(":backend:contract:client")`. The public factory is [`AigramClientFactory.create(URI, () -> String)`](../../backend/contract/client/src/main/kotlin/ru/aigram/client/configuration/AigramClientFactory.kt). It requires an HTTP or HTTPS origin without user information, an extra path, query parameters or a fragment.
 
 The factory is an explicit library entry point. Consumers can register it in their own DI container; the module does not automatically create an application client bean. Binary media operations use `ByteArray` for raw response bytes.
 
@@ -124,12 +141,11 @@ The factory bounds buffered responses at **16 MiB**, including binary media. Thi
 `AigramClient` exposes `activity`, `chats`, `media`, `memory`, `models`, `settings`, `system` and `telegram`. Their generated operations return Reactor `Mono`; the wrapper owns its JDK HTTP transport and must be closed. A blocking CLI example is:
 
 ```kotlin
-import jakarta.inject.Provider
 import ru.aigram.client.configuration.AigramClientFactory
 import ru.aigram.client.generated.model.Message
 import java.net.URI
 
-fun history(origin: URI, token: Provider<String>): List<Message>? =
+fun history(origin: URI, token: () -> String): List<Message>? =
     AigramClientFactory().create(origin, token).use { client ->
         client.chats.history(
             chatId = "-1009007199254740993555",
@@ -138,7 +154,7 @@ fun history(origin: URI, token: Provider<String>): List<Message>? =
     }
 ```
 
-Reactive callers can compose the returned `Mono` and close the client after their work completes. The session provider is evaluated on each subscription/request, so token rotation does not require constructing another client. Invalid session values fail before dispatch. The factory disables redirects and adds no automatic retries. HTTP errors follow WebClient's `WebClientResponseException` behavior. A missing body for a required response raises `IllegalStateException` rather than producing a fabricated empty result.
+Reactive callers can compose the returned `Mono` and close the client after their work completes. The session callback is evaluated on each subscription/request, so token rotation does not require constructing another client. Invalid session values fail before dispatch. The factory disables redirects and adds no automatic retries. HTTP errors follow WebClient's `WebClientResponseException` behavior. A missing body for a required response raises `IllegalStateException` rather than producing a fabricated empty result.
 
 ### Jackson compatibility
 

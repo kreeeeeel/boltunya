@@ -8,7 +8,9 @@ The hardware checks follow [Ollama's official hardware requirements and GPU sele
 
 ## Applying a change
 
-Saving `ollamaDevice` does not restart Ollama, install drivers or download models. The choice is passed to the next Ollama child process started by the application. An already running app-managed server reports a pending change. Restarting the application starts it with the new preference after its managed process has shut down.
+Saving `ollamaDevice` does not restart Ollama, install drivers or download models. The choice is passed to the next Ollama child process started by the application. An already running app-managed server reports a pending change. On the models page, **Restart Ollama** stops the managed process and launches it with the saved preference. The button stays disabled during the operation. Restarting the application also applies the change.
+
+Ollama failures, including model warmup failures, appear in a block with an icon, title and description. Restarting clears the warmup error; the next request loads the model again. For external servers, the button is disabled with an explanation to restart the server where it is launched.
 
 - **Automatic** preserves the parent process's environment, including existing user CUDA, HIP and Vulkan masks. It does not clear external environment settings.
 - **CPU** hides CUDA, HIP/ROCm and Vulkan devices from the child process and disables the Vulkan backend.
@@ -25,3 +27,5 @@ AMD and Intel devices remain under Ollama's automatic detection. Explicit AMD se
 ## Local API
 
 [OpenAPI](../../backend/contract/api/schema/api.yaml) describes `GET /api/engine/devices` and `PATCH /api/settings` with `ollamaDevice: auto | cpu | GPU-UUID`. Device discovery requires the local session. The status includes configured and known active modes, whether the process is managed, selection support, restart requirements and explicit limitations. Unsupported new choices return `INVALID_OLLAMA_DEVICE` with HTTP 400.
+
+`POST /api/engine/restart` requires the local session and restarts only the managed process. The engine state's `canRestart` flag indicates whether this operation is available. External or stopped processes return `ENGINE_RESTART_UNAVAILABLE` with HTTP 409; a launch failure returns HTTP 502.
