@@ -1,1 +1,0 @@
-(?ms)^Title:[ \t]*(.*?)\r?\nURL:[ \t]*(\S+)\r?\n(?:Published(?:Date)?:[ \t]*([^\r\n]*)\r?\n)?(?:Author:[^\r\n]*\r?\n)?(?:Highlights:|Text:)[ \t]*\r?\n?(.*?)(?=\r?\n\r?\n---\r?\n\r?\nTitle:|\z)

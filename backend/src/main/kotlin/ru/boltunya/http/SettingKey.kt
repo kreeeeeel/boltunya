@@ -8,6 +8,7 @@ import kotlinx.serialization.json.intOrNull
 
 enum class SettingKey(val jsonName: String, private val kind: SettingValueKind) {
     PAUSED("paused", SettingValueKind.BOOLEAN),
+    MAX_PARALLEL_TASKS("maxParallelTasks", SettingValueKind.INTEGER),
     SHOW_TYPING("showTyping", SettingValueKind.BOOLEAN),
     IGNORE_ASSISTANT_TASKS("ignoreAssistantTasks", SettingValueKind.BOOLEAN),
     MEMORY_ENABLED("memoryEnabled", SettingValueKind.BOOLEAN),
@@ -23,6 +24,8 @@ enum class SettingKey(val jsonName: String, private val kind: SettingValueKind) 
     REPLY_DELAY_SECONDS("replyDelaySeconds", SettingValueKind.INTEGER),
     REPLY_INTERVAL_SECONDS("replyIntervalSeconds", SettingValueKind.INTEGER),
     DEFAULT_MODEL("defaultModel", SettingValueKind.STRING),
+    DEFAULT_MODEL_PROFILE_ID("defaultModelProfileId", SettingValueKind.STRING),
+    DELIVERY_MODE("deliveryMode", SettingValueKind.STRING),
     OLLAMA_DEVICE("ollamaDevice", SettingValueKind.STRING),
     GLOBAL_PROMPT("globalPrompt", SettingValueKind.STRING),
     GROUP_REPLIES("groupReplies", SettingValueKind.STRING),

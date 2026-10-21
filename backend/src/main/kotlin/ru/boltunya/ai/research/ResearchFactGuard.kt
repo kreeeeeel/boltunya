@@ -5,21 +5,20 @@ import ru.boltunya.domain.ChatMessage
 import ru.boltunya.resources.ResourceCatalog
 
 class ResearchFactGuard @Inject constructor(private val resources: ResourceCatalog) {
+    private val terms = ResearchTerms(resources)
+    private val markdown = ResearchMarkdown()
+    private val numbers = ResearchNumbers()
+
     fun matches(reply: String, research: ResearchContext, history: List<ChatMessage> = emptyList()): Boolean {
         if (research.requiredNumbers.isEmpty()) return true
-        val text = reply.replace(resources.regex("common/research-url"), "")
-            .replace(resources.regex("common/research-numeric-date"), "")
-        val numbers = resources.regex("common/research-number").findAll(text)
-            .map { it.value.filterNot(Char::isWhitespace).replace(',', '.').toBigDecimal().stripTrailingZeros() }
-            .toSet()
-        if (numbers.isEmpty() && onlySourceRequested(history)) return true
-        return research.requiredNumbers.all { it.toBigDecimal().stripTrailingZeros() in numbers }
+        val values = numbers.values(markdown.mapLinks(reply) { _, _ -> "" })
+        if (values.isEmpty() && onlySourceRequested(history)) return true
+        return research.requiredNumbers.all { it.toBigDecimal().stripTrailingZeros() in values }
     }
 
     private fun onlySourceRequested(history: List<ChatMessage>): Boolean {
         val latest = history.lastOrNull { !it.outgoing }?.text.orEmpty().trim()
-        return resources.regex("intent/research-reuse").matches(latest) &&
-            resources.regex("intent/source-request").containsMatchIn(latest) &&
-            !resources.regex("intent/source-negation").containsMatchIn(latest)
+        return terms.only("research-reuse", latest) && terms.contains("source-request", latest) &&
+            !terms.contains("source-negation", latest)
     }
 }

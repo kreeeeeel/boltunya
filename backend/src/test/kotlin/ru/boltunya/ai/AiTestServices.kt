@@ -29,7 +29,7 @@ class AiTestServices(
     val completion = ChatCompletionService(
         SpringAiModelFactory().create(baseUrl),
         ModelPolicies(resources),
-        ModelReplyReader(resources),
+        ModelReplyReader(),
         runtime,
         inference,
         ModelMeasurementStore(Files.createTempDirectory("boltunya-sdk-test-")),
@@ -38,10 +38,8 @@ class AiTestServices(
     val conversation = ConversationService(
         completion,
         prompts,
-        ReplyQualityGuard(),
         researcher,
         planner,
-        inference,
         ResearchLinkPolicy(),
         ResearchFactGuard(resources),
         resources,

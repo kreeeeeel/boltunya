@@ -2,6 +2,13 @@ package ru.boltunya.http
 
 enum class ApiRoute(val path: String, val method: HttpMethod) {
     STATE("/api/state", HttpMethod.GET),
+    MODEL_PROFILES("/api/model-profiles", HttpMethod.GET),
+    MODEL_PROFILES_CREATE("/api/model-profiles", HttpMethod.POST),
+    MODEL_ROUTING("/api/model-routing", HttpMethod.GET),
+    MODEL_ROUTING_SAVE("/api/model-routing", HttpMethod.PUT),
+    APPEARANCE("/api/appearance", HttpMethod.GET),
+    APPEARANCE_SAVE("/api/appearance", HttpMethod.PUT),
+    STICKERS("/api/stickers", HttpMethod.GET),
     ACTIVITY_CLEAR("/api/activity", HttpMethod.DELETE),
     ACTIVITY_QUEUE("/api/activity/queue", HttpMethod.PATCH),
     SEARCH_CONNECTION("/api/search/connection", HttpMethod.GET),
@@ -14,6 +21,7 @@ enum class ApiRoute(val path: String, val method: HttpMethod) {
     RESTORE("/api/telegram/restore", HttpMethod.POST),
     LOGOUT("/api/telegram/logout", HttpMethod.POST),
     PREVIEW("/api/preview", HttpMethod.POST),
+    PREVIEW_JOB("/api/preview/jobs", HttpMethod.POST),
     ENGINE_INSTALL("/api/engine/install", HttpMethod.POST),
     ENGINE_START("/api/engine/start", HttpMethod.POST),
     ENGINE_DEVICES("/api/engine/devices", HttpMethod.GET),
@@ -29,6 +37,5 @@ enum class ApiRoute(val path: String, val method: HttpMethod) {
     MEMORY_EDIT("/api/memory", HttpMethod.PATCH),
     MEMORY_REFRESH("/api/memory/refresh", HttpMethod.POST),
     MEMORY_CANCEL("/api/memory/cancel", HttpMethod.POST),
-    FLOWS("/api/flows", HttpMethod.GET),
     QUIT("/api/quit", HttpMethod.POST),
 }

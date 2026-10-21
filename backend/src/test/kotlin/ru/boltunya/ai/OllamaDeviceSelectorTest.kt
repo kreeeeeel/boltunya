@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.boltunya.domain.ComputeDevice
 import ru.boltunya.exception.impl.InvalidOllamaDeviceException
-import ru.boltunya.resources.ResourceCatalog
 import ru.boltunya.storage.SettingsStore
 import java.nio.file.Path
 import kotlin.test.assertEquals
@@ -21,7 +20,7 @@ class OllamaDeviceSelectorTest {
     fun `validates discovered devices persists selection and retains a temporarily absent saved UUID`() {
         val settings = SettingsStore(directory)
         var discovered = listOf(ComputeDevice(uuid, "NVIDIA", "nvidia", 12288L * 1024 * 1024))
-        val selector = OllamaDeviceSelector(settings, ComputeDeviceDiscovery { discovered }, ResourceCatalog())
+        val selector = OllamaDeviceSelector(settings, ComputeDeviceDiscovery { discovered })
         selector.validate("auto")
         selector.validate("cpu")
         selector.validate(uuid)
@@ -37,7 +36,7 @@ class OllamaDeviceSelectorTest {
     @Test
     fun `restricts explicit modes to the intended backend and automatic mode preserves inherited settings`() {
         val selector =
-            OllamaDeviceSelector(SettingsStore(directory), ComputeDeviceDiscovery { emptyList() }, ResourceCatalog())
+            OllamaDeviceSelector(SettingsStore(directory), ComputeDeviceDiscovery { emptyList() })
         assertTrue(selector.environment("auto").isEmpty())
         val cpu = selector.environment("cpu")
         listOf(
@@ -60,7 +59,7 @@ class OllamaDeviceSelectorTest {
     fun `reports pending app managed changes without claiming control over external or remote Ollama`() {
         val settings = SettingsStore(directory)
         settings.update { it.copy(ollamaDevice = "cpu") }
-        val selector = OllamaDeviceSelector(settings, ComputeDeviceDiscovery { emptyList() }, ResourceCatalog())
+        val selector = OllamaDeviceSelector(settings, ComputeDeviceDiscovery { emptyList() })
         val owned = selector.status(true, true, true, true, true, "auto")
         assertTrue(owned.selectionSupported)
         assertTrue(owned.restartRequired)
@@ -84,7 +83,7 @@ class OllamaDeviceSelectorTest {
     fun `passes configured environment only into the app managed child process without changing this process`() {
         val settings = SettingsStore(directory)
         settings.update { it.copy(ollamaDevice = "cpu") }
-        val selector = OllamaDeviceSelector(settings, ComputeDeviceDiscovery { emptyList() }, ResourceCatalog())
+        val selector = OllamaDeviceSelector(settings, ComputeDeviceDiscovery { emptyList() })
         val inherited = System.getenv("CUDA_VISIBLE_DEVICES")
         EngineManager(directory, OllamaRuntime("http://127.0.0.1:1"), devices = selector).use { engine ->
             val command = directory.resolve("engine/ollama.exe")

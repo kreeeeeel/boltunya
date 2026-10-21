@@ -2,14 +2,11 @@ package ru.boltunya.resources
 
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class ResourceCatalogTest {
     @Test
-    fun `loads multilingual patterns without code changes and never renders user templates recursively`() {
+    fun `renders resources without evaluating replacement values as templates`() {
         val resources = ResourceCatalog()
-        val pattern = resources.regex("intent/assistant-instruction")
-        listOf("напиши", "write", "жаз", "згенеруй").stream().forEach { assertTrue(pattern.containsMatchIn(it)) }
         val text = resources.render(
             "prompts/ru/weather/period.txt",
             mapOf(
@@ -18,5 +15,17 @@ class ResourceCatalogTest {
             ),
         )
         assertEquals("на {{secret}}", text)
+    }
+
+    @Test
+    fun `preserves malformed and unknown placeholders and handles adjacent and nested opening braces`() {
+        val resources = ResourceCatalog()
+        assertEquals(
+            "hello/hello {{unknown}} {{invalid key}} {{unfinished",
+            resources.interpolate("{{key}}/{{key}} {{unknown}} {{invalid key}} {{unfinished", mapOf("key" to "hello")),
+        )
+        assertEquals("{{hello", resources.interpolate("{{{{key}}", mapOf("key" to "hello")))
+        assertEquals("", resources.interpolate("{{missing}}", emptyMap(), preserveUnknown = false))
+        assertEquals("value", resources.interpolate("{{data.last}}", mapOf("data.last" to "value")))
     }
 }

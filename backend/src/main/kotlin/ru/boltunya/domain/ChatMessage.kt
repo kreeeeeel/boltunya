@@ -24,4 +24,6 @@ data class ChatMessage(
     val senderId: String = "",
     val deleted: Boolean = false,
     val deletedAt: Long = 0,
+    val contextExcluded: Boolean = false,
+    val senderUsername: String = "",
 )

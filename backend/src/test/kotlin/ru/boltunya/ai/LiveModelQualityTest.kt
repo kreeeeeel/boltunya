@@ -89,14 +89,8 @@ class LiveModelQualityTest {
                                     }
                                 },
                             )
-                            val checks = case.getValue("expected").jsonArray.map { pattern ->
-                                Regex(
-                                    pattern.jsonPrimitive.content,
-                                    RegexOption.IGNORE_CASE,
-                                ).containsMatchIn(reply.text)
-                            }
+                            val checks = ReplyExpectation().checks(case.getValue("expected").jsonObject, reply.text)
                             val valid = reply.text.isNotBlank() && checks.all { it } &&
-                                !ReplyQualityGuard().containsInternalAnalysis(reply.text) &&
                                 reply.text.length <= case.getValue("maxLength").jsonPrimitive.content.toInt() &&
                                 !reply.text.contains("http")
                             put("passed", valid)

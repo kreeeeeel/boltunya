@@ -19,6 +19,8 @@ class TelegramUpdateHandler @Inject constructor(
     private val history: TelegramHistoryTracker,
     private val media: TelegramMediaStore,
     private val prefetch: MediaPrefetcher,
+    private val typing: TelegramTypingStore,
+    private val delivery: TelegramMediaDeliveryTracker,
 ) {
     fun register(builder: SimpleTelegramClientBuilder, version: Long) {
         builder.addDefaultExceptionHandler {
@@ -103,6 +105,7 @@ class TelegramUpdateHandler @Inject constructor(
         }
         builder.addUpdateHandler(TdApi.UpdateNewMessage::class.java) { update ->
             if (connection.version == version) {
+                typing.clear(update.message.chatId, update.message.senderId)
                 val mapped = messages.map(update.message)
                 val message = try {
                     history.record(mapped)
@@ -135,7 +138,20 @@ class TelegramUpdateHandler @Inject constructor(
             }
         }
         builder.addUpdateHandler(TdApi.UpdateMessageSendSucceeded::class.java) {
-            if (connection.version == version) history.record(messages.map(it.message))
+            if (connection.version == version) {
+                delivery.succeeded(cache.ownId.toString(), it.message.chatId, it.oldMessageId, it.message.id)
+                history.record(messages.map(it.message))
+            }
+        }
+        builder.addUpdateHandler(TdApi.UpdateMessageSendFailed::class.java) {
+            if (connection.version ==
+                version
+            ) {
+                delivery.failed(cache.ownId.toString(), it.message.chatId, it.oldMessageId)
+            }
+        }
+        builder.addUpdateHandler(TdApi.UpdateChatAction::class.java) {
+            if (connection.version == version) typing.update(it.chatId, it.senderId, it.action)
         }
         builder.addUpdateHandler(TdApi.UpdateDeleteMessages::class.java) { update ->
             if (connection.version != version) return@addUpdateHandler

@@ -9,7 +9,10 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class SettingsUpdate(
     val paused: Boolean? = null,
+    @field:Min(1) @field:Max(4) val maxParallelTasks: Int? = null,
     val defaultModel: String? = null,
+    @field:Size(max = 36) val defaultModelProfileId: String? = null,
+    val deliveryMode: DeliveryMode? = null,
     @field:Size(max = 80)
     val ollamaDevice: String? = null,
     @field:Size(max = 4000)

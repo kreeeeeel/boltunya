@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.boltunya.storage.SettingsStore
 import java.nio.file.Path
+import java.time.Clock
 import kotlin.test.assertEquals
 
 class TelegramChatDirectoryTest {
@@ -21,6 +22,7 @@ class TelegramChatDirectoryTest {
                 TelegramMessageMapper(files),
                 TelegramWallpaperMapper(files),
                 SettingsStore(directory),
+                TelegramTypingStore(cache, Clock.systemUTC()),
             )
         cache.users[10] = TdApi.User().apply {
             id = 10
@@ -92,6 +94,7 @@ class TelegramChatDirectoryTest {
                 TelegramMessageMapper(files),
                 TelegramWallpaperMapper(files),
                 SettingsStore(directory),
+                TelegramTypingStore(cache, Clock.systemUTC()),
             )
         listOf(1L, 2L, 3L).stream().forEach { id ->
             cache.chats[id] = TdApi.Chat().apply {

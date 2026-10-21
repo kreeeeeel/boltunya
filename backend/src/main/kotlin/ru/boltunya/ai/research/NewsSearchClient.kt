@@ -26,8 +26,10 @@ private const val MAX_NEWS_PER_HOST = 2
 class NewsSearchClient(
     private val clock: Clock = Clock.systemDefaultZone(),
     private val resources: ResourceCatalog = ResourceCatalog(),
-    private val urls: ResearchUrl = ResearchUrl(resources),
+    private val urls: ResearchUrl = ResearchUrl(),
     private val feeds: List<String> = Json.decodeFromString(resources.text("search/news-feeds.json")),
+    private val intents: ResearchTerms = ResearchTerms(resources),
+    private val words: ResearchWords = ResearchWords(),
 ) {
     private val general = Json.decodeFromString<List<String>>(resources.text("search/news-general-terms.json")).toSet()
     private var refreshedAt = Instant.MIN
@@ -35,7 +37,7 @@ class NewsSearchClient(
 
     @Synchronized
     fun search(query: String): List<ResearchSource>? {
-        if (!resources.regex("intent/news").containsMatchIn(query)) return null
+        if (!intents.contains("news", query)) return null
         val now = clock.instant()
         if (now.epochSecond - refreshedAt.epochSecond >= NEWS_CACHE_SECONDS) {
             cached = Executors.newFixedThreadPool(MAX_FEED_WORKERS).use { executor ->
@@ -44,9 +46,9 @@ class NewsSearchClient(
             refreshedAt = now
         }
         val terms = tokens(query).filterNot { token -> general.any { token.startsWith(it) } }
-        val world = resources.regex("intent/news-world").containsMatchIn(query)
-        val local = resources.regex("intent/news-russia").containsMatchIn(query)
-        val today = resources.regex("intent/today").containsMatchIn(query)
+        val world = intents.contains("news-world", query)
+        val local = intents.contains("news-russia", query)
+        val today = intents.contains("today", query)
         val hosts = mutableMapOf<String, Int>()
         val range = (now.epochSecond - MAX_NEWS_AGE_SECONDS)..(now.epochSecond + FUTURE_TOLERANCE_SECONDS)
         return cached.filter { source ->
@@ -54,9 +56,7 @@ class NewsSearchClient(
             date.epochSecond in range &&
                 (!today || date.atZone(clock.zone).toLocalDate() == LocalDate.now(clock))
         }.filter { source ->
-            val international = resources.regex(
-                "common/news-world-source",
-            ).containsMatchIn(source.url + " " + source.text)
+            val international = international(source)
             (!world || international) && (!local || !international) &&
                 (
                     terms.isEmpty() ||
@@ -73,8 +73,11 @@ class NewsSearchClient(
     }
 
     private fun tokens(text: String): List<String> =
-        resources.regex("common/research-token").findAll(text.lowercase(Locale.ROOT))
-            .map { it.value }.filter { it.length >= 2 && it.any(Char::isLetter) }.toList()
+        words.tokens(text).filter { it.length >= 2 && it.any(Char::isLetter) }
+
+    fun international(source: ResearchSource): Boolean =
+        source.url.contains("/world/") || source.url.contains("mezhdunarodnaya-panorama") ||
+            intents.contains("news-world-source", source.text)
 
     private fun read(feed: String): List<ResearchSource> = try {
         val document = Jsoup.connect(feed).timeout(FEED_TIMEOUT_MS).maxBodySize(MAX_FEED_BYTES)

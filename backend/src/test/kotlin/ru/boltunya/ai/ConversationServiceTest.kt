@@ -22,7 +22,7 @@ import kotlin.test.assertTrue
 
 class ConversationServiceTest {
     @Test
-    fun `a collected Russian writing profile does not authorize changing the recipients language`() {
+    fun `factual memory does not activate a language regex or an unsolicited retry`() {
         val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
         val calls = AtomicInteger()
         server.createContext("/api/chat") { exchange ->
@@ -41,8 +41,8 @@ class ConversationServiceTest {
                 listOf(ChatMessage("1", "synthetic", "hey, how is it going?", false, 0)),
                 memory = MemoryContext(ownerSummary = "Обычно пишет на русском"),
             )
-            assertEquals("all good, how about you?", reply.text)
-            assertEquals(2, calls.get())
+            assertEquals("привет, всё отлично", reply.text)
+            assertEquals(1, calls.get())
         } finally {
             server.stop(0)
         }
@@ -192,20 +192,13 @@ class ConversationServiceTest {
     }
 
     @Test
-    fun `retries assistant boilerplate once and returns the revised answer`() {
+    fun `repeated legitimate phrases are returned without similarity rejection or an extra generation`() {
         val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
         val calls = AtomicInteger()
-        var lastRequest = ""
         server.createContext("/api/chat") { exchange ->
-            lastRequest = String(exchange.requestBody.readAllBytes(), Charsets.UTF_8)
-            val text = if (calls.incrementAndGet() ==
-                1
-            ) {
-                "Я ИИ-помощник, у меня нет личных отношений"
-            } else {
-                "Ну ты, конечно)"
-            }
-            val bytes = "{\"message\":{\"content\":\"$text\"}}".toByteArray(Charsets.UTF_8)
+            exchange.requestBody.readAllBytes()
+            calls.incrementAndGet()
+            val bytes = """{"message":{"content":"да, договорились"},"done_reason":"stop"}""".toByteArray()
             exchange.responseHeaders.set("Content-Type", "application/json")
             exchange.sendResponseHeaders(200, bytes.size.toLong())
             exchange.responseBody.use { it.write(bytes) }
@@ -215,41 +208,13 @@ class ConversationServiceTest {
             val client = AiTestServices("http://127.0.0.1:${server.address.port}")
             val result = client.reply(
                 ChatRule(internetAccess = false),
-                listOf(ChatMessage("1", "42", "Кто лучшая сестра?", false, 0)),
+                listOf(
+                    ChatMessage("1", "42", "да, договорились", true, 0, automated = true),
+                    ChatMessage("2", "42", "Так завтра в то же время?", false, 0),
+                ),
             )
-            assertEquals("Ну ты, конечно)", result.text)
-            assertEquals(2, calls.get())
-            val messages = Json.parseToJsonElement(lastRequest).jsonObject["messages"]?.jsonArray
-            assertEquals("user", messages?.last()?.jsonObject?.get("role")?.jsonPrimitive?.content)
-            assertTrue(messages?.first().toString().contains("Предыдущий вариант"))
-        } finally {
-            server.stop(0)
-        }
-    }
-
-    @Test
-    fun `instruct models omit thinking and unsafe repeated replies are not returned`() {
-        val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
-        val calls = AtomicInteger()
-        server.createContext("/api/chat") { exchange ->
-            val body = Json.parseToJsonElement(String(exchange.requestBody.readAllBytes())).jsonObject
-            assertFalse(body.containsKey("think"))
-            calls.incrementAndGet()
-            val bytes = """{"message":{"content":"Я ИИ-помощник, у меня нет личных отношений"}}""".toByteArray()
-            exchange.responseHeaders.set("Content-Type", "application/json")
-            exchange.sendResponseHeaders(200, bytes.size.toLong())
-            exchange.responseBody.use { it.write(bytes) }
-        }
-        server.start()
-        try {
-            val client = AiTestServices("http://127.0.0.1:${server.address.port}")
-            assertFailsWith<IntegrationException> {
-                client.reply(
-                    ChatRule(model = "qwen2.5:7b", internetAccess = false),
-                    listOf(ChatMessage("1", "42", "Привет", false, 0)),
-                )
-            }
-            assertEquals(2, calls.get())
+            assertEquals("да, договорились", result.text)
+            assertEquals(1, calls.get())
         } finally {
             server.stop(0)
         }
@@ -293,40 +258,28 @@ class ConversationServiceTest {
     }
 
     @Test
-    fun `plain internal analysis is retried and never returned even when the incoming message repeats`() {
-        listOf(false, true).stream().forEach { repeatedFailure ->
-            val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
-            val calls = AtomicInteger()
-            server.createContext("/api/chat") { exchange ->
-                exchange.requestBody.readAllBytes()
-                val text = if (calls.incrementAndGet() == 1 || repeatedFailure) {
-                    "Хорошо, мне нужно составить ответ от лица владельца Telegram. Последнее сообщение собеседника — напиши рецепт сырников."
-                } else {
-                    "смешай творог, яйцо и муку, слепи сырники и обжарь"
-                }
-                val bytes = "{\"message\":{\"content\":\"$text\"}}".toByteArray()
-                exchange.responseHeaders.set("Content-Type", "application/json")
-                exchange.sendResponseHeaders(200, bytes.size.toLong())
-                exchange.responseBody.use { it.write(bytes) }
-            }
-            server.start()
-            try {
-                val client = AiTestServices("http://127.0.0.1:${server.address.port}")
-                val history = listOf(
-                    ChatMessage("1", "synthetic", "напиши рецепт сырников", false, 0),
-                    ChatMessage("2", "synthetic", "напиши рецепт сырников", false, 0),
-                )
-                if (repeatedFailure) {
-                    assertFailsWith<InvalidModelReplyException> {
-                        client.reply(ChatRule(internetAccess = false), history)
-                    }
-                } else {
-                    assertTrue(client.reply(ChatRule(internetAccess = false), history).text.startsWith("смешай творог"))
-                }
-                assertEquals(2, calls.get())
-            } finally {
-                server.stop(0)
-            }
+    fun `final text is not classified by its wording`() {
+        val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
+        val calls = AtomicInteger()
+        val answer = "Мне нужно написать ответ коллеге, потом отправлю файл."
+        server.createContext("/api/chat") { exchange ->
+            exchange.requestBody.readAllBytes()
+            calls.incrementAndGet()
+            val bytes = ("{\"message\":{\"content\":" + Json.encodeToString(answer) + "}}").toByteArray()
+            exchange.responseHeaders.set("Content-Type", "application/json")
+            exchange.sendResponseHeaders(200, bytes.size.toLong())
+            exchange.responseBody.use { it.write(bytes) }
+        }
+        server.start()
+        try {
+            val reply = AiTestServices("http://127.0.0.1:${server.address.port}").reply(
+                ChatRule(internetAccess = false),
+                listOf(ChatMessage("1", "42", "Когда отправишь файл?", false, 0)),
+            )
+            assertEquals(answer, reply.text)
+            assertEquals(1, calls.get())
+        } finally {
+            server.stop(0)
         }
     }
 

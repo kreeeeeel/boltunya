@@ -2,7 +2,7 @@ package ru.boltunya.ai
 
 import jakarta.inject.Inject
 import ru.boltunya.domain.ComputeDevice
-import ru.boltunya.resources.ResourceCatalog
+import ru.boltunya.validation.InputRule
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -20,8 +20,7 @@ private const val MIN_DRIVER_MAJOR = 550
 private const val MIN_LEGACY_DRIVER_MAJOR = 570
 private const val QUERY_FIELDS = 5
 
-class NvidiaDeviceDiscovery @Inject constructor(private val resources: ResourceCatalog, private val clock: Clock) :
-    ComputeDeviceDiscovery {
+class NvidiaDeviceDiscovery @Inject constructor(private val clock: Clock) : ComputeDeviceDiscovery {
     private var refreshedAt = Long.MIN_VALUE
     private var cached = emptyList<ComputeDevice>()
 
@@ -41,7 +40,7 @@ class NvidiaDeviceDiscovery @Inject constructor(private val resources: ResourceC
         val compute = fields.getOrNull(2)?.toDoubleOrNull()
         val driver = fields.getOrNull(3)?.substringBefore('.')?.toIntOrNull()
         val name = fields.getOrNull(4).orEmpty()
-        if (!resources.regex("common/ollama-device-uuid").matches(uuid) || memory == null ||
+        if (!InputRule.GPU_UUID.accepts(uuid) || memory == null ||
             memory !in 1..Long.MAX_VALUE / MEBIBYTE || compute == null || !compute.isFinite() || driver == null ||
             name.isBlank()
         ) {

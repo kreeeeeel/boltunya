@@ -47,6 +47,16 @@ class MediaResponderTest {
             assertContentEquals(bytes.copyOfRange(10, 20), partial.body())
             val invalid = HttpRequest.newBuilder(URI.create("$base/video")).header("Range", "bytes=200-").build()
             assertEquals(416, http.send(invalid, HttpResponse.BodyHandlers.ofByteArray()).statusCode())
+            listOf(
+                "bytes=+1-2",
+                "bytes=1-2,3-4",
+                "bytes=1--2",
+                "bytes=99999999999999999999-",
+                "bytes=-9",
+            ).stream().forEach { range ->
+                val malformed = HttpRequest.newBuilder(URI.create("$base/video")).header("Range", range).build()
+                assertEquals(416, http.send(malformed, HttpResponse.BodyHandlers.ofByteArray()).statusCode(), range)
+            }
             val animation = http.send(
                 HttpRequest.newBuilder(URI.create("$base/sticker")).build(),
                 HttpResponse.BodyHandlers.ofString(),

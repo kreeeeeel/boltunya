@@ -7,7 +7,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.longOrNull
-import ru.boltunya.resources.ResourceCatalog
+import ru.boltunya.validation.InputRule
 import java.io.IOException
 import java.io.UncheckedIOException
 import java.nio.file.Files
@@ -19,7 +19,6 @@ class OllamaModelInventory(
     private val root: Path = Path.of(
         System.getenv("OLLAMA_MODELS") ?: "${System.getProperty("user.home")}/.ollama/models",
     ),
-    private val resources: ResourceCatalog = ResourceCatalog(),
 ) {
     fun installed(): Set<String> {
         val manifests = root.resolve("manifests")
@@ -58,7 +57,7 @@ class OllamaModelInventory(
                 val item = layer as? JsonObject
                 val digest = (item?.get("digest") as? JsonPrimitive)?.contentOrNull.orEmpty()
                 val size = (item?.get("size") as? JsonPrimitive)?.longOrNull ?: -1
-                if (!resources.regex("common/RegistryModelInstaller-2").matches(digest) || size < 0) {
+                if (!InputRule.MODEL_DIGEST.accepts(digest) || size < 0) {
                     false
                 } else {
                     // Verify completeness without reading gigabytes of model weights on every status refresh.

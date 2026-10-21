@@ -9,6 +9,7 @@ import ru.boltunya.ai.ModelInference
 import ru.boltunya.ai.OllamaDeviceSelector
 import ru.boltunya.automation.ReplyCoordinator
 import ru.boltunya.domain.AppSettings
+import ru.boltunya.domain.DeliveryMode
 import ru.boltunya.domain.GroupReplyMode
 import ru.boltunya.domain.SettingsUpdate
 import ru.boltunya.exception.impl.DuplicateStyleIdentifierException
@@ -34,27 +35,31 @@ class SettingsEndpoint @Inject constructor(
         val update = json.decodeFromJsonElement<SettingsUpdate>(body)
         validation.validate(update)
         if (update.ollamaDevice != null) devices.validate(update.ollamaDevice)
-        if (update.groupReplies == GroupReplyMode.INHERIT) throw InvalidSettingTypeException()
+        if (update.groupReplies == GroupReplyMode.INHERIT || update.deliveryMode == DeliveryMode.INHERIT) {
+            throw InvalidSettingTypeException()
+        }
         if (update.customStyles != null &&
             update.customStyles.stream().map { it.id }.distinct().count() != update.customStyles.size.toLong()
         ) {
             throw DuplicateStyleIdentifierException()
         }
-        if (update.defaultModel != null) {
-            validation.model(update.defaultModel)
-        }
         val current = settings.get()
-        if (update.paused == false || update.defaultModel != null && !(update.paused ?: current.paused)) {
-            validation.model(update.defaultModel ?: current.defaultModel, forAutomation = true)
+        val model = update.defaultModel ?: current.defaultModel
+        val profileId = update.defaultModelProfileId ?: current.defaultModelProfileId
+        if (update.defaultModel != null || update.defaultModelProfileId != null || update.paused == false) {
+            validation.selection(model, profileId, forAutomation = !(update.paused ?: current.paused))
         }
-        if (update.defaultModel != null) {
-            engine.warm(update.defaultModel)
+        if ((update.defaultModel != null || update.defaultModelProfileId != null) && profileId.isEmpty()) {
+            engine.warm(model)
         }
-        replies.cancelPending()
+        if (body.keys.any { it != SettingKey.MAX_PARALLEL_TASKS.jsonName }) replies.cancelPending()
         val saved = settings.update {
             it.copy(
+                maxParallelTasks = update.maxParallelTasks ?: it.maxParallelTasks,
                 paused = update.paused ?: it.paused, globalPrompt = update.globalPrompt ?: it.globalPrompt,
                 defaultModel = update.defaultModel ?: it.defaultModel,
+                defaultModelProfileId = update.defaultModelProfileId ?: it.defaultModelProfileId,
+                deliveryMode = update.deliveryMode ?: it.deliveryMode,
                 ollamaDevice = update.ollamaDevice ?: it.ollamaDevice,
                 replyDelaySeconds = update.replyDelaySeconds ?: it.replyDelaySeconds,
                 replyIntervalSeconds =

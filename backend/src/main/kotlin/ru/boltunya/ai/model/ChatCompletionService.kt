@@ -15,17 +15,30 @@ import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.reactive.function.client.WebClientException
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import reactor.core.publisher.Mono
+import reactor.core.scheduler.Schedulers
 import ru.boltunya.ai.ModelInference
 import ru.boltunya.ai.OllamaRuntime
+import ru.boltunya.ai.profile.ModelTargetResolver
+import ru.boltunya.ai.profile.ModelTask
+import ru.boltunya.ai.profile.ProfileChatOptions
+import ru.boltunya.ai.profile.ProfileContextBudget
+import ru.boltunya.ai.profile.ProfileModelFactory
+import ru.boltunya.ai.profile.ResolvedModelTarget
 import ru.boltunya.automation.activity.ReplyTraceScope
 import ru.boltunya.domain.ChatRule
 import ru.boltunya.domain.ModelMeasurement
+import ru.boltunya.exception.AppException
 import ru.boltunya.exception.impl.EmptyMemorySummaryException
 import ru.boltunya.exception.impl.EngineHttpFailedException
 import ru.boltunya.exception.impl.EngineUnavailableException
 import ru.boltunya.exception.impl.InvalidModelReplyException
+import ru.boltunya.exception.impl.ModelCapabilityUnavailableException
+import ru.boltunya.exception.impl.ModelProviderFailedException
+import ru.boltunya.exception.impl.ModelProviderRefusedException
 import ru.boltunya.storage.ModelMeasurementStore
 import tools.jackson.databind.json.JsonMapper
+import java.time.Duration
 
 private const val CONTEXT_TOKENS = 8192
 private const val MEMORY_RESPONSE_TOKENS = 1536
@@ -43,14 +56,114 @@ class ChatCompletionService @Inject constructor(
     private val measurements: ModelMeasurementStore,
     private val tracing: ReplyTraceScope = ReplyTraceScope(),
     private val responses: ModelResponseStream = ModelResponseStream(),
+    private val targets: ModelTargetResolver? = null,
+    private val clients: ProfileModelFactory? = null,
+    private val profileOptions: ProfileChatOptions = ProfileChatOptions(),
+    private val contextBudget: ProfileContextBudget = ProfileContextBudget(),
 ) {
     private val mapper = JsonMapper.builder().build()
+
+    fun modelName(rule: ChatRule, task: ModelTask = ModelTask.REPLY): String =
+        targets?.resolve(task, rule)?.model ?: rule.model
 
     fun generate(
         rule: ChatRule,
         messages: List<Message>,
         schema: JsonObject? = null,
         maxTokens: Int = rule.maxTokens,
+        task: ModelTask = ModelTask.REPLY,
+    ): ModelCompletion {
+        val target = targets?.resolve(task, rule)
+        val group = target?.executionGroup ?: "shared"
+        val action = {
+            if (target != null && target.profileId.isNotEmpty()) {
+                generateTarget(target, messages, schema, maxTokens, task)
+            } else {
+                generateLegacy(
+                    if (target ==
+                        null
+                    ) {
+                        rule
+                    } else {
+                        rule.copy(model = target.model)
+                    },
+                    messages,
+                    schema,
+                    maxTokens,
+                )
+            }
+        }
+        return if (task == ModelTask.MEMORY && tracing.current()?.foregroundMemory() != true) {
+            inference.background(group, action)
+        } else {
+            inference.foreground(group, action)
+        }
+    }
+
+    fun generateTarget(
+        target: ResolvedModelTarget,
+        messages: List<Message>,
+        schema: JsonObject? = null,
+        maxTokens: Int = target.options.maxOutputTokens,
+        task: ModelTask = ModelTask.REPLY,
+    ): ModelCompletion {
+        val factory = clients
+        if (factory == null) throw ModelProviderFailedException()
+        if (messages.stream().anyMatch { it is UserMessage && it.media.isNotEmpty() } && !target.capabilities.vision) {
+            throw ModelCapabilityUnavailableException()
+        }
+        val options = profileOptions.build(target, maxTokens, schema)
+        val context = contextBudget.select(target, messages, maxTokens)
+        // Serialize an allowlist, never Spring API options (which may contain the API key).
+        val safeOptions = mapper.writeValueAsString(
+            mapOf(
+                "profileId" to target.profileId,
+                "provider" to target.provider.name,
+                "task" to task.name,
+                "model" to target.model,
+                "parameters" to target.options,
+            ),
+        )
+        val attempt = tracing.current()?.begin(target.model, context, safeOptions)
+        val started = System.nanoTime()
+        val response = try {
+            val client = factory.model(target)
+            val chunks = if (target.capabilities.streaming) {
+                client.stream(Prompt(context, options))
+            } else {
+                Mono.fromCallable {
+                    client.call(Prompt(context, options))
+                }.subscribeOn(Schedulers.boundedElastic()).flux()
+            }
+            responses.read(
+                chunks,
+                attempt,
+                Duration.ofSeconds(target.options.idleTimeoutSeconds.toLong()),
+                Duration.ofSeconds(target.options.totalTimeoutSeconds.toLong()),
+            )
+        } catch (exception: AppException) {
+            throw exception
+        } catch (exception: Exception) {
+            if (Thread.currentThread().isInterrupted) throw exception
+            // API response bodies can contain echoed input or credentials; do not retain their messages as causes.
+            throw ModelProviderFailedException()
+        }
+        val result = reader.read(response, (System.nanoTime() - started) / 1_000_000)
+        attempt?.finish(result)
+        if ((response.result?.output?.metadata?.get("refusal") as? String).orEmpty().isNotBlank() ||
+            result.finishReason.equals("content_filter", ignoreCase = true)
+        ) {
+            throw ModelProviderRefusedException()
+        }
+        if (result.finishReason.equals("length", ignoreCase = true)) throw InvalidModelReplyException()
+        return result
+    }
+
+    private fun generateLegacy(
+        rule: ChatRule,
+        messages: List<Message>,
+        schema: JsonObject?,
+        maxTokens: Int,
     ): ModelCompletion {
         val policy = policies.get(rule.model)
         val first = call(rule, messages, schema, maxTokens, policy, policy.reasoningTokens)
@@ -117,13 +230,14 @@ class ChatCompletionService @Inject constructor(
         return result
     }
 
-    fun summarize(model: String, instruction: String, data: String): String = inference.background {
+    fun summarize(model: String, instruction: String, data: String): String {
         val result = generate(
             ChatRule(model = model, creativity = MEMORY_CREATIVITY),
             listOf(SystemMessage(instruction), UserMessage(data)),
             maxTokens = MEMORY_RESPONSE_TOKENS,
+            task = ModelTask.MEMORY,
         )
         if (result.text.isBlank()) throw EmptyMemorySummaryException()
-        result.text.removePrefix("```markdown").removePrefix("```").removeSuffix("```").trim()
+        return result.text.removePrefix("```markdown").removePrefix("```").removeSuffix("```").trim()
     }
 }

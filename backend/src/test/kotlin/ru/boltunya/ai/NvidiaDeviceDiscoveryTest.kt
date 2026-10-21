@@ -1,14 +1,13 @@
 package ru.boltunya.ai
 
 import org.junit.jupiter.api.Test
-import ru.boltunya.resources.ResourceCatalog
 import java.time.Clock
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class NvidiaDeviceDiscoveryTest {
-    private val discovery = NvidiaDeviceDiscovery(ResourceCatalog(), Clock.systemUTC())
+    private val discovery = NvidiaDeviceDiscovery(Clock.systemUTC())
 
     @Test
     fun `uses Nvidia UUIDs and reported VRAM instead of assuming hardware enumeration indices`() {

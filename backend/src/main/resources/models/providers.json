@@ -1,0 +1,51 @@
+[
+  {
+    "id": "ollama",
+    "name": "Ollama",
+    "provider": "ollama",
+    "baseUrl": "http://127.0.0.1:11434",
+    "model": "gemma3:4b",
+    "apiKeyRequired": false,
+    "defaultCapabilities": {
+      "structuredOutput": true,
+      "topK": true,
+      "penalties": true
+    }
+  },
+  {
+    "id": "openai",
+    "name": "OpenAI",
+    "provider": "openai-compatible",
+    "baseUrl": "https://api.openai.com/v1",
+    "defaultCapabilities": {
+      "tokenLimit": "max_completion_tokens",
+      "temperature": false,
+      "topP": false
+    }
+  },
+  {
+    "id": "deepseek",
+    "name": "DeepSeek",
+    "provider": "openai-compatible",
+    "baseUrl": "https://api.deepseek.com/v1"
+  },
+  {
+    "id": "openrouter",
+    "name": "OpenRouter",
+    "provider": "openai-compatible",
+    "baseUrl": "https://openrouter.ai/api/v1"
+  },
+  {
+    "id": "groq",
+    "name": "Groq",
+    "provider": "openai-compatible",
+    "baseUrl": "https://api.groq.com/openai/v1"
+  },
+  {
+    "id": "custom",
+    "name": "OpenAI compatible",
+    "provider": "openai-compatible",
+    "baseUrl": "http://127.0.0.1:1234/v1",
+    "apiKeyRequired": false
+  }
+]

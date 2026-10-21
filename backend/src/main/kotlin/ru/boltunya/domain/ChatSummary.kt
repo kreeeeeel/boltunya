@@ -20,4 +20,5 @@ data class ChatSummary(
     val memberCount: Int? = null,
     val lastMessageOutgoing: Boolean = false,
     val lastMessageSender: String = "",
+    val typingUsers: List<ChatTypingUser> = emptyList(),
 )

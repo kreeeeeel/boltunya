@@ -7,6 +7,7 @@ import ru.boltunya.exception.impl.MemoryConflictException
 import ru.boltunya.exception.impl.MemoryNotReadyException
 import ru.boltunya.exception.impl.MemoryTooLargeException
 import ru.boltunya.resources.ResourceCatalog
+import ru.boltunya.validation.InputRule
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
@@ -31,9 +32,7 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
 
     @Synchronized
     fun activate(ownerId: String) {
-        if (!resources.regex("common/memory-chat-id").matches(ownerId) ||
-            ownerId.toLongOrNull() == null
-        ) {
+        if (!InputRule.CHAT_ID.accepts(ownerId)) {
             throw MemoryNotReadyException()
         }
         if (accountId == ownerId) return
@@ -239,7 +238,7 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
 
     private fun file(chatId: String): Path {
         if (chatId.isEmpty()) return root.resolve("MEMORY.md")
-        if (!resources.regex("common/memory-chat-id").matches(chatId) || chatId.toLongOrNull() == null) {
+        if (!InputRule.CHAT_ID.accepts(chatId)) {
             throw InvalidMemoryChatException()
         }
         if (accountId.isEmpty()) throw MemoryNotReadyException()

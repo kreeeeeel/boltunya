@@ -29,7 +29,9 @@ class TelegramMessageView @Inject constructor(
             group = chat?.type is TdApi.ChatTypeBasicGroup || chat?.type is TdApi.ChatTypeSupergroup,
             mentionsMe = mention,
             topicId = (message.topicId as? TdApi.MessageTopicForum)?.forumTopicId ?: 0,
-            senderName = user?.let { (it.firstName + " " + it.lastName).trim() } ?: senderChat?.title.orEmpty(),
+            senderName =
+            user?.let { (it.firstName.orEmpty() + " " + it.lastName.orEmpty()).trim() }
+                ?: senderChat?.title.orEmpty(),
             senderAvatarUrl = avatar?.let {
                 "/api/media/${files.register(it, "image/jpeg", "sender-avatar.jpg")}"
             }.orEmpty(),
@@ -38,6 +40,7 @@ class TelegramMessageView @Inject constructor(
                 is TdApi.MessageSenderChat -> "chat:${origin.chatId}"
                 else -> ""
             },
+            senderUsername = user?.usernames?.activeUsernames?.firstOrNull().orEmpty(),
             replyToId = reply?.messageId?.toString().orEmpty(),
             replyText = (reply?.content as? TdApi.MessageText)?.text?.text.orEmpty(),
             read = message.isOutgoing && message.id <= (chat?.lastReadOutboxMessageId ?: 0),

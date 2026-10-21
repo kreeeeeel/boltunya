@@ -6,6 +6,7 @@ import org.springframework.ai.chat.messages.AssistantMessage
 import org.springframework.ai.chat.messages.Message
 import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
+import org.springframework.ai.content.Media
 import ru.boltunya.ai.research.ResearchContext
 import ru.boltunya.ai.research.ResearchLinkPolicy
 import ru.boltunya.domain.ChatMessage
@@ -43,6 +44,7 @@ class PromptBuilder(
         research: ResearchContext = ResearchContext(),
         styleHistory: List<ChatMessage> = history,
         memory: MemoryContext = MemoryContext(),
+        images: Map<String, List<Media>> = emptyMap(),
     ): List<Message> {
         val style = CommunicationStyle.entries.firstOrNull { it.key == rule.style } ?: CommunicationStyle.FRIENDLY
         val tone = if (style == CommunicationStyle.CUSTOM && rule.resolvedStyleInstructions.isNotBlank()) {
@@ -136,18 +138,19 @@ class PromptBuilder(
             selectedStyle,
         ).filter(String::isNotBlank).joinToString("\n\n")
         val candidates = history.asReversed().stream()
-            .filter { it.text.isNotBlank() }
-            .filter {
-                !it.outgoing || !it.automated ||
-                    !resources.regex("intent/internal-analysis").containsMatchIn(it.text)
-            }
+            .filter { !it.contextExcluded }
+            .filter { it.text.isNotBlank() || images[it.id].orEmpty().isNotEmpty() }
             .map { message ->
                 val text = if (!message.outgoing) {
                     authors.content(message, MAX_MESSAGE_CHARACTERS)
                 } else {
                     message.text.take(MAX_MESSAGE_CHARACTERS)
                 }
-                if (message.outgoing) AssistantMessage.builder().content(text).build() else UserMessage(text)
+                if (message.outgoing) {
+                    AssistantMessage.builder().content(text).build()
+                } else {
+                    UserMessage.builder().text(text).media(images[message.id].orEmpty()).build()
+                }
             }.collect(Collectors.toList()).asReversed()
 
         var characters = 0

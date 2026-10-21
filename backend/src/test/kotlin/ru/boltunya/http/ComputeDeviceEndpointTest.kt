@@ -14,7 +14,6 @@ import ru.boltunya.automation.ReplyCoordinator
 import ru.boltunya.domain.ComputeDevice
 import ru.boltunya.domain.ComputeDeviceStatus
 import ru.boltunya.domain.ReplyResult
-import ru.boltunya.resources.ResourceCatalog
 import ru.boltunya.storage.SettingsStore
 import java.net.InetSocketAddress
 import java.net.URI
@@ -52,7 +51,7 @@ class ComputeDeviceEndpointTest {
                     ),
                 )
             }
-            val selector = OllamaDeviceSelector(settings, discovered, ResourceCatalog())
+            val selector = OllamaDeviceSelector(settings, discovered)
             val gateway = FakeTelegramGateway()
             val ai = AiTestServices(endpoint)
             EngineManager(

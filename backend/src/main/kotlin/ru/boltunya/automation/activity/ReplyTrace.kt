@@ -4,19 +4,38 @@ import org.springframework.ai.chat.messages.Message
 import ru.boltunya.domain.ActivityAttempt
 import ru.boltunya.domain.ActivityDetails
 import ru.boltunya.domain.ActivityEntry
+import ru.boltunya.domain.ActivityKind
 import ru.boltunya.domain.ActivityMessage
 import ru.boltunya.domain.ActivityStep
 
 private val FINAL_STATUSES = setOf(
     ActivityStatus.SENT.value,
+    ActivityStatus.READY.value,
     ActivityStatus.CANCELLED.value,
     ActivityStatus.ERROR.value,
 )
 
-class ReplyTrace(private var entry: ActivityEntry, private val trigger: String) {
+class ReplyTrace(private var entry: ActivityEntry, private var trigger: String) {
     private val attempts = mutableListOf<AttemptTrace>()
     private val steps = mutableListOf(ActivityStep("queued", System.currentTimeMillis()))
     private var response = ""
+
+    @Synchronized
+    fun prioritize() {
+        entry = entry.copy(priority = true)
+    }
+
+    @Synchronized
+    fun foregroundMemory(): Boolean = entry.kind == ActivityKind.MEMORY && entry.priority
+
+    @Synchronized
+    fun currentPhase(): ActivityPhase =
+        ActivityPhase.entries.firstOrNull { it.value == entry.phase } ?: ActivityPhase.CONTEXT
+
+    @Synchronized
+    fun updateTrigger(text: String) {
+        if (active()) trigger = text
+    }
 
     @Synchronized
     fun phase(value: ActivityPhase) {
@@ -34,15 +53,23 @@ class ReplyTrace(private var entry: ActivityEntry, private val trigger: String) 
 
     @Synchronized
     fun begin(model: String, messages: List<Message>, options: String): AttemptTrace {
+        val retainContent = entry.kind != ActivityKind.MEMORY
         val attempt = AttemptTrace(
             ActivityAttempt(
                 attempts.size + 1,
                 entry.phase,
                 model,
-                messages.stream().map { ActivityMessage(it.messageType.value, it.text.orEmpty()) }.toList(),
+                if (retainContent) {
+                    messages.stream().map {
+                        ActivityMessage(it.messageType.value, it.text.orEmpty())
+                    }.toList()
+                } else {
+                    emptyList()
+                },
                 options,
                 System.currentTimeMillis(),
             ),
+            retainContent,
         )
         attempts.add(attempt)
         entry = entry.copy(detail = model)
@@ -51,14 +78,14 @@ class ReplyTrace(private var entry: ActivityEntry, private val trigger: String) 
 
     @Synchronized
     fun generated(text: String) {
-        if (active()) response = text
+        if (active() && entry.kind != ActivityKind.MEMORY) response = text
     }
 
     @Synchronized
     fun finish(status: ActivityStatus, detail: String, text: String? = null) {
         if (!active()) return
         phase(ActivityPhase.valueOf(status.name))
-        if (text != null) response = text
+        if (text != null && entry.kind != ActivityKind.MEMORY) response = text
         val now = System.currentTimeMillis()
         attempts.stream().forEach { it.stop(now) }
         entry = entry.copy(

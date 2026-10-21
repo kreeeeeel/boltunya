@@ -27,27 +27,29 @@ class CurrencyRatesClient(
     private val clock: Clock = Clock.systemDefaultZone(),
     private val endpoint: String = CBR_ENDPOINT,
     private val resources: ResourceCatalog = ResourceCatalog(),
+    private val intents: ResearchTerms = ResearchTerms(resources),
+    private val words: ResearchWords = ResearchWords(),
 ) {
     private val aliases = Json.decodeFromString<Map<String, List<String>>>(resources.text("search/currencies.json"))
     private val names = Json.decodeFromString<Map<String, String>>(resources.text("search/currency-names.json"))
     private val symbols = Json.decodeFromString<Map<String, String>>(resources.text("search/currency-symbols.json"))
 
     fun lookup(query: String): ResearchContext? {
-        if (!resources.regex("intent/currency-rate").containsMatchIn(query) ||
-            resources.regex("intent/news").containsMatchIn(query)
+        if (!intents.contains("currency-rate", query) ||
+            intents.contains("news", query)
         ) {
             return null
         }
-        if (resources.regex("intent/currency-market").containsMatchIn(query)) return null
-        val currencies = resources.regex("common/research-token").findAll(query.lowercase(Locale.ROOT))
+        if (intents.contains("currency-market", query)) return null
+        val currencies = words.tokens(query)
             .mapNotNull { token ->
                 aliases.entries.firstOrNull { entry ->
-                    entry.value.any { token.value.startsWith(it) }
+                    entry.value.any { token.startsWith(it) }
                 }?.key
             }.distinct().toList()
-        if (currencies.isEmpty() && !resources.regex("intent/currency-general").containsMatchIn(query)) return null
+        if (currencies.isEmpty() && !intents.contains("currency-general", query)) return null
         val requested = currencies.ifEmpty { listOf("USD", "EUR") }
-        val pairs = if (requested.size > 1 && !resources.regex("intent/currency-list").containsMatchIn(query)) {
+        val pairs = if (requested.size > 1 && !intents.contains("currency-list", query)) {
             listOf(requested[0] to requested[1])
         } else {
             requested.filterNot { it == "RUB" }.map { it to "RUB" }

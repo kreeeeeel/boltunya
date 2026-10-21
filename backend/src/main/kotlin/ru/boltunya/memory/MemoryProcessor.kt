@@ -1,6 +1,7 @@
 package ru.boltunya.memory
 
 import jakarta.inject.Inject
+import ru.boltunya.storage.ContextExclusionStore
 import ru.boltunya.telegram.TelegramGateway
 import java.time.Clock
 
@@ -14,8 +15,11 @@ class MemoryProcessor @Inject constructor(
     private val summarizer: MemorySummarizer,
     private val clock: Clock,
     private val ownerSummarizer: OwnerMemorySummarizer,
+    private val exclusions: ContextExclusionStore? = null,
+    private val roster: ParticipantRosterStore? = null,
 ) {
     fun process(state: ChatMemoryState, model: String, recent: Boolean, canCommit: () -> Boolean = { true }): Boolean {
+        val policyRevision = exclusions?.revision(state.accountId, state.chatId)
         val previous = store.read(state.chatId)
         val before = if (state.headId == 0L) {
             0
@@ -24,7 +28,9 @@ class MemoryProcessor @Inject constructor(
         } else {
             state.backfillBeforeId
         }
-        val fetched = telegram.history(state.chatId, HISTORY_PAGE_MESSAGES, before).sortedBy { it.id.toLong() }
+        val history = telegram.history(state.chatId, HISTORY_PAGE_MESSAGES, before).sortedBy { it.id.toLong() }
+        val fetched = exclusions?.decorate(state.accountId, history) ?: history
+        if (unchanged(state, policyRevision)) roster?.record(state.accountId, state.chatId, fetched)
         val page = if (recent) {
             val settledBefore = clock.instant().epochSecond - MESSAGE_SETTLE_SECONDS
             fetched.stream().takeWhile { it.date <= settledBefore }.toList()
@@ -41,6 +47,7 @@ class MemoryProcessor @Inject constructor(
         }
         if (recent && page.size != fetched.size && candidates.isEmpty()) return false
         val batch = batches.select(candidates)
+        if (!unchanged(state, policyRevision)) return false
         val ownerSources = batch.sources.filter { it.speaker == MemorySpeaker.OWNER && it.text.isNotBlank() }
         val ownerUpdate = if (ownerSources.isEmpty()) {
             null
@@ -48,6 +55,7 @@ class MemoryProcessor @Inject constructor(
             val owner = store.read("")
             OwnerMemoryUpdate(owner, ownerSummarizer.summarizeOwner(model, owner.facts(), ownerSources))
         }
+        if (!unchanged(state, policyRevision)) return false
         val summary = if (batch.sources.any {
                 it.text.isNotBlank()
             }
@@ -77,8 +85,19 @@ class MemoryProcessor @Inject constructor(
             processedMessages = state.processedMessages + batch.messages.size,
             ownerMemoryVersion = 1,
         )
-        return canCommit() && store.commit(state, previous.documentRevision, summary, next, ownerUpdate)
+        val policy = exclusions
+        return if (policy == null) {
+            canCommit() && store.commit(state, previous.documentRevision, summary, next, ownerUpdate)
+        } else {
+            synchronized(policy) {
+                unchanged(state, policyRevision) && canCommit() &&
+                    store.commit(state, previous.documentRevision, summary, next, ownerUpdate)
+            }
+        }
     }
+
+    private fun unchanged(state: ChatMemoryState, revision: Long?): Boolean =
+        exclusions == null || exclusions.revision(state.accountId, state.chatId) == revision
 
     private fun delta(
         state: ChatMemoryState,

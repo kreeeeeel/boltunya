@@ -23,12 +23,20 @@ import ru.boltunya.ai.PersonalStyleBuilder
 import ru.boltunya.ai.PromptBuilder
 import ru.boltunya.ai.RegistryBlobDownloader
 import ru.boltunya.ai.RegistryModelInstaller
-import ru.boltunya.ai.ReplyQualityGuard
+import ru.boltunya.ai.ReplyImageContext
+import ru.boltunya.ai.ReplyMediaPlanner
 import ru.boltunya.ai.model.ChatCompletionService
 import ru.boltunya.ai.model.ModelPolicies
 import ru.boltunya.ai.model.ModelReplyReader
 import ru.boltunya.ai.model.ModelResponseStream
 import ru.boltunya.ai.model.SpringAiModelFactory
+import ru.boltunya.ai.profile.ModelCredentialVault
+import ru.boltunya.ai.profile.ModelProfileStore
+import ru.boltunya.ai.profile.ModelRoutingStore
+import ru.boltunya.ai.profile.ModelTargetResolver
+import ru.boltunya.ai.profile.ProfileChatOptions
+import ru.boltunya.ai.profile.ProfileContextBudget
+import ru.boltunya.ai.profile.ProfileModelFactory
 import ru.boltunya.ai.research.CurrencyRatesClient
 import ru.boltunya.ai.research.ExaMcpSearchClient
 import ru.boltunya.ai.research.ExaResultParser
@@ -47,14 +55,12 @@ import ru.boltunya.ai.research.WeatherClient
 import ru.boltunya.ai.research.WebSearchClient
 import ru.boltunya.application.ApplicationRuntime
 import ru.boltunya.application.ProcessExit
+import ru.boltunya.automation.MemoryWorkQueue
 import ru.boltunya.automation.PersonalReplyGenerator
 import ru.boltunya.automation.ReplyCoordinator
+import ru.boltunya.automation.ReplyDeliveryPolicy
 import ru.boltunya.automation.activity.ReplyTraceScope
 import ru.boltunya.diagnostics.DiagnosticLog
-import ru.boltunya.flows.FlowEngine
-import ru.boltunya.flows.FlowStore
-import ru.boltunya.flows.FlowTemplate
-import ru.boltunya.flows.FlowValidation
 import ru.boltunya.http.ApiRouter
 import ru.boltunya.http.ExitAction
 import ru.boltunya.http.InputValidation
@@ -65,17 +71,23 @@ import ru.boltunya.http.RequestReader
 import ru.boltunya.http.ResourceResponder
 import ru.boltunya.http.ResponseWriter
 import ru.boltunya.http.endpoint.ActivityEndpoint
+import ru.boltunya.http.endpoint.AppearanceEndpoint
+import ru.boltunya.http.endpoint.AttachmentEndpoint
 import ru.boltunya.http.endpoint.AuthenticationEndpoint
 import ru.boltunya.http.endpoint.ChatEndpoint
+import ru.boltunya.http.endpoint.ContextExclusionEndpoint
 import ru.boltunya.http.endpoint.DiagnosticsEndpoint
+import ru.boltunya.http.endpoint.DraftEndpoint
 import ru.boltunya.http.endpoint.EngineEndpoint
-import ru.boltunya.http.endpoint.FlowEndpoint
 import ru.boltunya.http.endpoint.MediaEndpoint
 import ru.boltunya.http.endpoint.MemoryEndpoint
+import ru.boltunya.http.endpoint.ModelProfilesEndpoint
 import ru.boltunya.http.endpoint.PreviewEndpoint
 import ru.boltunya.http.endpoint.SearchEndpoint
 import ru.boltunya.http.endpoint.SettingsEndpoint
 import ru.boltunya.http.endpoint.StateEndpoint
+import ru.boltunya.http.endpoint.UploadEndpoint
+import ru.boltunya.media.UploadStore
 import ru.boltunya.memory.MemoryBatchBuilder
 import ru.boltunya.memory.MemoryCoordinator
 import ru.boltunya.memory.MemoryProcessor
@@ -83,11 +95,14 @@ import ru.boltunya.memory.MemoryStore
 import ru.boltunya.memory.MemorySummarizer
 import ru.boltunya.memory.OllamaMemorySummarizer
 import ru.boltunya.memory.OwnerMemorySummarizer
+import ru.boltunya.memory.ParticipantRosterStore
 import ru.boltunya.monitoring.MonitoringService
 import ru.boltunya.monitoring.NvidiaMonitor
 import ru.boltunya.resources.ResourceCatalog
 import ru.boltunya.storage.ActivityFeedbackStore
+import ru.boltunya.storage.AppearanceStore
 import ru.boltunya.storage.AutomatedReplyStore
+import ru.boltunya.storage.ContextExclusionStore
 import ru.boltunya.storage.CredentialStore
 import ru.boltunya.storage.MessageArchiveStore
 import ru.boltunya.storage.ModelMeasurementStore
@@ -106,14 +121,22 @@ import ru.boltunya.telegram.TelegramChatDirectory
 import ru.boltunya.telegram.TelegramChatLoader
 import ru.boltunya.telegram.TelegramConnectionState
 import ru.boltunya.telegram.TelegramEntityMapper
+import ru.boltunya.telegram.TelegramGalleryService
 import ru.boltunya.telegram.TelegramGateway
 import ru.boltunya.telegram.TelegramHistoryReader
 import ru.boltunya.telegram.TelegramHistoryTracker
 import ru.boltunya.telegram.TelegramInteraction
+import ru.boltunya.telegram.TelegramMediaContent
+import ru.boltunya.telegram.TelegramMediaDeliveryTracker
+import ru.boltunya.telegram.TelegramMediaSender
 import ru.boltunya.telegram.TelegramMediaStore
+import ru.boltunya.telegram.TelegramMessageLinks
 import ru.boltunya.telegram.TelegramMessageMapper
 import ru.boltunya.telegram.TelegramMessageSender
 import ru.boltunya.telegram.TelegramMessageView
+import ru.boltunya.telegram.TelegramStickerRegistry
+import ru.boltunya.telegram.TelegramStickerService
+import ru.boltunya.telegram.TelegramTypingStore
 import ru.boltunya.telegram.TelegramUpdateHandler
 import ru.boltunya.telegram.TelegramWallpaperMapper
 import java.net.http.HttpClient
@@ -137,13 +160,40 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
         bind(Path::class.java).toInstance(configuration.directory)
         Stream.of(
             PersonalReplyGenerator::class.java,
+            ReplyDeliveryPolicy::class.java,
+            ReplyImageContext::class.java,
+            ReplyMediaPlanner::class.java,
+            UploadStore::class.java,
+            UploadEndpoint::class.java,
+            AttachmentEndpoint::class.java,
+            ContextExclusionEndpoint::class.java,
+            ContextExclusionStore::class.java,
+            TelegramMediaSender::class.java,
+            TelegramMediaContent::class.java,
+            TelegramMediaDeliveryTracker::class.java,
+            TelegramTypingStore::class.java,
+            TelegramGalleryService::class.java,
+            TelegramMessageLinks::class.java,
+            TelegramStickerService::class.java,
+            TelegramStickerRegistry::class.java,
             TdLightGateway::class.java,
             ResourceCatalog::class.java,
             SearchCredentialStore::class.java,
             SearchEndpoint::class.java,
             ExaResultParser::class.java,
             ModelInference::class.java,
+            ModelCredentialVault::class.java,
+            ModelProfileStore::class.java,
+            ModelRoutingStore::class.java,
+            ModelTargetResolver::class.java,
+            ProfileChatOptions::class.java,
+            ProfileContextBudget::class.java,
+            ProfileModelFactory::class.java,
+            ModelProfilesEndpoint::class.java,
+            AppearanceEndpoint::class.java,
+            AppearanceStore::class.java,
             MemoryStore::class.java,
+            ParticipantRosterStore::class.java,
             MemoryCoordinator::class.java,
             MemoryProcessor::class.java,
             MemoryBatchBuilder::class.java,
@@ -176,14 +226,13 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
             AuthenticationEndpoint::class.java,
             ChatEndpoint::class.java,
             EngineEndpoint::class.java,
-            FlowEndpoint::class.java,
             MediaEndpoint::class.java,
             PreviewEndpoint::class.java,
+            DraftEndpoint::class.java,
             SettingsEndpoint::class.java,
             StateEndpoint::class.java,
             PersonalStyleBuilder::class.java,
             MessageContextFormatter::class.java,
-            ReplyQualityGuard::class.java,
             ResearchFactGuard::class.java,
             EngineManager::class.java,
             NvidiaDeviceDiscovery::class.java,
@@ -194,10 +243,6 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
             ModelCatalog::class.java,
             MonitoringService::class.java,
             NvidiaMonitor::class.java,
-            FlowEngine::class.java,
-            FlowStore::class.java,
-            FlowTemplate::class.java,
-            FlowValidation::class.java,
             CredentialStore::class.java,
             AutomatedReplyStore::class.java,
             ActivityFeedbackStore::class.java,
@@ -226,13 +271,8 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
         .version(HttpClient.Version.HTTP_1_1).connectTimeout(Duration.ofSeconds(15)).build()
 
     @Provides @Singleton
-    fun installer(
-        models: ModelCatalog,
-        resources: ResourceCatalog,
-        http: HttpClient,
-        downloader: RegistryBlobDownloader,
-    ): RegistryModelInstaller =
-        RegistryModelInstaller(models = models, resources = resources, http = http, downloader = downloader)
+    fun installer(models: ModelCatalog, http: HttpClient, downloader: RegistryBlobDownloader): RegistryModelInstaller =
+        RegistryModelInstaller(models = models, http = http, downloader = downloader)
 
     @Provides @Singleton
     fun weather(): WeatherClient = WeatherClient()
@@ -241,7 +281,7 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
     fun pages(): PublicPageReader = PublicPageReader()
 
     @Provides @Singleton
-    fun researchUrl(resources: ResourceCatalog): ResearchUrl = ResearchUrl(resources)
+    fun researchUrl(): ResearchUrl = ResearchUrl()
 
     @Provides @Singleton
     fun searchSelector(resources: ResourceCatalog, urls: ResearchUrl, clock: Clock): SearchResultSelector =
@@ -339,12 +379,23 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
         telegram: TelegramGateway,
         automated: AutomatedReplyStore,
         generator: PersonalReplyGenerator,
-        flows: FlowEngine,
         tracing: ReplyTraceScope,
         diagnostics: DiagnosticLog,
         feedback: ActivityFeedbackStore,
-    ): ReplyCoordinator =
-        ReplyCoordinator(settings, telegram, automated, flows, tracing, diagnostics, feedback, generator::reply)
+        exclusions: ContextExclusionStore,
+    ): ReplyCoordinator = ReplyCoordinator(
+        settings,
+        telegram,
+        automated,
+        tracing,
+        diagnostics,
+        feedback,
+        exclusions = exclusions,
+        generate = generator::reply,
+    )
+
+    @Provides @Singleton
+    fun memoryQueue(replies: ReplyCoordinator): MemoryWorkQueue = replies
 
     @Provides @Singleton
     fun json(): Json = Json { encodeDefaults = true }

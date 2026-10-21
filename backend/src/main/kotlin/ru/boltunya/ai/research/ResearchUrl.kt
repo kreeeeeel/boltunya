@@ -6,7 +6,7 @@ import java.util.Locale
 
 private const val MAX_URL_CHARACTERS = 2048
 
-class ResearchUrl(private val resources: ResourceCatalog = ResourceCatalog()) {
+class ResearchUrl {
     fun canonical(value: String): String {
         if (value.length > MAX_URL_CHARACTERS) return ""
         val uri = try {
@@ -16,7 +16,10 @@ class ResearchUrl(private val resources: ResourceCatalog = ResourceCatalog()) {
         }
         if (uri.scheme !in setOf("https", "http") || uri.host.isNullOrBlank() || uri.userInfo != null) return ""
         val query = uri.rawQuery.orEmpty().split('&')
-            .filter { it.isNotBlank() && !resources.regex("common/research-tracking").containsMatchIn(it) }
+            .filter { parameter ->
+                val name = parameter.substringBefore('=').lowercase(Locale.ROOT)
+                parameter.isNotBlank() && !name.startsWith("utm_") && name !in setOf("gclid", "fbclid", "yclid")
+            }
             .joinToString("&")
         val path = uri.rawPath.orEmpty().ifEmpty { "/" }
         return uri.scheme.lowercase(Locale.ROOT) + "://" + uri.rawAuthority.lowercase(Locale.ROOT) + path +

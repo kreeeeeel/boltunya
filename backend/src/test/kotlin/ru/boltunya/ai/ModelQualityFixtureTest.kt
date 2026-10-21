@@ -29,7 +29,6 @@ class ModelQualityFixtureTest {
         assertFalse(passes("style-aggressive", "Я отправляю мгновенно. Не отсылаю."))
     }
 
-    private fun passes(id: String, text: String): Boolean = cases.getValue(id).getValue("expected").jsonArray.all {
-        Regex(it.jsonPrimitive.content, RegexOption.IGNORE_CASE).containsMatchIn(text)
-    }
+    private fun passes(id: String, text: String): Boolean =
+        ReplyExpectation().checks(cases.getValue(id).getValue("expected").jsonObject, text).all { it }
 }

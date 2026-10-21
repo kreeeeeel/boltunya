@@ -5,19 +5,24 @@ import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Size
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import ru.boltunya.validation.ResourcePattern
+import ru.boltunya.validation.InputFormat
+import ru.boltunya.validation.InputRule
 
 @Serializable
 data class ChatRule(
     val enabled: Boolean = false,
     val groupReplies: GroupReplyMode = GroupReplyMode.INHERIT,
-    @field:ResourcePattern("common/communication-style")
+    @field:InputFormat(InputRule.COMMUNICATION_STYLE)
     val style: String = "friendly",
     @field:Size(max = 64)
     val styleId: String = "",
     @field:Size(max = 120)
     val model: String = "qwen3:1.7b",
     val useDefaultModel: Boolean = true,
+    @field:Size(max = 36) val modelProfileId: String = "",
+    val deliveryMode: DeliveryMode = DeliveryMode.INHERIT,
+    val analyzePhotos: Boolean = false,
+    val aiStickers: Boolean = false,
     @field:Size(max = 4000)
     val instructions: String = "",
     @field:Min(4)

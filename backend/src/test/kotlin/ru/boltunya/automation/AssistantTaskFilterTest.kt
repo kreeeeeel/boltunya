@@ -24,4 +24,12 @@ class AssistantTaskFilterTest {
         )
             .stream().forEach { assertFalse(filter.ignores(it), it) }
     }
+
+    @Test
+    fun `uses multilingual literal words and keeps word boundaries`() {
+        listOf("жаз код", "рецептін бер", "розв’яжи рівняння", "розв'яжи рівняння", "дай рецептик")
+            .stream().forEach { assertTrue(filter.ignores(it), it) }
+        listOf("writer code", "give postcode", "Я написал рецепт", "Кодовое имя Напиши")
+            .stream().forEach { assertFalse(filter.ignores(it), it) }
+    }
 }

@@ -2,14 +2,15 @@ package ru.boltunya.domain
 
 import jakarta.validation.constraints.Positive
 import kotlinx.serialization.Serializable
-import ru.boltunya.validation.ResourcePattern
+import ru.boltunya.validation.InputFormat
+import ru.boltunya.validation.InputRule
 
 @Serializable
 data class TelegramCredentials(
     @field:Positive
     val apiId: Int,
-    @field:ResourcePattern("common/credentials-hash")
+    @field:InputFormat(InputRule.CREDENTIALS_HASH)
     val apiHash: String,
-    @field:ResourcePattern("common/credentials-phone")
+    @field:InputFormat(InputRule.CREDENTIALS_PHONE)
     val phone: String,
 )

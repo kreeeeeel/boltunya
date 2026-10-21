@@ -47,9 +47,7 @@ class LiveStyleProfileTest {
                             ownerSummary = "Пишет коротко, со строчной буквы, без официальных оборотов.",
                         ),
                     )
-                    val valid = case.getValue("expected").jsonArray.all {
-                        Regex(it.jsonPrimitive.content, RegexOption.IGNORE_CASE).containsMatchIn(reply.text)
-                    }
+                    val valid = ReplyExpectation().checks(case.getValue("expected").jsonObject, reply.text).all { it }
                     if (!valid) failures.add(case.getValue("id").jsonPrimitive.content)
                     add(
                         buildJsonObject {

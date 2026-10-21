@@ -36,7 +36,7 @@ class SearchEndpointTest {
         val ollama = AiTestServices("http://127.0.0.1:1")
         TestSearchMcpServer().start().use { mcp ->
             val provider = ExaMcpSearchClient(
-                SearchCredentialStore(directory, ResourceCatalog()),
+                SearchCredentialStore(directory),
                 ExaResultParser(ResourceCatalog(), PublicPageReader()),
                 mcp.origin,
                 "/mcp",

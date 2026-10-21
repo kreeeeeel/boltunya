@@ -1,5 +1,6 @@
 package ru.boltunya.memory
 
+import jakarta.inject.Provider
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -126,6 +127,7 @@ class MemoryFactsMigrationTest {
                 ModelInference(),
                 clock,
                 automated,
+                queueProvider = Provider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 val context = coordinator.context(ChatRule(useMemory = false), telegram.messages)
                 assertEquals("Ручная общая заметка  \n", context.globalNotes)

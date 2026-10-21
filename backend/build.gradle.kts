@@ -15,10 +15,13 @@ repositories {
 
 dependencies {
     implementation("org.springframework.ai:spring-ai-ollama:2.0.1")
+    implementation("org.springframework.ai:spring-ai-openai:2.0.1")
     implementation("com.google.inject:guice:7.0.0")
     implementation("com.github.oshi:oshi-core:7.7.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     implementation("org.jsoup:jsoup:1.23.2")
+    implementation("org.commonmark:commonmark:0.30.0")
+    implementation("org.commonmark:commonmark-ext-autolink:0.30.0")
     implementation("io.modelcontextprotocol.sdk:mcp:2.1.0")
     implementation(platform("it.tdlight:tdlight-java-bom:3.5.7+td.1.8.68"))
     implementation("it.tdlight:tdlight-java")

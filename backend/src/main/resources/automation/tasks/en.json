@@ -1,0 +1,5 @@
+{
+  "instructions": ["write", "generate", "give", "solve", "create"],
+  "tasks": ["recipe", "code", "script", "essay", "homework", "equation"],
+  "taskPrefixes": []
+}

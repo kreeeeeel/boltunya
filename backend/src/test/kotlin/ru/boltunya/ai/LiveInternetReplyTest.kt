@@ -57,8 +57,10 @@ class LiveInternetReplyTest {
                 }
                 if (incoming.startsWith("Найди последнюю стабильную")) {
                     val page = PublicPageReader().read("https://kotlinlang.org/docs/releases.html")
-                    val version = assertNotNull(Regex("Latest Kotlin version:\\s*(\\d+\\.\\d+\\.\\d+)").find(page))
-                    assertTrue(reply.text.contains(version.groupValues[1]), reply.text)
+                    val version = page.substringAfter("Latest Kotlin version:", "").trimStart()
+                        .takeWhile { it.isDigit() || it == '.' }.trimEnd('.')
+                    assertTrue(version.split('.').size == 3 && version.all { it.isDigit() || it == '.' }, page)
+                    assertTrue(reply.text.contains(version), reply.text)
                 }
             }
         }

@@ -16,14 +16,36 @@ private val MODEL_INACTIVITY_TIMEOUT = Duration.ofMinutes(10)
 
 /** Active local inference may run as long as needed; only a stalled stream times out. */
 class ModelResponseStream(private val inactivityTimeout: Duration = MODEL_INACTIVITY_TIMEOUT) {
-    fun read(chunks: Flux<ChatResponse>, attempt: AttemptTrace? = null): ChatResponse {
+    fun read(
+        chunks: Flux<ChatResponse>,
+        attempt: AttemptTrace? = null,
+        idleTimeout: Duration = inactivityTimeout,
+        totalTimeout: Duration = Duration.ZERO,
+    ): ChatResponse {
         val text = StringBuilder()
         val thinking = StringBuilder()
+        val reasoning = AtomicReference("")
+        val refusal = StringBuilder()
         val last = AtomicReference<ChatResponse>()
-        chunks.timeout(inactivityTimeout).doOnNext { chunk ->
+        val generation = AtomicReference<ChatGenerationMetadata>()
+        val deadline = if (totalTimeout.isZero) Long.MAX_VALUE else System.nanoTime() + totalTimeout.toNanos()
+        val timed = if (totalTimeout.isZero) {
+            chunks
+        } else {
+            chunks.timeout(
+                reactor.core.publisher.Mono.delay(totalTimeout),
+            ) { reactor.core.publisher.Mono.delay(Duration.ofNanos(maxOf(1, deadline - System.nanoTime()))) }
+        }
+        timed.timeout(idleTimeout).doOnNext { chunk ->
             last.set(chunk)
+            if (chunk.result?.metadata?.finishReason.orEmpty().isNotBlank()) {
+                generation.set(chunk.result?.metadata)
+            }
             text.append(chunk.result?.output?.text.orEmpty())
             thinking.append(chunk.result?.output?.metadata?.get("thinking") as? String ?: "")
+            val cumulativeReasoning = chunk.result?.output?.metadata?.get("reasoningContent") as? String
+            if (cumulativeReasoning != null) reasoning.set(cumulativeReasoning)
+            refusal.append(chunk.result?.output?.metadata?.get("refusal") as? String ?: "")
             attempt?.append(chunk)
         }.onErrorMap(TimeoutException::class.java) { EngineUnavailableException(it) }.blockLast()
         val response = last.get() ?: throw EmptyModelReplyException()
@@ -31,8 +53,13 @@ class ModelResponseStream(private val inactivityTimeout: Duration = MODEL_INACTI
             listOf(
                 Generation(
                     AssistantMessage.builder().content(text.toString())
-                        .properties(mapOf("thinking" to thinking.toString())).build(),
-                    response.result?.metadata ?: ChatGenerationMetadata.NULL,
+                        .properties(
+                            mapOf(
+                                "thinking" to (thinking.toString() + reasoning.get()),
+                                "refusal" to refusal.toString(),
+                            ),
+                        ).build(),
+                    generation.get() ?: response.result?.metadata ?: ChatGenerationMetadata.NULL,
                 ),
             ),
             response.metadata,

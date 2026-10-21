@@ -13,7 +13,7 @@ import ru.boltunya.exception.impl.InvalidModelManifestException
 import ru.boltunya.exception.impl.InvalidModelSizeException
 import ru.boltunya.exception.impl.ModelRegistryUnavailableException
 import ru.boltunya.exception.impl.UnknownCatalogModelException
-import ru.boltunya.resources.ResourceCatalog
+import ru.boltunya.validation.InputRule
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -29,7 +29,6 @@ class RegistryModelInstaller(
     ),
     private val registry: String = "https://registry.ollama.ai",
     private val models: ModelCatalog = ModelCatalog(),
-    private val resources: ResourceCatalog = ResourceCatalog(),
     private val http: HttpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER)
         .version(HttpClient.Version.HTTP_1_1).connectTimeout(Duration.ofSeconds(15)).build(),
     private val downloader: RegistryBlobDownloader = RegistryBlobDownloader(http),
@@ -60,7 +59,7 @@ class RegistryModelInstaller(
         Files.createDirectories(blobRoot)
         layers.stream().forEach { layer ->
             val digest = layer.jsonObject["digest"]?.jsonPrimitive?.contentOrNull.orEmpty()
-            if (!resources.regex("common/RegistryModelInstaller-2").matches(digest)) {
+            if (!InputRule.MODEL_DIGEST.accepts(digest)) {
                 throw InvalidModelDigestException()
             }
             val target = blobRoot.resolve(digest.replace(':', '-'))

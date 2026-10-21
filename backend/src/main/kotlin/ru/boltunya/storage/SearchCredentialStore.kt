@@ -3,7 +3,7 @@ package ru.boltunya.storage
 import com.sun.jna.platform.win32.Crypt32Util
 import jakarta.inject.Inject
 import ru.boltunya.exception.impl.InvalidSearchKeyException
-import ru.boltunya.resources.ResourceCatalog
+import ru.boltunya.validation.InputRule
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicLong
 
 private const val KEY_FILE = "search.credentials"
 
-class SearchCredentialStore @Inject constructor(directory: Path, private val resources: ResourceCatalog) {
+class SearchCredentialStore @Inject constructor(directory: Path) {
     private val file = directory.resolve(KEY_FILE)
     private val revision = AtomicLong()
 
@@ -22,7 +22,7 @@ class SearchCredentialStore @Inject constructor(directory: Path, private val res
     @Synchronized
     fun save(value: String) {
         val key = value.trim()
-        if (!resources.regex("common/exa-api-key").matches(key)) throw InvalidSearchKeyException()
+        if (!InputRule.SEARCH_KEY.accepts(key)) throw InvalidSearchKeyException()
         Files.createDirectories(file.parent)
         val temporary = file.resolveSibling("$KEY_FILE.tmp")
         Files.write(temporary, Crypt32Util.cryptProtectData(key.toByteArray(Charsets.UTF_8)))

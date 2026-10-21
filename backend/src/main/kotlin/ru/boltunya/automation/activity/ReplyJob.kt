@@ -1,6 +1,8 @@
 package ru.boltunya.automation.activity
 
+import ru.boltunya.automation.MemoryQueueTask
 import ru.boltunya.domain.ChatMessage
+import ru.boltunya.domain.ReplyResult
 import java.util.concurrent.atomic.AtomicBoolean
 
 class ReplyJob(
@@ -10,9 +12,13 @@ class ReplyJob(
     val readyAt: Long,
     val waitUntil: Long,
     var order: Long,
+    val draft: (() -> ReplyResult)? = null,
+    val accountId: String = "",
+    val memory: MemoryQueueTask? = null,
 ) {
     val cancelled = AtomicBoolean()
     var priority = false
+    var preempted = false
 
     @Volatile var delivering = false
 

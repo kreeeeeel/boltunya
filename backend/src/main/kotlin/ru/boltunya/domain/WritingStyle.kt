@@ -2,11 +2,12 @@ package ru.boltunya.domain
 
 import jakarta.validation.constraints.Size
 import kotlinx.serialization.Serializable
-import ru.boltunya.validation.ResourcePattern
+import ru.boltunya.validation.InputFormat
+import ru.boltunya.validation.InputRule
 
 @Serializable
 data class WritingStyle(
-    @field:ResourcePattern("common/style-id")
+    @field:InputFormat(InputRule.STYLE_ID)
     val id: String,
     @field:Size(min = 1, max = 40)
     val name: String,

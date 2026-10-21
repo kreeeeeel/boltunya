@@ -1,5 +1,6 @@
 package ru.boltunya.memory
 
+import jakarta.inject.Provider
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.boltunya.ai.ModelInference
@@ -59,6 +60,7 @@ class MemoryCoordinatorShutdownTest {
                 ModelInference(),
                 Clock.systemUTC(),
                 automated,
+                queueProvider = Provider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 coordinator.refresh("42", immediate = true)
                 assertTrue(started.await(3, TimeUnit.SECONDS))

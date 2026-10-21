@@ -1,1 +1,0 @@
-\b(?:i\s+need\s+to|i\s+(?:should|must))\s+(?:compose|write|draft|formulate).{0,100}(?:reply|response|message).{0,80}(?:owner|on\s+behalf)|\b(?:the\s+)?(?:owner|user)\s+(?:should|must)\s+(?:respond|reply)|\b(?:the\s+)?(?:interlocutor.s|recipient.s)\s+(?:last|latest)\s+message

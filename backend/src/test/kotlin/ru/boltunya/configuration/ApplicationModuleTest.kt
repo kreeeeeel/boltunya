@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.boltunya.ai.EngineManager
 import ru.boltunya.application.ApplicationRuntime
+import ru.boltunya.automation.MemoryWorkQueue
 import ru.boltunya.automation.PersonalReplyGenerator
 import ru.boltunya.automation.ReplyCoordinator
 import ru.boltunya.domain.ChatRule
@@ -60,6 +61,10 @@ class ApplicationModuleTest {
             assertSame(
                 injector.getInstance(ReplyCoordinator::class.java),
                 injector.getInstance(ReplyCoordinator::class.java),
+            )
+            assertSame(
+                injector.getInstance(ReplyCoordinator::class.java),
+                injector.getInstance(MemoryWorkQueue::class.java),
             )
             assertSame(
                 injector.getInstance(LocalWebServer::class.java),

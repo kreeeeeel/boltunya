@@ -22,6 +22,8 @@ class SearchResultSelector(
     private val resources: ResourceCatalog = ResourceCatalog(),
     private val urls: ResearchUrl = ResearchUrl(),
     private val clock: Clock = Clock.systemUTC(),
+    private val intents: ResearchTerms = ResearchTerms(resources),
+    private val words: ResearchWords = ResearchWords(),
 ) {
     private val newsGeneral = Json.decodeFromString<List<String>>(
         resources.text("search/news-general-terms.json"),
@@ -34,7 +36,7 @@ class SearchResultSelector(
         .flatMap { (canonical, terms) -> (terms + canonical).map { stem(it) to canonical } }.toMap()
 
     fun select(query: String, candidates: List<ResearchSource>): List<ResearchSource> {
-        val news = resources.regex("intent/news").containsMatchIn(query)
+        val news = intents.contains("news", query)
         val terms = tokens(query).filterNot { token -> news && newsGeneral.any { token.startsWith(it) } }.toSet()
         val hosts = mutableMapOf<String, Int>()
         return candidates.map { it.copy(url = urls.canonical(it.url)) }
@@ -77,8 +79,8 @@ class SearchResultSelector(
         return title * 3 + body + coverage * 4 + article
     }
 
-    private fun tokens(text: String): Set<String> = resources.regex("common/research-token")
-        .findAll(text.take(MAX_SOURCE_TEXT)).map { aliases[stem(it.value)] ?: stem(it.value) }
+    private fun tokens(text: String): Set<String> = words.tokens(text.take(MAX_SOURCE_TEXT))
+        .map { aliases[stem(it)] ?: stem(it) }
         .filter { it.length >= MIN_TOKEN_LENGTH && it.any(Char::isLetter) && it !in stopwords }.toSet()
 
     private fun stem(value: String): String = value.lowercase(Locale.ROOT).take(STEM_LENGTH)

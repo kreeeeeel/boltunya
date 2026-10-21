@@ -19,14 +19,18 @@ class TelegramMessageViewTest {
             firstName = "Anna"
             lastName = "Miller"
             profilePhoto = TdApi.ProfilePhoto().apply { small = TdApi.File().apply { id = 21 } }
+            usernames = TdApi.Usernames().apply { activeUsernames = arrayOf("anna_example", "another_name") }
         }
         val mapped = view.map(message(TdApi.MessageSenderUser(10)))
         assertEquals(true, mapped.group)
         assertEquals("Anna Miller", mapped.senderName)
         assertEquals("user:10", mapped.senderId)
+        assertEquals("anna_example", mapped.senderUsername)
         assertEquals("/api/media/21", mapped.senderAvatarUrl)
         cache.users[10]?.profilePhoto = null
+        cache.users[10]?.usernames = null
         assertEquals("", view.map(message(TdApi.MessageSenderUser(10))).senderAvatarUrl)
+        assertEquals("", view.map(message(TdApi.MessageSenderUser(10))).senderUsername)
     }
 
     @Test

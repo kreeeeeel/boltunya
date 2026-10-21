@@ -836,229 +836,6 @@
         }
       }
     },
-    "/api/flows": {
-      "get": {
-        "operationId": "getFlows",
-        "tags": [
-          "Flows"
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AutomationFlow"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/flows/{flowId}": {
-      "parameters": [
-        {
-          "name": "flowId",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "put": {
-        "operationId": "saveFlow",
-        "tags": [
-          "Flows"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AutomationFlow"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": {
-                      "type": "boolean"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "operationId": "deleteFlow",
-        "tags": [
-          "Flows"
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": {
-                      "type": "boolean"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/flows/{flowId}/test": {
-      "parameters": [
-        {
-          "name": "flowId",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string"
-          }
-        }
-      ],
-      "post": {
-        "operationId": "previewFlow",
-        "tags": [
-          "Flows"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "text"
-                ],
-                "properties": {
-                  "text": {
-                    "type": "string",
-                    "maxLength": 4096
-                  },
-                  "flow": {
-                    "$ref": "#/components/schemas/AutomationFlow"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Reply"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/memory": {
       "get": {
         "tags": [
@@ -2384,6 +2161,1251 @@
           }
         }
       }
+    },
+    "/api/model-profiles": {
+      "get": {
+        "operationId": "modelProfiles",
+        "tags": [
+          "model-profiles"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelProfileReport"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createModelProfile",
+        "tags": [
+          "model-profiles"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelProfileUpdate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/model-profiles/{id}": {
+      "put": {
+        "operationId": "updateModelProfile",
+        "tags": [
+          "model-profiles"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelProfileUpdate"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "deleteModelProfile",
+        "tags": [
+          "model-profiles"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/api/model-profiles/{id}/test": {
+      "post": {
+        "operationId": "testModelProfile",
+        "tags": [
+          "model-profiles"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelProfileTestResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelProfileTestRequest"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/api/model-routing": {
+      "get": {
+        "operationId": "modelRouting",
+        "tags": [
+          "model-profiles"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelTaskRouting"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "saveModelRouting",
+        "tags": [
+          "model-profiles"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelTaskRouting"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelTaskRouting"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/appearance": {
+      "get": {
+        "operationId": "appearance",
+        "responses": {
+          "200": {
+            "description": "Appearance preferences",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppearanceSettings"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid preferences",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "saveAppearance",
+        "responses": {
+          "200": {
+            "description": "Appearance preferences",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppearanceSettings"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid preferences",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppearanceSettings"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/uploads": {
+      "post": {
+        "operationId": "uploadFile",
+        "tags": [
+          "media"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadedFile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-File-Name",
+            "required": true,
+            "description": "UTF-8 filename encoded with encodeURIComponent. Path separators are sanitized.",
+            "schema": {
+              "type": "string",
+              "maxLength": 2000
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "video/mp4": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/uploads/{id}": {
+      "delete": {
+        "operationId": "deleteUpload",
+        "tags": [
+          "media"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/stickers": {
+      "get": {
+        "operationId": "stickers",
+        "tags": [
+          "media"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StickerCatalog"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stickers/sets/{id}": {
+      "get": {
+        "operationId": "stickerSet",
+        "tags": [
+          "media"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StickerItem"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/preview/jobs": {
+      "post": {
+        "operationId": "enqueuePreviewJob",
+        "tags": [
+          "preview"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewJobRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Queued draft job; it never sends Telegram messages",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewJob"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/preview/jobs/{id}": {
+      "get": {
+        "operationId": "previewJob",
+        "tags": [
+          "preview"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Queued draft job; it never sends Telegram messages",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewJob"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chats/{chatId}/messages/{messageId}/link": {
+      "get": {
+        "operationId": "messageLink",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chatId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "messageId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageLink"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chats/{chatId}/messages/{messageId}/context": {
+      "put": {
+        "operationId": "excludeMessageContext",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chatId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "messageId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContextExclusionUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Context policy updated; Telegram message remains unchanged",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chats/{chatId}/context-exclusions": {
+      "delete": {
+        "operationId": "restoreChatContext",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chatId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Context policy updated; Telegram message remains unchanged",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chats/{chatId}/gallery": {
+      "get": {
+        "operationId": "chatGallery",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chatId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "around",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatGallery"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chats/{chatId}/attachments": {
+      "post": {
+        "operationId": "sendAttachments",
+        "tags": [
+          "media"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMediaRequest"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chatId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/chats/{chatId}/stickers": {
+      "post": {
+        "operationId": "sendSticker",
+        "tags": [
+          "media"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendStickerRequest"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chatId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -2399,7 +3421,11 @@
           "maxTokens",
           "delaySeconds",
           "creativity",
-          "emoji"
+          "emoji",
+          "modelProfileId",
+          "deliveryMode",
+          "analyzePhotos",
+          "aiStickers"
         ],
         "properties": {
           "enabled": {
@@ -2476,6 +3502,22 @@
             "type": "boolean",
             "default": true,
             "description": "Follow the global model selection unless explicitly overridden."
+          },
+          "modelProfileId": {
+            "type": "string",
+            "default": "",
+            "maxLength": 36
+          },
+          "deliveryMode": {
+            "$ref": "#/components/schemas/DeliveryMode"
+          },
+          "analyzePhotos": {
+            "type": "boolean",
+            "default": false
+          },
+          "aiStickers": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -2484,7 +3526,9 @@
         "required": [
           "paused",
           "defaultModel",
-          "rules"
+          "rules",
+          "defaultModelProfileId",
+          "deliveryMode"
         ],
         "properties": {
           "paused": {
@@ -2581,6 +3625,25 @@
             "default": "auto",
             "maxLength": 80,
             "description": "auto, cpu, or a supported NVIDIA UUID discovered by the application. Applied only on the next app-managed Ollama launch."
+          },
+          "defaultModelProfileId": {
+            "type": "string",
+            "default": "",
+            "maxLength": 36
+          },
+          "deliveryMode": {
+            "type": "string",
+            "enum": [
+              "reply",
+              "send"
+            ],
+            "default": "reply"
+          },
+          "maxParallelTasks": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4,
+            "default": 1
           }
         }
       },
@@ -2656,6 +3719,12 @@
           },
           "lastMessageSender": {
             "type": "string"
+          },
+          "typingUsers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChatTypingUser"
+            }
           }
         }
       },
@@ -2707,7 +3776,7 @@
           },
           "automated": {
             "type": "boolean",
-            "description": "Sent by this application’s AI; metadata is visible only in the local interface."
+            "description": "Sent by this application; AI metadata is visible only in the local interface."
           },
           "group": {
             "type": "boolean"
@@ -2739,6 +3808,12 @@
           "deletedAt": {
             "type": "integer",
             "format": "int64"
+          },
+          "contextExcluded": {
+            "type": "boolean"
+          },
+          "senderUsername": {
+            "type": "string"
           }
         }
       },
@@ -3002,6 +4077,14 @@
             ],
             "nullable": true,
             "default": null
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "reply",
+              "draft",
+              "memory"
+            ]
           }
         }
       },
@@ -3094,6 +4177,14 @@
           },
           "tokensPerSecond": {
             "type": "number"
+          },
+          "model": {
+            "type": "string",
+            "default": ""
+          },
+          "stickerId": {
+            "type": "string",
+            "default": ""
           }
         }
       },
@@ -3179,6 +4270,22 @@
             "type": "string",
             "maxLength": 80,
             "description": "auto, cpu, or a supported discovered NVIDIA UUID. Saves a preference without stopping any process."
+          },
+          "defaultModelProfileId": {
+            "type": "string",
+            "maxLength": 36
+          },
+          "deliveryMode": {
+            "type": "string",
+            "enum": [
+              "reply",
+              "send"
+            ]
+          },
+          "maxParallelTasks": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4
           }
         }
       },
@@ -3316,7 +4423,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "pattern": "^[a-zA-Z0-9-]{1,64}$"
+            "maxLength": 120
           },
           "name": {
             "type": "string",
@@ -3425,125 +4532,6 @@
           "gpuMemoryTotalBytes": {
             "type": "integer",
             "nullable": true
-          }
-        }
-      },
-      "FlowNode": {
-        "type": "object",
-        "required": [
-          "id",
-          "kind",
-          "text",
-          "key",
-          "operation",
-          "match",
-          "x",
-          "y"
-        ],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "kind": {
-            "type": "string",
-            "enum": [
-              "command",
-              "agent",
-              "reply",
-              "store",
-              "condition"
-            ]
-          },
-          "text": {
-            "type": "string"
-          },
-          "key": {
-            "type": "string"
-          },
-          "operation": {
-            "type": "string",
-            "enum": [
-              "get",
-              "set",
-              "delete"
-            ]
-          },
-          "match": {
-            "type": "string",
-            "enum": [
-              "prefix",
-              "equals",
-              "contains"
-            ]
-          },
-          "x": {
-            "type": "number"
-          },
-          "y": {
-            "type": "number"
-          }
-        }
-      },
-      "FlowEdge": {
-        "type": "object",
-        "required": [
-          "id",
-          "source",
-          "target",
-          "output"
-        ],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "source": {
-            "type": "string"
-          },
-          "target": {
-            "type": "string"
-          },
-          "output": {
-            "type": "string"
-          }
-        }
-      },
-      "AutomationFlow": {
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "enabled",
-          "chatIds",
-          "nodes",
-          "edges"
-        ],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "enabled": {
-            "type": "boolean"
-          },
-          "chatIds": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "nodes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/FlowNode"
-            }
-          },
-          "edges": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/FlowEdge"
-            }
           }
         }
       },
@@ -3766,6 +4754,14 @@
           "running": {
             "type": "integer",
             "format": "int64"
+          },
+          "maxParallelTasks": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4
+          },
+          "activeTasks": {
+            "type": "integer"
           }
         }
       },
@@ -4196,6 +5192,827 @@
             "type": "boolean",
             "default": true,
             "description": "Only NVIDIA UUIDs are currently selectable explicitly. AMD and Intel are left to automatic Ollama discovery."
+          }
+        }
+      },
+      "ModelProfileOptions": {
+        "type": "object",
+        "required": [
+          "stop",
+          "maxOutputTokens",
+          "contextWindow",
+          "reasoningTokens",
+          "reasoningEffort",
+          "thinking",
+          "connectTimeoutSeconds",
+          "idleTimeoutSeconds",
+          "totalTimeoutSeconds",
+          "keepAliveMinutes"
+        ],
+        "properties": {
+          "temperature": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 2
+          },
+          "topP": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 1
+          },
+          "topK": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "presencePenalty": {
+            "type": "number",
+            "nullable": true,
+            "minimum": -2,
+            "maximum": 2
+          },
+          "frequencyPenalty": {
+            "type": "number",
+            "nullable": true,
+            "minimum": -2,
+            "maximum": 2
+          },
+          "repeatPenalty": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 2
+          },
+          "seed": {
+            "type": "integer",
+            "nullable": true
+          },
+          "stop": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "maxItems": 16,
+            "default": []
+          },
+          "maxOutputTokens": {
+            "type": "integer",
+            "default": 2048,
+            "minimum": 32,
+            "maximum": 131072
+          },
+          "contextWindow": {
+            "type": "integer",
+            "default": 8192,
+            "minimum": 512,
+            "maximum": 2097152
+          },
+          "reasoningTokens": {
+            "type": "integer",
+            "default": 2048,
+            "minimum": 0,
+            "maximum": 65536
+          },
+          "reasoningEffort": {
+            "type": "string",
+            "default": "default",
+            "maxLength": 40
+          },
+          "thinking": {
+            "type": "string",
+            "enum": [
+              "default",
+              "enabled",
+              "disabled"
+            ],
+            "default": "default"
+          },
+          "connectTimeoutSeconds": {
+            "type": "integer",
+            "default": 10,
+            "minimum": 1,
+            "maximum": 120
+          },
+          "idleTimeoutSeconds": {
+            "type": "integer",
+            "default": 600,
+            "minimum": 10,
+            "maximum": 3600
+          },
+          "totalTimeoutSeconds": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 86400
+          },
+          "keepAliveMinutes": {
+            "type": "integer",
+            "default": 20,
+            "minimum": 0,
+            "maximum": 1440
+          }
+        }
+      },
+      "ModelCapabilities": {
+        "type": "object",
+        "required": [
+          "streaming",
+          "vision",
+          "structuredOutput",
+          "reasoning",
+          "temperature",
+          "topP",
+          "topK",
+          "penalties",
+          "tokenLimit"
+        ],
+        "properties": {
+          "streaming": {
+            "type": "boolean",
+            "default": true
+          },
+          "vision": {
+            "type": "boolean",
+            "default": false
+          },
+          "structuredOutput": {
+            "type": "boolean",
+            "default": false
+          },
+          "reasoning": {
+            "type": "boolean",
+            "default": false
+          },
+          "temperature": {
+            "type": "boolean",
+            "default": true
+          },
+          "topP": {
+            "type": "boolean",
+            "default": true
+          },
+          "topK": {
+            "type": "boolean",
+            "default": false
+          },
+          "penalties": {
+            "type": "boolean",
+            "default": false
+          },
+          "tokenLimit": {
+            "type": "string",
+            "enum": [
+              "max_tokens",
+              "max_completion_tokens"
+            ],
+            "default": "max_tokens"
+          }
+        }
+      },
+      "ModelProfile": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "provider",
+          "preset",
+          "baseUrl",
+          "model",
+          "enabled",
+          "options",
+          "capabilities",
+          "apiKeyConfigured"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "ollama",
+              "openai-compatible"
+            ]
+          },
+          "preset": {
+            "type": "string",
+            "enum": [
+              "ollama",
+              "openai",
+              "deepseek",
+              "openrouter",
+              "groq",
+              "custom"
+            ]
+          },
+          "baseUrl": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "options": {
+            "$ref": "#/components/schemas/ModelProfileOptions"
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/ModelCapabilities"
+          },
+          "apiKeyConfigured": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "ModelProfileUpdate": {
+        "type": "object",
+        "required": [
+          "name",
+          "provider",
+          "preset",
+          "baseUrl",
+          "model",
+          "enabled",
+          "options",
+          "capabilities"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "ollama",
+              "openai-compatible"
+            ]
+          },
+          "preset": {
+            "type": "string",
+            "enum": [
+              "ollama",
+              "openai",
+              "deepseek",
+              "openrouter",
+              "groq",
+              "custom"
+            ]
+          },
+          "baseUrl": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "options": {
+            "$ref": "#/components/schemas/ModelProfileOptions"
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/ModelCapabilities"
+          },
+          "apiKey": {
+            "type": "string",
+            "maxLength": 8192,
+            "writeOnly": true,
+            "description": "Omitted or empty keeps the existing key. Never returned."
+          },
+          "clearApiKey": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "ModelProviderPreset": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "provider",
+          "baseUrl",
+          "model",
+          "apiKeyRequired",
+          "defaultsOptions",
+          "defaultCapabilities"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "default": ""
+          },
+          "name": {
+            "type": "string",
+            "default": ""
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "ollama",
+              "openai-compatible"
+            ]
+          },
+          "baseUrl": {
+            "type": "string",
+            "default": ""
+          },
+          "model": {
+            "type": "string",
+            "default": ""
+          },
+          "apiKeyRequired": {
+            "type": "boolean",
+            "default": false
+          },
+          "defaultsOptions": {
+            "$ref": "#/components/schemas/ModelProfileOptions"
+          },
+          "defaultCapabilities": {
+            "$ref": "#/components/schemas/ModelCapabilities"
+          }
+        }
+      },
+      "ModelProfileReport": {
+        "type": "object",
+        "required": [
+          "profiles",
+          "presets"
+        ],
+        "properties": {
+          "profiles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModelProfile"
+            }
+          },
+          "presets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModelProviderPreset"
+            }
+          }
+        }
+      },
+      "ModelTaskRouting": {
+        "type": "object",
+        "required": [
+          "enabled",
+          "parallelIndependentTasks",
+          "replyProfileId",
+          "memoryProfileId",
+          "researchProfileId",
+          "visionProfileId"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": false
+          },
+          "parallelIndependentTasks": {
+            "type": "boolean",
+            "default": false
+          },
+          "replyProfileId": {
+            "type": "string",
+            "default": "",
+            "maxLength": 36
+          },
+          "memoryProfileId": {
+            "type": "string",
+            "default": "",
+            "maxLength": 36
+          },
+          "researchProfileId": {
+            "type": "string",
+            "default": "",
+            "maxLength": 36
+          },
+          "visionProfileId": {
+            "type": "string",
+            "default": "",
+            "maxLength": 36
+          }
+        }
+      },
+      "ModelProfileTestResult": {
+        "type": "object",
+        "required": [
+          "ok",
+          "code",
+          "message",
+          "durationMs",
+          "inputTokens",
+          "outputTokens",
+          "finishReason",
+          "preview"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "default": false
+          },
+          "code": {
+            "type": "string",
+            "default": ""
+          },
+          "message": {
+            "type": "string",
+            "default": ""
+          },
+          "durationMs": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "inputTokens": {
+            "type": "integer"
+          },
+          "outputTokens": {
+            "type": "integer"
+          },
+          "finishReason": {
+            "type": "string",
+            "default": ""
+          },
+          "preview": {
+            "type": "string",
+            "default": ""
+          }
+        }
+      },
+      "DeliveryMode": {
+        "type": "string",
+        "enum": [
+          "inherit",
+          "reply",
+          "send"
+        ]
+      },
+      "ModelProfileTestRequest": {
+        "type": "object",
+        "required": [
+          "confirmGeneration"
+        ],
+        "properties": {
+          "confirmGeneration": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "AppearanceSettings": {
+        "type": "object",
+        "required": [
+          "mode",
+          "tokens",
+          "css"
+        ],
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "light",
+              "dark",
+              "system"
+            ],
+            "default": "system"
+          },
+          "tokens": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "maxLength": 9
+            },
+            "maxProperties": 8
+          },
+          "css": {
+            "type": "string",
+            "maxLength": 20000,
+            "default": ""
+          }
+        }
+      },
+      "UploadedFile": {
+        "type": "object",
+        "required": [
+          "id",
+          "fileName",
+          "mimeType",
+          "size"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "SendMediaRequest": {
+        "type": "object",
+        "required": [
+          "uploadIds",
+          "kind"
+        ],
+        "properties": {
+          "uploadIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 1,
+            "maxItems": 10
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "media",
+              "photo",
+              "video",
+              "document"
+            ]
+          },
+          "caption": {
+            "type": "string",
+            "maxLength": 1024
+          }
+        }
+      },
+      "SendStickerRequest": {
+        "type": "object",
+        "required": [
+          "stickerId"
+        ],
+        "properties": {
+          "stickerId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          }
+        }
+      },
+      "StickerItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "emoji",
+          "setId",
+          "media",
+          "width",
+          "height"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "emoji": {
+            "type": "string"
+          },
+          "setId": {
+            "type": "string"
+          },
+          "media": {
+            "$ref": "#/components/schemas/MediaAttachment"
+          },
+          "width": {
+            "type": "integer"
+          },
+          "height": {
+            "type": "integer"
+          }
+        }
+      },
+      "StickerSet": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "name",
+          "count"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "thumbnail": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MediaAttachment"
+              }
+            ],
+            "nullable": true
+          },
+          "count": {
+            "type": "integer"
+          }
+        }
+      },
+      "StickerCatalog": {
+        "type": "object",
+        "required": [
+          "recent",
+          "favorites",
+          "sets"
+        ],
+        "properties": {
+          "recent": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StickerItem"
+            }
+          },
+          "favorites": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StickerItem"
+            }
+          },
+          "sets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StickerSet"
+            }
+          }
+        }
+      },
+      "PreviewJob": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "result",
+          "error"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "generating",
+              "ready",
+              "error",
+              "cancelled"
+            ]
+          },
+          "result": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Reply"
+              }
+            ],
+            "nullable": true
+          },
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "PreviewJobRequest": {
+        "type": "object",
+        "required": [
+          "chatId"
+        ],
+        "properties": {
+          "chatId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rule": {
+            "$ref": "#/components/schemas/ChatRule"
+          },
+          "text": {
+            "type": "string",
+            "description": "Legacy compatibility; real chat history is used for draft generation."
+          },
+          "messageId": {
+            "type": "string",
+            "description": "Optional incoming message ID. History is limited through this real message; no synthetic message is appended."
+          }
+        }
+      },
+      "ChatGallery": {
+        "type": "object",
+        "required": [
+          "messages",
+          "hasMoreBefore",
+          "hasMoreAfter"
+        ],
+        "properties": {
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            }
+          },
+          "hasMoreBefore": {
+            "type": "boolean"
+          },
+          "hasMoreAfter": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MessageLink": {
+        "type": "object",
+        "required": [
+          "url"
+        ],
+        "properties": {
+          "url": {
+            "type": "string"
+          }
+        }
+      },
+      "ChatTypingUser": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "action"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "typing",
+              "uploadPhoto",
+              "uploadVideo",
+              "uploadDocument",
+              "recordVoice",
+              "uploadVoice",
+              "recordVideo",
+              "uploadVideoNote",
+              "chooseSticker"
+            ]
+          }
+        }
+      },
+      "ContextExclusionUpdate": {
+        "type": "object",
+        "required": [
+          "scope",
+          "excluded"
+        ],
+        "properties": {
+          "scope": {
+            "type": "string",
+            "enum": [
+              "message",
+              "through",
+              "from"
+            ]
+          },
+          "excluded": {
+            "type": "boolean"
           }
         }
       }

@@ -18,7 +18,7 @@ class FakeTelegramGateway : TelegramGateway {
     var beforeSend: () -> Unit = {}
     var messages = listOf(ChatMessage("1", "42", "Привет", false, 0))
 
-    override fun status(): TelegramStatus = TelegramStatus(state = "ready")
+    override fun status(): TelegramStatus = TelegramStatus(state = "ready", userId = "100")
     override fun connect(credentials: TelegramCredentials) = Unit
     override fun restore() = Unit
     override fun submit(value: String) = Unit

@@ -23,18 +23,12 @@ class SelectedStyleRequestTest {
     @TempDir lateinit var directory: Path
 
     @Test
-    fun `named style reaches initial and retry system requests and its explicit language passes validation`() {
+    fun `named style follows factual memory and final text is accepted without wording retries`() {
         val requests = mutableListOf<JsonObject>()
         val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
         server.createContext("/api/chat") { exchange ->
             requests.add(Json.parseToJsonElement(String(exchange.requestBody.readAllBytes())).jsonObject)
-            val text = if (requests.size ==
-                1
-            ) {
-                "Я ИИ-помощник, могу помочь с чем-то другим"
-            } else {
-                "Всё нормально, сегодня спокойно."
-            }
+            val text = "Всё нормально, сегодня спокойно."
             val bytes = ("{\"message\":{\"content\":" + Json.encodeToString(text) + "}}").toByteArray()
             exchange.responseHeaders.set("Content-Type", "application/json")
             exchange.sendResponseHeaders(200, bytes.size.toLong())
@@ -52,7 +46,7 @@ class SelectedStyleRequestTest {
                 memory = MemoryContext(summary = "Собеседник — друг со школы"),
             )
             assertEquals("Всё нормально, сегодня спокойно.", result.text)
-            assertEquals(2, requests.size)
+            assertEquals(1, requests.size)
             requests.stream().forEach { request ->
                 val system = request.getValue(
                     "messages",

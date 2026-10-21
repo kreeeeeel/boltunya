@@ -3,17 +3,13 @@ package ru.boltunya.http
 import com.sun.net.httpserver.HttpExchange
 import jakarta.inject.Inject
 import ru.boltunya.domain.MediaFile
-import ru.boltunya.exception.InvalidInputException
 import ru.boltunya.exception.impl.AnimationTooLargeException
-import ru.boltunya.resources.ResourceCatalog
 import java.net.URLEncoder
 import java.nio.file.Files
 import java.util.stream.Stream
 import java.util.zip.GZIPInputStream
 
 private const val MAX_ANIMATION_BYTES = 2 * 1024 * 1024
-
-private val resources = ResourceCatalog()
 
 class MediaResponder @Inject constructor() {
     fun respond(exchange: HttpExchange, media: MediaFile) {
@@ -39,10 +35,10 @@ class MediaResponder @Inject constructor() {
         }
         val size = Files.size(media.path)
         val range = exchange.requestHeaders.getFirst("Range")
-        val match = range?.let { resources.regex("common/MediaResponder-1").matchEntire(it) }
-        val start = match?.groupValues?.get(1)?.toLongOrNull() ?: 0
-        val end = match?.groupValues?.get(2)?.toLongOrNull()?.coerceAtMost(size - 1) ?: (size - 1)
-        if ((range != null && match == null) || start >= size || end < start) {
+        val bounds = range?.let { byteRange(it, size) }
+        val start = bounds?.first ?: 0
+        val end = bounds?.last ?: (size - 1)
+        if ((range != null && bounds == null) || start >= size || end < start) {
             exchange.responseHeaders.set("Content-Range", "bytes */$size")
             exchange.sendResponseHeaders(416, -1)
             return
@@ -68,5 +64,19 @@ class MediaResponder @Inject constructor() {
                     remaining -= count
                 }
         }
+    }
+
+    private fun byteRange(value: String, size: Long): LongRange? {
+        if (!value.startsWith("bytes=")) return null
+        val parts = value.substring(6).split('-', limit = 2)
+        if (parts.size != 2 || parts[0].isEmpty() || !parts.stream().allMatch { part ->
+                part.chars().allMatch { it in '0'.code..'9'.code }
+            }
+        ) {
+            return null
+        }
+        val start = parts[0].toLongOrNull() ?: return null
+        val end = if (parts[1].isEmpty()) size - 1 else parts[1].toLongOrNull()?.coerceAtMost(size - 1) ?: return null
+        return start..end
     }
 }

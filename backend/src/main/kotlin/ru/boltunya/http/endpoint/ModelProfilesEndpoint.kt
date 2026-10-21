@@ -1,0 +1,114 @@
+package ru.boltunya.http.endpoint
+
+import jakarta.inject.Inject
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonPrimitive
+import org.springframework.ai.chat.messages.UserMessage
+import ru.boltunya.ai.ModelInference
+import ru.boltunya.ai.model.ChatCompletionService
+import ru.boltunya.ai.profile.ModelProfile
+import ru.boltunya.ai.profile.ModelProfileReport
+import ru.boltunya.ai.profile.ModelProfileStore
+import ru.boltunya.ai.profile.ModelProfileTestResult
+import ru.boltunya.ai.profile.ModelProfileUpdate
+import ru.boltunya.ai.profile.ModelRoutingStore
+import ru.boltunya.ai.profile.ModelTargetResolver
+import ru.boltunya.ai.profile.ModelTask
+import ru.boltunya.ai.profile.ModelTaskRouting
+import ru.boltunya.automation.ReplyCoordinator
+import ru.boltunya.exception.AppException
+import ru.boltunya.exception.impl.ModelCapabilityUnavailableException
+import ru.boltunya.exception.impl.ModelProfileInUseException
+import ru.boltunya.exception.impl.ModelProviderFailedException
+import ru.boltunya.exception.impl.ModelTestConfirmationRequiredException
+import ru.boltunya.http.InputValidation
+import ru.boltunya.resources.ResourceCatalog
+import ru.boltunya.storage.SettingsStore
+
+class ModelProfilesEndpoint @Inject constructor(
+    private val json: Json,
+    private val profiles: ModelProfileStore,
+    private val routing: ModelRoutingStore,
+    private val settings: SettingsStore,
+    private val validation: InputValidation,
+    private val targets: ModelTargetResolver,
+    private val completion: ChatCompletionService,
+    private val inference: ModelInference,
+    private val resources: ResourceCatalog,
+    private val replies: ReplyCoordinator,
+) {
+    fun list(): ModelProfileReport = ModelProfileReport(profiles.list(), profiles.presets())
+
+    fun save(id: String?, body: JsonObject): ModelProfile {
+        val update = json.decodeFromJsonElement<ModelProfileUpdate>(body)
+        validation.validate(update)
+        val saved = profiles.save(id, update)
+        replies.cancelPending()
+        return saved
+    }
+
+    fun delete(id: String) {
+        profiles.get(id)
+        val current = settings.get()
+        if (current.defaultModelProfileId == id || current.rules.values.stream().anyMatch { it.modelProfileId == id } ||
+            ModelTask.entries.stream().anyMatch { routing.get().profileId(it) == id }
+        ) {
+            throw ModelProfileInUseException()
+        }
+        profiles.delete(id)
+    }
+
+    fun routing(): ModelTaskRouting = routing.get()
+
+    fun routing(body: JsonObject): ModelTaskRouting {
+        val update = json.decodeFromJsonElement<ModelTaskRouting>(body)
+        validation.validate(update)
+        ModelTask.entries.stream().forEach { task ->
+            val id = update.profileId(task)
+            if (id.isNotEmpty()) {
+                val target = targets.profile(id)
+                if (task == ModelTask.VISION && !target.capabilities.vision) throw ModelCapabilityUnavailableException()
+            }
+        }
+        replies.cancelPending()
+        return routing.save(update)
+    }
+
+    fun test(id: String, body: JsonObject): ModelProfileTestResult {
+        if (body["confirmGeneration"]?.jsonPrimitive?.booleanOrNull !=
+            true
+        ) {
+            throw ModelTestConfirmationRequiredException()
+        }
+        val target = targets.profile(id)
+        val started = System.nanoTime()
+        return try {
+            val result = inference.foreground {
+                completion.generateTarget(
+                    target,
+                    listOf(UserMessage(resources.prompt("common/provider-test"))),
+                    maxTokens = 32,
+                )
+            }
+            ModelProfileTestResult(
+                result.text.isNotBlank(),
+                if (result.text.isBlank()) "EMPTY_MODEL_REPLY" else "",
+                durationMs = result.durationMs,
+                inputTokens = result.inputTokens,
+                outputTokens = result.outputTokens,
+                finishReason = result.finishReason,
+                preview = result.text.take(300),
+            )
+        } catch (exception: AppException) {
+            ModelProfileTestResult(false, exception.code.name, exception.message, elapsed(started))
+        } catch (_: Exception) {
+            val error = ModelProviderFailedException()
+            ModelProfileTestResult(false, error.code.name, error.message, elapsed(started))
+        }
+    }
+
+    private fun elapsed(started: Long): Long = (System.nanoTime() - started) / 1_000_000
+}

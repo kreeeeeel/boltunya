@@ -27,8 +27,14 @@ class SettingsStore(private val directory: Path) {
 
     fun rule(chatId: String): ChatRule = resolveModel(settings.rules[chatId] ?: ChatRule())
 
-    fun resolveModel(rule: ChatRule): ChatRule =
-        if (rule.useDefaultModel) rule.copy(model = settings.defaultModel) else rule
+    fun resolveModel(rule: ChatRule): ChatRule = if (rule.useDefaultModel) {
+        rule.copy(
+            model = settings.defaultModel,
+            modelProfileId = settings.defaultModelProfileId,
+        )
+    } else {
+        rule
+    }
 
     fun resolve(rule: ChatRule): ChatRule {
         val resolved = resolveModel(rule).copy(resolvedStyleInstructions = "")

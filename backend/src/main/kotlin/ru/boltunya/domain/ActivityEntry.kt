@@ -25,4 +25,5 @@ data class ActivityEntry(
     val preview: String = "",
     val feedbackAvailable: Boolean = false,
     val feedbackRating: ActivityFeedbackRating? = null,
+    val kind: ActivityKind = ActivityKind.REPLY,
 )

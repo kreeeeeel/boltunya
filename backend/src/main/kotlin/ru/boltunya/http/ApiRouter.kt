@@ -8,20 +8,26 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
+import ru.boltunya.ai.profile.ProfileModelFactory
 import ru.boltunya.exception.impl.MethodNotAllowedException
 import ru.boltunya.exception.impl.RouteNotFoundException
 import ru.boltunya.http.endpoint.ActivityEndpoint
+import ru.boltunya.http.endpoint.AppearanceEndpoint
+import ru.boltunya.http.endpoint.AttachmentEndpoint
 import ru.boltunya.http.endpoint.AuthenticationEndpoint
 import ru.boltunya.http.endpoint.ChatEndpoint
+import ru.boltunya.http.endpoint.ContextExclusionEndpoint
 import ru.boltunya.http.endpoint.DiagnosticsEndpoint
+import ru.boltunya.http.endpoint.DraftEndpoint
 import ru.boltunya.http.endpoint.EngineEndpoint
-import ru.boltunya.http.endpoint.FlowEndpoint
 import ru.boltunya.http.endpoint.MediaEndpoint
 import ru.boltunya.http.endpoint.MemoryEndpoint
+import ru.boltunya.http.endpoint.ModelProfilesEndpoint
 import ru.boltunya.http.endpoint.PreviewEndpoint
 import ru.boltunya.http.endpoint.SearchEndpoint
 import ru.boltunya.http.endpoint.SettingsEndpoint
 import ru.boltunya.http.endpoint.StateEndpoint
+import ru.boltunya.http.endpoint.UploadEndpoint
 import ru.boltunya.monitoring.MonitoringService
 import ru.boltunya.telegram.TelegramCacheStorage
 
@@ -30,6 +36,9 @@ private const val ID_SEGMENT = 3
 private const val ACTION_SEGMENT = 4
 private const val ITEM_SEGMENTS = 4
 private const val ACTION_SEGMENTS = 5
+private const val MESSAGE_LINK_SEGMENTS = 7
+private const val MESSAGE_ID_SEGMENT = 5
+private const val MESSAGE_ACTION_SEGMENT = 6
 private const val MEDIA_PREFIX = "/api/media/"
 
 class ApiRouter @Inject constructor(
@@ -41,7 +50,7 @@ class ApiRouter @Inject constructor(
     private val settings: SettingsEndpoint,
     private val chats: ChatEndpoint,
     private val preview: PreviewEndpoint,
-    private val flows: FlowEndpoint,
+    private val drafts: DraftEndpoint,
     private val engine: EngineEndpoint,
     private val media: MediaEndpoint,
     private val monitor: MonitoringService,
@@ -52,6 +61,12 @@ class ApiRouter @Inject constructor(
     private val search: SearchEndpoint,
     private val activity: ActivityEndpoint,
     private val diagnostics: DiagnosticsEndpoint,
+    private val models: ModelProfilesEndpoint,
+    private val appearance: AppearanceEndpoint,
+    private val modelClients: ProfileModelFactory,
+    private val attachments: AttachmentEndpoint,
+    private val uploads: UploadEndpoint,
+    private val exclusions: ContextExclusionEndpoint,
 ) : AutoCloseable {
     fun handle(exchange: HttpExchange) {
         val path = exchange.requestURI.path
@@ -63,10 +78,21 @@ class ApiRouter @Inject constructor(
             media.get(exchange, path.removePrefix(MEDIA_PREFIX))
             return
         }
+        if (path == "/api/uploads" && method == HttpMethod.POST) {
+            response.json(exchange, json.encodeToJsonElement(uploads.create(exchange)))
+            return
+        }
         val body = if (method == HttpMethod.GET) JsonObject(emptyMap()) else input.read(exchange)
         val route = ApiRoute.entries.firstOrNull { it.path == path && it.method == method }
         val result = when (route) {
             ApiRoute.STATE -> json.encodeToJsonElement(state.get())
+            ApiRoute.MODEL_PROFILES -> json.encodeToJsonElement(models.list())
+            ApiRoute.MODEL_PROFILES_CREATE -> json.encodeToJsonElement(models.save(null, body))
+            ApiRoute.MODEL_ROUTING -> json.encodeToJsonElement(models.routing())
+            ApiRoute.MODEL_ROUTING_SAVE -> json.encodeToJsonElement(models.routing(body))
+            ApiRoute.APPEARANCE -> json.encodeToJsonElement(appearance.get())
+            ApiRoute.APPEARANCE_SAVE -> json.encodeToJsonElement(appearance.update(body))
+            ApiRoute.STICKERS -> json.encodeToJsonElement(attachments.catalog())
             ApiRoute.ACTIVITY_CLEAR -> {
                 activity.clear()
                 ok()
@@ -113,7 +139,7 @@ class ApiRouter @Inject constructor(
                 ok()
             }
             ApiRoute.PREVIEW -> json.encodeToJsonElement(preview.reply(body))
-            ApiRoute.FLOWS -> json.encodeToJsonElement(flows.list())
+            ApiRoute.PREVIEW_JOB -> json.encodeToJsonElement(drafts.enqueue(body))
             ApiRoute.ENGINE_DEVICES -> json.encodeToJsonElement(engine.devices())
             ApiRoute.ENGINE_INSTALL, ApiRoute.ENGINE_START, ApiRoute.MODEL_PULL, ApiRoute.MODEL_CANCEL -> {
                 engine.act(route, body)
@@ -130,6 +156,47 @@ class ApiRouter @Inject constructor(
 
     private fun dynamic(exchange: HttpExchange, method: HttpMethod, body: JsonObject): JsonElement {
         val parts = exchange.requestURI.path.split('/')
+        if (parts.size == MESSAGE_LINK_SEGMENTS && parts[RESOURCE_SEGMENT] == "chats" &&
+            parts[ACTION_SEGMENT] == "messages" && parts[MESSAGE_ACTION_SEGMENT] == "context" &&
+            method == HttpMethod.PUT
+        ) {
+            exclusions.update(parts[ID_SEGMENT], parts[MESSAGE_ID_SEGMENT], body)
+            return ok()
+        }
+        if (parts.size == MESSAGE_LINK_SEGMENTS && parts[RESOURCE_SEGMENT] == "chats" &&
+            parts[ACTION_SEGMENT] == "messages" && parts[MESSAGE_ACTION_SEGMENT] == "link" && method == HttpMethod.GET
+        ) {
+            return json.encodeToJsonElement(chats.link(parts[ID_SEGMENT], parts[MESSAGE_ID_SEGMENT]))
+        }
+        if (parts.size == ACTION_SEGMENTS && parts[RESOURCE_SEGMENT] == "preview" &&
+            parts[ID_SEGMENT] == "jobs" && method == HttpMethod.GET
+        ) {
+            return json.encodeToJsonElement(drafts.job(parts[ACTION_SEGMENT]))
+        }
+        if (parts.size == ITEM_SEGMENTS && parts[RESOURCE_SEGMENT] == "uploads" && method == HttpMethod.DELETE) {
+            uploads.delete(parts[ID_SEGMENT])
+            return ok()
+        }
+        if (parts.size == ACTION_SEGMENTS && parts[RESOURCE_SEGMENT] == "stickers" &&
+            parts[ID_SEGMENT] == "sets" && method == HttpMethod.GET
+        ) {
+            return json.encodeToJsonElement(attachments.stickerSet(parts[ACTION_SEGMENT]))
+        }
+        if (parts.size >= ITEM_SEGMENTS && parts[RESOURCE_SEGMENT] == "model-profiles") {
+            val id = parts[ID_SEGMENT]
+            return when {
+                parts.size == ITEM_SEGMENTS && method == HttpMethod.PUT -> json.encodeToJsonElement(
+                    models.save(id, body),
+                )
+                parts.size == ITEM_SEGMENTS && method == HttpMethod.DELETE -> {
+                    models.delete(id)
+                    ok()
+                }
+                parts.size == ACTION_SEGMENTS && parts[ACTION_SEGMENT] == "test" && method == HttpMethod.POST ->
+                    json.encodeToJsonElement(models.test(id, body))
+                else -> throw RouteNotFoundException()
+            }
+        }
         if (parts.size >= ITEM_SEGMENTS && parts[RESOURCE_SEGMENT] == "activity") {
             val id = parts[ID_SEGMENT]
             return when {
@@ -175,6 +242,18 @@ class ApiRouter @Inject constructor(
         if (parts.size == ACTION_SEGMENTS && parts[RESOURCE_SEGMENT] == "chats") {
             val id = parts[ID_SEGMENT]
             return when {
+                parts[ACTION_SEGMENT] == "gallery" && method == HttpMethod.GET -> json.encodeToJsonElement(
+                    chats.gallery(
+                        id,
+                        exchange.requestURI.query?.split('&')?.firstOrNull {
+                            it.startsWith("around=")
+                        }?.substringAfter('=').orEmpty(),
+                    ),
+                )
+                parts[ACTION_SEGMENT] == "context-exclusions" && method == HttpMethod.DELETE -> {
+                    exclusions.clear(id)
+                    ok()
+                }
                 parts[ACTION_SEGMENT] == "deleted" && method == HttpMethod.GET -> json.encodeToJsonElement(
                     chats.deleted(
                         id,
@@ -197,6 +276,14 @@ class ApiRouter @Inject constructor(
                     chats.send(id, body)
                     ok()
                 }
+                parts[ACTION_SEGMENT] == "attachments" && method == HttpMethod.POST -> {
+                    attachments.send(id, body)
+                    ok()
+                }
+                parts[ACTION_SEGMENT] == "stickers" && method == HttpMethod.POST -> {
+                    attachments.sticker(id, body)
+                    ok()
+                }
                 parts[ACTION_SEGMENT] == "rule" && method == HttpMethod.PUT -> {
                     chats.saveRule(id, body)
                     ok()
@@ -204,29 +291,13 @@ class ApiRouter @Inject constructor(
                 else -> throw RouteNotFoundException()
             }
         }
-        if (parts.size >= ITEM_SEGMENTS && parts[RESOURCE_SEGMENT] == "flows") {
-            val id = parts[ID_SEGMENT]
-            return when {
-                parts.size == ITEM_SEGMENTS && method == HttpMethod.PUT -> {
-                    flows.save(id, body)
-                    ok()
-                }
-                parts.size == ITEM_SEGMENTS && method == HttpMethod.DELETE -> {
-                    flows.delete(id)
-                    ok()
-                }
-                parts.size == ACTION_SEGMENTS && parts[ACTION_SEGMENT] == "test" &&
-                    method == HttpMethod.POST -> json.encodeToJsonElement(
-                    flows.preview(id, body),
-                )
-                else -> throw RouteNotFoundException()
-            }
-        }
+
         throw RouteNotFoundException()
     }
 
     private fun ok(): JsonObject = buildJsonObject { put("ok", true) }
     override fun close() {
         validation.close()
+        modelClients.close()
     }
 }

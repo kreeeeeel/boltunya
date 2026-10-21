@@ -120,7 +120,6 @@ class LivePersonalizationTest {
         val lower = reply.lowercase()
         assertTrue(lower.contains("казан") && lower.contains("моск"), reply)
         assertFalse(reply.trimStart().startsWith("{"), reply)
-        assertFalse(ReplyQualityGuard().containsInternalAnalysis(reply), reply)
         val report = buildJsonObject {
             put("model", rule.model)
             put("reply", reply)

@@ -4,7 +4,7 @@ import org.springframework.ai.chat.model.ChatResponse
 import ru.boltunya.ai.model.ModelCompletion
 import ru.boltunya.domain.ActivityAttempt
 
-class AttemptTrace(private val request: ActivityAttempt) {
+class AttemptTrace(private val request: ActivityAttempt, private val retainContent: Boolean = true) {
     private val response = StringBuilder()
     private val thinking = StringBuilder()
     private var completed: ModelCompletion? = null
@@ -12,13 +12,19 @@ class AttemptTrace(private val request: ActivityAttempt) {
 
     @Synchronized
     fun append(chunk: ChatResponse) {
+        if (!retainContent) return
         response.append(chunk.result?.output?.text.orEmpty())
         thinking.append(chunk.result?.output?.metadata?.get("thinking") as? String ?: "")
+        val cumulativeReasoning = chunk.result?.output?.metadata?.get("reasoningContent") as? String
+        if (cumulativeReasoning != null) {
+            thinking.setLength(0)
+            thinking.append(cumulativeReasoning)
+        }
     }
 
     @Synchronized
     fun finish(result: ModelCompletion) {
-        completed = result
+        completed = if (retainContent) result else result.copy(text = "", rawText = "", thinking = "")
         endedAt = System.currentTimeMillis()
     }
 

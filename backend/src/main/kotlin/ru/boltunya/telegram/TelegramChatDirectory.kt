@@ -11,6 +11,7 @@ class TelegramChatDirectory @Inject constructor(
     private val mapper: TelegramMessageMapper,
     private val wallpaper: TelegramWallpaperMapper,
     private val settings: SettingsStore,
+    private val typing: TelegramTypingStore,
 ) {
     fun list(): List<ChatSummary> = cache.chats.values.stream().filter { chat ->
         val type = chat.type
@@ -47,6 +48,7 @@ class TelegramChatDirectory @Inject constructor(
             memberCount = memberCount(chat.type),
             lastMessageOutgoing = chat.lastMessage?.isOutgoing == true,
             lastMessageSender = senderName(chat.lastMessage?.senderId),
+            typingUsers = typing.list(chat.id),
         )
     }.sorted(compareByDescending { it.date }).toList()
 

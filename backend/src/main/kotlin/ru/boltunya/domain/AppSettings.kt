@@ -9,7 +9,10 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class AppSettings(
     val paused: Boolean = true,
+    @field:Min(1) @field:Max(4) val maxParallelTasks: Int = 1,
     val defaultModel: String = "gemma3:4b",
+    @field:Size(max = 36) val defaultModelProfileId: String = "",
+    val deliveryMode: DeliveryMode = DeliveryMode.REPLY,
     @field:Size(max = 80)
     val ollamaDevice: String = "auto",
     val globalPrompt: String = "",

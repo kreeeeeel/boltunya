@@ -14,16 +14,27 @@ class ExaResultParser @Inject constructor(
     private val resources: ResourceCatalog,
     private val pages: PublicPageReader,
 ) {
-    fun parse(text: String): List<ResearchSource> = resources.regex("common/exa-result")
-        .findAll(text.take(MAX_RESPONSE_CHARACTERS)).take(MAX_RESULTS).mapNotNull { match ->
-            val url = match.groupValues[2]
+    fun parse(text: String): List<ResearchSource> = text.take(MAX_RESPONSE_CHARACTERS).lines()
+        .fold(mutableListOf<MutableList<String>>()) { records, line ->
+            if (line.startsWith("Title:")) records.add(mutableListOf())
+            records.lastOrNull()?.add(line)
+            records
+        }.take(MAX_RESULTS).mapNotNull { lines ->
+            val title = lines.first().substringAfter(':').trim()
+            val url = lines.firstOrNull { it.startsWith("URL:") }?.substringAfter(':')?.trim().orEmpty()
+            val published = lines.firstOrNull { it.startsWith("Published:") || it.startsWith("PublishedDate:") }
+                ?.substringAfter(':')?.trim().orEmpty()
+            val start = lines.indexOfFirst { it.startsWith("Text:") || it.startsWith("Highlights:") }
+            if (url.isBlank() || title.isBlank() || start < 0) return@mapNotNull null
+            val content = (listOf(lines[start].substringAfter(':')) + lines.drop(start + 1))
+                .dropLastWhile { it.isBlank() || it.trim() == "---" }.joinToString("\n").trim()
             try {
                 pages.validate(url)
                 ResearchSource(
-                    match.groupValues[1].take(MAX_TITLE_CHARACTERS),
+                    title.take(MAX_TITLE_CHARACTERS),
                     url,
-                    match.groupValues[4].trim().take(MAX_SOURCE_CHARACTERS),
-                    match.groupValues[3].takeIf { it != "N/A" }.orEmpty(),
+                    content.take(MAX_SOURCE_CHARACTERS),
+                    published.takeUnless { it == "N/A" }.orEmpty(),
                 )
             } catch (exception: IntegrationException) {
                 System.err.println("MCP search link rejected: ${exception.javaClass.simpleName}")

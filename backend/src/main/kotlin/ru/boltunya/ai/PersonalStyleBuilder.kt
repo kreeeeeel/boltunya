@@ -5,15 +5,18 @@ import ru.boltunya.domain.ChatMessage
 import ru.boltunya.resources.ResourceCatalog
 
 private val resources = ResourceCatalog()
+private const val MAX_SAMPLE_CHARACTERS = 600
+private const val MAX_STYLE_SAMPLES = 40L
+private const val MIN_STYLE_SAMPLES = 3
 
 class PersonalStyleBuilder @Inject constructor() {
     fun build(history: List<ChatMessage>): String {
         val samples = history.asReversed().stream()
-            .filter { it.outgoing && !it.automated && it.kind == "text" && it.text.isNotBlank() }
+            .filter { it.outgoing && !it.automated && !it.contextExcluded && it.kind == "text" && it.text.isNotBlank() }
             .map { it.text.trim() }
-            .filter { it.length <= 600 && !boilerplate(it) }
-            .distinct().limit(40).toList()
-        if (samples.size < 3) {
+            .filter { it.length <= MAX_SAMPLE_CHARACTERS }
+            .distinct().limit(MAX_STYLE_SAMPLES).toList()
+        if (samples.size < MIN_STYLE_SAMPLES) {
             return resources.prompt("ru/conversation/style-fallback")
         }
         val lowercase = samples.stream().filter { text ->
@@ -24,6 +27,4 @@ class PersonalStyleBuilder @Inject constructor() {
             mapOf("lowercase" to lowercase),
         )
     }
-
-    private fun boilerplate(text: String): Boolean = resources.regex("intent/style-boilerplate").containsMatchIn(text)
 }

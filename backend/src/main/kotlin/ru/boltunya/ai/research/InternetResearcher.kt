@@ -25,6 +25,7 @@ class InternetResearcher(
     private val selector: SearchResultSelector = SearchResultSelector(),
     private val readPage: (String) -> String = PublicPageReader()::read,
     private val currencies: CurrencyRatesClient = CurrencyRatesClient(clock),
+    private val privacy: ResearchPrivacy = ResearchPrivacy(),
 ) {
     private val cache = ConcurrentHashMap<Pair<ResearchPlan, Long>, Pair<Instant, ResearchContext>>()
 
@@ -37,7 +38,7 @@ class InternetResearcher(
             throw InvalidResearchPlanException()
         }
         val publicQuery = if (plan.kind == "weather") plan.location else plan.query
-        if (resources.regex("common/InternetResearcher-1").containsMatchIn(publicQuery)) {
+        if (privacy.containsContactDetails(publicQuery)) {
             return ResearchContext(
                 "unavailable",
                 resources.prompt("ru/research/private-query"),

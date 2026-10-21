@@ -15,6 +15,7 @@ import ru.boltunya.http.InputValidation
 import ru.boltunya.http.RequestReader
 import ru.boltunya.memory.MemoryCoordinator
 import ru.boltunya.storage.AutomatedReplyStore
+import ru.boltunya.storage.ContextExclusionStore
 import ru.boltunya.storage.SettingsStore
 import ru.boltunya.storage.WritingStyleStore
 import ru.boltunya.telegram.TelegramGateway
@@ -32,12 +33,13 @@ class PreviewEndpoint @Inject constructor(
     private val validation: InputValidation,
     private val input: RequestReader,
     private val memory: MemoryCoordinator,
+    private val exclusions: ContextExclusionStore,
 ) {
     fun reply(body: JsonObject): ReplyResult {
         val submitted = json.decodeFromJsonElement<ChatRule>(body["rule"] ?: throw ModelSettingsRequiredException())
         val rule = settings.resolveModel(submitted)
         validation.validate(rule)
-        validation.model(rule.model)
+        validation.target(rule)
         val id = body["chatId"]?.jsonPrimitive?.contentOrNull.orEmpty()
         val history = if (id.isBlank()) {
             emptyList()
@@ -48,19 +50,31 @@ class PreviewEndpoint @Inject constructor(
             ).map { it.copy(automated = it.automated || automated.contains(it.chatId, it.id)) }
         }
         val message = ChatMessage("preview", id, input.text(body, "text", MAX_MESSAGE_CHARACTERS), false, 0)
-        val samples = history.filter { !it.automated }
+        val owner = telegram.status().userId
+        fun eligible(messages: List<ChatMessage>): List<ChatMessage> =
+            if (id.isBlank()) messages else exclusions.forInference(owner, messages)
+        val context = eligible(
+            if (history.lastOrNull()?.let { !it.outgoing && it.text == message.text } ==
+                true
+            ) {
+                history
+            } else {
+                history + message
+            },
+        )
+        val samples = eligible(history.filter { !it.automated })
         return conversation.reply(
             settings.resolve(rule),
-            history + message,
+            context,
             settings.get().globalPrompt,
             if (rule.matchMyStyle &&
                 id.isNotBlank()
             ) {
-                writing.update(id, samples)
+                eligible(writing.update(id, samples))
             } else {
                 emptyList()
             },
-            memory.context(rule, history + message),
+            memory.context(rule, context),
         )
     }
 }

@@ -1,8 +1,14 @@
 package ru.boltunya.memory
 
 import jakarta.inject.Inject
+import jakarta.inject.Provider
 import ru.boltunya.ai.ModelInference
 import ru.boltunya.ai.OllamaRuntime
+import ru.boltunya.ai.profile.ModelProvider
+import ru.boltunya.ai.profile.ModelTargetResolver
+import ru.boltunya.ai.profile.ModelTask
+import ru.boltunya.automation.MemoryQueueTask
+import ru.boltunya.automation.MemoryWorkQueue
 import ru.boltunya.diagnostics.DiagnosticLog
 import ru.boltunya.diagnostics.DiagnosticSource
 import ru.boltunya.domain.ChatMessage
@@ -11,14 +17,20 @@ import ru.boltunya.domain.GroupReplyMode
 import ru.boltunya.exception.IntegrationException
 import ru.boltunya.exception.impl.BackgroundInferenceDeferredException
 import ru.boltunya.exception.impl.MemoryUpdateFailedException
+import ru.boltunya.exception.impl.ReplyCancelledException
 import ru.boltunya.storage.AutomatedReplyStore
+import ru.boltunya.storage.ContextExclusionStore
 import ru.boltunya.storage.SettingsStore
 import ru.boltunya.telegram.TelegramGateway
 import java.time.Clock
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
+import java.util.stream.Stream
 
 private const val STARTUP_DELAY_SECONDS = 30L
 private const val WORK_INTERVAL_SECONDS = 15L
@@ -37,7 +49,11 @@ class MemoryCoordinator @Inject constructor(
     private val inference: ModelInference,
     private val clock: Clock,
     private val automated: AutomatedReplyStore,
+    private val queueProvider: Provider<MemoryWorkQueue>,
     private val diagnostics: DiagnosticLog? = null,
+    private val targets: ModelTargetResolver? = null,
+    private val roster: ParticipantRosterStore? = null,
+    private val exclusions: ContextExclusionStore? = null,
 ) : AutoCloseable {
     private val executor = Executors.newSingleThreadScheduledExecutor { task ->
         Thread(task, "conversation-memory").also {
@@ -45,6 +61,11 @@ class MemoryCoordinator @Inject constructor(
                 true
         }
     }
+    private val queue by lazy { queueProvider.get() }
+    private val outstanding = AtomicReference("")
+    private val completion = AtomicReference<CountDownLatch?>()
+
+    @Volatile private var queuedChat = ""
     private val failures = ConcurrentHashMap<String, Long>()
     private val errors = ConcurrentHashMap<String, String>()
     private val collections = ConcurrentLinkedQueue<MemoryCollectionRequest>()
@@ -81,8 +102,13 @@ class MemoryCoordinator @Inject constructor(
         }
         val state = store.state(message.chatId)
         if (!rule.enabled && state?.manual != true && state?.ownerSource != true && !ownMessage) return
+        if (message.group && exclusions?.excludes(attachedAccount, message.chatId, message.id) != true) {
+            roster?.record(attachedAccount, message.chatId, listOf(message))
+        }
         store.observe(message.chatId, message.id.toLongOrNull() ?: return, ownerSource = ownMessage)
-        if (!message.outgoing && rule.enabled && !settings.get().paused) inference.interruptBackground()
+        if (!message.outgoing && rule.enabled && !settings.get().paused) {
+            inference.interruptBackground(targets?.resolve(ModelTask.REPLY, rule)?.executionGroup ?: "shared")
+        }
     }
 
     fun context(rule: ChatRule, history: List<ChatMessage>): MemoryContext {
@@ -92,6 +118,7 @@ class MemoryCoordinator @Inject constructor(
         return try {
             if (!attach()) return MemoryContext()
             if (rule.useMemory) store.observe(chatId, history.last().id.toLongOrNull() ?: 0, manual = !rule.enabled)
+            if (rule.useMemory) roster?.record(attachedAccount, chatId, history)
             val general = store.read("")
             val chat = if (rule.useMemory) store.read(chatId) else StoredMemory("", "", "", "")
             MemoryContext(
@@ -99,6 +126,13 @@ class MemoryCoordinator @Inject constructor(
                 chat.notes.takeIf { store.hasNotes(chatId, it) }.orEmpty(),
                 chat.facts(),
                 general.facts(),
+                if (rule.useMemory &&
+                    history.any { it.group }
+                ) {
+                    roster?.context(attachedAccount, chatId).orEmpty()
+                } else {
+                    emptyList()
+                },
             )
         } catch (exception: Exception) {
             diagnostics?.record(DiagnosticSource.MEMORY, exception)
@@ -141,8 +175,9 @@ class MemoryCoordinator @Inject constructor(
                     }
                 }
                 if (immediate && selected.isNotEmpty()) {
+                    cancelOutstanding()
                     inference.interruptBackground()
-                    executor.execute { tick() }
+                    scheduleNext()
                 }
             }
         } else {
@@ -156,8 +191,9 @@ class MemoryCoordinator @Inject constructor(
             if (immediate) {
                 collections.removeIf { it.chatId == chatId }
                 collections.add(MemoryCollectionRequest(chatId, rebuild, store.state(chatId)?.processedMessages ?: 0))
+                cancelOutstanding()
                 inference.interruptBackground()
-                executor.execute { tick() }
+                scheduleNext()
             }
         }
     }
@@ -165,19 +201,18 @@ class MemoryCoordinator @Inject constructor(
     @Synchronized
     fun cancel(chatId: String) {
         if (!attach()) return
-        val ids = collections.stream()
-            .filter { (chatId.isEmpty() || it.chatId == chatId) && (pending(it) || processing == it.chatId) }
-            .map { it.chatId }.toList()
-        val resumeAt =
-            clock.instant().epochSecond + TimeUnit.HOURS.toSeconds(settings.get().memoryIntervalHours.toLong())
-        ids.stream().forEach { id ->
-            cancelledUntil[id] = resumeAt
-            store.cancelCollection(id)
-            failures.remove(id)
-            errors.remove(id)
+        val ids = Stream.concat(
+            collections.stream().filter {
+                (chatId.isEmpty() || it.chatId == chatId) &&
+                    (pending(it) || processing == it.chatId)
+            }.map { it.chatId },
+            Stream.of(queuedChat).filter { it.isNotEmpty() && (chatId.isEmpty() || it == chatId) },
+        ).distinct().toList()
+        ids.stream().forEach(::suspendCollection)
+        if (queuedChat in ids) {
+            val id = outstanding.get()
+            if (id.isNotEmpty()) queue.cancelMemory(id)
         }
-        collections.removeIf { it.chatId in ids }
-        if (processing in ids) inference.interruptBackground()
     }
 
     private fun suspended(chatId: String): Boolean = clock.instant().epochSecond < (cancelledUntil[chatId] ?: 0)
@@ -205,7 +240,12 @@ class MemoryCoordinator @Inject constructor(
             active = true,
             status = status,
             queuedChats = queue.count { it.chatId != processing },
-            queuePosition = if (running) 0 else queue.indexOf(selected.first()) + 1,
+            queuePosition = when {
+                running -> 0
+                selected.any { it.chatId == queuedChat } && outstanding.get().isNotEmpty() ->
+                    this.queue.memoryQueuePosition(outstanding.get())
+                else -> queue.indexOf(selected.first()) + 1
+            },
             processedMessages = requests.filter { chatId.isEmpty() || it.chatId == chatId }.sumOf {
                 maxOf(0, (store.state(it.chatId)?.processedMessages ?: 0) - it.initialProcessedMessages)
             },
@@ -250,7 +290,7 @@ class MemoryCoordinator @Inject constructor(
     }
 
     internal fun tick() {
-        if (closed || !settings.get().memoryEnabled) return
+        if (closed || !settings.get().memoryEnabled || outstanding.get().isNotEmpty()) return
         val now = clock.instant().epochSecond
         try {
             if (!attach()) return
@@ -259,7 +299,7 @@ class MemoryCoordinator @Inject constructor(
                 startup = false
                 lastRefresh = now
             }
-            if (inference.foregroundBusy()) return
+            val memoryTarget = targets?.resolve(ModelTask.MEMORY, ChatRule())
             val interval = TimeUnit.HOURS.toSeconds(settings.get().memoryIntervalHours.toLong())
             collections.removeIf { store.state(it.chatId) == null || suspended(it.chatId) }
             val priority = collections.firstOrNull(::pending)?.chatId
@@ -281,23 +321,57 @@ class MemoryCoordinator @Inject constructor(
                 }.thenBy { it.updatedAt },
             ).findFirst().orElse(null)
                 ?: return
-            val model = settings.get().defaultModel
+            val model = memoryTarget?.model ?: settings.get().defaultModel
             waitingModel = try {
-                model !in ollama.installed()
+                if (memoryTarget?.provider == ModelProvider.OPENAI_COMPATIBLE) {
+                    false
+                } else {
+                    val engine = if (memoryTarget != null && memoryTarget.profileId.isNotEmpty()) {
+                        OllamaRuntime(memoryTarget.baseUrl)
+                    } else {
+                        ollama
+                    }
+                    model !in engine.installed()
+                }
             } catch (_: IntegrationException) {
                 true
             }
             if (waitingModel) return
-            processing = selected.chatId
             val recent =
                 selected.headId == 0L || selected.deltaTargetId != 0L || selected.requested ||
                     selected.dirty && now - selected.recentUpdatedAt >= interval
-            processor.process(selected, model, recent) {
-                !closed && !suspended(selected.chatId) && settings.get().memoryEnabled && allowed(selected) &&
-                    telegram.status().userId == selected.accountId
+            val explicit = collections.stream().anyMatch { it.chatId == selected.chatId && pending(it) }
+            val chat = telegram.chats().stream().filter { it.id == selected.chatId }.findFirst().orElse(null)
+            val id = UUID.randomUUID().toString()
+            val finished = CountDownLatch(1)
+            if (!outstanding.compareAndSet("", id)) return
+            completion.set(finished)
+            queuedChat = selected.chatId
+            val request = MemoryQueueTask(
+                id, selected.chatId, selected.accountId, chat?.title ?: "", chat?.avatarUrl.orEmpty(), model, explicit,
+                canStart = { !inference.foregroundBusy(memoryTarget?.executionGroup ?: "shared") },
+                action = {
+                    processing = selected.chatId
+                    if (closed || suspended(selected.chatId) || !settings.get().memoryEnabled ||
+                        telegram.status().userId != selected.accountId
+                    ) {
+                        throw ReplyCancelledException()
+                    }
+                    processor.process(selected, model, recent) {
+                        !closed && !Thread.currentThread().isInterrupted && !suspended(selected.chatId) &&
+                            settings.get().memoryEnabled && allowed(selected) &&
+                            telegram.status().userId == selected.accountId
+                    }
+                },
+                userCancelled = { suspendCollection(selected.chatId) },
+                completed = { failure -> complete(id, selected, failure, finished) },
+            )
+            try {
+                queue.enqueueMemory(request)
+            } catch (exception: Exception) {
+                request.finish(exception)
+                throw exception
             }
-            failures.remove(selected.chatId)
-            errors.remove(selected.chatId)
         } catch (_: BackgroundInferenceDeferredException) {
             // A foreground response takes priority; the checkpoint remains unchanged.
         } catch (exception: Exception) {
@@ -309,9 +383,55 @@ class MemoryCoordinator @Inject constructor(
                 }
                 System.err.println("Memory update failed: ${exception.javaClass.simpleName}")
             }
-        } finally {
-            processing = ""
         }
+    }
+
+    private fun complete(id: String, state: ChatMemoryState, failure: Throwable?, finished: CountDownLatch) {
+        try {
+            if (attachedAccount == state.accountId) {
+                if (failure == null || failure is BackgroundInferenceDeferredException ||
+                    failure is ReplyCancelledException
+                ) {
+                    failures.remove(state.chatId)
+                    errors.remove(state.chatId)
+                } else if (!closed) {
+                    failures[state.chatId] = clock.instant().epochSecond + ERROR_RETRY_SECONDS
+                    errors[state.chatId] = MemoryUpdateFailedException().message
+                }
+            }
+        } finally {
+            if (outstanding.get() == id) {
+                processing = ""
+                queuedChat = ""
+                outstanding.compareAndSet(id, "")
+            }
+            finished.countDown()
+        }
+        val retryable = failure == null || failure is BackgroundInferenceDeferredException ||
+            failure is ReplyCancelledException
+        if (retryable &&
+            !closed && collections.stream().anyMatch { pending(it) }
+        ) {
+            scheduleNext()
+        }
+    }
+
+    private fun cancelOutstanding() {
+        val id = outstanding.get()
+        if (id.isNotEmpty()) queue.cancelMemory(id)
+    }
+
+    private fun scheduleNext() = synchronized(executor) {
+        if (!closed) executor.execute { tick() }
+    }
+
+    private fun suspendCollection(chatId: String) {
+        cancelledUntil[chatId] =
+            clock.instant().epochSecond + TimeUnit.HOURS.toSeconds(settings.get().memoryIntervalHours.toLong())
+        store.cancelCollection(chatId)
+        failures.remove(chatId)
+        errors.remove(chatId)
+        collections.removeIf { it.chatId == chatId }
     }
 
     @Synchronized
@@ -368,10 +488,18 @@ class MemoryCoordinator @Inject constructor(
             GroupReplyMode.DISABLED
 
     override fun close() {
-        closed = true
-        executor.shutdownNow()
+        synchronized(executor) {
+            closed = true
+            executor.shutdown()
+        }
+        val finished = completion.get()
+        val id = outstanding.get()
+        if (id.isNotEmpty()) queue.cancelMemory(id)
         inference.interruptBackground()
         try {
+            if (finished != null && !finished.await(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                System.err.println("Shared memory worker did not stop within the shutdown timeout")
+            }
             if (!executor.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
                 System.err.println("Conversation memory worker did not stop within the shutdown timeout")
             }

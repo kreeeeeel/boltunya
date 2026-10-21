@@ -4,7 +4,7 @@ import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.exception.impl.InvalidHistoryIdentifierException
-import ru.boltunya.resources.ResourceCatalog
+import ru.boltunya.validation.InputRule
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
@@ -13,11 +13,7 @@ import java.time.Clock
 private const val MESSAGE_ID_SHIFT = 20
 private const val MESSAGES_PER_BUCKET = 128
 
-class MessageArchiveStore @Inject constructor(
-    directory: Path,
-    private val resources: ResourceCatalog,
-    private val clock: Clock,
-) {
+class MessageArchiveStore @Inject constructor(directory: Path, private val clock: Clock) {
     private val root = directory.resolve("history")
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -95,7 +91,7 @@ class MessageArchiveStore @Inject constructor(
 
     private fun folder(account: String, chat: String): Path {
         listOf(account, chat).stream().forEach {
-            if (it.toLongOrNull() == null || !resources.regex("common/memory-chat-id").matches(it)) {
+            if (!InputRule.CHAT_ID.accepts(it)) {
                 throw InvalidHistoryIdentifierException()
             }
         }

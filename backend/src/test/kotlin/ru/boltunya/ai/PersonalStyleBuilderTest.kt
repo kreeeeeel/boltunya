@@ -23,7 +23,7 @@ class PersonalStyleBuilderTest {
     }
 
     @Test
-    fun `uses owner language and punctuation without copying incoming messages or bot boilerplate`() {
+    fun `uses authored metadata without classifying the wording of manual messages`() {
         val history = listOf(
             ChatMessage("1", "42", "Пиши официально", false, 0),
             ChatMessage("2", "42", "ща гляну))", true, 0),
@@ -40,7 +40,7 @@ class PersonalStyleBuilderTest {
             ),
         )
         val style = PersonalStyleBuilder().build(history)
-        assertTrue(style.contains("100%"))
+        assertTrue(style.contains("75%"))
         assertFalse(style.contains("ща гляну))"))
         assertFalse(style.contains("Пиши официально"))
         assertFalse(style.contains("Я ИИ-помощник"))

@@ -11,7 +11,10 @@ import org.jsoup.parser.Parser
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import ru.boltunya.ai.research.InternetResearcher
+import ru.boltunya.ai.research.NewsSearchClient
 import ru.boltunya.ai.research.RecordedSearchProvider
+import ru.boltunya.ai.research.ResearchMarkdown
+import ru.boltunya.ai.research.ResearchTerms
 import ru.boltunya.ai.research.ResearchUrl
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ChatRule
@@ -62,9 +65,7 @@ class LiveResearchConversationTest {
                     history.add(ChatMessage(history.size.toString(), "live-test", incoming, false, 0))
                     val reply = client.reply(rule, history).text
                     history.add(ChatMessage(history.size.toString(), "live-test", reply, true, 0, automated = true))
-                    val links = resources.regex("common/research-url").findAll(reply).map {
-                        it.value.trimEnd('.', ',')
-                    }.toList()
+                    val links = ResearchMarkdown().links(reply)
                     val requested = incoming == "Дай ссылку на источник"
                     val currency = questions.first().contains("курс")
                     val news = questions.first().contains("новости")
@@ -95,15 +96,15 @@ class LiveResearchConversationTest {
                     if (!requested && links.isNotEmpty()) failures.add("Unexpected link: $incoming")
                     if (incoming == "А в мире?" &&
                         (
-                            !resources.regex("intent/news-world").containsMatchIn(search.query) ||
-                                resources.regex("intent/news-russia").containsMatchIn(search.query)
+                            !ResearchTerms().contains("news-world", search.query) ||
+                                ResearchTerms().contains("news-russia", search.query)
                             )
                     ) {
                         failures.add("Lost news region: ${search.query}")
                     }
                     if (incoming == "А в мире?" &&
                         search.sources.any {
-                            !resources.regex("common/news-world-source").containsMatchIn(it.url + " " + it.text)
+                            !NewsSearchClient().international(it)
                         }
                     ) {
                         failures.add("Non-world source after region change")

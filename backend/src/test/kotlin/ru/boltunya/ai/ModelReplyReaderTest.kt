@@ -5,11 +5,10 @@ import org.springframework.ai.chat.messages.AssistantMessage
 import org.springframework.ai.chat.model.ChatResponse
 import org.springframework.ai.chat.model.Generation
 import ru.boltunya.ai.model.ModelReplyReader
-import ru.boltunya.resources.ResourceCatalog
 import kotlin.test.assertEquals
 
 class ModelReplyReaderTest {
-    private val reader = ModelReplyReader(ResourceCatalog())
+    private val reader = ModelReplyReader()
 
     @Test
     fun readsFinalTextWithoutLegacyThinkingTags() {

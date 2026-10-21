@@ -12,8 +12,8 @@ import java.net.http.HttpClient
 import java.time.Duration
 
 class SpringAiModelFactory @Inject constructor() {
-    fun create(baseUrl: String): ChatModel {
-        val http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build()
+    fun create(baseUrl: String, connectTimeoutSeconds: Int = 3): ChatModel {
+        val http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(connectTimeoutSeconds.toLong())).build()
         val requestFactory = JdkClientHttpRequestFactory(http)
         val api = OllamaApi.builder().baseUrl(baseUrl)
             .restClientBuilder(RestClient.builder().requestFactory(requestFactory)).build()

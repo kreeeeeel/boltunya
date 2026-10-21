@@ -11,4 +11,5 @@ data class MemorySource(
     val kind: String,
     val sender: String,
     val senderId: String = "",
+    val senderUsername: String = "",
 )

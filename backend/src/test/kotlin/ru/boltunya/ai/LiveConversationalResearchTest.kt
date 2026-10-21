@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import ru.boltunya.ai.research.InternetResearcher
 import ru.boltunya.ai.research.RecordedSearchProvider
+import ru.boltunya.ai.research.ResearchMarkdown
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ChatRule
 import ru.boltunya.memory.MemoryContext
@@ -69,10 +70,7 @@ class LiveConversationalResearchTest {
                     if (incoming.contains("новости") && (search.query.isBlank() || search.sources.isEmpty())) {
                         failures.add("Missing verified news lookup")
                     }
-                    if (resources.regex(
-                            "common/research-url",
-                        ).containsMatchIn(reply)
-                    ) {
+                    if (ResearchMarkdown().links(reply).isNotEmpty()) {
                         failures.add("Unrequested source link")
                     }
                     if (incoming.contains("доллара") || incoming == "А евро?") {
@@ -92,10 +90,7 @@ class LiveConversationalResearchTest {
                         ) {
                             failures.add("Changed significant digits: $reply")
                         }
-                        if (resources.regex(
-                                "common/research-machine-currency",
-                            ).containsMatchIn(reply)
-                        ) {
+                        if (listOf("USD/RUB", "EUR/RUB", "RUB/USD", "RUB/EUR").any { reply.contains(it) }) {
                             failures.add("Machine notation: $reply")
                         }
                         if (!reply.contains(today.toString()) &&

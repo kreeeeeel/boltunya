@@ -10,7 +10,6 @@ import ru.boltunya.automation.ReplyCoordinator
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ReplyResult
 import ru.boltunya.memory.MemoryTelegramGateway
-import ru.boltunya.resources.ResourceCatalog
 import ru.boltunya.storage.MessageArchiveStore
 import ru.boltunya.storage.SettingsStore
 import ru.boltunya.telegram.StorageClient
@@ -110,7 +109,6 @@ class StorageEndpointTest {
                     assertEquals(200, request("/api/chats/42/messages").statusCode())
                     MessageArchiveStore(
                         directory,
-                        ResourceCatalog(),
                         Clock.systemUTC(),
                     ).delete("100", "42", listOf(10), true, false)
                     source.messages = emptyList()

@@ -23,9 +23,10 @@ class LiveReplyQualityTest {
         val clock = Clock.fixed(Instant.parse("2026-10-15T18:30:00Z"), ZoneId.of("Europe/Moscow"))
         val client = AiTestServices(prompts = PromptBuilder(clock))
         val model = System.getenv("TIHO_QUALITY_MODEL") ?: "gemma3:4b"
-        if (model !in client.installed()) {
-            RegistryModelInstaller().install(model) {}
-        }
+        org.junit.jupiter.api.Assumptions.assumeTrue(
+            model in client.installed(),
+            "Selected live model must be installed explicitly",
+        )
         val rule = ChatRule(model = model, maxTokens = 128, creativity = 40, internetAccess = false)
         val cases = listOf(
             "Кто лучшая сестра на свете?",
@@ -51,7 +52,13 @@ class LiveReplyQualityTest {
                 assertFalse(result.text.lowercase().contains("ии-помощник"), result.text)
                 assertFalse(result.text.lowercase().contains("могу помочь с чем-то другим"), result.text)
                 assertFalse(result.text.lowercase().contains("напишу тебе что-то интересное"), result.text)
-                assertFalse(Regex("[\\p{IsHan}]").containsMatchIn(result.text), result.text)
+                assertFalse(
+                    result.text.codePoints().anyMatch {
+                        Character.UnicodeScript.of(it) ==
+                            Character.UnicodeScript.HAN
+                    },
+                    result.text,
+                )
                 when (incoming) {
                     "Кто лучшая сестра на свете?" -> {
                         assertFalse(result.text.lowercase().contains("у меня нет"), result.text)
@@ -60,7 +67,12 @@ class LiveReplyQualityTest {
                     "Сколько сейчас времени?" -> assertTrue(result.text.contains("21:30"), result.text)
                     "А можешь вопросы позадавать?" -> assertTrue(result.text.contains('?'), result.text)
                     "Как зовут мою сестру?" -> {
-                        assertTrue(Regex("даш[ау]", RegexOption.IGNORE_CASE).containsMatchIn(result.text), result.text)
+                        assertTrue(
+                            listOf("даша", "дашу").any {
+                                result.text.contains(it, ignoreCase = true)
+                            },
+                            result.text,
+                        )
                     }
                 }
                 add(

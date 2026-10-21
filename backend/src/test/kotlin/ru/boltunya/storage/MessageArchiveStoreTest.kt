@@ -5,7 +5,6 @@ import org.junit.jupiter.api.io.TempDir
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.MessageEntity
 import ru.boltunya.exception.impl.InvalidHistoryIdentifierException
-import ru.boltunya.resources.ResourceCatalog
 import java.nio.file.Path
 import java.time.Clock
 import kotlin.test.assertEquals
@@ -15,7 +14,7 @@ import kotlin.test.assertTrue
 
 class MessageArchiveStoreTest {
     @TempDir lateinit var directory: Path
-    private fun store() = MessageArchiveStore(directory, ResourceCatalog(), Clock.systemUTC())
+    private fun store() = MessageArchiveStore(directory, Clock.systemUTC())
     private fun message(id: Int, text: String = "Текст") =
         ChatMessage((id.toLong() shl 20).toString(), "42", text, false, 100L + id)
 

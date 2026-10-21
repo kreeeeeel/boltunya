@@ -18,7 +18,7 @@ class ExaMcpSearchClientTest {
 
     @Test
     fun `negotiates MCP over HTTP parses source text and never treats rate limit instructions as search results`() {
-        val credentials = SearchCredentialStore(directory, ResourceCatalog())
+        val credentials = SearchCredentialStore(directory)
         val reader = PublicPageReader { arrayOf(InetAddress.getByAddress(byteArrayOf(8, 8, 8, 8))) }
         TestSearchMcpServer().start().use { server ->
             val client =
@@ -41,7 +41,7 @@ class ExaMcpSearchClientTest {
 
     @Test
     fun `default free search avoids Exa entirely without a configured key`() {
-        val credentials = SearchCredentialStore(directory, ResourceCatalog())
+        val credentials = SearchCredentialStore(directory)
         val reader = PublicPageReader { arrayOf(InetAddress.getByAddress(byteArrayOf(8, 8, 8, 8))) }
         TestSearchMcpServer().start().use { server ->
             val client =
@@ -67,7 +67,7 @@ class ExaMcpSearchClientTest {
 
     @Test
     fun `keeps the API key encrypted at rest and sends it only in the provider header`() {
-        val credentials = SearchCredentialStore(directory, ResourceCatalog())
+        val credentials = SearchCredentialStore(directory)
         credentials.save("example-exa-key-123")
         assertEquals("example-exa-key-123", credentials.load())
         assertFalse(String(Files.readAllBytes(directory.resolve("search.credentials"))).contains("example-exa-key-123"))

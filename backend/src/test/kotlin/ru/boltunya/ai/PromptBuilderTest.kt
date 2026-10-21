@@ -121,7 +121,7 @@ class PromptBuilderTest {
     }
 
     @Test
-    fun `excludes previously leaked automated analysis while preserving real conversation context`() {
+    fun `history is retained without classifying message wording`() {
         val analysis = "Хорошо, мне нужно составить ответ от лица владельца Telegram " +
             "в соответствии с заданными правилами."
         val prompt = builder.build(
@@ -133,7 +133,7 @@ class PromptBuilderTest {
                 ChatMessage("4", "42", "Напомни время", false, 0),
             ),
         )
-        assertEquals(listOf("Встретимся в 19:30", analysis), prompt.drop(1).take(2).map { it.text })
+        assertEquals(listOf(analysis, "Встретимся в 19:30", analysis), prompt.drop(1).take(3).map { it.text })
         assertTrue(prompt.last().text.orEmpty().endsWith("Напомни время"))
     }
 

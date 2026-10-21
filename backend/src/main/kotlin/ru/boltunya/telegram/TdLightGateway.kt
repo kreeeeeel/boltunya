@@ -11,9 +11,13 @@ import it.tdlight.client.TDLibSettings
 import it.tdlight.client.TelegramError
 import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
+import ru.boltunya.domain.ChatGallery
 import ru.boltunya.domain.ChatMessage
 import ru.boltunya.domain.ChatSummary
 import ru.boltunya.domain.MediaFile
+import ru.boltunya.domain.OutgoingMedia
+import ru.boltunya.domain.StickerCatalog
+import ru.boltunya.domain.StickerItem
 import ru.boltunya.domain.TelegramCredentials
 import ru.boltunya.domain.TelegramStatus
 import ru.boltunya.exception.IntegrationException
@@ -58,6 +62,10 @@ class TdLightGateway @Inject constructor(
     private val loader: TelegramChatLoader,
     private val sender: TelegramMessageSender,
     private val prefetch: MediaPrefetcher,
+    private val mediaSender: TelegramMediaSender,
+    private val stickerService: TelegramStickerService,
+    private val galleries: TelegramGalleryService,
+    private val links: TelegramMessageLinks,
 ) : TelegramGateway {
     private var factory: SimpleTelegramClientFactory? = null
 
@@ -88,6 +96,14 @@ class TdLightGateway @Inject constructor(
     }
 
     override fun media(fileId: Int): MediaFile = mediaFiles.get(fileId)
+    override fun sendMedia(chatId: String, media: List<OutgoingMedia>, replyToId: String, topicId: Int): List<String> =
+        mediaSender.send(chatId, media, replyToId, topicId)
+    override fun stickers(): StickerCatalog = stickerService.catalog()
+    override fun stickerSet(id: String): List<StickerItem> = stickerService.set(id)
+    override fun gallery(chatId: String, around: String): ChatGallery = galleries.gallery(chatId, around)
+    override fun messageLink(chatId: String, messageId: String): String = links.link(chatId, messageId)
+    override fun sendSticker(chatId: String, stickerId: String, replyToId: String, topicId: Int): String =
+        stickerService.send(chatId, stickerId, replyToId, topicId)
 
     @Synchronized
     override fun connect(credentials: TelegramCredentials) {

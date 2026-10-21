@@ -2,6 +2,9 @@ package ru.boltunya.ai
 
 import org.junit.jupiter.api.Test
 import org.springframework.ai.chat.messages.AssistantMessage
+import org.springframework.ai.chat.metadata.ChatGenerationMetadata
+import org.springframework.ai.chat.metadata.ChatResponseMetadata
+import org.springframework.ai.chat.metadata.DefaultUsage
 import org.springframework.ai.chat.model.ChatResponse
 import org.springframework.ai.chat.model.Generation
 import reactor.core.publisher.Flux
@@ -17,6 +20,44 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class ModelResponseStreamTest {
+    @Test
+    fun `usage only final chunk retains finish reason reasoning and refusal metadata`() {
+        val first = ChatResponse(
+            listOf(
+                Generation(
+                    AssistantMessage.builder().content("Answer").properties(
+                        mapOf(
+                            "reasoningContent" to "Think",
+                            "refusal" to "declined",
+                        ),
+                    ).build(),
+                    ChatGenerationMetadata.builder().finishReason("STOP").build(),
+                ),
+            ),
+        )
+        val usage = ChatResponse(emptyList(), ChatResponseMetadata.builder().usage(DefaultUsage(7, 3)).build())
+        val response = ModelResponseStream().read(Flux.just(first, usage))
+        assertEquals("Answer", response.result?.output?.text)
+        assertEquals("STOP", response.result?.metadata?.finishReason)
+        assertEquals("Think", response.result?.output?.metadata?.get("thinking"))
+        assertEquals("declined", response.result?.output?.metadata?.get("refusal"))
+        assertEquals(7, response.metadata.usage.promptTokens)
+    }
+
+    @Test
+    fun `explicit total deadline stops a stream even when it continues emitting chunks`() {
+        val chunks = Flux.interval(Duration.ofMillis(20)).map {
+            ChatResponse(listOf(Generation(AssistantMessage("a"))))
+        }
+        assertFailsWith<EngineUnavailableException> {
+            ModelResponseStream().read(
+                chunks,
+                idleTimeout = Duration.ofSeconds(2),
+                totalTimeout = Duration.ofMillis(100),
+            )
+        }
+    }
+
     @Test
     fun `thinking chunks reset inactivity so total generation may exceed the idle timeout`() {
         val chunks = Flux.interval(Duration.ofMillis(100)).take(20).map { index ->

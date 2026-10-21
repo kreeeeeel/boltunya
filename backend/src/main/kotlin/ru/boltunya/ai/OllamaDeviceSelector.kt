@@ -4,8 +4,8 @@ import jakarta.inject.Inject
 import ru.boltunya.domain.ComputeDevice
 import ru.boltunya.domain.ComputeDeviceStatus
 import ru.boltunya.exception.impl.InvalidOllamaDeviceException
-import ru.boltunya.resources.ResourceCatalog
 import ru.boltunya.storage.SettingsStore
+import ru.boltunya.validation.InputRule
 
 private const val AUTOMATIC_DEVICE = "auto"
 private const val CPU_DEVICE = "cpu"
@@ -13,13 +13,12 @@ private const val CPU_DEVICE = "cpu"
 class OllamaDeviceSelector @Inject constructor(
     private val settings: SettingsStore,
     private val discovery: ComputeDeviceDiscovery,
-    private val resources: ResourceCatalog,
 ) {
     fun selected(): String = settings.get().ollamaDevice
 
     fun validate(id: String) {
         if (id == AUTOMATIC_DEVICE || id == CPU_DEVICE) return
-        if (id == selected() && resources.regex("common/ollama-device-uuid").matches(id)) return
+        if (id == selected() && InputRule.GPU_UUID.accepts(id)) return
         if (discovery.devices().stream().noneMatch {
                 it.id == id && it.selectable
             }
@@ -30,7 +29,7 @@ class OllamaDeviceSelector @Inject constructor(
 
     fun environment(id: String = selected()): Map<String, String> {
         if (id == AUTOMATIC_DEVICE) return emptyMap()
-        if (id != CPU_DEVICE && !resources.regex("common/ollama-device-uuid").matches(id)) {
+        if (id != CPU_DEVICE && !InputRule.GPU_UUID.accepts(id)) {
             throw InvalidOllamaDeviceException()
         }
         return mapOf(

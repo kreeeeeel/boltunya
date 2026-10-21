@@ -1,5 +1,6 @@
 package ru.boltunya.memory
 
+import jakarta.inject.Provider
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.boltunya.ai.ModelInference
@@ -56,6 +57,7 @@ class MemoryCoordinatorTest {
                 inference,
                 clock,
                 automated,
+                queueProvider = Provider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 try {
                     coordinator.refresh("42", immediate = true)
@@ -127,6 +129,7 @@ class MemoryCoordinatorTest {
                 ModelInference(),
                 clock,
                 automated,
+                queueProvider = Provider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 coordinator.refresh(rebuild = true)
                 assertEquals("", store.read("").summary)
@@ -194,6 +197,7 @@ class MemoryCoordinatorTest {
                 ModelInference(),
                 clock,
                 automated,
+                queueProvider = Provider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 coordinator.refresh("43", immediate = true)
                 assertTrue(summarized.await(3, TimeUnit.SECONDS))
@@ -231,6 +235,7 @@ class MemoryCoordinatorTest {
                 ModelInference(),
                 clock,
                 automated,
+                queueProvider = Provider { DirectMemoryWorkQueue() },
             )
                 .use { coordinator ->
                     coordinator.tick()
@@ -288,6 +293,7 @@ class MemoryCoordinatorTest {
                 ModelInference(),
                 clock,
                 AutomatedReplyStore(directory),
+                queueProvider = Provider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 coordinator.tick()
                 coordinator.observe(message)
@@ -335,6 +341,7 @@ class MemoryCoordinatorTest {
                 ModelInference(),
                 clock,
                 AutomatedReplyStore(directory),
+                queueProvider = Provider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 coordinator.tick()
                 coordinator.tick()
@@ -389,6 +396,7 @@ class MemoryCoordinatorTest {
                 ModelInference(),
                 clock,
                 AutomatedReplyStore(directory),
+                queueProvider = Provider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 coordinator.tick()
                 coordinator.tick()
@@ -407,6 +415,7 @@ class MemoryCoordinatorTest {
                 ModelInference(),
                 clock,
                 AutomatedReplyStore(directory),
+                queueProvider = Provider { DirectMemoryWorkQueue() },
             ).use { it.tick() }
             assertEquals(readCount, telegram.reads.size)
         }
@@ -447,6 +456,7 @@ class MemoryCoordinatorTest {
                 ModelInference(),
                 clock,
                 AutomatedReplyStore(directory),
+                queueProvider = Provider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 coordinator.tick()
                 coordinator.tick()
@@ -501,6 +511,7 @@ class MemoryCoordinatorTest {
                 ModelInference(),
                 clock,
                 AutomatedReplyStore(directory),
+                queueProvider = Provider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 coordinator.tick()
                 assertTrue(telegram.reads.isEmpty())

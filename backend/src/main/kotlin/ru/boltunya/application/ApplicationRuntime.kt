@@ -2,13 +2,15 @@ package ru.boltunya.application
 
 import jakarta.inject.Inject
 import ru.boltunya.ai.EngineManager
+import ru.boltunya.ai.profile.ModelTargetResolver
+import ru.boltunya.diagnostics.DiagnosticLog
+import ru.boltunya.diagnostics.DiagnosticSource
 import ru.boltunya.automation.ReplyCoordinator
 import ru.boltunya.configuration.ApplicationConfiguration
 import ru.boltunya.http.LocalWebServer
 import ru.boltunya.memory.MemoryCoordinator
 import ru.boltunya.monitoring.MonitoringService
 import ru.boltunya.storage.CredentialStore
-import ru.boltunya.storage.SettingsStore
 import ru.boltunya.telegram.MediaPrefetcher
 import ru.boltunya.telegram.TelegramGateway
 import java.nio.channels.FileChannel
@@ -23,11 +25,12 @@ class ApplicationRuntime @Inject constructor(
     private val telegram: TelegramGateway,
     private val engine: EngineManager,
     private val replies: ReplyCoordinator,
-    private val settings: SettingsStore,
     private val credentials: CredentialStore,
     private val monitor: MonitoringService,
     private val memory: MemoryCoordinator,
     private val prefetch: MediaPrefetcher,
+    private val targets: ModelTargetResolver,
+    private val diagnostics: DiagnosticLog,
 ) : AutoCloseable {
     private val directory = configuration.directory
     private val closed = AtomicBoolean()
@@ -47,7 +50,13 @@ class ApplicationRuntime @Inject constructor(
         Files.writeString(directory.resolve("launch.url"), server.start())
         monitor.start()
         engine.start()
-        engine.warm(settings.get().defaultModel)
+        try {
+            val warmModel = targets.startupWarmModel()
+            if (warmModel != null) engine.warm(warmModel)
+        } catch (exception: Exception) {
+            diagnostics.record(DiagnosticSource.ENGINE, exception)
+            System.err.println("Startup warmup skipped: ${exception.javaClass.simpleName}")
+        }
         memory.start()
         prefetch.start()
         Thread.ofVirtual().start {
