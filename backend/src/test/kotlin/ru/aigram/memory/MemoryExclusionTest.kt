@@ -2,9 +2,9 @@ package ru.aigram.memory
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ContextExclusionScope
-import ru.aigram.domain.ContextExclusionUpdate
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ContextExclusionScope
+import ru.aigram.domain.chat.ContextExclusionUpdate
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.ContextExclusionStore
@@ -92,12 +92,16 @@ class MemoryExclusionTest {
                 store,
                 MemoryBatchBuilder(AutomatedReplyStore(location)),
                 MemorySummarizer { _, _, _ ->
-                    if (stage == "chat") exclusions.update("100", "42", "1", ContextExclusionUpdate())
+                    if (stage == "chat") {
+                        exclusions.update("100", "42", "1", ContextExclusionUpdate())
+                    }
                     "A private fact"
                 },
                 Clock.systemUTC(),
                 OwnerMemorySummarizer { _, _, _ ->
-                    if (stage == "owner") exclusions.update("100", "42", "1", ContextExclusionUpdate())
+                    if (stage == "owner") {
+                        exclusions.update("100", "42", "1", ContextExclusionUpdate())
+                    }
                     "A private fact"
                 },
                 exclusions,

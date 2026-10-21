@@ -3,8 +3,8 @@ package ru.aigram.telegram
 import it.tdlight.jni.TdApi
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.MediaAttachment
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.media.MediaAttachment
 import ru.aigram.storage.SettingsStore
 import java.nio.file.Files
 import java.nio.file.Path

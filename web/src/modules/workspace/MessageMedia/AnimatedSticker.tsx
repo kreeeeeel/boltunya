@@ -2,10 +2,8 @@ import {Box, Skeleton, Text} from '@gravity-ui/uikit';
 import {useTranslations} from 'next-intl';
 import {useEffect, useRef, useState} from 'react';
 import type {AnimationItem} from 'lottie-web';
-
-import {api, dataOrThrow} from '@/shared/api/client';
+import {api} from '@/shared/api/client';
 import styles from '@/modules/workspace/MessageMedia/MessageMedia.module.css';
-
 export function AnimatedSticker({fileId}: {readonly fileId: number}) {
     const t = useTranslations();
     const container = useRef<HTMLDivElement>(null);
@@ -17,17 +15,20 @@ export function AnimatedSticker({fileId}: {readonly fileId: number}) {
         async function load() {
             try {
                 const [source, lottie] = await Promise.all([
-                    api.GET('/api/media/{fileId}', {
-                        params: {path: {fileId}},
-                        parseAs: 'text',
-                        signal: controller.signal,
-                    }),
+                    api.media.media(
+                        {
+                            fileId,
+                        },
+                        {
+                            signal: controller.signal,
+                        },
+                    ),
                     import('lottie-web'),
                 ]);
                 if (controller.signal.aborted || !container.current) {
                     return;
                 }
-                const data = JSON.parse(dataOrThrow(source));
+                const data = JSON.parse(await source.text());
                 animation = lottie.default.loadAnimation({
                     container: container.current,
                     renderer: 'svg',

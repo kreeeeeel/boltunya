@@ -1,13 +1,13 @@
 package ru.aigram.memory
 
-import jakarta.inject.Provider
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.aigram.ai.ModelInference
 import ru.aigram.ai.OllamaRuntime
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.ContextExclusionUpdate
+import ru.aigram.configuration.testBeanProvider
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.ContextExclusionUpdate
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.ContextExclusionStore
@@ -60,7 +60,7 @@ class MemoryInvalidationTest {
         MemoryModelServer().use { server ->
             MemoryCoordinator(
                 store, settings, telegram, server.start().runtime, processor, ModelInference(), Clock.systemUTC(),
-                automated, Provider { DirectMemoryWorkQueue() },
+                automated, testBeanProvider { DirectMemoryWorkQueue() },
             ).use { memory ->
                 memory.tick()
                 assertTrue(telegram.reads.isEmpty())
@@ -113,7 +113,7 @@ class MemoryInvalidationTest {
         )
         MemoryCoordinator(
             store, settings, telegram, OllamaRuntime("http://127.0.0.1:1"), processor, ModelInference(),
-            Clock.systemUTC(), automated, Provider { DirectMemoryWorkQueue() }, exclusions = exclusions,
+            Clock.systemUTC(), automated, testBeanProvider { DirectMemoryWorkQueue() }, exclusions = exclusions,
         ).use { memory ->
             memory.invalidateContext("43")
             memory.refresh(rebuild = true)

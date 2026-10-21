@@ -1,21 +1,20 @@
 package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
-import jakarta.inject.Inject
-import jakarta.inject.Provider
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.stereotype.Component
 import ru.aigram.automation.ReplyCoordinator
-import ru.aigram.domain.ChatMessage
+import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.memory.MemoryCoordinator
 import ru.aigram.storage.MessageArchiveStore
 
 @Component
-class TelegramHistoryTracker @Inject constructor(
+class TelegramHistoryTracker(
     private val archive: MessageArchiveStore,
     private val cache: TelegramCache,
     private val mapper: TelegramMessageMapper,
-    private val replies: Provider<ReplyCoordinator>,
-    private val memory: Provider<MemoryCoordinator>,
+    private val replies: ObjectProvider<ReplyCoordinator>,
+    private val memory: ObjectProvider<MemoryCoordinator>,
 ) {
     fun record(message: ChatMessage): ChatMessage {
         val owner = cache.ownId.takeIf { it != 0L }?.toString().orEmpty()
@@ -25,7 +24,12 @@ class TelegramHistoryTracker @Inject constructor(
 
     fun edited(update: TdApi.UpdateMessageContent) {
         val owner = cache.ownId.takeIf { it != 0L }?.toString().orEmpty()
-        val original = archive.find(owner, update.chatId.toString(), update.messageId.toString()) ?: return
+        val original = archive.find(owner, update.chatId.toString(), update.messageId.toString())
+
+        if (original == null) {
+            return
+        }
+
         val content = mapper.map(
             TdApi.Message().apply {
                 id = update.messageId
@@ -57,22 +61,30 @@ class TelegramHistoryTracker @Inject constructor(
 
     @Synchronized
     fun deleted(account: String, chatId: Long, ids: List<Long>) {
-        if (account == "0" || account.isEmpty()) return
+        if (account == "0" || account.isEmpty()) {
+            return
+        }
         val changed = try {
             archive.delete(account, chatId.toString(), ids, permanent = true, fromCache = false)
         } catch (exception: Exception) {
             invalidate(account, chatId, ids)
             throw exception
         }
-        if (changed) invalidate(account, chatId, ids)
+        if (changed) {
+            invalidate(account, chatId, ids)
+        }
     }
 
     private fun invalidate(account: String, chatId: Long, ids: List<Long>) {
-        if (cache.ownId.toString() != account) return
-        cache.updateChat(chatId) { chat ->
-            if (ids.stream().anyMatch { it == chat.lastMessage?.id }) chat.lastMessage = null
+        if (cache.ownId.toString() != account) {
+            return
         }
-        replies.get().invalidateContext(chatId.toString())
-        memory.get().invalidateContext(chatId.toString())
+        cache.updateChat(chatId) { chat ->
+            if (ids.stream().anyMatch { it == chat.lastMessage?.id }) {
+                chat.lastMessage = null
+            }
+        }
+        replies.getObject().invalidateContext(chatId.toString())
+        memory.getObject().invalidateContext(chatId.toString())
     }
 }

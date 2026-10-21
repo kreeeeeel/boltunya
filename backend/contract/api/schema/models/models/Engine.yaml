@@ -8,6 +8,9 @@ Engine:
         - models
         - warming
     properties:
+        canRestart:
+            type: boolean
+            description: The running local Ollama process is managed by the application and can be restarted.
         installed:
             type: boolean
             default: false

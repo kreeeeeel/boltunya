@@ -9,6 +9,9 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.jsoup.Jsoup
+import ru.aigram.domain.ai.research.ResearchContext
+import ru.aigram.domain.ai.research.ResearchSource
+import ru.aigram.domain.ai.research.WeatherCondition
 import ru.aigram.exception.IntegrationException
 import ru.aigram.exception.impl.InvalidWeatherResponseException
 import ru.aigram.exception.impl.WeatherCoordinatesMissingException
@@ -58,10 +61,18 @@ class WeatherClient(
             ),
         )
         val daily = response["daily"]?.jsonObject
-        if (daily == null) throw WeatherForecastMissingException()
-        fun dailyValue(name: String): String =
-            daily[name]?.jsonArray?.getOrNull(dayOffset)?.jsonPrimitive?.contentOrNull
-                ?: throw WeatherDateUnavailableException()
+        if (daily == null) {
+            throw WeatherForecastMissingException()
+        }
+        fun dailyValue(name: String): String {
+            val resolved = daily[name]?.jsonArray?.getOrNull(dayOffset)?.jsonPrimitive?.contentOrNull
+
+            if (resolved == null) {
+                throw WeatherDateUnavailableException()
+            }
+
+            return resolved
+        }
         val name = city["name"]?.jsonPrimitive?.contentOrNull.orEmpty()
         val country = city["country"]?.jsonPrimitive?.contentOrNull.orEmpty()
         val current = response["current"]?.jsonObject

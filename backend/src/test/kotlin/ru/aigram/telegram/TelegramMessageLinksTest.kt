@@ -1,7 +1,7 @@
 package ru.aigram.telegram
 
-import jakarta.inject.Provider
 import org.junit.jupiter.api.Test
+import ru.aigram.configuration.testBeanProvider
 import ru.aigram.exception.impl.InvalidMediaIdentifierException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -10,7 +10,7 @@ import kotlin.test.assertFalse
 class TelegramMessageLinksTest {
     @Test
     fun `asks Telegram for the exact opaque message ID without synthesizing a public link`() {
-        val links = TelegramMessageLinks(Provider { error("No Telegram in request tests") })
+        val links = TelegramMessageLinks(testBeanProvider { error("No Telegram in request tests") })
         val request = links.request(-100123, "987654321098765")
         assertEquals(-100123L, request.chatId)
         assertEquals(987654321098765L, request.messageId)

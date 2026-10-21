@@ -1,8 +1,7 @@
 package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
-import jakarta.inject.Inject
-import jakarta.inject.Provider
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.stereotype.Component
 import ru.aigram.exception.impl.InvalidMediaIdentifierException
 import ru.aigram.exception.impl.TelegramRequestRejectedException
@@ -13,13 +12,15 @@ import java.util.concurrent.TimeoutException
 private const val MESSAGE_LINK_TIMEOUT_SECONDS = 10L
 
 @Component
-class TelegramMessageLinks @Inject constructor(private val gateway: Provider<TdLightGateway>) {
+class TelegramMessageLinks(private val gateway: ObjectProvider<TdLightGateway>) {
     fun link(chatId: String, messageId: String): String {
-        val service = gateway.get()
+        val service = gateway.getObject()
         val request = request(service.parseChatId(chatId), messageId)
         return try {
             val link = service.readyClient().send(request).get(MESSAGE_LINK_TIMEOUT_SECONDS, TimeUnit.SECONDS).link
-            if (link.isNullOrBlank()) throw TelegramRequestRejectedException()
+            if (link.isNullOrBlank()) {
+                throw TelegramRequestRejectedException()
+            }
             link
         } catch (_: ExecutionException) {
             throw TelegramRequestRejectedException()
@@ -32,7 +33,12 @@ class TelegramMessageLinks @Inject constructor(private val gateway: Provider<TdL
     }
 
     internal fun request(chatId: Long, messageId: String): TdApi.GetMessageLink {
-        val id = messageId.toLongOrNull()?.takeIf { it > 0 } ?: throw InvalidMediaIdentifierException()
+        val id = messageId.toLongOrNull()?.takeIf { it > 0 }
+
+        if (id == null) {
+            throw InvalidMediaIdentifierException()
+        }
+
         return TdApi.GetMessageLink(chatId, id, 0, 0, "", false, false)
     }
 }

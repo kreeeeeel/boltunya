@@ -2,8 +2,8 @@ package ru.aigram.automation
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.DeliveryMode
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.DeliveryMode
 import ru.aigram.storage.SettingsStore
 import java.nio.file.Path
 import kotlin.test.assertEquals

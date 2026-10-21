@@ -1,14 +1,13 @@
 package ru.aigram.ai
 
-import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Component
-import ru.aigram.domain.ModelInfo
+import ru.aigram.domain.ai.model.ModelInfo
 import ru.aigram.resources.ResourceCatalog
 import java.util.stream.Stream
 
 @Component
-class ModelCatalog @Inject constructor() {
+class ModelCatalog {
     @Volatile private var observedInstalled: Set<String> = emptySet()
     val models: List<ModelInfo> = Json.decodeFromString(ResourceCatalog().text("models/catalog.json"))
     private val aliases: Map<String, String> = Json.decodeFromString(ResourceCatalog().text("models/aliases.json"))

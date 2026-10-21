@@ -1,7 +1,6 @@
 import {generate, ident, parse, walk} from 'css-tree';
-import type {components} from '@/shared/api/schema';
-
-export type Appearance = components['schemas']['AppearanceSettings'];
+import type * as Contract from '@aigram/api-client';
+export type Appearance = Contract.AppearanceSettings;
 export const defaultAppearance: Appearance = {mode: 'system', tokens: {}, css: ''};
 export const themeTokens = {
     accent: ['--g-color-base-brand', '--g-color-text-brand', '--g-color-text-link'],
@@ -21,7 +20,7 @@ export function validThemeColor(value: string) {
     );
 }
 export function compileAppearance(value: Appearance): string {
-    if (value.css.length > 20_000 || !['light', 'dark', 'system'].includes(value.mode)) {
+    if (value.css.length > 20000 || !['light', 'dark', 'system'].includes(value.mode)) {
         throw new Error('invalidTheme');
     }
     const tokens = Object.entries(value.tokens)

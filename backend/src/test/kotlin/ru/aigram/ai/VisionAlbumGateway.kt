@@ -1,7 +1,7 @@
 package ru.aigram.ai
 
 import ru.aigram.automation.FakeTelegramGateway
-import ru.aigram.domain.MediaFile
+import ru.aigram.domain.media.MediaFile
 import ru.aigram.telegram.TelegramGateway
 import java.nio.file.Path
 

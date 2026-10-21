@@ -2,9 +2,9 @@ package ru.aigram.storage
 
 import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Component
-import ru.aigram.domain.AppSettings
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.CommunicationStyle
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.CommunicationStyle
+import ru.aigram.domain.settings.AppSettings
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
@@ -40,9 +40,15 @@ class SettingsStore(private val directory: Path) {
 
     fun resolve(rule: ChatRule): ChatRule {
         val resolved = resolveModel(rule).copy(resolvedStyleInstructions = "")
-        if (resolved.style != CommunicationStyle.CUSTOM.key) return resolved
+        if (resolved.style != CommunicationStyle.CUSTOM.key) {
+            return resolved
+        }
         val style = settings.customStyles.stream().filter { it.id == resolved.styleId }.findFirst().orElse(null)
-            ?: return resolved.copy(style = CommunicationStyle.FRIENDLY.key, styleId = "")
+
+        if (style == null) {
+            return resolved.copy(style = CommunicationStyle.FRIENDLY.key, styleId = "")
+        }
+
         return resolved.copy(resolvedStyleInstructions = style.instructions)
     }
 

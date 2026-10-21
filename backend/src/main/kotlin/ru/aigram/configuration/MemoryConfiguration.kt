@@ -1,6 +1,6 @@
 package ru.aigram.configuration
 
-import jakarta.inject.Provider
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import ru.aigram.ai.ModelInference
@@ -30,7 +30,7 @@ class MemoryConfiguration {
         inference: ModelInference,
         clock: Clock,
         automated: AutomatedReplyStore,
-        queue: Provider<MemoryWorkQueue>,
+        queue: ObjectProvider<MemoryWorkQueue>,
         diagnostics: DiagnosticLog,
         targets: ModelTargetResolver,
         roster: ParticipantRosterStore,

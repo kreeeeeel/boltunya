@@ -2,9 +2,9 @@ PromptBudgetRequest:
     type: object
     properties:
         rule:
-            $ref: ../chats/ChatRule.yaml#/ChatRule
+            $ref: ../chats/ChatRuleInput.yaml#/ChatRuleInput
         globalPrompt:
             type: string
             maxLength: 4000
         preferences:
-            $ref: ./ModelPromptSettings.yaml#/ModelPromptSettings
+            $ref: ./ModelPromptSettingsInput.yaml#/ModelPromptSettingsInput

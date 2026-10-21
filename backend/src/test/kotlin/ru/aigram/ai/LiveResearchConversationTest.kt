@@ -16,8 +16,8 @@ import ru.aigram.ai.research.RecordedSearchProvider
 import ru.aigram.ai.research.ResearchMarkdown
 import ru.aigram.ai.research.ResearchTerms
 import ru.aigram.ai.research.ResearchUrl
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
 import ru.aigram.resources.ResourceCatalog
 import java.math.RoundingMode
 import java.nio.file.Files
@@ -70,7 +70,11 @@ class LiveResearchConversationTest {
                     val currency = questions.first().contains("курс")
                     val news = questions.first().contains("новости")
                     if (incoming.contains("курс доллара") || incoming == "А евро?") {
-                        val code = if (incoming == "А евро?") "EUR" else "USD"
+                        val code = if (incoming == "А евро?") {
+                            "EUR"
+                        } else {
+                            "USD"
+                        }
                         val expected = rates.getValue(
                             code,
                         ).toBigDecimal().setScale(2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
@@ -93,7 +97,9 @@ class LiveResearchConversationTest {
                     ) {
                         failures.add("Undated or stale news: $incoming")
                     }
-                    if (!requested && links.isNotEmpty()) failures.add("Unexpected link: $incoming")
+                    if (!requested && links.isNotEmpty()) {
+                        failures.add("Unexpected link: $incoming")
+                    }
                     if (incoming == "А в мире?" &&
                         (
                             !ResearchTerms().contains("news-world", search.query) ||
@@ -117,7 +123,9 @@ class LiveResearchConversationTest {
                             failures.add("Lost forecast date: $incoming -> $reply")
                         }
                     }
-                    if (requested && links.isEmpty()) failures.add("Missing requested source: $incoming")
+                    if (requested && links.isEmpty()) {
+                        failures.add("Missing requested source: $incoming")
+                    }
                     if (links.any { link ->
                             !(
                                 currency &&

@@ -2,8 +2,8 @@ package ru.aigram.automation.activity
 
 import ru.aigram.automation.MemoryQueueTask
 import ru.aigram.automation.proactive.ProactiveTask
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ReplyResult
+import ru.aigram.domain.ai.ReplyResult
+import ru.aigram.domain.chat.ChatMessage
 import java.util.concurrent.atomic.AtomicBoolean
 
 class ReplyJob(

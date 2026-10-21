@@ -2,8 +2,8 @@ package ru.aigram.storage
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.MessageEntity
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.MessageEntity
 import ru.aigram.exception.impl.InvalidHistoryIdentifierException
 import java.nio.file.Path
 import java.time.Clock

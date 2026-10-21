@@ -2,9 +2,9 @@ package ru.aigram.storage
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ContextExclusionScope
-import ru.aigram.domain.ContextExclusionUpdate
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ContextExclusionScope
+import ru.aigram.domain.chat.ContextExclusionUpdate
 import ru.aigram.exception.impl.InvalidContextSelectionException
 import java.nio.file.Files
 import java.nio.file.Path

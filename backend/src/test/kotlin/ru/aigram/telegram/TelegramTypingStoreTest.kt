@@ -2,7 +2,7 @@ package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
 import org.junit.jupiter.api.Test
-import ru.aigram.domain.TypingAction
+import ru.aigram.domain.chat.TypingAction
 import ru.aigram.memory.AdvancingClock
 import java.time.Duration
 import java.time.Instant

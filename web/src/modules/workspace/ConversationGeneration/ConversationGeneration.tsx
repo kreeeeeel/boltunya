@@ -2,14 +2,13 @@ import {CircleStop} from '@gravity-ui/icons';
 import {Box, Button, Flex, Icon, Text} from '@gravity-ui/uikit';
 import {useLocale, useTranslations} from 'next-intl';
 import {useState} from 'react';
-
 import {ActivityProgress} from '@/modules/activity/ActivityProgress/ActivityProgress';
 import {seconds} from '@/modules/activity/model/activity';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
+import {api, errorMessage} from '@/shared/api/client';
 import type {Activity} from '@/shared/api/client';
 import styles from '@/modules/workspace/ConversationGeneration/ConversationGeneration.module.css';
 import {ActivityDetailsDialog} from '@/modules/activity/ActivityDetailsDialog/ActivityDetailsDialog';
-
+import {StatusNotice} from '@/shared/ui/StatusNotice/StatusNotice';
 export function ConversationGeneration({
     entry,
     onRefresh,
@@ -24,26 +23,25 @@ export function ConversationGeneration({
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [details, setDetails] = useState(false);
-
     if (entry.status === 'error' || entry.status === 'interrupted') {
         return (
             <Box className={`${styles.root} ${styles.failure}`} qa="conversation-generation-error">
-                <Flex direction="column" gap={3}>
-                    <Text variant="subheader-2">{t('failed')}</Text>
-                    <Text color="danger" role="alert">
-                        {entry.detail}
-                    </Text>
-                    <Flex gap={2} wrap>
-                        <Button view="normal" onClick={() => setDetails(true)}>
-                            {t('history')}
-                        </Button>
-                        {onRetry && (
-                            <Button view="action" onClick={() => void onRetry()}>
-                                {t('retryDraft')}
+                <StatusNotice
+                    title={t('failed')}
+                    description={entry.detail}
+                    actions={
+                        <Flex gap={2} wrap>
+                            <Button view="normal" onClick={() => setDetails(true)}>
+                                {t('history')}
                             </Button>
-                        )}
-                    </Flex>
-                </Flex>
+                            {onRetry && (
+                                <Button view="action" onClick={() => void onRetry()}>
+                                    {t('retryDraft')}
+                                </Button>
+                            )}
+                        </Flex>
+                    }
+                />
                 {details && (
                     <ActivityDetailsDialog
                         id={entry.id}
@@ -54,12 +52,13 @@ export function ConversationGeneration({
             </Box>
         );
     }
-
     async function cancel() {
         setBusy(true);
         setError('');
         try {
-            dataOrThrow(await api.POST('/api/activity/{id}/cancel', {params: {path: {id: entry.id}}}));
+            await api.activity.cancelActivity({
+                id: entry.id,
+            });
             await onRefresh();
         } catch (cause) {
             setError(errorMessage(cause));
@@ -67,7 +66,6 @@ export function ConversationGeneration({
             setBusy(false);
         }
     }
-
     return (
         <Box className={styles.root} qa="conversation-generation">
             <ActivityProgress entry={entry} className={styles.process}>

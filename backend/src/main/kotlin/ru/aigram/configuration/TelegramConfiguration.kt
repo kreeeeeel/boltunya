@@ -1,6 +1,6 @@
 package ru.aigram.configuration
 
-import jakarta.inject.Provider
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import ru.aigram.storage.CredentialStore
@@ -27,12 +27,13 @@ import java.nio.file.Path
 @Configuration(proxyBeanMethods = false)
 class TelegramConfiguration {
     @Bean
-    fun telegramMediaStore(directory: Path, gateway: Provider<TdLightGateway>): TelegramMediaStore = TelegramMediaStore(
-        directory.resolve("telegram/files"),
-        listOf("profile_photos", "stickers", "thumbnails", "wallpapers").stream().map {
-            directory.resolve("telegram/data/$it")
-        }.toList(),
-    ) { gateway.get().downloadFile(it) }
+    fun telegramMediaStore(directory: Path, gateway: ObjectProvider<TdLightGateway>): TelegramMediaStore =
+        TelegramMediaStore(
+            directory.resolve("telegram/files"),
+            listOf("profile_photos", "stickers", "thumbnails", "wallpapers").stream().map {
+                directory.resolve("telegram/data/$it")
+            }.toList(),
+        ) { gateway.getObject().downloadFile(it) }
 
     @Bean
     fun telegramInteraction(connection: TelegramConnectionState): TelegramInteraction = TelegramInteraction {

@@ -1,9 +1,13 @@
 package ru.aigram.diagnostics
 
-import jakarta.inject.Inject
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Component
+import ru.aigram.domain.events.diagnostics.DesktopUpdateFailure
+import ru.aigram.domain.events.diagnostics.DiagnosticEntry
+import ru.aigram.domain.events.diagnostics.DiagnosticGuide
+import ru.aigram.domain.events.diagnostics.DiagnosticReport
+import ru.aigram.domain.events.diagnostics.DiagnosticSource
 import ru.aigram.exception.AppException
 import ru.aigram.exception.ErrorCode
 import ru.aigram.resources.ResourceCatalog
@@ -28,7 +32,7 @@ private val UPDATE_CODES = mapOf(
 
 /** A bounded support log. Exception messages, requests, prompts and chat identifiers are never persisted. */
 @Component
-class DiagnosticLog @Inject constructor(directory: Path, private val clock: Clock, resources: ResourceCatalog) {
+class DiagnosticLog(directory: Path, private val clock: Clock, resources: ResourceCatalog) {
     private val path = directory.resolve("diagnostics/errors.json")
     private val updatePath = directory.resolve("desktop/updates/last-error.json")
     private val json = Json { prettyPrint = true }
@@ -62,7 +66,9 @@ class DiagnosticLog @Inject constructor(directory: Path, private val clock: Cloc
                 .limit(MAX_STACK_FRAMES)
                 .map { it.className.removePrefix(APPLICATION_PACKAGE) + "." + it.methodName + ":" + it.lineNumber }
                 .toList()
-            if (frames.isNotEmpty()) put("location", frames.joinToString("\n"))
+            if (frames.isNotEmpty()) {
+                put("location", frames.joinToString("\n"))
+            }
         }
         val entry = DiagnosticEntry(
             id = previous?.id ?: UUID.randomUUID().toString(),
@@ -118,17 +124,25 @@ class DiagnosticLog @Inject constructor(directory: Path, private val clock: Cloc
 
     private fun importUpdateFailure() {
         try {
-            if (!Files.isRegularFile(updatePath) || Files.size(updatePath) > MAX_LOG_BYTES) return
+            if (!Files.isRegularFile(updatePath) || Files.size(updatePath) > MAX_LOG_BYTES) {
+                return
+            }
             val modified = Files.getLastModifiedTime(updatePath).toMillis()
-            if (modified == updateModified) return
+            if (modified == updateModified) {
+                return
+            }
             updateModified = modified
             val failure = json.decodeFromString<DesktopUpdateFailure>(
                 Files.readString(updatePath).removePrefix("\uFEFF"),
             )
-            if (UPDATE_CODES[failure.stage] != failure.code) return
+            if (UPDATE_CODES[failure.stage] != failure.code) {
+                return
+            }
             val date = Instant.parse(failure.failedAt).epochSecond
             val previous = entries.firstOrNull { it.source == DiagnosticSource.UPDATE.value && it.code == failure.code }
-            if (previous != null && previous.date >= date) return
+            if (previous != null && previous.date >= date) {
+                return
+            }
             val guide = guides.getValue(failure.code)
             val entry = DiagnosticEntry(
                 previous?.id ?: UUID.randomUUID().toString(), date, previous?.firstOccurredAt ?: date,

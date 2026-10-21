@@ -7,5 +7,7 @@ export function visibleChatActivity(entries: Activity[], chatId: string | null) 
         return active;
     }
     const latest = [...conversation].sort((left, right) => right.date - left.date)[0];
-    return latest && ['error', 'interrupted'].includes(latest.status) ? latest : undefined;
+    return latest && latest.kind !== 'draft' && ['error', 'interrupted'].includes(latest.status)
+        ? latest
+        : undefined;
 }

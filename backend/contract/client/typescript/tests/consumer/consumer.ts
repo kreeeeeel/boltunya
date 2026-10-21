@@ -1,8 +1,10 @@
 import {
     ChatsApi,
     Configuration,
+    ModelsApi,
     SystemApi,
     type ConfigurationParameters,
+    type Ok,
 } from "@aigram/api-client";
 
 const settings: ConfigurationParameters = {
@@ -13,6 +15,7 @@ const settings: ConfigurationParameters = {
 const configuration = new Configuration(settings);
 const chats = new ChatsApi(configuration);
 const system = new SystemApi(configuration);
+const models = new ModelsApi(configuration);
 
 type EngineModel = Awaited<
     ReturnType<SystemApi["state"]>
@@ -43,4 +46,14 @@ export async function sendText() {
 
 export async function readState() {
     return system.state();
+}
+
+export function canRestartEngine(
+    state: Awaited<ReturnType<SystemApi["state"]>>,
+): boolean {
+    return state.engine.canRestart ?? false;
+}
+
+export async function restartLocalEngine(): Promise<Ok> {
+    return models.restartEngine();
 }

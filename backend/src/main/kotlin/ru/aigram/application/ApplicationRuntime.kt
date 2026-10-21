@@ -1,6 +1,5 @@
 package ru.aigram.application
 
-import jakarta.inject.Inject
 import org.springframework.stereotype.Component
 import ru.aigram.ai.EngineManager
 import ru.aigram.ai.profile.ModelTargetResolver
@@ -8,10 +7,10 @@ import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.automation.proactive.ProactiveCoordinator
 import ru.aigram.configuration.ApplicationConfiguration
 import ru.aigram.diagnostics.DiagnosticLog
-import ru.aigram.diagnostics.DiagnosticSource
-import ru.aigram.http.LocalWebServer
+import ru.aigram.domain.events.diagnostics.DiagnosticSource
 import ru.aigram.memory.MemoryCoordinator
 import ru.aigram.monitoring.MonitoringService
+import ru.aigram.server.LocalApiServer
 import ru.aigram.storage.CredentialStore
 import ru.aigram.telegram.MediaPrefetcher
 import ru.aigram.telegram.TelegramGateway
@@ -22,9 +21,9 @@ import java.nio.file.StandardOpenOption
 import java.util.concurrent.atomic.AtomicBoolean
 
 @Component
-class ApplicationRuntime @Inject constructor(
+class ApplicationRuntime constructor(
     private val configuration: ApplicationConfiguration,
-    private val server: LocalWebServer,
+    private val server: LocalApiServer,
     private val telegram: TelegramGateway,
     private val engine: EngineManager,
     private val replies: ReplyCoordinator,

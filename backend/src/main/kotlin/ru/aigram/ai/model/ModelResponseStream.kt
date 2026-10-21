@@ -30,7 +30,11 @@ class ModelResponseStream(private val inactivityTimeout: Duration = MODEL_INACTI
         val refusal = StringBuilder()
         val last = AtomicReference<ChatResponse>()
         val generation = AtomicReference<ChatGenerationMetadata>()
-        val deadline = if (totalTimeout.isZero) Long.MAX_VALUE else System.nanoTime() + totalTimeout.toNanos()
+        val deadline = if (totalTimeout.isZero) {
+            Long.MAX_VALUE
+        } else {
+            System.nanoTime() + totalTimeout.toNanos()
+        }
         val timed = if (totalTimeout.isZero) {
             chunks
         } else {
@@ -49,11 +53,18 @@ class ModelResponseStream(private val inactivityTimeout: Duration = MODEL_INACTI
                     ?: chunk.result?.metadata?.get<Any>(THINKING) as? String ?: "",
             )
             val cumulativeReasoning = chunk.result?.output?.metadata?.get(REASONING_CONTENT) as? String
-            if (!cumulativeReasoning.isNullOrEmpty()) reasoning.set(cumulativeReasoning)
+            if (!cumulativeReasoning.isNullOrEmpty()) {
+                reasoning.set(cumulativeReasoning)
+            }
             refusal.append(chunk.result?.output?.metadata?.get("refusal") as? String ?: "")
             attempt?.append(chunk)
         }.onErrorMap(TimeoutException::class.java) { EngineUnavailableException(it) }.blockLast()
-        val response = last.get() ?: throw EmptyModelReplyException()
+        val response = last.get()
+
+        if (response == null) {
+            throw EmptyModelReplyException()
+        }
+
         return ChatResponse(
             listOf(
                 Generation(

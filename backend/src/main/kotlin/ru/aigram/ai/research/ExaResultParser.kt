@@ -1,7 +1,7 @@
 package ru.aigram.ai.research
 
-import jakarta.inject.Inject
 import org.springframework.stereotype.Component
+import ru.aigram.domain.ai.research.ResearchSource
 import ru.aigram.exception.IntegrationException
 import ru.aigram.resources.ResourceCatalog
 import java.io.IOException
@@ -12,13 +12,12 @@ private const val MAX_SOURCE_CHARACTERS = 4000
 private const val MAX_TITLE_CHARACTERS = 180
 
 @Component
-class ExaResultParser @Inject constructor(
-    private val resources: ResourceCatalog,
-    private val pages: PublicPageReader,
-) {
+class ExaResultParser(private val resources: ResourceCatalog, private val pages: PublicPageReader) {
     fun parse(text: String): List<ResearchSource> = text.take(MAX_RESPONSE_CHARACTERS).lines()
         .fold(mutableListOf<MutableList<String>>()) { records, line ->
-            if (line.startsWith("Title:")) records.add(mutableListOf())
+            if (line.startsWith("Title:")) {
+                records.add(mutableListOf())
+            }
             records.lastOrNull()?.add(line)
             records
         }.take(MAX_RESULTS).mapNotNull { lines ->
@@ -27,7 +26,9 @@ class ExaResultParser @Inject constructor(
             val published = lines.firstOrNull { it.startsWith("Published:") || it.startsWith("PublishedDate:") }
                 ?.substringAfter(':')?.trim().orEmpty()
             val start = lines.indexOfFirst { it.startsWith("Text:") || it.startsWith("Highlights:") }
-            if (url.isBlank() || title.isBlank() || start < 0) return@mapNotNull null
+            if (url.isBlank() || title.isBlank() || start < 0) {
+                return@mapNotNull null
+            }
             val content = (listOf(lines[start].substringAfter(':')) + lines.drop(start + 1))
                 .dropLastWhile { it.isBlank() || it.trim() == "---" }.joinToString("\n").trim()
             try {

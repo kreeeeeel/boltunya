@@ -8,3 +8,4 @@ CommunicationStyle:
         - aggressive
         - rough
         - custom
+    default: friendly

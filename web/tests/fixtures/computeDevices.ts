@@ -1,6 +1,5 @@
-import type {components} from '@/shared/api/schema';
-
-export const computeDevices: components['schemas']['ComputeDeviceStatus'] = {
+import type * as Contract from '@aigram/api-client';
+export const computeDevices: Contract.ComputeDeviceStatus = {
     configured: 'auto',
     active: 'auto',
     managed: true,

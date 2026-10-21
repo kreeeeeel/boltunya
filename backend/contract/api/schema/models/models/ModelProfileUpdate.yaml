@@ -3,12 +3,8 @@ ModelProfileUpdate:
     required:
         - name
         - provider
-        - preset
         - baseUrl
         - model
-        - enabled
-        - options
-        - capabilities
     properties:
         name:
             type: string
@@ -30,11 +26,20 @@ ModelProfileUpdate:
             type: boolean
             default: true
         options:
-            $ref: ./ModelProfileOptions.yaml#/ModelProfileOptions
+            allOf:
+                -
+                    $ref: ./ModelProfileOptionsInput.yaml#/ModelProfileOptionsInput
+            default: {}
+            x-kotlin-empty-default: true
         capabilities:
-            $ref: ./ModelCapabilities.yaml#/ModelCapabilities
+            allOf:
+                -
+                    $ref: ./ModelCapabilitiesInput.yaml#/ModelCapabilitiesInput
+            default: {}
+            x-kotlin-empty-default: true
         apiKey:
             type: string
+            nullable: true
             maxLength: 8192
             writeOnly: true
             description: Omitted or empty keeps the existing key. Never returned.

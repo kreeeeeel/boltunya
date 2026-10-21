@@ -1,15 +1,14 @@
 package ru.aigram.storage
 
-import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Component
-import ru.aigram.domain.ChatMessage
+import ru.aigram.domain.chat.ChatMessage
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
 @Component
-class WritingStyleStore @Inject constructor(directory: Path) {
+class WritingStyleStore(directory: Path) {
     private val file = directory.resolve("writing-style.json")
     private var samples = if (Files.exists(file)) {
         Json.decodeFromString<Map<String, List<ChatMessage>>>(Files.readString(file))
@@ -25,7 +24,9 @@ class WritingStyleStore @Inject constructor(directory: Path) {
         }
             .map { ChatMessage(it.id, chatId, it.text, true, it.date) }.toList()
         val next = (samples[chatId].orEmpty() + incoming).distinctBy { it.id }.takeLast(50)
-        if (samples[chatId] == next || next.isEmpty()) return next
+        if (samples[chatId] == next || next.isEmpty()) {
+            return next
+        }
         val updated = (samples + (chatId to next)).entries.toList().takeLast(200).associate { it.toPair() }
         Files.createDirectories(file.parent)
         val temporary = file.resolveSibling("writing-style.tmp")

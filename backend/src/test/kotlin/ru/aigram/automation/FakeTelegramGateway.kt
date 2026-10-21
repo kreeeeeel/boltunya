@@ -1,10 +1,10 @@
 package ru.aigram.automation
 
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.ChatSummary
-import ru.aigram.domain.TelegramCredentials
-import ru.aigram.domain.TelegramStatus
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.ChatSummary
+import ru.aigram.domain.telegram.TelegramCredentials
+import ru.aigram.domain.telegram.TelegramStatus
 import ru.aigram.telegram.TelegramGateway
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -29,7 +29,9 @@ class FakeTelegramGateway : TelegramGateway {
         beforeSend()
         val failure = nextSendError
         nextSendError = null
-        if (failure != null) throw failure
+        if (failure != null) {
+            throw failure
+        }
         sent.add(text)
         replyIds.add(replyToId)
         topicIds.add(topicId)

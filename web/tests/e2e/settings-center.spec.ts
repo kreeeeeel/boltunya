@@ -5,12 +5,11 @@ import {chooseSettingsSection} from '../fixtures/settings';
 import {persistTestTheme} from '../fixtures/settings';
 import {syntheticPromptBudget} from '../fixtures/promptBudget';
 import {computeDevices} from '../fixtures/computeDevices';
-import type {components} from '../../src/shared/api/schema';
+import type * as Contract from '@aigram/api-client';
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
 import ru from '../../src/shared/i18n/ru.json';
 import type {Locator} from '@playwright/test';
-
 async function expectCompactMemoryActions(actions: Locator) {
     await expect(actions.getByRole('button')).toHaveCount(4);
     await expect
@@ -53,9 +52,9 @@ async function expectCompactMemoryActions(actions: Locator) {
 }
 test.beforeEach(async ({page}) => {
     const state = structuredClone(workspaceState);
-    let appearance: components['schemas']['AppearanceSettings'] = {mode: 'light', tokens: {}, css: ''};
+    let appearance: Contract.AppearanceSettings = {mode: 'light', tokens: {}, css: ''};
     const profiles = structuredClone(modelProfiles);
-    const prompts = new Map<string, components['schemas']['ModelPromptSettings']>();
+    const prompts = new Map<string, Contract.ModelPromptSettings>();
     let routing = {
         enabled: false,
         parallelIndependentTasks: false,
@@ -255,7 +254,6 @@ test('routing offers only vision-capable profiles for image analysis', async ({p
     });
     await expect(page.getByRole('button', {name: ru.saved, exact: true})).toBeVisible();
 });
-
 for (const dark of [false, true]) {
     test(`model connections use one centered illustrated empty state in ${dark ? 'dark' : 'light'} theme`, async ({
         page,
@@ -293,7 +291,6 @@ for (const dark of [false, true]) {
         await empty.getByRole('button', {name: ru.modelProfiles.create, exact: true}).click();
         await expect(page.getByRole('textbox', {name: ru.modelProfiles.name, exact: true})).toBeVisible();
     });
-
     test(`settings navigation stays fixed and language cards align in ${dark ? 'dark' : 'light'} theme`, async ({
         page,
     }) => {
@@ -471,7 +468,6 @@ for (const dark of [false, true]) {
         ).not.toBe('rgba(0, 0, 0, 0)');
     });
 }
-
 test('the color picker updates its field and live example before applying the whole theme', async ({
     page,
 }) => {
@@ -496,7 +492,6 @@ test('the color picker updates its field and live example before applying the wh
     );
     await page.screenshot({path: '../docs/resources/appearance-color-picker.png', animations: 'disabled'});
 });
-
 test('model additions save separately, preserve drafts and display token estimates', async ({page}) => {
     await chooseSettingsSection(page, 'prompt');
     await page.getByRole('textbox', {name: ru.globalPrompt, exact: true}).fill('Shared wording');
@@ -524,7 +519,6 @@ test('model additions save separately, preserve drafts and display token estimat
         'Shared wording',
     );
 });
-
 for (const dark of [false, true]) {
     test(`memory actions stay compact and wrap in both memory windows in ${dark ? 'dark' : 'light'} theme`, async ({
         page,

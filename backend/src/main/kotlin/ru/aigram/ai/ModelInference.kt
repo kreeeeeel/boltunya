@@ -1,9 +1,9 @@
 package ru.aigram.ai
 
-import jakarta.inject.Inject
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import ru.aigram.automation.activity.ActivityPhase
 import ru.aigram.automation.activity.ReplyTraceScope
+import ru.aigram.domain.events.ActivityPhase
 import ru.aigram.exception.impl.BackgroundInferenceDeferredException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Semaphore
@@ -12,7 +12,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 private const val MAX_INDEPENDENT_INFERENCES = 4
 
 @Component
-class ModelInference @Inject constructor(private val tracing: ReplyTraceScope) {
+class ModelInference @Autowired constructor(private val tracing: ReplyTraceScope) {
     constructor() : this(ReplyTraceScope())
 
     private val resources = ConcurrentHashMap<String, InferenceResource>()
@@ -25,7 +25,11 @@ class ModelInference @Inject constructor(private val tracing: ReplyTraceScope) {
         val previousPhase = tracing.current()?.currentPhase()
         tracing.phase(ActivityPhase.WAITING_RESOURCE)
         val resource = resources.computeIfAbsent(group) { InferenceResource() }
-        val mode = if (group == "shared") scheduling.writeLock() else scheduling.readLock()
+        val mode = if (group == "shared") {
+            scheduling.writeLock()
+        } else {
+            scheduling.readLock()
+        }
         resource.foreground.incrementAndGet()
         interruptBackground(group)
         try {
@@ -38,10 +42,14 @@ class ModelInference @Inject constructor(private val tracing: ReplyTraceScope) {
                         independent.acquire()
                         acquired = true
                     }
-                    if (previousPhase != null) tracing.phase(previousPhase)
+                    if (previousPhase != null) {
+                        tracing.phase(previousPhase)
+                    }
                     return action()
                 } finally {
-                    if (acquired) independent.release()
+                    if (acquired) {
+                        independent.release()
+                    }
                     resource.lock.unlock()
                 }
             } finally {
@@ -56,8 +64,14 @@ class ModelInference @Inject constructor(private val tracing: ReplyTraceScope) {
 
     fun <T> background(group: String, action: () -> T): T {
         val resource = resources.computeIfAbsent(group) { InferenceResource() }
-        val mode = if (group == "shared") scheduling.writeLock() else scheduling.readLock()
-        if (foregroundBusy(group) || !mode.tryLock()) throw BackgroundInferenceDeferredException()
+        val mode = if (group == "shared") {
+            scheduling.writeLock()
+        } else {
+            scheduling.readLock()
+        }
+        if (foregroundBusy(group) || !mode.tryLock()) {
+            throw BackgroundInferenceDeferredException()
+        }
         if (!resource.lock.tryLock()) {
             mode.unlock()
             throw BackgroundInferenceDeferredException()
@@ -69,19 +83,25 @@ class ModelInference @Inject constructor(private val tracing: ReplyTraceScope) {
         }
         try {
             resource.background.set(Thread.currentThread())
-            if (foregroundBusy(group)) throw BackgroundInferenceDeferredException()
+            if (foregroundBusy(group)) {
+                throw BackgroundInferenceDeferredException()
+            }
             return action()
         } catch (_: InterruptedException) {
             throw BackgroundInferenceDeferredException()
         } catch (exception: Exception) {
-            if (Thread.currentThread().isInterrupted) throw BackgroundInferenceDeferredException()
+            if (Thread.currentThread().isInterrupted) {
+                throw BackgroundInferenceDeferredException()
+            }
             throw exception
         } finally {
             resource.background.set(null)
             Thread.interrupted()
             resource.lock.unlock()
             mode.unlock()
-            if (group != "shared") independent.release()
+            if (group != "shared") {
+                independent.release()
+            }
         }
     }
 

@@ -2,7 +2,7 @@ import {Box, Button, DropdownMenu, Flex, Icon, Text, TextArea, Tooltip} from '@g
 import {FaceSmile, File, Paperclip, PaperPlane, Picture, Sparkles, Sticker, Video} from '@gravity-ui/icons';
 import {useEffect, useRef, useState} from 'react';
 import {useTranslations} from 'next-intl';
-import {api, dataOrThrow} from '@/shared/api/client';
+import {api} from '@/shared/api/client';
 import {AttachmentDialog} from '@/modules/media/AttachmentDialog/AttachmentDialog';
 import type {AttachmentSelection} from '@/modules/media/AttachmentDialog/AttachmentDialog';
 import {StickerPicker} from '@/modules/media/StickerPicker/StickerPicker';
@@ -11,9 +11,7 @@ import {validAttachments} from '@/modules/media/model/uploads';
 import type {AttachmentKind} from '@/modules/media/model/uploads';
 import {EmojiPicker} from '@/shared/ui/EmojiPicker/EmojiPicker';
 import styles from '@/modules/workspace/Conversation/Conversation.module.css';
-
 const MAX_MESSAGE_LENGTH = 4096;
-
 export function ConversationComposer({
     chatId,
     text,
@@ -42,7 +40,6 @@ export function ConversationComposer({
     const input = useRef<HTMLTextAreaElement>(null);
     const [stickerAnchor, setStickerAnchor] = useState<HTMLButtonElement | null>(null);
     const urls = useRef(new Set<string>());
-
     useEffect(() => {
         const values = urls.current;
         return () => values.forEach(URL.revokeObjectURL);
@@ -60,7 +57,6 @@ export function ConversationComposer({
             files.current.click();
         }
     }
-
     function insertEmoji(emoji: string) {
         const start = input.current?.selectionStart ?? text.length;
         const end = input.current?.selectionEnd ?? start;
@@ -74,7 +70,6 @@ export function ConversationComposer({
             input.current?.setSelectionRange(start + emoji.length, start + emoji.length);
         });
     }
-
     function closeAttachments() {
         selection?.forEach((item) => {
             URL.revokeObjectURL(item.preview);
@@ -82,7 +77,6 @@ export function ConversationComposer({
         });
         setSelection(undefined);
     }
-
     return (
         <Box className={styles.composerArea}>
             {error && (
@@ -228,12 +222,10 @@ export function ConversationComposer({
                     anchor={stickerAnchor}
                     onClose={() => setStickers(false)}
                     onPick={async (stickerId) => {
-                        dataOrThrow(
-                            await api.POST('/api/chats/{chatId}/stickers', {
-                                params: {path: {chatId}},
-                                body: {stickerId},
-                            }),
-                        );
+                        await api.chats.sendSticker({
+                            chatId,
+                            sendStickerRequest: {stickerId},
+                        });
                         await onMediaSent();
                     }}
                 />

@@ -1,6 +1,5 @@
 package ru.aigram.ai.model
 
-import jakarta.inject.Inject
 import kotlinx.serialization.json.JsonObject
 import org.springframework.ai.chat.messages.Message
 import org.springframework.ai.chat.messages.SystemMessage
@@ -21,15 +20,18 @@ import reactor.core.scheduler.Schedulers
 import ru.aigram.ai.ModelInference
 import ru.aigram.ai.OllamaRuntime
 import ru.aigram.ai.profile.ModelTargetResolver
-import ru.aigram.ai.profile.ModelTask
 import ru.aigram.ai.profile.ProfileChatOptions
 import ru.aigram.ai.profile.ProfileContextBudget
 import ru.aigram.ai.profile.ProfileModelFactory
-import ru.aigram.ai.profile.ResolvedModelTarget
 import ru.aigram.ai.prompt.ModelPromptStore
 import ru.aigram.automation.activity.ReplyTraceScope
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.ModelMeasurement
+import ru.aigram.domain.ai.model.ModelCompletion
+import ru.aigram.domain.ai.model.ModelMeasurement
+import ru.aigram.domain.ai.model.ModelPolicy
+import ru.aigram.domain.ai.model.ThinkingMode
+import ru.aigram.domain.ai.profile.ModelTask
+import ru.aigram.domain.ai.profile.ResolvedModelTarget
+import ru.aigram.domain.chat.ChatRule
 import ru.aigram.exception.AppException
 import ru.aigram.exception.impl.EmptyMemorySummaryException
 import ru.aigram.exception.impl.EngineHttpFailedException
@@ -51,7 +53,7 @@ private const val KEEP_ALIVE = "20m"
 private const val MEMORY_CREATIVITY = 10
 
 @Component
-class ChatCompletionService @Inject constructor(
+class ChatCompletionService(
     private val model: ChatModel,
     private val policies: ModelPolicies,
     private val reader: ModelReplyReader,
@@ -92,7 +94,11 @@ class ChatCompletionService @Inject constructor(
         val target = promptTarget(ChatRule(model = model), ModelTask.MEMORY)
         val messages = listOf(SystemMessage(instruction), UserMessage(data))
         val reserve = if (target.profileId.isEmpty()) {
-            MEMORY_RESPONSE_TOKENS + if (policies.get(target.model).reasoningTokens > 0) MAX_REASONING_TOKENS else 0
+            MEMORY_RESPONSE_TOKENS + if (policies.get(target.model).reasoningTokens > 0) {
+                MAX_REASONING_TOKENS
+            } else {
+                0
+            }
         } else {
             reservedTokens(target, MEMORY_RESPONSE_TOKENS)
         }
@@ -100,7 +106,12 @@ class ChatCompletionService @Inject constructor(
     }
 
     fun instructions(rule: ChatRule, globalPrompt: String, task: ModelTask = ModelTask.REPLY): String {
-        val target = targets?.resolve(task, rule) ?: return globalPrompt
+        val target = targets?.resolve(task, rule)
+
+        if (target == null) {
+            return globalPrompt
+        }
+
         val text = promptSettings?.get(target)?.instructions.orEmpty()
         return if (text.isBlank()) {
             globalPrompt
@@ -120,7 +131,11 @@ class ChatCompletionService @Inject constructor(
         task: ModelTask = ModelTask.REPLY,
     ): ModelCompletion {
         val original = targets?.resolve(task, rule)
-        val target = if (original == null) null else promptSettings?.configure(original) ?: original
+        val target = if (original == null) {
+            null
+        } else {
+            promptSettings?.configure(original) ?: original
+        }
         val group = target?.executionGroup ?: "shared"
         val action = {
             if (target != null && target.profileId.isNotEmpty()) {
@@ -156,7 +171,9 @@ class ChatCompletionService @Inject constructor(
         task: ModelTask = ModelTask.REPLY,
     ): ModelCompletion {
         val factory = clients
-        if (factory == null) throw ModelProviderFailedException()
+        if (factory == null) {
+            throw ModelProviderFailedException()
+        }
         if (messages.stream().anyMatch { it is UserMessage && it.media.isNotEmpty() } && !target.capabilities.vision) {
             throw ModelCapabilityUnavailableException()
         }
@@ -193,7 +210,9 @@ class ChatCompletionService @Inject constructor(
         } catch (exception: AppException) {
             throw exception
         } catch (exception: Exception) {
-            if (Thread.currentThread().isInterrupted) throw exception
+            if (Thread.currentThread().isInterrupted) {
+                throw exception
+            }
             // API response bodies can contain echoed input or credentials; do not retain their messages as causes.
             throw ModelProviderFailedException()
         }
@@ -204,7 +223,9 @@ class ChatCompletionService @Inject constructor(
         ) {
             throw ModelProviderRefusedException()
         }
-        if (result.finishReason.equals("length", ignoreCase = true)) throw InvalidModelReplyException()
+        if (result.finishReason.equals("length", ignoreCase = true)) {
+            throw InvalidModelReplyException()
+        }
         return result
     }
 
@@ -225,13 +246,19 @@ class ChatCompletionService @Inject constructor(
                 schema,
                 maxOf(maxTokens, RETRY_RESPONSE_TOKENS),
                 policy,
-                if (policy.reasoningTokens > 0) MAX_REASONING_TOKENS else 0,
+                if (policy.reasoningTokens > 0) {
+                    MAX_REASONING_TOKENS
+                } else {
+                    0
+                },
                 target,
             )
         } else {
             first
         }
-        if (result.finishReason == "length" && result.text.isNotBlank()) throw InvalidModelReplyException()
+        if (result.finishReason == "length" && result.text.isNotBlank()) {
+            throw InvalidModelReplyException()
+        }
         if (result.text.isNotBlank() && result.tokensPerSecond > 0) {
             measurements.record(rule.model, ModelMeasurement(result.durationMs, result.tokensPerSecond))
         }
@@ -250,7 +277,13 @@ class ChatCompletionService @Inject constructor(
         val configured = contextBudget.configure(target, messages, maxTokens + reasoningTokens)
         val context = contextBudget.select(configured, messages, maxTokens, maxTokens + reasoningTokens)
         runtime.track(rule.model)
-        val temperature = (if (schema != null) 0.0 else rule.creativity / 100.0)
+        val temperature = (
+            if (schema != null) {
+                0.0
+            } else {
+                rule.creativity / 100.0
+            }
+            )
             .coerceIn(policy.minimumTemperature, policy.maximumTemperature)
         val options = OllamaChatOptions.builder().model(rule.model)
             .temperature(temperature)
@@ -261,7 +294,9 @@ class ChatCompletionService @Inject constructor(
             ThinkingMode.LOW -> options.thinkOption(ThinkOption.ThinkLevel.LOW)
             ThinkingMode.DEFAULT -> Unit
         }
-        if (schema != null) options.format(mapper.readValue(schema.toString(), Map::class.java))
+        if (schema != null) {
+            options.format(mapper.readValue(schema.toString(), Map::class.java))
+        }
         val started = System.nanoTime()
         val built = options.build()
         val attempt = tracing.current()?.begin(rule.model, context, mapper.writeValueAsString(built))
@@ -292,7 +327,9 @@ class ChatCompletionService @Inject constructor(
             maxTokens = MEMORY_RESPONSE_TOKENS,
             task = ModelTask.MEMORY,
         )
-        if (result.text.isBlank()) throw EmptyMemorySummaryException()
+        if (result.text.isBlank()) {
+            throw EmptyMemorySummaryException()
+        }
         return result.text.removePrefix("```markdown").removePrefix("```").removeSuffix("```").trim()
     }
 }

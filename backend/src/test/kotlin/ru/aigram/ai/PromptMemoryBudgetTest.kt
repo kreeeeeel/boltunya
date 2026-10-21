@@ -1,13 +1,13 @@
 package ru.aigram.ai
 
 import org.junit.jupiter.api.Test
-import ru.aigram.ai.profile.ModelProvider
 import ru.aigram.ai.profile.ProfileContextBudget
-import ru.aigram.ai.profile.ResolvedModelTarget
 import ru.aigram.ai.prompt.PromptTokenEstimator
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.memory.MemoryContext
+import ru.aigram.domain.ai.profile.ModelProvider
+import ru.aigram.domain.ai.profile.ResolvedModelTarget
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.memory.MemoryContext
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 

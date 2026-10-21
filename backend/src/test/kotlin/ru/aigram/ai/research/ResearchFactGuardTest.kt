@@ -1,7 +1,8 @@
 package ru.aigram.ai.research
 
 import org.junit.jupiter.api.Test
-import ru.aigram.domain.ChatMessage
+import ru.aigram.domain.ai.research.ResearchContext
+import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.resources.ResourceCatalog
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

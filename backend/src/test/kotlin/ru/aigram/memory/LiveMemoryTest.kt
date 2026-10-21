@@ -3,8 +3,11 @@ package ru.aigram.memory
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import ru.aigram.ai.AiTestServices
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.memory.MemoryContext
+import ru.aigram.domain.memory.MemorySource
+import ru.aigram.domain.memory.MemorySpeaker
 import ru.aigram.resources.ResourceCatalog
 import kotlin.test.assertTrue
 

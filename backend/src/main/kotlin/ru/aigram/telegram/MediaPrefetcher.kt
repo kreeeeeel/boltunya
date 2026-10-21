@@ -1,7 +1,6 @@
 package ru.aigram.telegram
 
-import jakarta.inject.Inject
-import ru.aigram.domain.ChatMessage
+import ru.aigram.domain.chat.ChatMessage
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Executors
@@ -10,10 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 private const val MAX_PENDING_DOWNLOADS = 64
 
-class MediaPrefetcher @Inject constructor(
-    private val files: TelegramMediaStore,
-    private val policy: MediaDownloadPolicy,
-) : AutoCloseable {
+class MediaPrefetcher(private val files: TelegramMediaStore, private val policy: MediaDownloadPolicy) : AutoCloseable {
     private val closed = AtomicBoolean()
     private val pending = ConcurrentLinkedQueue<ChatMessage>()
     private val queued = ConcurrentHashMap.newKeySet<Int>()
@@ -26,17 +22,40 @@ class MediaPrefetcher @Inject constructor(
     }
 
     fun observe(message: ChatMessage) {
-        val media = message.media ?: return
-        if (!policy.allows(message.kind, media.size) || files.isDownloaded(media.fileId)) return
-        if (pending.size >= MAX_PENDING_DOWNLOADS) return
-        if (queued.add(media.fileId)) pending.add(message)
+        val media = message.media
+
+        if (media == null) {
+            return
+        }
+
+        if (!policy.allows(message.kind, media.size) || files.isDownloaded(media.fileId)) {
+            return
+        }
+        if (pending.size >= MAX_PENDING_DOWNLOADS) {
+            return
+        }
+        if (queued.add(media.fileId)) {
+            pending.add(message)
+        }
     }
 
     internal fun downloadOne() {
-        val message = pending.poll() ?: return
-        val media = message.media ?: return
+        val message = pending.poll()
+
+        if (message == null) {
+            return
+        }
+
+        val media = message.media
+
+        if (media == null) {
+            return
+        }
+
         try {
-            if (policy.allows(message.kind, media.size)) files.get(media.fileId)
+            if (policy.allows(message.kind, media.size)) {
+                files.get(media.fileId)
+            }
         } catch (exception: Exception) {
             System.err.println("Media prefetch failed: ${exception.javaClass.simpleName}")
         } finally {

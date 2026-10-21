@@ -1,8 +1,8 @@
 package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
-import ru.aigram.domain.MediaAttachment
-import ru.aigram.domain.MediaFile
+import ru.aigram.domain.media.MediaAttachment
+import ru.aigram.domain.media.MediaFile
 import ru.aigram.exception.impl.MediaNotReadyException
 import ru.aigram.exception.impl.MediaTooLargeException
 import ru.aigram.exception.impl.MediaUnavailableException
@@ -58,7 +58,12 @@ class TelegramMediaStore(
     }
 
     fun get(fileId: Int): MediaFile {
-        val metadata = files[fileId] ?: throw UnknownMediaException()
+        val metadata = files[fileId]
+
+        if (metadata == null) {
+            throw UnknownMediaException()
+        }
+
         if (metadata.size > MAX_FILE_BYTES) {
             throw MediaTooLargeException()
         }

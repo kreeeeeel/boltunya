@@ -1,10 +1,9 @@
 import {Button, Dialog, Flex, Skeleton, Text} from '@gravity-ui/uikit';
 import {useEffect, useState} from 'react';
 import {useTranslations} from 'next-intl';
-import {api, dataOrThrow, errorMessage, type Message} from '@/shared/api/client';
+import {api, errorMessage, type Message} from '@/shared/api/client';
 import {MessageBubble} from '@/modules/workspace/Conversation/MessageBubble';
 import styles from '@/modules/workspace/DeletedMessagesDialog/DeletedMessagesDialog.module.css';
-
 export function DeletedMessagesDialog({
     chatId,
     title,
@@ -21,9 +20,10 @@ export function DeletedMessagesDialog({
     const [error, setError] = useState('');
     useEffect(() => {
         let active = true;
-        void api
-            .GET('/api/chats/{chatId}/deleted', {params: {path: {chatId}}})
-            .then(dataOrThrow)
+        void api.chats
+            .getDeletedMessages({
+                chatId,
+            })
             .then((value) => {
                 if (active) {
                     setMessages(value);
@@ -43,11 +43,10 @@ export function DeletedMessagesDialog({
         setBusy(true);
         setError('');
         try {
-            const value = dataOrThrow(
-                await api.GET('/api/chats/{chatId}/deleted', {
-                    params: {path: {chatId}, query: {before: messages?.[0]?.id ?? ''}},
-                }),
-            );
+            const value = await api.chats.getDeletedMessages({
+                chatId,
+                before: messages?.[0]?.id ?? '',
+            });
             setMessages((previous) => [...value, ...(previous ?? [])]);
             setMore(value.length === 100);
         } catch (cause) {

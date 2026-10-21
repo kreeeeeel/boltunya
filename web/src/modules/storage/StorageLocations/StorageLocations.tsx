@@ -2,24 +2,20 @@ import {FolderOpen} from '@gravity-ui/icons';
 import {Box, Button, Flex, Icon, Skeleton, Text, Tooltip} from '@gravity-ui/uikit';
 import {useEffect, useState} from 'react';
 import {useTranslations} from 'next-intl';
-
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
-import type {components} from '@/shared/api/schema';
+import {api, errorMessage} from '@/shared/api/client';
+import type * as Contract from '@aigram/api-client';
 import {desktopBridge} from '@/shared/desktop/bridge';
 import styles from '@/modules/storage/StorageLocations/StorageLocations.module.css';
-
 export function StorageLocations() {
     const t = useTranslations('storageLocations');
-    const [locations, setLocations] = useState<components['schemas']['StorageLocation'][]>();
+    const [locations, setLocations] = useState<Contract.StorageLocation[]>();
     const [busy, setBusy] = useState('');
     const [error, setError] = useState('');
     const desktop = desktopBridge();
-
     useEffect(() => {
         let active = true;
-        void api
-            .GET('/api/storage/locations')
-            .then(dataOrThrow)
+        void api.system
+            .storageLocations()
             .then((value) => {
                 if (active) {
                     setLocations(value.locations);
@@ -34,7 +30,6 @@ export function StorageLocations() {
             active = false;
         };
     }, []);
-
     async function open(id: string) {
         setBusy(id);
         setError('');
@@ -46,7 +41,6 @@ export function StorageLocations() {
             setBusy('');
         }
     }
-
     return (
         <Flex direction="column" gap={3} qa="storage-locations">
             <Text variant="subheader-2">{t('title')}</Text>

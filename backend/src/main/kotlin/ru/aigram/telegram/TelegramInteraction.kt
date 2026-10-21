@@ -3,7 +3,7 @@ package ru.aigram.telegram
 import it.tdlight.client.ClientInteraction
 import it.tdlight.client.InputParameter
 import it.tdlight.client.ParameterInfo
-import ru.aigram.domain.TelegramStatus
+import ru.aigram.domain.telegram.TelegramStatus
 import ru.aigram.exception.InvalidInputException
 import ru.aigram.exception.impl.AuthenticationCodeNotExpectedException
 import ru.aigram.exception.impl.UnsupportedAuthenticationException

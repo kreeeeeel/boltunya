@@ -1,11 +1,12 @@
 package ru.aigram.storage
 
-import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Component
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ContextExclusionScope
-import ru.aigram.domain.ContextExclusionUpdate
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ContextExclusionRule
+import ru.aigram.domain.chat.ContextExclusionRules
+import ru.aigram.domain.chat.ContextExclusionScope
+import ru.aigram.domain.chat.ContextExclusionUpdate
 import ru.aigram.exception.impl.InvalidContextSelectionException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -16,7 +17,7 @@ private const val MAX_MESSAGE_OVERRIDES = 10000
 
 /** Account-scoped context policy; Telegram messages themselves are never changed or deleted. */
 @Component
-class ContextExclusionStore @Inject constructor(directory: Path) {
+class ContextExclusionStore(directory: Path) {
     private val root = directory.resolve("context-exclusions")
     private val json = Json { ignoreUnknownKeys = true }
     private val cache = ConcurrentHashMap<String, ContextExclusionRules>()
@@ -55,7 +56,9 @@ class ContextExclusionStore @Inject constructor(directory: Path) {
         val previous = rules(ownerId, chatId)
         val entries = previous.entries.filterNot { it.messageId == id && it.scope == update.scope } +
             ContextExclusionRule(id, update.scope, update.excluded)
-        if (entries.size > MAX_MESSAGE_OVERRIDES) throw InvalidContextSelectionException()
+        if (entries.size > MAX_MESSAGE_OVERRIDES) {
+            throw InvalidContextSelectionException()
+        }
         persist(
             ownerId,
             chatId,
@@ -74,7 +77,11 @@ class ContextExclusionStore @Inject constructor(directory: Path) {
     private fun rules(ownerId: String, chatId: String): ContextExclusionRules =
         cache.computeIfAbsent("$ownerId:$chatId") {
             val path = file(ownerId, chatId)
-            if (Files.exists(path)) json.decodeFromString(Files.readString(path)) else ContextExclusionRules()
+            if (Files.exists(path)) {
+                json.decodeFromString(Files.readString(path))
+            } else {
+                ContextExclusionRules()
+            }
         }
 
     private fun persist(ownerId: String, chatId: String, rules: ContextExclusionRules) {

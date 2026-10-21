@@ -1,10 +1,8 @@
 import {useEffect, useState} from 'react';
-
 import {isActive} from '@/modules/activity/model/activity';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
+import {api, errorMessage} from '@/shared/api/client';
 import type {ActivityDetails} from '@/shared/api/client';
-import type {components} from '@/shared/api/schema';
-
+import type * as Contract from '@aigram/api-client';
 export function useActivityDetails(id: string) {
     const [details, setDetails] = useState<ActivityDetails | null>(null);
     const [error, setError] = useState('');
@@ -13,8 +11,13 @@ export function useActivityDetails(id: string) {
         let timer: ReturnType<typeof setTimeout>;
         async function poll() {
             try {
-                const result = dataOrThrow(
-                    await api.GET('/api/activity/{id}', {params: {path: {id}}, signal: controller.signal}),
+                const result = await api.activity.activityDetails(
+                    {
+                        id,
+                    },
+                    {
+                        signal: controller.signal,
+                    },
                 );
                 if (controller.signal.aborted) {
                     return;
@@ -36,7 +39,7 @@ export function useActivityDetails(id: string) {
             clearTimeout(timer);
         };
     }, [id]);
-    function updateFeedback(feedback: components['schemas']['ActivityFeedback'] | null) {
+    function updateFeedback(feedback: Contract.ActivityFeedback | null) {
         setDetails((previous) => (previous ? {...previous, feedback} : previous));
     }
     return {details, error, updateFeedback};

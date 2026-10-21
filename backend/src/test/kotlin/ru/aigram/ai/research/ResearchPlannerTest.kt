@@ -2,7 +2,8 @@ package ru.aigram.ai.research
 
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
-import ru.aigram.domain.ChatMessage
+import ru.aigram.domain.ai.research.ResearchPlan
+import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.exception.IntegrationException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

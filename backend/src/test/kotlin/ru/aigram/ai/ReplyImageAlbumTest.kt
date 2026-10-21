@@ -4,9 +4,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.springframework.ai.chat.messages.UserMessage
 import ru.aigram.ai.profile.ProfileAiTestServices
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.MediaAttachment
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.media.MediaAttachment
 import ru.aigram.exception.impl.VisionInputLimitExceededException
 import java.io.RandomAccessFile
 import java.nio.file.Files

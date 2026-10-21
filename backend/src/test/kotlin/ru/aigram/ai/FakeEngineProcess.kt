@@ -18,7 +18,11 @@ class FakeEngineProcess(
     override fun isAlive(): Boolean = alive
     override fun parent(): Optional<ProcessHandle> = Optional.empty()
     override fun children(): Stream<ProcessHandle> = descendants()
-    override fun descendants(): Stream<ProcessHandle> = if (alive) descendants.stream() else Stream.empty()
+    override fun descendants(): Stream<ProcessHandle> = if (alive) {
+        descendants.stream()
+    } else {
+        Stream.empty()
+    }
     override fun onExit(): CompletableFuture<ProcessHandle> = exited
     override fun supportsNormalTermination(): Boolean = true
     override fun compareTo(other: ProcessHandle): Int = processId.compareTo(other.pid())

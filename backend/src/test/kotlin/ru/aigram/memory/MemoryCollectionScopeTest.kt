@@ -1,14 +1,14 @@
 package ru.aigram.memory
 
-import jakarta.inject.Provider
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.aigram.ai.ModelInference
 import ru.aigram.ai.OllamaRuntime
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.GroupReplyMode
-import ru.aigram.domain.MemoryCollectionScope
+import ru.aigram.configuration.testBeanProvider
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.GroupReplyMode
+import ru.aigram.domain.memory.MemoryCollectionScope
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.SettingsStore
@@ -158,7 +158,7 @@ class MemoryCollectionScopeTest {
         )
         return MemoryCoordinator(
             store, settings, telegram, runtime, processor, inference, clock, automated,
-            Provider { DirectMemoryWorkQueue() },
+            testBeanProvider { DirectMemoryWorkQueue() },
         )
     }
 }

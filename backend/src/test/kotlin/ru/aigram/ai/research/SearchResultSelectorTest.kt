@@ -1,6 +1,7 @@
 package ru.aigram.ai.research
 
 import org.junit.jupiter.api.Test
+import ru.aigram.domain.ai.research.ResearchSource
 import ru.aigram.exception.impl.SearchRateLimitedException
 import java.time.Clock
 import java.time.Instant
@@ -53,7 +54,9 @@ class SearchResultSelectorTest {
         val primary = object : SearchProvider {
             override fun search(query: String): List<ResearchSource> {
                 attempts++
-                if (revision == 0L) throw SearchRateLimitedException()
+                if (revision == 0L) {
+                    throw SearchRateLimitedException()
+                }
                 return listOf(ResearchSource("Kotlin official", "https://kotlinlang.org/", "Kotlin"))
             }
             override fun revision(): Long = revision

@@ -1,14 +1,13 @@
 package ru.aigram.ai
 
-import jakarta.inject.Inject
 import org.springframework.ai.content.Media
 import org.springframework.core.io.ByteArrayResource
 import org.springframework.stereotype.Component
 import org.springframework.util.MimeTypeUtils
 import ru.aigram.ai.profile.ModelTargetResolver
-import ru.aigram.ai.profile.ModelTask
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
+import ru.aigram.domain.ai.profile.ModelTask
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
 import ru.aigram.exception.impl.MediaUnavailableException
 import ru.aigram.exception.impl.VisionInputLimitExceededException
 import ru.aigram.telegram.TelegramGateway
@@ -22,17 +21,23 @@ private val VISION_MIME_TYPES = setOf("image/jpeg", "image/png", "image/webp")
 
 /** Explicit per-chat consent is checked before downloading or supplying a photograph to a model. */
 @Component
-class ReplyImageContext @Inject constructor(
-    private val telegram: TelegramGateway,
-    private val targets: ModelTargetResolver,
-) {
+class ReplyImageContext(private val telegram: TelegramGateway, private val targets: ModelTargetResolver) {
     fun supports(message: ChatMessage): Boolean =
         message.kind == "photo" && message.media?.mimeType in VISION_MIME_TYPES
 
     fun build(rule: ChatRule, history: List<ChatMessage>): Map<String, List<Media>> {
-        if (!rule.analyzePhotos) return emptyMap()
-        val latest = history.lastOrNull { !it.outgoing && !it.deleted && !it.contextExcluded } ?: return emptyMap()
-        if (!supports(latest)) return emptyMap()
+        if (!rule.analyzePhotos) {
+            return emptyMap()
+        }
+        val latest = history.lastOrNull { !it.outgoing && !it.deleted && !it.contextExcluded }
+
+        if (latest == null) {
+            return emptyMap()
+        }
+
+        if (!supports(latest)) {
+            return emptyMap()
+        }
         val photos = if (latest.mediaAlbumId.isEmpty()) {
             listOf(latest)
         } else {
@@ -61,14 +66,27 @@ class ReplyImageContext @Inject constructor(
     }
 
     private fun load(message: ChatMessage, remaining: Long): Pair<Media, Long> {
-        val attachment = message.media ?: throw MediaUnavailableException()
+        val attachment = message.media
+
+        if (attachment == null) {
+            throw MediaUnavailableException()
+        }
+
         val file = telegram.media(attachment.fileId)
-        if (file.mimeType !in VISION_MIME_TYPES) throw MediaUnavailableException()
+        if (file.mimeType !in VISION_MIME_TYPES) {
+            throw MediaUnavailableException()
+        }
         val available = minOf(MAX_VISION_FILE_BYTES, remaining)
-        if (Files.size(file.path) > available) limitExceeded()
+        if (Files.size(file.path) > available) {
+            limitExceeded()
+        }
         val bytes = Files.newInputStream(file.path).use { input -> input.readNBytes((available + 1).toInt()) }
-        if (bytes.size > available) limitExceeded()
-        if (bytes.isEmpty()) throw MediaUnavailableException()
+        if (bytes.size > available) {
+            limitExceeded()
+        }
+        if (bytes.isEmpty()) {
+            throw MediaUnavailableException()
+        }
         val media = Media(MimeTypeUtils.parseMimeType(file.mimeType), ByteArrayResource(bytes))
         return media to bytes.size.toLong()
     }

@@ -1,12 +1,11 @@
 package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
-import jakarta.inject.Inject
-import jakarta.inject.Provider
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.stereotype.Component
-import ru.aigram.domain.MessageDeletionOptions
-import ru.aigram.domain.MessageDeletionResult
-import ru.aigram.domain.MessageDeletionScope
+import ru.aigram.domain.chat.MessageDeletionOptions
+import ru.aigram.domain.chat.MessageDeletionResult
+import ru.aigram.domain.chat.MessageDeletionScope
 import ru.aigram.exception.impl.TelegramDeleteFailedException
 import ru.aigram.storage.MessageArchiveStore
 import java.util.concurrent.ExecutionException
@@ -16,15 +15,15 @@ import java.util.concurrent.TimeoutException
 private const val MESSAGE_DELETION_TIMEOUT_SECONDS = 15L
 
 @Component
-class TelegramMessageDeletion @Inject constructor(
-    private val gateway: Provider<TdLightGateway>,
+class TelegramMessageDeletion(
+    private val gateway: ObjectProvider<TdLightGateway>,
     private val view: TelegramMessageView,
     private val archive: MessageArchiveStore,
     private val history: TelegramHistoryTracker,
     private val policy: TelegramMessageDeletionPolicy,
 ) {
     fun options(chatId: String, messageId: String): MessageDeletionOptions {
-        val service = gateway.get()
+        val service = gateway.getObject()
         val request = policy.propertiesRequest(service.parseChatId(chatId), messageId)
         return execute {
             policy.options(service.readyClient().send(request).get(MESSAGE_DELETION_TIMEOUT_SECONDS, TimeUnit.SECONDS))
@@ -32,7 +31,7 @@ class TelegramMessageDeletion @Inject constructor(
     }
 
     fun delete(chatId: String, messageId: String, scope: MessageDeletionScope): MessageDeletionResult {
-        val service = gateway.get()
+        val service = gateway.getObject()
         val id = service.parseChatId(chatId)
         val request = policy.propertiesRequest(id, messageId)
         val client = service.readyClient()
@@ -55,7 +54,9 @@ class TelegramMessageDeletion @Inject constructor(
             client.send(deletion).get(MESSAGE_DELETION_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             history.deleted(account, id, listOf(request.messageId))
             val retained = archive.find(account, chatId, messageId)
-            if (retained == null || !retained.deleted) throw TelegramDeleteFailedException()
+            if (retained == null || !retained.deleted) {
+                throw TelegramDeleteFailedException()
+            }
             MessageDeletionResult(chatId, messageId, retained.deletedAt)
         }
     }

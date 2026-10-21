@@ -1,6 +1,5 @@
 package ru.aigram.ai
 
-import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import org.springframework.ai.chat.messages.Message
@@ -8,27 +7,28 @@ import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.content.Media
 import org.springframework.stereotype.Component
 import ru.aigram.ai.model.ChatCompletionService
-import ru.aigram.ai.profile.ModelTask
 import ru.aigram.ai.research.InternetResearcher
-import ru.aigram.ai.research.ResearchContext
 import ru.aigram.ai.research.ResearchFactGuard
 import ru.aigram.ai.research.ResearchLinkPolicy
 import ru.aigram.ai.research.ResearchPlanner
-import ru.aigram.automation.activity.ActivityPhase
 import ru.aigram.automation.activity.ReplyTraceScope
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.ReplyResult
-import ru.aigram.domain.StickerItem
+import ru.aigram.domain.ai.ModelReplyPlan
+import ru.aigram.domain.ai.ReplyResult
+import ru.aigram.domain.ai.profile.ModelTask
+import ru.aigram.domain.ai.research.ResearchContext
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.events.ActivityPhase
+import ru.aigram.domain.media.StickerItem
+import ru.aigram.domain.memory.MemoryContext
 import ru.aigram.exception.impl.EmptyModelReplyException
 import ru.aigram.exception.impl.InvalidModelReplyException
-import ru.aigram.memory.MemoryContext
 import ru.aigram.resources.ResourceCatalog
 
 private const val MEMORY_PLANNER_CHARACTERS = 6000
 
 @Component
-class ConversationService @Inject constructor(
+class ConversationService(
     private val completion: ChatCompletionService,
     private val prompts: PromptBuilder,
     private val researcher: InternetResearcher,
@@ -90,7 +90,9 @@ class ConversationService @Inject constructor(
             }
             tracing.phase(ActivityPhase.SEARCH)
             val found = researcher.lookup(plan)
-            if (found.status in setOf("weather", "search", "currency")) planner.remember(history, plan)
+            if (found.status in setOf("weather", "search", "currency")) {
+                planner.remember(history, plan)
+            }
             found
         } else {
             ResearchContext()
@@ -107,9 +109,21 @@ class ConversationService @Inject constructor(
         val baseMessages = prompts.build(
             rule, history, modelPrompt, research, styleHistory, memory, images, inputTarget, reservedTokens,
         )
-        val messages = if (stickers.isEmpty()) baseMessages else mediaPlanner.messages(baseMessages, stickers)
-        val replySchema = if (stickers.isEmpty()) null else mediaPlanner.schema(stickers)
-        fun read(text: String) = if (stickers.isEmpty()) ModelReplyPlan(text) else mediaPlanner.read(text, stickers)
+        val messages = if (stickers.isEmpty()) {
+            baseMessages
+        } else {
+            mediaPlanner.messages(baseMessages, stickers)
+        }
+        val replySchema = if (stickers.isEmpty()) {
+            null
+        } else {
+            mediaPlanner.schema(stickers)
+        }
+        fun read(text: String) = if (stickers.isEmpty()) {
+            ModelReplyPlan(text)
+        } else {
+            mediaPlanner.read(text, stickers)
+        }
         tracing.phase(ActivityPhase.REPLY)
         var response = generate(messages, replySchema)
         var plan = read(response.text)
@@ -139,14 +153,23 @@ class ConversationService @Inject constructor(
                     ),
                 ) +
                     retryBase.drop(1)
-            response = generate(if (stickers.isEmpty()) retry else mediaPlanner.messages(retry, stickers), replySchema)
+            response = generate(
+                if (stickers.isEmpty()) {
+                    retry
+                } else {
+                    mediaPlanner.messages(retry, stickers)
+                },
+                replySchema,
+            )
             plan = read(response.text)
             text = plan.text
         }
         if (text.isBlank() && plan.stickerId.isBlank()) {
             throw EmptyModelReplyException()
         }
-        if (!facts.matches(text, research, history)) throw InvalidModelReplyException()
+        if (!facts.matches(text, research, history)) {
+            throw InvalidModelReplyException()
+        }
         text = links.format(text, rule, history, research)
         return ReplyResult(
             text,

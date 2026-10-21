@@ -1,6 +1,5 @@
 package ru.aigram.client.configuration
 
-import jakarta.inject.Provider
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.client.reactive.JdkClientHttpConnector
@@ -24,7 +23,7 @@ private val CONNECT_TIMEOUT = Duration.ofSeconds(10)
 
 class AigramClientFactory {
     /** The caller supplies the API origin and keeps ownership of session acquisition and rotation. */
-    fun create(baseUri: URI, sessionToken: Provider<String>): AigramClient {
+    fun create(baseUri: URI, sessionToken: () -> String): AigramClient {
         if (baseUri.scheme.orEmpty().lowercase() !in setOf("http", "https") || baseUri.host.isNullOrBlank() ||
             baseUri.rawUserInfo != null || baseUri.rawQuery != null || baseUri.rawFragment != null ||
             baseUri.rawPath.orEmpty() !in setOf("", "/") || baseUri.port == 0 || baseUri.port > 65535
@@ -57,9 +56,9 @@ class AigramClientFactory {
         }
     }
 
-    private fun session(source: Provider<String>): ExchangeFilterFunction = ExchangeFilterFunction { request, next ->
+    private fun session(source: () -> String): ExchangeFilterFunction = ExchangeFilterFunction { request, next ->
         Mono.defer {
-            val token = source.get().orEmpty()
+            val token = source()
             if (token.isEmpty() || !token.chars().allMatch {
                     it in 0x21..0x7e && it != '"'.code && it != ','.code && it != ';'.code && it != '\\'.code
                 }

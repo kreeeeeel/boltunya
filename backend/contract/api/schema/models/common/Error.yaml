@@ -5,3 +5,6 @@ Error:
     properties:
         message:
             type: string
+        code:
+            type: string
+            description: Stable application error code, present in existing local API failures.

@@ -1,8 +1,9 @@
 package ru.aigram.ai.research
 
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.SourceLinks
+import ru.aigram.domain.ai.research.ResearchContext
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.SourceLinks
 import ru.aigram.resources.ResourceCatalog
 
 class ResearchLinkPolicy(
@@ -21,10 +22,16 @@ class ResearchLinkPolicy(
     }
 
     fun forPrompt(rule: ChatRule, history: List<ChatMessage>, research: ResearchContext): ResearchContext =
-        if (visible(rule, history)) research else research.copy(sources = research.sources.map { it.copy(url = "") })
+        if (visible(rule, history)) {
+            research
+        } else {
+            research.copy(sources = research.sources.map { it.copy(url = "") })
+        }
 
     fun format(text: String, rule: ChatRule, history: List<ChatMessage>, research: ResearchContext): String {
-        if (research.status == "none") return text
+        if (research.status == "none") {
+            return text
+        }
         val allowed = if (visible(rule, history)) {
             research.sources.filter { urls.canonical(it.url).isNotEmpty() }.associateBy { urls.canonical(it.url) }
         } else {
@@ -46,7 +53,13 @@ class ResearchLinkPolicy(
         }
         val answer = cleaned.lines().filterNot { terms.only("source-label", it) }
             .joinToString("\n").trim()
-        if (answer.isBlank()) return resources.prompt("ru/research/no-answer")
-        return if (!included && allowed.isNotEmpty()) answer + "\n\n" + allowed.values.first().url else answer
+        if (answer.isBlank()) {
+            return resources.prompt("ru/research/no-answer")
+        }
+        return if (!included && allowed.isNotEmpty()) {
+            answer + "\n\n" + allowed.values.first().url
+        } else {
+            answer
+        }
     }
 }

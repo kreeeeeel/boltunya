@@ -23,7 +23,14 @@ class OpenAiStubServer(private val response: String, private val streaming: Bool
                 requests.incrementAndGet()
                 body.set(Json.decodeFromString(exchange.requestBody.bufferedReader().readText()))
                 authorization.set(exchange.requestHeaders.getFirst("Authorization").orEmpty())
-                exchange.responseHeaders.set("Content-Type", if (streaming) "text/event-stream" else "application/json")
+                exchange.responseHeaders.set(
+                    "Content-Type",
+                    if (streaming) {
+                        "text/event-stream"
+                    } else {
+                        "application/json"
+                    },
+                )
                 val bytes = response.toByteArray(Charsets.UTF_8)
                 exchange.sendResponseHeaders(200, bytes.size.toLong())
                 exchange.responseBody.write(bytes)

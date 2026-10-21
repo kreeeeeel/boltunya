@@ -1,14 +1,13 @@
 package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
-import jakarta.inject.Inject
 import org.springframework.stereotype.Component
-import ru.aigram.domain.OutgoingMedia
-import ru.aigram.domain.OutgoingMediaKind
+import ru.aigram.domain.media.OutgoingMedia
+import ru.aigram.domain.media.OutgoingMediaKind
 import ru.aigram.exception.impl.InvalidUploadException
 
 @Component
-class TelegramMediaContent @Inject constructor() {
+class TelegramMediaContent {
     fun content(media: OutgoingMedia): TdApi.InputMessageContent {
         val file = TdApi.InputFileLocal(media.path.toAbsolutePath().toString())
         val caption = TdApi.FormattedText(media.caption, emptyArray())
@@ -51,14 +50,23 @@ class TelegramMediaContent @Inject constructor() {
         val reply = if (replyToId.isEmpty()) {
             null
         } else {
+            val id = replyToId.toLongOrNull()
+            if (id == null || id <= 0) {
+                throw InvalidUploadException()
+            }
+
             TdApi.InputMessageReplyToMessage(
-                replyToId.toLongOrNull()?.takeIf { it > 0 } ?: throw InvalidUploadException(),
+                id,
                 null,
                 0,
                 "",
             )
         }
-        val topic = if (topicId == 0) null else TdApi.MessageTopicForum(topicId)
+        val topic = if (topicId == 0) {
+            null
+        } else {
+            TdApi.MessageTopicForum(topicId)
+        }
         return if (media.size == 1) {
             TdApi.SendMessage().apply {
                 this.chatId = chatId

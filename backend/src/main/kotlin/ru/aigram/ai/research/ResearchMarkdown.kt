@@ -28,7 +28,11 @@ class ResearchMarkdown {
     fun mapLinks(value: String, replace: (String, String) -> String): String {
         val normalized = Collections.list(StringTokenizer(value, " \n\t", true)).joinToString("") { part ->
             val token = part.toString()
-            if (token.startsWith("t.me/")) "https://$token" else token
+            if (token.startsWith("t.me/")) {
+                "https://$token"
+            } else {
+                token
+            }
         }
         val document = parser.parse(normalized)
         val links = mutableListOf<Link>()
@@ -37,7 +41,9 @@ class ResearchMarkdown {
                 links.add(link)
             }
         })
-        if (links.isEmpty()) return value
+        if (links.isEmpty()) {
+            return value
+        }
         links.stream().forEach { link ->
             link.insertBefore(Text(replace(label(link), link.destination)))
             link.unlink()

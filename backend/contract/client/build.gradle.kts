@@ -10,7 +10,6 @@ repositories {
 
 dependencies {
     api(project(":backend:contract:client:openapi"))
-    api("jakarta.inject:jakarta.inject-api:2.0.1")
     implementation("com.fasterxml.jackson.core:jackson-databind")
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.13.4")

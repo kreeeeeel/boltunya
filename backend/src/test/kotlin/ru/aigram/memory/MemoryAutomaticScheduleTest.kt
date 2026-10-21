@@ -1,15 +1,16 @@
 package ru.aigram.memory
 
-import jakarta.inject.Provider
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.aigram.ai.ModelInference
 import ru.aigram.ai.OllamaRuntime
 import ru.aigram.automation.MemoryWorkQueue
 import ru.aigram.automation.ReplyCoordinator
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.ReplyResult
+import ru.aigram.configuration.testBeanProvider
+import ru.aigram.domain.ai.ReplyResult
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.memory.MemoryStatus
 import ru.aigram.exception.impl.MemoryUpdateFailedException
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.AutomatedReplyStore
@@ -365,7 +366,10 @@ class MemoryAutomaticScheduleTest {
             OwnerMemorySummarizer { _, old, _ -> old },
         )
         return MemoryCoordinator(
-            store, settings, telegram, runtime, processor, ModelInference(), clock, automated, Provider { queue },
+            store, settings, telegram, runtime, processor, ModelInference(), clock, automated,
+            testBeanProvider {
+                queue
+            },
         )
     }
 

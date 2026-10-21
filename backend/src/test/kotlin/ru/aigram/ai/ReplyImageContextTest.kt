@@ -2,15 +2,15 @@ package ru.aigram.ai
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.ai.profile.ModelCapabilities
-import ru.aigram.ai.profile.ModelProfileUpdate
-import ru.aigram.ai.profile.ModelProvider
 import ru.aigram.ai.profile.ProfileAiTestServices
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.MediaAttachment
+import ru.aigram.controller.integration.MediaArchiveGateway
+import ru.aigram.domain.ai.profile.ModelCapabilities
+import ru.aigram.domain.ai.profile.ModelProfileUpdate
+import ru.aigram.domain.ai.profile.ModelProvider
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.media.MediaAttachment
 import ru.aigram.exception.impl.ModelCapabilityUnavailableException
-import ru.aigram.http.MediaArchiveGateway
 import ru.aigram.memory.MemoryTelegramGateway
 import java.nio.file.Files
 import java.nio.file.Path

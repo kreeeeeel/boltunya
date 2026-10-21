@@ -11,7 +11,7 @@ import reactor.core.publisher.Flux
 import ru.aigram.ai.model.ModelReplyReader
 import ru.aigram.ai.model.ModelResponseStream
 import ru.aigram.automation.activity.AttemptTrace
-import ru.aigram.domain.ActivityAttempt
+import ru.aigram.domain.events.ActivityAttempt
 import ru.aigram.exception.impl.EngineUnavailableException
 import java.time.Duration
 import java.util.concurrent.CountDownLatch
@@ -99,8 +99,22 @@ class ModelResponseStreamTest {
     fun `thinking chunks reset inactivity so total generation may exceed the idle timeout`() {
         val chunks = Flux.interval(Duration.ofMillis(100)).take(20).map { index ->
             val message = AssistantMessage.builder()
-                .content(if (index == 19L) "Готовый ответ" else "")
-                .properties(mapOf("thinking" to if (index < 19L) "мысль " else ""))
+                .content(
+                    if (index == 19L) {
+                        "Готовый ответ"
+                    } else {
+                        ""
+                    },
+                )
+                .properties(
+                    mapOf(
+                        "thinking" to if (index < 19L) {
+                            "мысль "
+                        } else {
+                            ""
+                        },
+                    ),
+                )
                 .build()
             ChatResponse(listOf(Generation(message)))
         }

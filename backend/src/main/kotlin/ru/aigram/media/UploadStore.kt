@@ -1,11 +1,10 @@
 package ru.aigram.media
 
-import jakarta.inject.Inject
 import org.springframework.stereotype.Component
-import ru.aigram.domain.OutgoingMedia
-import ru.aigram.domain.OutgoingMediaKind
-import ru.aigram.domain.UploadedFile
+import ru.aigram.domain.media.OutgoingMedia
+import ru.aigram.domain.media.OutgoingMediaKind
 import ru.aigram.domain.media.StoredUpload
+import ru.aigram.domain.media.UploadedFile
 import ru.aigram.exception.impl.InvalidUploadException
 import ru.aigram.exception.impl.MediaTooLargeException
 import ru.aigram.exception.impl.UploadLimitReachedException
@@ -37,7 +36,7 @@ private val FORBIDDEN_FILE_CHARACTERS = "\\/:*?\"<>|".chars().toArray().toSet()
 private val RESERVED_FILE_NAMES = setOf("CON", "PRN", "AUX", "NUL")
 
 @Component
-class UploadStore @Inject constructor(directory: Path, private val clock: Clock) {
+class UploadStore(directory: Path, private val clock: Clock) {
     private val root = directory.resolve("uploads")
     private val entries = linkedMapOf<String, StoredUpload>()
 

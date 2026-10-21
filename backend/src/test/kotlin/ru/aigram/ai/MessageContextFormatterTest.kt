@@ -4,7 +4,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
-import ru.aigram.domain.ChatMessage
+import ru.aigram.domain.chat.ChatMessage
 import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

@@ -2,7 +2,7 @@ package ru.aigram.ai
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.domain.ComputeDevice
+import ru.aigram.domain.ai.ComputeDevice
 import ru.aigram.exception.impl.InvalidOllamaDeviceException
 import ru.aigram.storage.SettingsStore
 import java.nio.file.Path

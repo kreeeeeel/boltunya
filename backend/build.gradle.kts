@@ -17,10 +17,11 @@ repositories {
 
 dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:4.1.1"))
-    implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-webmvc")
+    implementation(project(":backend:contract:api"))
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation(kotlin("reflect"))
-    implementation("jakarta.inject:jakarta.inject-api:2.0.1")
+    implementation("tools.jackson.module:jackson-module-kotlin")
     implementation("org.springframework.ai:spring-ai-ollama:2.0.1")
     implementation("org.springframework.ai:spring-ai-openai:2.0.1")
     implementation("com.github.oshi:oshi-core:7.7.1")
@@ -34,6 +35,7 @@ dependencies {
     runtimeOnly("it.tdlight:tdlight-natives:4.0.594:windows_amd64")
     implementation("net.java.dev.jna:jna-platform:5.18.1")
     testImplementation(kotlin("test"))
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.3.21")
     testImplementation("org.junit.jupiter:junit-jupiter:5.13.4")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
@@ -82,6 +84,7 @@ tasks.jar {
 }
 
 tasks.register<Exec>("buildWeb") {
+    dependsOn(":backend:contract:client:typescript:generateClient")
     workingDir("../web")
     commandLine("cmd", "/c", "npm.cmd", "run", "build:prod")
 }

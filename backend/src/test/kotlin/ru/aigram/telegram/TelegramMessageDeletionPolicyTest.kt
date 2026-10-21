@@ -2,8 +2,8 @@ package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
 import org.junit.jupiter.api.Test
-import ru.aigram.domain.MessageDeletionOptions
-import ru.aigram.domain.MessageDeletionScope
+import ru.aigram.domain.chat.MessageDeletionOptions
+import ru.aigram.domain.chat.MessageDeletionScope
 import ru.aigram.exception.impl.InvalidHistoryIdentifierException
 import ru.aigram.exception.impl.MessageDeletionNotAllowedException
 import kotlin.test.assertEquals

@@ -9,7 +9,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
 import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
-import ru.aigram.domain.ChatRule
+import ru.aigram.domain.chat.ChatRule
 import java.net.InetSocketAddress
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.test.assertEquals

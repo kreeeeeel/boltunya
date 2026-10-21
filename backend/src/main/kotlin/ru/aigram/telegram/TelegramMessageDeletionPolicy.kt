@@ -1,18 +1,19 @@
 package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
-import jakarta.inject.Inject
 import org.springframework.stereotype.Component
-import ru.aigram.domain.MessageDeletionOptions
-import ru.aigram.domain.MessageDeletionScope
+import ru.aigram.domain.chat.MessageDeletionOptions
+import ru.aigram.domain.chat.MessageDeletionScope
 import ru.aigram.exception.impl.InvalidHistoryIdentifierException
 import ru.aigram.exception.impl.MessageDeletionNotAllowedException
 
 @Component
-class TelegramMessageDeletionPolicy @Inject constructor() {
+class TelegramMessageDeletionPolicy {
     fun propertiesRequest(chatId: Long, messageId: String): TdApi.GetMessageProperties {
         val id = messageId.toLongOrNull()
-        if (id == null || id <= 0 || id.toString() != messageId) throw InvalidHistoryIdentifierException()
+        if (id == null || id <= 0 || id.toString() != messageId) {
+            throw InvalidHistoryIdentifierException()
+        }
         return TdApi.GetMessageProperties(chatId, id)
     }
 
@@ -32,7 +33,9 @@ class TelegramMessageDeletionPolicy @Inject constructor() {
             MessageDeletionScope.SELF -> options.canDeleteForSelf
             MessageDeletionScope.EVERYONE -> options.canDeleteForEveryone
         }
-        if (!allowed) throw MessageDeletionNotAllowedException()
+        if (!allowed) {
+            throw MessageDeletionNotAllowedException()
+        }
         return TdApi.DeleteMessages(chatId, longArrayOf(message.messageId), scope == MessageDeletionScope.EVERYONE)
     }
 }

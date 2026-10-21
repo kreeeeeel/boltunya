@@ -1,13 +1,12 @@
 package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
-import jakarta.inject.Inject
 import org.springframework.stereotype.Component
-import ru.aigram.domain.ChatSummary
+import ru.aigram.domain.chat.ChatSummary
 import ru.aigram.storage.SettingsStore
 
 @Component
-class TelegramChatDirectory @Inject constructor(
+class TelegramChatDirectory(
     private val cache: TelegramCache,
     private val files: TelegramMediaStore,
     private val mapper: TelegramMessageMapper,
@@ -37,7 +36,11 @@ class TelegramChatDirectory @Inject constructor(
             avatarUrl = avatar?.let { "/api/media/${files.register(it, "image/jpeg", "avatar.jpg")}" }.orEmpty(),
             kind = when (val type = chat.type) {
                 is TdApi.ChatTypeBasicGroup -> "group"
-                is TdApi.ChatTypeSupergroup -> if (type.isChannel) "channel" else "supergroup"
+                is TdApi.ChatTypeSupergroup -> if (type.isChannel) {
+                    "channel"
+                } else {
+                    "supergroup"
+                }
                 else -> "private"
             },
             wallpaper = wallpaper.map(chat.background, cache.lightBackground),

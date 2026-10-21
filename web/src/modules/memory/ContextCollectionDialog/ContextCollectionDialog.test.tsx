@@ -4,11 +4,26 @@ import {fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {beforeEach, expect, it, vi} from 'vitest';
 import {ContextCollectionDialog} from '@/modules/memory/ContextCollectionDialog/ContextCollectionDialog';
 import ru from '@/shared/i18n/ru.json';
-
-const mocks = vi.hoisted(() => ({GET: vi.fn(), POST: vi.fn()}));
+const mocks = vi.hoisted(() => ({
+    getChatMemory: vi.fn(),
+    getGlobalMemory: vi.fn(),
+    refreshChatMemory: vi.fn(),
+    refreshChangedMemory: vi.fn(),
+    cancelChatMemoryCollection: vi.fn(),
+    cancelGlobalMemoryCollection: vi.fn(),
+}));
 vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
-    api: mocks,
+    api: {
+        memory: {
+            getChatMemory: mocks.getChatMemory,
+            getGlobalMemory: mocks.getGlobalMemory,
+            refreshChatMemory: mocks.refreshChatMemory,
+            refreshChangedMemory: mocks.refreshChangedMemory,
+            cancelChatMemoryCollection: mocks.cancelChatMemoryCollection,
+            cancelGlobalMemoryCollection: mocks.cancelGlobalMemoryCollection,
+        },
+    },
 }));
 const document = {
     chatId: '42',
@@ -33,27 +48,73 @@ function mount(chatId = '42') {
     );
 }
 beforeEach(() => {
-    mocks.GET.mockReset().mockResolvedValue({data: document, response: new Response()});
-    mocks.POST.mockReset().mockImplementation(async () => {
+    mocks.getChatMemory.mockReset().mockResolvedValue(document);
+    mocks.getGlobalMemory.mockReset().mockResolvedValue(document);
+    mocks.refreshChatMemory.mockReset().mockImplementation(async () => {
         const result = {
-            data: {
-                ...document,
+            ...document,
+            status: 'queued',
+            collection: {
+                active: true,
                 status: 'queued',
-                collection: {
-                    active: true,
-                    status: 'queued',
-                    queuedChats: 2,
-                    queuePosition: 2,
-                    processedMessages: 0,
-                },
+                queuedChats: 2,
+                queuePosition: 2,
+                processedMessages: 0,
             },
-            response: new Response(),
         };
-        mocks.GET.mockResolvedValue(result);
+        mocks.getChatMemory.mockResolvedValue(result);
+        mocks.getGlobalMemory.mockResolvedValue(result);
+        return result;
+    });
+    mocks.refreshChangedMemory.mockReset().mockImplementation(async () => {
+        const result = {
+            ...document,
+            status: 'queued',
+            collection: {
+                active: true,
+                status: 'queued',
+                queuedChats: 2,
+                queuePosition: 2,
+                processedMessages: 0,
+            },
+        };
+        mocks.getChatMemory.mockResolvedValue(result);
+        mocks.getGlobalMemory.mockResolvedValue(result);
+        return result;
+    });
+    mocks.cancelChatMemoryCollection.mockReset().mockImplementation(async () => {
+        const result = {
+            ...document,
+            status: 'queued',
+            collection: {
+                active: true,
+                status: 'queued',
+                queuedChats: 2,
+                queuePosition: 2,
+                processedMessages: 0,
+            },
+        };
+        mocks.getChatMemory.mockResolvedValue(result);
+        mocks.getGlobalMemory.mockResolvedValue(result);
+        return result;
+    });
+    mocks.cancelGlobalMemoryCollection.mockReset().mockImplementation(async () => {
+        const result = {
+            ...document,
+            status: 'queued',
+            collection: {
+                active: true,
+                status: 'queued',
+                queuedChats: 2,
+                queuePosition: 2,
+                processedMessages: 0,
+            },
+        };
+        mocks.getChatMemory.mockResolvedValue(result);
+        mocks.getGlobalMemory.mockResolvedValue(result);
         return result;
     });
 });
-
 it.each([false, true])(
     'requests prioritized collection with rebuild=%s and shows queue status',
     async (rebuild) => {
@@ -64,9 +125,9 @@ it.each([false, true])(
         }
         fireEvent.click(screen.getByRole('button', {name: ru.context.start}));
         await waitFor(() =>
-            expect(mocks.POST).toHaveBeenCalledWith('/api/memory/{chatId}', {
-                params: {path: {chatId: '42'}},
-                body: {rebuild, immediate: true},
+            expect(mocks.refreshChatMemory).toHaveBeenCalledWith({
+                chatId: '42',
+                memoryRefreshRequest: {rebuild, immediate: true},
             }),
         );
         expect(await screen.findByText(ru.memory.status.queued)).toBeVisible();
@@ -74,15 +135,14 @@ it.each([false, true])(
         expect(screen.getByRole('button', {name: ru.context.cancel})).toBeEnabled();
     },
 );
-
 it('explains disabled memory and does not silently enable it or start a job', async () => {
-    mocks.GET.mockResolvedValue({data: {...document, status: 'disabled'}, response: new Response()});
+    mocks.getChatMemory.mockResolvedValue({...document, status: 'disabled'});
+    mocks.getGlobalMemory.mockResolvedValue({...document, status: 'disabled'});
     mount();
     expect(await screen.findByText(ru.context.disabled)).toBeVisible();
     expect(screen.getByRole('button', {name: ru.context.start})).toBeDisabled();
-    expect(mocks.POST).not.toHaveBeenCalled();
+    expect(mocks.refreshChatMemory).not.toHaveBeenCalled();
 });
-
 it('restores an active collection on opening and cancels it without editing saved notes', async () => {
     const active = {
         ...document,
@@ -94,10 +154,30 @@ it('restores an active collection on opening and cancels it without editing save
             processedMessages: 540,
         },
     };
-    mocks.GET.mockResolvedValue({data: active, response: new Response()});
-    mocks.POST.mockImplementation(async () => {
-        const result = {data: document, response: new Response()};
-        mocks.GET.mockResolvedValue(result);
+    mocks.getChatMemory.mockResolvedValue(active);
+    mocks.getGlobalMemory.mockResolvedValue(active);
+    mocks.refreshChatMemory.mockImplementation(async () => {
+        const result = document;
+        mocks.getChatMemory.mockResolvedValue(result);
+        mocks.getGlobalMemory.mockResolvedValue(result);
+        return result;
+    });
+    mocks.refreshChangedMemory.mockImplementation(async () => {
+        const result = document;
+        mocks.getChatMemory.mockResolvedValue(result);
+        mocks.getGlobalMemory.mockResolvedValue(result);
+        return result;
+    });
+    mocks.cancelChatMemoryCollection.mockImplementation(async () => {
+        const result = document;
+        mocks.getChatMemory.mockResolvedValue(result);
+        mocks.getGlobalMemory.mockResolvedValue(result);
+        return result;
+    });
+    mocks.cancelGlobalMemoryCollection.mockImplementation(async () => {
+        const result = document;
+        mocks.getChatMemory.mockResolvedValue(result);
+        mocks.getGlobalMemory.mockResolvedValue(result);
         return result;
     });
     mount();
@@ -106,30 +186,31 @@ it('restores an active collection on opening and cancels it without editing save
     expect(screen.queryByRole('button', {name: ru.context.start})).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', {name: ru.context.cancel}));
     await waitFor(() =>
-        expect(mocks.POST).toHaveBeenCalledWith('/api/memory/{chatId}/cancel', {
-            params: {path: {chatId: '42'}},
+        expect(mocks.cancelChatMemoryCollection).toHaveBeenCalledWith({
+            chatId: '42',
         }),
     );
     expect(await screen.findByRole('button', {name: ru.context.start})).toBeEnabled();
 });
-
 it('keeps a failed request retryable and displays the API error', async () => {
-    mocks.POST.mockRejectedValue(new Error('Модель недоступна'));
+    mocks.refreshChatMemory.mockRejectedValue(new Error('Модель недоступна'));
+    mocks.refreshChangedMemory.mockRejectedValue(new Error('Модель недоступна'));
+    mocks.cancelChatMemoryCollection.mockRejectedValue(new Error('Модель недоступна'));
+    mocks.cancelGlobalMemoryCollection.mockRejectedValue(new Error('Модель недоступна'));
     mount();
     await screen.findByText('Просмотрено сообщений: 120');
     fireEvent.click(screen.getByRole('button', {name: ru.context.start}));
     expect(await screen.findByRole('alert')).toHaveTextContent('Модель недоступна');
     expect(screen.getByRole('button', {name: ru.context.start})).toBeEnabled();
 });
-
 it('queues a complete global rebuild through the shared memory endpoint', async () => {
     mount('');
     await screen.findByText(ru.context.globalHint);
     fireEvent.click(screen.getByRole('radio', {name: (name) => name.startsWith(ru.context.rebuild)}));
     fireEvent.click(screen.getByRole('button', {name: ru.context.start}));
     await waitFor(() =>
-        expect(mocks.POST).toHaveBeenCalledWith('/api/memory/refresh', {
-            body: {rebuild: true, immediate: true},
+        expect(mocks.refreshChangedMemory).toHaveBeenCalledWith({
+            memoryRefreshRequest: {rebuild: true, immediate: true},
         }),
     );
 });

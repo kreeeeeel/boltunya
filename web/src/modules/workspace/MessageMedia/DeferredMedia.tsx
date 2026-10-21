@@ -2,9 +2,8 @@ import {Button, Flex, Icon, Text} from '@gravity-ui/uikit';
 import {ArrowDownToLine} from '@gravity-ui/icons';
 import {useState} from 'react';
 import {useTranslations} from 'next-intl';
-import {api, dataOrThrow, errorMessage, type Message} from '@/shared/api/client';
+import {api, errorMessage, type Message} from '@/shared/api/client';
 import styles from '@/modules/workspace/MessageMedia/MessageMedia.module.css';
-
 export function DeferredMedia({
     media,
     onDownloaded,
@@ -19,9 +18,9 @@ export function DeferredMedia({
         setBusy(true);
         setError('');
         try {
-            dataOrThrow(
-                await api.POST('/api/media/{fileId}/download', {params: {path: {fileId: media.fileId}}}),
-            );
+            await api.media.downloadMedia({
+                fileId: media.fileId,
+            });
             onDownloaded();
         } catch (cause) {
             setError(errorMessage(cause));

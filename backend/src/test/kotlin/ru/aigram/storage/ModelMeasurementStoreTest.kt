@@ -2,7 +2,7 @@ package ru.aigram.storage
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.domain.ModelMeasurement
+import ru.aigram.domain.ai.model.ModelMeasurement
 import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertNull

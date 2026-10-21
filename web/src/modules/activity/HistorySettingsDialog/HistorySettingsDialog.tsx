@@ -1,10 +1,9 @@
 import {Dialog, Flex, Skeleton, Text, TextInput} from '@gravity-ui/uikit';
 import {useEffect, useState} from 'react';
 import {useTranslations} from 'next-intl';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
+import {api, errorMessage} from '@/shared/api/client';
 import {SaveDialogFooter} from '@/shared/ui/SaveDialogFooter/SaveDialogFooter';
 import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
-
 export function HistorySettingsDialog({
     onClose,
     onRefresh,
@@ -21,9 +20,10 @@ export function HistorySettingsDialog({
     const feedback = useSaveFeedback(value);
     useEffect(() => {
         const controller = new AbortController();
-        void api
-            .GET('/api/activity/history/settings', {signal: controller.signal})
-            .then(dataOrThrow)
+        void api.activity
+            .activityHistorySettings({
+                signal: controller.signal,
+            })
             .then((result) => {
                 if (!controller.signal.aborted) {
                     setValue({retentionDays: result.retentionDays, maxStorageMb: result.maxStorageMb});
@@ -41,7 +41,9 @@ export function HistorySettingsDialog({
         setBusy(true);
         setError('');
         try {
-            dataOrThrow(await api.PUT('/api/activity/history/settings', {body: value}));
+            await api.activity.configureActivityHistory({
+                activityHistorySettings: value,
+            });
             feedback.markSaved();
             void onRefresh().catch(() => setError(common('settingsCenter.refreshWarning')));
         } catch (cause) {

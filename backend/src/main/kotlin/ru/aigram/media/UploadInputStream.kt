@@ -9,18 +9,24 @@ internal class UploadInputStream(input: InputStream, private val maximum: Long) 
 
     override fun read(): Int {
         val value = super.read()
-        if (value >= 0) count(1)
+        if (value >= 0) {
+            count(1)
+        }
         return value
     }
 
     override fun read(buffer: ByteArray, offset: Int, length: Int): Int {
         val amount = super.read(buffer, offset, length)
-        if (amount > 0) count(amount)
+        if (amount > 0) {
+            count(amount)
+        }
         return amount
     }
 
     private fun count(amount: Int) {
         received += amount
-        if (received > maximum) throw MediaTooLargeException()
+        if (received > maximum) {
+            throw MediaTooLargeException()
+        }
     }
 }

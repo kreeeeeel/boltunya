@@ -1,20 +1,18 @@
 import {expect, test} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
-
 import {workspaceState} from '../fixtures/workspace';
 import {activityDetails, testActivity} from '../fixtures/activity';
-import type {components} from '@/shared/api/schema';
+import type * as Contract from '@aigram/api-client';
 import {persistTestTheme} from '../fixtures/settings';
 import {historyPage, historyStorage} from '../fixtures/activityHistory';
 import ru from '../../src/shared/i18n/ru.json';
-
 test.beforeEach(async ({page}) => {
     const state = structuredClone(workspaceState);
     state.activity = structuredClone(testActivity);
     state.replyQueue = {paused: false, queued: 1, running: 1};
     state.settings.paused = false;
-    const feedbacks = new Map<string, components['schemas']['ActivityFeedback']>();
+    const feedbacks = new Map<string, Contract.ActivityFeedback>();
     let appearance = {mode: 'light', tokens: {}, css: ''};
     await page.route('**/api/**', async (route) => {
         const request = route.request();
@@ -101,7 +99,6 @@ test.beforeEach(async ({page}) => {
     await page.goto(process.env.TIHO_TEST_URL ?? readFileSync(launchFile, 'utf8'));
     await page.locator('[data-qa="nav-activity"]').click();
 });
-
 test('finished reply ratings support comments, edits and removal across card and details', async ({page}) => {
     const card = page.locator('[data-qa="event-sent"]');
     await card.getByRole('button', {name: 'Хорошо', exact: true}).click();
@@ -140,7 +137,6 @@ test('finished reply ratings support comments, edits and removal across card and
     await expect(page.locator('[data-qa="event-running"] [data-qa="activity-rating"]')).toHaveCount(0);
     await expect(page.locator('[data-qa="event-error"] [data-qa="activity-rating"]')).toHaveCount(0);
 });
-
 test('failed feedback saves keep the comment draft and can be retried', async ({page}) => {
     let fail = true;
     await page.route('**/api/activity/sent/feedback', async (route) => {
@@ -166,7 +162,6 @@ test('failed feedback saves keep the comment draft and can be retried', async ({
     await expect(editor.getByRole('button', {name: 'Оценка сохранена', exact: true})).toBeVisible();
     await expect(editor.getByRole('alert')).toHaveCount(0);
 });
-
 test('cards display a real queue, statuses and streamed thinking', async ({page}) => {
     await expect(page.getByRole('button', {name: 'История: Аня Смирнова'})).toHaveCSS('position', 'absolute');
     await expect(page.locator('[data-qa="empty-activity"]')).toHaveCount(0);
@@ -186,7 +181,6 @@ test('cards display a real queue, statuses and streamed thinking', async ({page}
     expect(positions[3].y).toBeGreaterThan(positions[0].y);
     await page.screenshot({path: '../docs/resources/activity-queue.png', animations: 'disabled'});
 });
-
 test('event grid adapts to two columns and then a single column without horizontal overflow', async ({
     page,
 }) => {
@@ -208,7 +202,6 @@ test('event grid adapts to two columns and then a single column without horizont
         );
     }
 });
-
 test('queue pause, priority, cancellation and clear use separate API actions', async ({page}) => {
     await page.getByRole('button', {name: 'Пауза', exact: true}).click();
     await expect(page.getByText('Очередь на паузе')).toBeVisible();
@@ -229,7 +222,6 @@ test('queue pause, priority, cancellation and clear use separate API actions', a
     await expect(page.locator('[data-qa="empty-activity"]')).toBeVisible();
     await expect(page.locator('[data-qa="events-toolbar"]')).toHaveCount(0);
 });
-
 test('history modal displays exact prompt, model output, thinking and usage', async ({page}) => {
     await page.getByRole('button', {name: 'История: Лиза'}).click();
     const dialog = page.getByRole('dialog', {name: 'История ответа'});
@@ -272,7 +264,6 @@ test('history modal displays exact prompt, model output, thinking and usage', as
     await dialog.getByRole('button', {name: 'Закрыть', exact: true}).click();
     await expect(dialog).toHaveCount(0);
 });
-
 test('failed detail request shows an error and modal remains dismissible', async ({page}) => {
     await page.route('**/api/activity/sent', (route) =>
         route.fulfill({status: 404, json: {message: 'История уже очищена'}}),
@@ -282,7 +273,6 @@ test('failed detail request shows an error and modal remains dismissible', async
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
 });
-
 test('a generated reply with failed delivery is not labeled as sent to Telegram', async ({page}) => {
     const details = activityDetails(testActivity[3]);
     details.response = 'Готовый ответ, который не был отправлен.';
@@ -293,7 +283,6 @@ test('a generated reply with failed delivery is not labeled as sent to Telegram'
     await expect(dialog.getByText('Отправлено в Telegram', {exact: true})).toHaveCount(0);
     await expect(dialog.getByText(details.response, {exact: true})).toBeVisible();
 });
-
 test('dark events use the app palette and readable card sizes', async ({page}) => {
     await persistTestTheme(page, true);
     await page.reload();
@@ -301,7 +290,6 @@ test('dark events use the app palette and readable card sizes', async ({page}) =
     await expect(page.locator('[data-qa="event-running"]')).toHaveCSS('background-color', 'rgb(36, 42, 52)');
     await page.screenshot({path: '../docs/resources/activity-dark.png', animations: 'disabled'});
 });
-
 test('parallel queue settings persist without fabricated resource forecasts', async ({page}) => {
     await page.getByRole('button', {name: 'Параллельные задачи', exact: true}).click();
     const dialog = page.getByRole('dialog', {name: 'Параллельные задачи', exact: true});
@@ -319,7 +307,6 @@ test('parallel queue settings persist without fabricated resource forecasts', as
     await page.getByRole('button', {name: 'Параллельные задачи', exact: true}).click();
     await expect(page.getByRole('radio', {name: '4', exact: true})).toBeChecked();
 });
-
 for (const dark of [false, true]) {
     test(`completed memory and initiative tags stay readable in ${dark ? 'dark' : 'light'} theme`, async ({
         page,
@@ -384,7 +371,6 @@ for (const dark of [false, true]) {
             animations: 'disabled',
         });
     });
-
     test(`persisted history loads older pages without duplicating live cards in ${dark ? 'dark' : 'light'} theme`, async ({
         page,
     }) => {

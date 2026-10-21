@@ -16,3 +16,4 @@ SendMediaRequest:
         caption:
             type: string
             maxLength: 1024
+            default: ''

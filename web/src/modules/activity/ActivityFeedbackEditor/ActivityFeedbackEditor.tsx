@@ -2,14 +2,11 @@ import {Check, ThumbsDown, ThumbsUp, TrashBin} from '@gravity-ui/icons';
 import {Box, Button, Flex, Icon, Text, TextArea} from '@gravity-ui/uikit';
 import {useState} from 'react';
 import {useTranslations} from 'next-intl';
-
-import type {components} from '@/shared/api/schema';
+import type * as Contract from '@aigram/api-client';
 import {useActivityFeedback} from '@/modules/activity/model/useActivityFeedback';
 import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
 import styles from '@/modules/activity/ActivityFeedbackEditor/ActivityFeedbackEditor.module.css';
-
-type Feedback = components['schemas']['ActivityFeedback'];
-
+type Feedback = Contract.ActivityFeedback;
 export function ActivityFeedbackEditor({
     id,
     value,
@@ -37,7 +34,6 @@ export function ActivityFeedbackEditor({
         onRefresh,
     );
     const unchanged = rating === (value?.rating ?? null) && comment === (value?.comment ?? '');
-
     async function save() {
         if (!rating) {
             return;
@@ -47,7 +43,6 @@ export function ActivityFeedbackEditor({
             saved.markSaved();
         }
     }
-
     return (
         <Box className={styles.root} qa="activity-feedback-editor">
             <Flex direction="column" gap={3}>

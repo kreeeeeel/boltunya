@@ -1,10 +1,9 @@
 package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
-import jakarta.inject.Inject
-import jakarta.inject.Provider
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.stereotype.Component
-import ru.aigram.domain.ChatGallery
+import ru.aigram.domain.media.ChatGallery
 import ru.aigram.exception.impl.InvalidMediaIdentifierException
 import ru.aigram.exception.impl.MediaUnavailableException
 import ru.aigram.exception.impl.TelegramSendFailedException
@@ -18,14 +17,19 @@ private const val GALLERY_PAGE_SIZE = 60
 private const val GALLERY_TIMEOUT_SECONDS = 20L
 
 @Component
-class TelegramGalleryService @Inject constructor(
-    private val gateway: Provider<TdLightGateway>,
+class TelegramGalleryService(
+    private val gateway: ObjectProvider<TdLightGateway>,
     private val view: TelegramMessageView,
 ) {
     fun gallery(chatId: String, around: String): ChatGallery {
-        val service = gateway.get()
+        val service = gateway.getObject()
         val chat = service.parseChatId(chatId)
-        val message = around.toLongOrNull()?.takeIf { it > 0 } ?: throw InvalidMediaIdentifierException()
+        val message = around.toLongOrNull()?.takeIf { it > 0 }
+
+        if (message == null) {
+            throw InvalidMediaIdentifierException()
+        }
+
         val client = service.readyClient()
         return try {
             val selected = client.send(TdApi.GetMessage(chat, message))
@@ -63,7 +67,9 @@ class TelegramGalleryService @Inject constructor(
         selected: TdApi.Message,
         latest: TdApi.FoundChatMessages,
     ): ChatGallery {
-        if (selected.chatId != chatId || !visual(selected)) throw MediaUnavailableException()
+        if (selected.chatId != chatId || !visual(selected)) {
+            throw MediaUnavailableException()
+        }
         val messages = (page.messages.orEmpty().asList() + selected).stream()
             .filter { it.chatId == chatId && visual(it) }
             .collect(Collectors.toMap({ it.id }, { it }, { first, _ -> first })).values.stream()

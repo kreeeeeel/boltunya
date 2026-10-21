@@ -2,7 +2,7 @@ package ru.aigram.media
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.domain.OutgoingMediaKind
+import ru.aigram.domain.media.OutgoingMediaKind
 import ru.aigram.exception.impl.InvalidUploadException
 import ru.aigram.exception.impl.MediaTooLargeException
 import ru.aigram.exception.impl.UploadNotFoundException

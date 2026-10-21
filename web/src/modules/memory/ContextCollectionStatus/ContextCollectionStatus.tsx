@@ -1,22 +1,19 @@
 import {Button, Flex, Loader, Text} from '@gravity-ui/uikit';
 import {useTranslations} from 'next-intl';
-
-import type {components} from '@/shared/api/schema';
+import type * as Contract from '@aigram/api-client';
 import styles from '@/modules/memory/ContextCollectionStatus/ContextCollectionStatus.module.css';
-
 export function ContextCollectionStatus({
     progress,
     busy,
     onCancel,
     onDetails,
 }: {
-    readonly progress: components['schemas']['MemoryCollectionProgress'];
+    readonly progress: Contract.MemoryCollectionProgress;
     readonly busy: boolean;
     readonly onCancel: () => void;
     readonly onDetails?: () => void;
 }) {
     const t = useTranslations();
-
     return (
         <Flex direction="column" gap={3} className={styles.root} qa="context-progress">
             <Flex alignItems="center" gap={3} role="status" aria-live="polite">

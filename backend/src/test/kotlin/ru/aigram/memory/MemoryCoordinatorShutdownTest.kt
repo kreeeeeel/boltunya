@@ -1,11 +1,11 @@
 package ru.aigram.memory
 
-import jakarta.inject.Provider
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.aigram.ai.ModelInference
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
+import ru.aigram.configuration.testBeanProvider
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.SettingsStore
@@ -60,7 +60,7 @@ class MemoryCoordinatorShutdownTest {
                 ModelInference(),
                 Clock.systemUTC(),
                 automated,
-                queueProvider = Provider { DirectMemoryWorkQueue() },
+                queueProvider = testBeanProvider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 coordinator.refresh("42", immediate = true)
                 assertTrue(started.await(3, TimeUnit.SECONDS))

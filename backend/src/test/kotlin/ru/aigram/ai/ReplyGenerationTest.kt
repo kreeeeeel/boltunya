@@ -6,8 +6,8 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
 import ru.aigram.resources.ResourceCatalog
 import java.net.InetSocketAddress
 import java.util.concurrent.atomic.AtomicInteger

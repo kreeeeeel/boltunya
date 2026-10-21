@@ -2,6 +2,7 @@ package ru.aigram.ai.research
 
 import com.sun.net.httpserver.HttpServer
 import org.junit.jupiter.api.Test
+import ru.aigram.domain.ai.research.ResearchSource
 import java.net.InetSocketAddress
 import java.time.Clock
 import java.time.Instant

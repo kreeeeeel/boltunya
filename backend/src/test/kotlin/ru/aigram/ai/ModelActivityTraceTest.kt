@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
 import ru.aigram.automation.activity.ReplyTrace
-import ru.aigram.domain.ActivityEntry
-import ru.aigram.domain.ChatRule
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.events.ActivityEntry
 import java.net.InetSocketAddress
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors

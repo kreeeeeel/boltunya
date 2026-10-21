@@ -2,7 +2,7 @@ import {Check, Xmark} from '@gravity-ui/icons';
 import {Box, Button, Dialog, Flex, Icon, Select, Text} from '@gravity-ui/uikit';
 import {useTranslations} from 'next-intl';
 import {useState} from 'react';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
+import {api, errorMessage} from '@/shared/api/client';
 import type {AppState, Engine} from '@/shared/api/client';
 import {desktopBridge} from '@/shared/desktop/bridge';
 import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
@@ -28,7 +28,6 @@ import {SearchConnectionPanel} from '@/modules/workspace/SearchConnectionPanel';
 import {StorageLocations} from '@/modules/storage/StorageLocations/StorageLocations';
 import {ComputeDevicePanel} from '@/modules/workspace/ComputeDevicePanel/ComputeDevicePanel';
 import styles from '@/modules/settings/SettingsCenter/SettingsCenter.module.css';
-
 export function SettingsCenter({
     settings,
     engine,
@@ -69,7 +68,9 @@ export function SettingsCenter({
         setWarning('');
         feedback.clearSaved();
         try {
-            dataOrThrow(await api.PATCH('/api/settings', {body: value}));
+            await api.settings.settings({
+                settingsUpdate: value,
+            });
             feedback.markSaved();
             void onRefresh().catch(() => setWarning(t('settingsCenter.refreshWarning')));
             const desktop = desktopBridge();

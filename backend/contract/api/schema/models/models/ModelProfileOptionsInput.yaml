@@ -1,0 +1,84 @@
+ModelProfileOptionsInput:
+    type: object
+    properties:
+        temperature:
+            type: number
+            nullable: true
+            minimum: 0
+            maximum: 2
+        topP:
+            type: number
+            nullable: true
+            minimum: 0
+            maximum: 1
+        topK:
+            type: integer
+            nullable: true
+            minimum: 0
+            maximum: 1000
+        presencePenalty:
+            type: number
+            nullable: true
+            minimum: -2
+            maximum: 2
+        frequencyPenalty:
+            type: number
+            nullable: true
+            minimum: -2
+            maximum: 2
+        repeatPenalty:
+            type: number
+            nullable: true
+            minimum: 0
+            maximum: 2
+        seed:
+            type: integer
+            nullable: true
+        stop:
+            type: array
+            items:
+                type: string
+                maxLength: 200
+            maxItems: 16
+            default: []
+        maxOutputTokens:
+            type: integer
+            default: 2048
+            minimum: 32
+            maximum: 131072
+        contextWindow:
+            type: integer
+            default: 8192
+            minimum: 512
+            maximum: 2097152
+        reasoningTokens:
+            type: integer
+            default: 2048
+            minimum: 0
+            maximum: 65536
+        reasoningEffort:
+            type: string
+            default: default
+            maxLength: 40
+        thinking:
+            $ref: ./ThinkingMode.yaml#/ThinkingMode
+        connectTimeoutSeconds:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 120
+        idleTimeoutSeconds:
+            type: integer
+            default: 600
+            minimum: 10
+            maximum: 3600
+        totalTimeoutSeconds:
+            type: integer
+            default: 0
+            minimum: 0
+            maximum: 86400
+        keepAliveMinutes:
+            type: integer
+            default: 20
+            minimum: 0
+            maximum: 1440

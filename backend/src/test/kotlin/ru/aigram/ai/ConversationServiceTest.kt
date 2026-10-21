@@ -7,12 +7,12 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
 import ru.aigram.ai.research.ResearchPlanner
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.memory.MemoryContext
 import ru.aigram.exception.IntegrationException
 import ru.aigram.exception.impl.EmptyModelReplyException
 import ru.aigram.exception.impl.InvalidModelReplyException
-import ru.aigram.memory.MemoryContext
 import java.net.InetSocketAddress
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
@@ -27,7 +27,11 @@ class ConversationServiceTest {
         val calls = AtomicInteger()
         server.createContext("/api/chat") { exchange ->
             exchange.requestBody.readAllBytes()
-            val text = if (calls.incrementAndGet() == 1) "привет, всё отлично" else "all good, how about you?"
+            val text = if (calls.incrementAndGet() == 1) {
+                "привет, всё отлично"
+            } else {
+                "all good, how about you?"
+            }
             val response = "{\"message\":{\"content\":" + Json.encodeToString(text) + "}}"
             val bytes = response.toByteArray()
             exchange.responseHeaders.set("Content-Type", "application/json")

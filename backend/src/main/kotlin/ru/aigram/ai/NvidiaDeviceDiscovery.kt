@@ -1,8 +1,7 @@
 package ru.aigram.ai
 
-import jakarta.inject.Inject
 import org.springframework.stereotype.Component
-import ru.aigram.domain.ComputeDevice
+import ru.aigram.domain.ai.ComputeDevice
 import ru.aigram.validation.InputRule
 import java.io.IOException
 import java.nio.file.Files
@@ -22,14 +21,16 @@ private const val MIN_LEGACY_DRIVER_MAJOR = 570
 private const val QUERY_FIELDS = 5
 
 @Component
-class NvidiaDeviceDiscovery @Inject constructor(private val clock: Clock) : ComputeDeviceDiscovery {
+class NvidiaDeviceDiscovery(private val clock: Clock) : ComputeDeviceDiscovery {
     private var refreshedAt = Long.MIN_VALUE
     private var cached = emptyList<ComputeDevice>()
 
     @Synchronized
     override fun devices(): List<ComputeDevice> {
         val now = clock.millis()
-        if (refreshedAt != Long.MIN_VALUE && now - refreshedAt < DISCOVERY_CACHE_MS) return cached
+        if (refreshedAt != Long.MIN_VALUE && now - refreshedAt < DISCOVERY_CACHE_MS) {
+            return cached
+        }
         cached = query()?.let(::parse).orEmpty()
         refreshedAt = now
         return cached
@@ -48,7 +49,11 @@ class NvidiaDeviceDiscovery @Inject constructor(private val clock: Clock) : Comp
         ) {
             null
         } else {
-            val minimumDriver = if (compute <= LEGACY_COMPUTE_CAPABILITY) MIN_LEGACY_DRIVER_MAJOR else MIN_DRIVER_MAJOR
+            val minimumDriver = if (compute <= LEGACY_COMPUTE_CAPABILITY) {
+                MIN_LEGACY_DRIVER_MAJOR
+            } else {
+                MIN_DRIVER_MAJOR
+            }
             val reason = when {
                 compute < MIN_COMPUTE_CAPABILITY -> "compute"
                 driver < minimumDriver -> "driver"
@@ -56,7 +61,13 @@ class NvidiaDeviceDiscovery @Inject constructor(private val clock: Clock) : Comp
             }
             ComputeDevice(uuid, name.take(256), "nvidia", memory * MEBIBYTE, compute >= MIN_COMPUTE_CAPABILITY, reason)
         }
-    }.flatMap { device -> if (device == null) Stream.empty() else Stream.of(device) }.distinct().toList()
+    }.flatMap { device ->
+        if (device == null) {
+            Stream.empty()
+        } else {
+            Stream.of(device)
+        }
+    }.distinct().toList()
 
     private fun query(): String? {
         val process = try {
@@ -82,13 +93,19 @@ class NvidiaDeviceDiscovery @Inject constructor(private val clock: Clock) : Comp
             Thread.currentThread().interrupt()
             null
         } finally {
-            if (process.isAlive) process.destroyForcibly()
+            if (process.isAlive) {
+                process.destroyForcibly()
+            }
         }
     }
 
     private fun executable(): String {
         val windows = System.getenv("SystemRoot") ?: System.getenv("WINDIR")
         val systemTool = windows?.let { Path.of(it, "System32", "nvidia-smi.exe") }
-        return if (systemTool != null && Files.isRegularFile(systemTool)) systemTool.toString() else "nvidia-smi.exe"
+        return if (systemTool != null && Files.isRegularFile(systemTool)) {
+            systemTool.toString()
+        } else {
+            "nvidia-smi.exe"
+        }
     }
 }

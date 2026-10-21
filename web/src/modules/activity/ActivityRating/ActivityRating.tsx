@@ -2,11 +2,9 @@ import {Comment, ThumbsDown, ThumbsUp} from '@gravity-ui/icons';
 import {Button, Flex, Icon, Text, Tooltip} from '@gravity-ui/uikit';
 import {useState} from 'react';
 import {useTranslations} from 'next-intl';
-
-import type {components} from '@/shared/api/schema';
+import type * as Contract from '@aigram/api-client';
 import {useActivityFeedback} from '@/modules/activity/model/useActivityFeedback';
 import styles from '@/modules/activity/ActivityRating/ActivityRating.module.css';
-
 export function ActivityRating({
     id,
     rating,
@@ -14,7 +12,7 @@ export function ActivityRating({
     onRefresh,
 }: {
     readonly id: string;
-    readonly rating?: components['schemas']['ActivityFeedbackRating'] | null;
+    readonly rating?: Contract.ActivityFeedbackRating | null;
     readonly onDetails: () => void;
     readonly onRefresh: () => Promise<void>;
 }) {

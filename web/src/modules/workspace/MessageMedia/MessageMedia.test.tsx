@@ -5,10 +5,14 @@ import {beforeEach, expect, it, vi} from 'vitest';
 import {MessageMedia} from '@/modules/workspace/MessageMedia/MessageMedia';
 import type {Message} from '@/shared/api/client';
 import ru from '@/shared/i18n/ru.json';
-const mocks = vi.hoisted(() => ({POST: vi.fn()}));
+const mocks = vi.hoisted(() => ({downloadMedia: vi.fn()}));
 vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
-    api: mocks,
+    api: {
+        media: {
+            downloadMedia: mocks.downloadMedia,
+        },
+    },
 }));
 const message: Message = {
     id: '1',
@@ -40,16 +44,16 @@ function mount(value = message) {
     );
 }
 beforeEach(() => {
-    mocks.POST.mockReset().mockResolvedValue({data: {ok: true}, response: new Response()});
+    mocks.downloadMedia.mockReset().mockResolvedValue({ok: true});
 });
 it('does not create an image request when autoload is off and downloads only after a click', async () => {
     mount();
     expect(screen.queryByRole('img')).toBeNull();
-    expect(mocks.POST).not.toHaveBeenCalled();
+    expect(mocks.downloadMedia).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', {name: ru.storage.download}));
     await waitFor(() =>
-        expect(mocks.POST).toHaveBeenCalledWith('/api/media/{fileId}/download', {
-            params: {path: {fileId: 7}},
+        expect(mocks.downloadMedia).toHaveBeenCalledWith({
+            fileId: 7,
         }),
     );
     expect(await screen.findByRole('img')).toHaveAttribute('src', '/api/media/7?v=2');
@@ -57,5 +61,5 @@ it('does not create an image request when autoload is off and downloads only aft
 it('shows an already cached photo even with autoload disabled', () => {
     mount({...message, media: {...message.media!, downloaded: true}});
     expect(screen.getByRole('img')).toBeInTheDocument();
-    expect(mocks.POST).not.toHaveBeenCalled();
+    expect(mocks.downloadMedia).not.toHaveBeenCalled();
 });

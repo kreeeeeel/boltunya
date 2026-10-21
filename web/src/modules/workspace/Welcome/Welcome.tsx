@@ -2,12 +2,10 @@ import {Box, Button, Flex, Icon, Loader, Text} from '@gravity-ui/uikit';
 import {ArrowRight} from '@gravity-ui/icons';
 import {useTranslations} from 'next-intl';
 import {useState} from 'react';
-
 import {ConnectDialog} from '@/modules/workspace/ConnectDialog/ConnectDialog';
 import styles from '@/modules/workspace/Welcome/Welcome.module.css';
 import type {AppState} from '@/shared/api/client';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
-
+import {api, errorMessage} from '@/shared/api/client';
 export function Welcome({
     state,
     loading,
@@ -27,7 +25,7 @@ export function Welcome({
     async function retry() {
         try {
             if (state?.telegram.state === 'error') {
-                dataOrThrow(await api.POST('/api/telegram/restore'));
+                await api.telegram.restoreTelegramSession();
             }
             await onRefresh();
             setRestoreError('');

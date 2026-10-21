@@ -1,10 +1,9 @@
 ContextExclusionUpdate:
     type: object
-    required:
-        - scope
-        - excluded
     properties:
         scope:
             $ref: ./ContextExclusionScope.yaml#/ContextExclusionScope
+            default: message
         excluded:
             type: boolean
+            default: true

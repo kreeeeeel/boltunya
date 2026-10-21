@@ -1,17 +1,15 @@
 import {Box, Button, Dialog, Flex, Icon, Progress, Text, TextArea} from '@gravity-ui/uikit';
 import {File as FileIcon, Xmark} from '@gravity-ui/icons';
 import {useEffect, useRef, useState} from 'react';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
+import {api, errorMessage} from '@/shared/api/client';
 import {useMediaMessages} from '@/modules/media/i18n/messages';
 import {uploadFile} from '@/modules/media/model/uploads';
 import type {AttachmentKind, UploadedFile} from '@/modules/media/model/uploads';
 import styles from '@/modules/media/AttachmentDialog/AttachmentDialog.module.css';
-
 export interface AttachmentSelection {
     file: File;
     preview: string;
 }
-
 export function AttachmentDialog({
     chatId,
     selection,
@@ -37,19 +35,19 @@ export function AttachmentDialog({
     const uploaded = useRef<Map<File, UploadedFile>>(new Map());
     const delivered = useRef(false);
     const submitted = useRef(false);
-
     useEffect(() => {
         const pending = uploaded.current;
         return () => {
             controller.current?.abort();
             if (!delivered.current && !submitted.current) {
                 pending.forEach((item) => {
-                    void api.DELETE('/api/uploads/{id}', {params: {path: {id: item.id}}});
+                    void api.media.deleteUpload({id: item.id}).catch((cause) => {
+                        console.error('Temporary attachment cleanup failed.', errorMessage(cause));
+                    });
                 });
             }
         };
     }, []);
-
     async function send() {
         if (sent) {
             onClose();
@@ -78,16 +76,14 @@ export function AttachmentDialog({
             }
             setSending(true);
             submitted.current = true;
-            dataOrThrow(
-                await api.POST('/api/chats/{chatId}/attachments', {
-                    params: {path: {chatId}},
-                    body: {
-                        uploadIds: items.map((item) => uploaded.current.get(item.file)!.id),
-                        kind,
-                        caption,
-                    },
-                }),
-            );
+            await api.chats.sendAttachments({
+                chatId,
+                sendMediaRequest: {
+                    uploadIds: items.map((item) => uploaded.current.get(item.file)!.id),
+                    kind,
+                    caption,
+                },
+            });
             delivered.current = true;
             setSent(true);
             try {
@@ -106,7 +102,6 @@ export function AttachmentDialog({
             controller.current = null;
         }
     }
-
     return (
         <Dialog
             open

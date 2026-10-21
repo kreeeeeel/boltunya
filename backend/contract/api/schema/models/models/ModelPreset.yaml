@@ -1,5 +1,6 @@
 ModelPreset:
     type: string
+    default: custom
     enum:
         - ollama
         - openai

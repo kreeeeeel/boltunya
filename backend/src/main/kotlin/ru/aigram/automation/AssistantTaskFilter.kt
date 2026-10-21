@@ -37,6 +37,12 @@ class AssistantTaskFilter {
         }
 
     private fun tokens(text: String): List<String> = text.lowercase(Locale.ROOT).codePoints()
-        .mapToObj { if (Character.isLetterOrDigit(it)) String(Character.toChars(it)) else " " }
+        .mapToObj {
+            if (Character.isLetterOrDigit(it)) {
+                String(Character.toChars(it))
+            } else {
+                " "
+            }
+        }
         .collect(Collectors.joining()).split(' ').filter(String::isNotEmpty)
 }

@@ -2,7 +2,7 @@ package ru.aigram.automation.proactive
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.domain.ChatMessage
+import ru.aigram.domain.chat.ChatMessage
 import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

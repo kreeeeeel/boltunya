@@ -2,28 +2,30 @@ import {ThemeProvider} from '@gravity-ui/uikit';
 import {NextIntlClientProvider} from 'next-intl';
 import {fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {beforeEach, expect, it, vi} from 'vitest';
-
 import {ActivityRating} from '@/modules/activity/ActivityRating/ActivityRating';
 import ru from '@/shared/i18n/ru.json';
-
-const mocks = vi.hoisted(() => ({PUT: vi.fn(), DELETE: vi.fn()}));
+const mocks = vi.hoisted(() => ({saveActivityFeedback: vi.fn(), removeActivityFeedback: vi.fn()}));
 vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
-    api: mocks,
+    api: {
+        activity: {
+            saveActivityFeedback: mocks.saveActivityFeedback,
+            removeActivityFeedback: mocks.removeActivityFeedback,
+        },
+    },
 }));
-
 beforeEach(() => {
-    mocks.PUT.mockReset();
-    mocks.DELETE.mockReset();
+    mocks.saveActivityFeedback.mockReset();
+    mocks.removeActivityFeedback.mockReset();
 });
-
 it('quickly changes a rating without overwriting its saved comment and can remove it', async () => {
     const onRefresh = vi.fn().mockResolvedValue(undefined);
-    mocks.PUT.mockResolvedValue({
-        data: {rating: 'good', comment: 'Сохранённый комментарий', updatedAt: 1},
-        response: new Response(),
+    mocks.saveActivityFeedback.mockResolvedValue({
+        rating: 'good',
+        comment: 'Сохранённый комментарий',
+        updatedAt: 1,
     });
-    mocks.DELETE.mockResolvedValue({data: {ok: true}, response: new Response()});
+    mocks.removeActivityFeedback.mockResolvedValue({ok: true});
     render(
         <NextIntlClientProvider locale="ru" messages={ru}>
             <ThemeProvider>
@@ -33,9 +35,9 @@ it('quickly changes a rating without overwriting its saved comment and can remov
     );
     fireEvent.click(screen.getByRole('button', {name: ru.events.feedback.good}));
     await waitFor(() =>
-        expect(mocks.PUT).toHaveBeenCalledWith('/api/activity/{id}/feedback', {
-            params: {path: {id: 'sent'}},
-            body: {rating: 'good'},
+        expect(mocks.saveActivityFeedback).toHaveBeenCalledWith({
+            id: 'sent',
+            activityFeedbackUpdate: {rating: 'good'},
         }),
     );
     await waitFor(() =>
@@ -46,8 +48,8 @@ it('quickly changes a rating without overwriting its saved comment and can remov
     );
     fireEvent.click(screen.getByRole('button', {name: ru.events.feedback.good}));
     await waitFor(() =>
-        expect(mocks.DELETE).toHaveBeenCalledWith('/api/activity/{id}/feedback', {
-            params: {path: {id: 'sent'}},
+        expect(mocks.removeActivityFeedback).toHaveBeenCalledWith({
+            id: 'sent',
         }),
     );
     await waitFor(() =>
@@ -57,12 +59,8 @@ it('quickly changes a rating without overwriting its saved comment and can remov
         ),
     );
 });
-
 it('retains the existing rating when a request fails', async () => {
-    mocks.PUT.mockResolvedValue({
-        error: {message: 'Не удалось сохранить оценку.'},
-        response: new Response('', {status: 503}),
-    });
+    mocks.saveActivityFeedback.mockRejectedValue(new Error('Не удалось сохранить оценку.'));
     render(
         <NextIntlClientProvider locale="ru" messages={ru}>
             <ThemeProvider>
@@ -77,7 +75,6 @@ it('retains the existing rating when a request fails', async () => {
         'true',
     );
 });
-
 it('reflects ratings changed in the details dialog after the activity snapshot refreshes', () => {
     const renderRating = (rating: 'good' | 'bad' | null) => (
         <NextIntlClientProvider locale="ru" messages={ru}>

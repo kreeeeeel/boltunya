@@ -1,14 +1,14 @@
 package ru.aigram.ai.profile
 
-import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Component
+import ru.aigram.domain.ai.profile.ModelTaskRouting
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
 @Component
-class ModelRoutingStore @Inject constructor(directory: Path) {
+class ModelRoutingStore(directory: Path) {
     private val file = directory.resolve("models/routing.json")
     private val json = Json {
         prettyPrint = true

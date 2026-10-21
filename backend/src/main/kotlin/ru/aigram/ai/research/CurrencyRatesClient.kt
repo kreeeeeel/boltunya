@@ -3,6 +3,8 @@ package ru.aigram.ai.research
 import kotlinx.serialization.json.Json
 import org.jsoup.Jsoup
 import org.jsoup.parser.Parser
+import ru.aigram.domain.ai.research.ResearchContext
+import ru.aigram.domain.ai.research.ResearchSource
 import ru.aigram.exception.impl.CurrencyRatesUnavailableException
 import ru.aigram.resources.ResourceCatalog
 import java.io.IOException
@@ -40,28 +42,39 @@ class CurrencyRatesClient(
         ) {
             return null
         }
-        if (intents.contains("currency-market", query)) return null
+        if (intents.contains("currency-market", query)) {
+            return null
+        }
         val currencies = words.tokens(query)
             .mapNotNull { token ->
                 aliases.entries.firstOrNull { entry ->
                     entry.value.any { token.startsWith(it) }
                 }?.key
             }.distinct().toList()
-        if (currencies.isEmpty() && !intents.contains("currency-general", query)) return null
+        if (currencies.isEmpty() && !intents.contains("currency-general", query)) {
+            return null
+        }
         val requested = currencies.ifEmpty { listOf("USD", "EUR") }
         val pairs = if (requested.size > 1 && !intents.contains("currency-list", query)) {
             listOf(requested[0] to requested[1])
         } else {
             requested.filterNot { it == "RUB" }.map { it to "RUB" }
         }
-        if (pairs.isEmpty()) return null
+        if (pairs.isEmpty()) {
+            return null
+        }
         try {
             val today = LocalDate.now(clock)
             val response = Jsoup.connect(endpoint).data("date_req", today.format(QUERY_DATE))
                 .timeout(
                     TIMEOUT_MS,
                 ).maxBodySize(MAX_BODY_BYTES).ignoreContentType(true).parser(Parser.xmlParser()).get()
-            val root = response.selectFirst("ValCurs") ?: throw CurrencyRatesUnavailableException()
+            val root = response.selectFirst("ValCurs")
+
+            if (root == null) {
+                throw CurrencyRatesUnavailableException()
+            }
+
             val date = LocalDate.parse(root.attr("Date"), RESPONSE_DATE)
             if (date.isAfter(today) ||
                 date.isBefore(today.minusDays(MAX_RATE_AGE_DAYS))
@@ -71,14 +84,26 @@ class CurrencyRatesClient(
             val rates = response.select("Valute").associate { row ->
                 val nominal =
                     row.selectFirst("Nominal")?.text()?.toBigDecimalOrNull()
-                        ?: throw CurrencyRatesUnavailableException()
+
+                if (nominal == null) {
+                    throw CurrencyRatesUnavailableException()
+                }
+
                 val value =
                     row.selectFirst("Value")?.text()?.replace(',', '.')?.toBigDecimalOrNull()
-                        ?: throw CurrencyRatesUnavailableException()
-                if (nominal <= BigDecimal.ZERO || value <= BigDecimal.ZERO) throw CurrencyRatesUnavailableException()
+
+                if (value == null) {
+                    throw CurrencyRatesUnavailableException()
+                }
+
+                if (nominal <= BigDecimal.ZERO || value <= BigDecimal.ZERO) {
+                    throw CurrencyRatesUnavailableException()
+                }
                 row.selectFirst("CharCode")?.text().orEmpty() to value.divide(nominal, 10, RoundingMode.HALF_UP)
             } + ("RUB" to BigDecimal.ONE)
-            if (pairs.any { it.first !in rates || it.second !in rates }) return null
+            if (pairs.any { it.first !in rates || it.second !in rates }) {
+                return null
+            }
             val quotes = pairs.map { (base, target) ->
                 val rate = rates.getValue(base).divide(rates.getValue(target), RATE_SCALE, RoundingMode.HALF_UP)
                 val amount = rate.stripTrailingZeros().toPlainString()

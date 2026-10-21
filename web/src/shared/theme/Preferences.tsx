@@ -3,7 +3,7 @@ import {ThemeProvider} from '@gravity-ui/uikit';
 import {NextIntlClientProvider} from 'next-intl';
 import {createContext, useContext, useEffect, useState} from 'react';
 import type {ReactNode} from 'react';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
+import {api, errorMessage} from '@/shared/api/client';
 import {compileAppearance, defaultAppearance} from '@/shared/theme/appearance';
 import type {Appearance} from '@/shared/theme/appearance';
 import en from '@/shared/i18n/en.json';
@@ -59,10 +59,10 @@ export function Preferences({children}: {children: ReactNode}) {
             document.documentElement.lang = language;
         }
         restoreLocale();
-        void api
-            .GET('/api/appearance')
+        void api.settings
+            .appearance()
             .then((result) => {
-                const saved = dataOrThrow(result);
+                const saved = result;
                 compileAppearance(saved);
                 setAppearance(saved);
                 setPreview(saved);
@@ -93,7 +93,9 @@ export function Preferences({children}: {children: ReactNode}) {
     }
     async function saveAppearance(next: Appearance) {
         compileAppearance(next);
-        const saved = dataOrThrow(await api.PUT('/api/appearance', {body: next}));
+        const saved = await api.settings.saveAppearance({
+            appearanceSettings: next,
+        });
         compileAppearance(saved);
         setAppearance(saved);
         setPreview(saved);

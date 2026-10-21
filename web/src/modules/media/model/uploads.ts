@@ -1,12 +1,12 @@
-import type {components} from '@/shared/api/schema';
-
-export type UploadedFile = components['schemas']['UploadedFile'];
+import type * as Contract from '@aigram/api-client';
+import {api} from '@/shared/api/client';
+import {apiConfiguration} from '@/shared/api/configuration';
+export type UploadedFile = Contract.UploadedFile;
 export type AttachmentKind = 'media' | 'document';
 export const MAX_ATTACHMENTS = 10;
 export const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
 export const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 export const MAX_BATCH_BYTES = 500 * 1024 * 1024;
-
 export function validAttachments(
     files: File[],
     kind: AttachmentKind,
@@ -36,18 +36,24 @@ export function validAttachments(
     }
     return '';
 }
-
-export function uploadFile(
+export async function uploadFile(
     file: File,
     signal: AbortSignal,
     progress: (loaded: number) => void,
 ): Promise<UploadedFile> {
+    const options = await api.media.uploadFileRequestOpts({
+        xFileName: encodeURIComponent(file.name),
+        body: file,
+    });
     return new Promise((resolve, reject) => {
         const request = new XMLHttpRequest();
-        request.open('POST', '/api/uploads');
+        request.open(options.method, apiConfiguration.basePath + options.path);
         request.withCredentials = true;
-        request.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
-        request.setRequestHeader('X-File-Name', encodeURIComponent(file.name));
+        Object.entries({...options.headers, 'Content-Type': file.type || 'application/octet-stream'}).forEach(
+            ([name, value]) => {
+                request.setRequestHeader(name, value);
+            },
+        );
         const abort = () => request.abort();
         signal.addEventListener('abort', abort, {once: true});
         request.onloadend = () => signal.removeEventListener('abort', abort);

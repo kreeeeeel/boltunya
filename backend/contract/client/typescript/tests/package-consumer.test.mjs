@@ -69,7 +69,7 @@ after(() => {
     rmSync(consumer, { recursive: true, force: true });
 });
 
-test("the installed tarball exposes all 73 operations in eight API groups and compiles typed imports", () => {
+test("the installed tarball exposes all 74 operations in eight API groups and compiles typed imports", () => {
     const apis = Object.values(sdk).filter(
         (value) =>
             typeof value === "function" &&
@@ -84,7 +84,8 @@ test("the installed tarball exposes all 73 operations in eight API groups and co
             ).length,
         0,
     );
-    assert.equal(operationCount, 73);
+    assert.equal(operationCount, 74);
+    assert.equal(typeof sdk.ModelsApi.prototype.restartEngine, "function");
     copyFileSync(
         join(directory, "tests/consumer/consumer.ts"),
         join(consumer, "consumer.ts"),
@@ -102,6 +103,25 @@ test("the installed tarball exposes all 73 operations in eight API groups and co
         ],
         { cwd: consumer, stdio: "pipe" },
     );
+});
+
+test("the typed model client exposes the approved app-managed engine restart operation", async () => {
+    const requests = [];
+    const api = new sdk.ModelsApi(
+        new sdk.Configuration({
+            basePath: "http://127.0.0.1:9000",
+            fetchApi: async (url, init) => {
+                requests.push({ url, init });
+                return Response.json({ ok: true });
+            },
+        }),
+    );
+
+    assert.deepEqual(await api.restartEngine(), { ok: true });
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].url, "http://127.0.0.1:9000/api/engine/restart");
+    assert.equal(requests[0].init.method, "POST");
+    assert.equal(requests[0].init.body, undefined);
 });
 
 test("history keeps large string IDs, nullable fields, unknown properties and explicit auth configuration", async () => {

@@ -1,9 +1,9 @@
 package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
-import jakarta.inject.Provider
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import ru.aigram.configuration.testBeanProvider
 import ru.aigram.exception.impl.MediaUnavailableException
 import java.nio.file.Path
 import kotlin.test.assertEquals
@@ -50,7 +50,7 @@ class TelegramGalleryServiceTest {
     private fun service(): TelegramGalleryService {
         val files = TelegramMediaStore(directory) { error("No downloads in gallery tests") }
         val view = TelegramMessageView(TelegramCache(), TelegramMessageMapper(files), files)
-        return TelegramGalleryService(Provider { error("No Telegram in gallery tests") }, view)
+        return TelegramGalleryService(testBeanProvider { error("No Telegram in gallery tests") }, view)
     }
 
     private fun photo(messageId: Long) = TdApi.Message().apply {

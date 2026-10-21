@@ -1,10 +1,9 @@
 package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
-import jakarta.inject.Inject
-import jakarta.inject.Provider
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.stereotype.Component
-import ru.aigram.domain.OutgoingMedia
+import ru.aigram.domain.media.OutgoingMedia
 import ru.aigram.exception.impl.TelegramSendFailedException
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
@@ -13,13 +12,13 @@ import java.util.concurrent.TimeoutException
 private const val MEDIA_SEND_TIMEOUT_SECONDS = 60L
 
 @Component
-class TelegramMediaSender @Inject constructor(
-    private val gateway: Provider<TdLightGateway>,
+class TelegramMediaSender(
+    private val gateway: ObjectProvider<TdLightGateway>,
     private val content: TelegramMediaContent,
     private val delivery: TelegramMediaDeliveryTracker,
 ) {
     fun send(chatId: String, media: List<OutgoingMedia>, replyToId: String = "", topicId: Int = 0): List<String> {
-        val service = gateway.get()
+        val service = gateway.getObject()
         val ownerId = service.status().userId
         val request = content.request(service.parseChatId(chatId), media, replyToId, topicId)
         val client = service.readyClient()
@@ -32,7 +31,9 @@ class TelegramMediaSender @Inject constructor(
                     val messages = client.send(
                         request,
                     ).get(MEDIA_SEND_TIMEOUT_SECONDS, TimeUnit.SECONDS).messages.filterNotNull()
-                    if (messages.size != media.size) throw TelegramSendFailedException()
+                    if (messages.size != media.size) {
+                        throw TelegramSendFailedException()
+                    }
                     delivery.await(ownerId, messages)
                 }
                 else -> throw TelegramSendFailedException()

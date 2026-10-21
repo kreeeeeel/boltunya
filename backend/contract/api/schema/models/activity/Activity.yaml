@@ -21,8 +21,10 @@ Activity:
             type: string
         date:
             type: integer
+            format: int64
         durationMs:
             type: integer
+            format: int64
         avatarUrl:
             type: string
         phase:

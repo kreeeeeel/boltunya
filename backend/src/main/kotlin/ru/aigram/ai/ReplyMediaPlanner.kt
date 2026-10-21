@@ -1,6 +1,5 @@
 package ru.aigram.ai
 
-import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -11,12 +10,13 @@ import kotlinx.serialization.json.put
 import org.springframework.ai.chat.messages.Message
 import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.stereotype.Component
-import ru.aigram.domain.StickerItem
+import ru.aigram.domain.ai.ModelReplyPlan
+import ru.aigram.domain.media.StickerItem
 import ru.aigram.exception.impl.InvalidModelReplyException
 import ru.aigram.resources.ResourceCatalog
 
 @Component
-class ReplyMediaPlanner @Inject constructor(private val resources: ResourceCatalog) {
+class ReplyMediaPlanner(private val resources: ResourceCatalog) {
     fun schema(stickers: List<StickerItem>): JsonObject = buildJsonObject {
         put("type", "object")
         put("additionalProperties", false)
@@ -56,7 +56,11 @@ class ReplyMediaPlanner @Inject constructor(private val resources: ResourceCatal
         }
         val instruction = resources.prompt("ru/conversation/sticker-plan", mapOf("stickers" to choices.toString()))
         return context.stream().map { message ->
-            if (message is SystemMessage) SystemMessage(message.text.orEmpty() + "\n" + instruction) else message
+            if (message is SystemMessage) {
+                SystemMessage(message.text.orEmpty() + "\n" + instruction)
+            } else {
+                message
+            }
         }.toList()
     }
 

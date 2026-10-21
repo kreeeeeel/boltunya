@@ -2,6 +2,7 @@ package ru.aigram.ai.research
 
 import com.sun.net.httpserver.HttpServer
 import org.junit.jupiter.api.Test
+import ru.aigram.domain.ai.research.ResearchPlan
 import ru.aigram.exception.IntegrationException
 import java.net.InetAddress
 import java.net.InetSocketAddress

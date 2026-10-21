@@ -1,11 +1,8 @@
 import {useState} from 'react';
-
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
-import type {components} from '@/shared/api/schema';
-
-type Feedback = components['schemas']['ActivityFeedback'];
-type FeedbackRating = components['schemas']['ActivityFeedbackRating'];
-
+import {api, errorMessage} from '@/shared/api/client';
+import type * as Contract from '@aigram/api-client';
+type Feedback = Contract.ActivityFeedback;
+type FeedbackRating = Contract.ActivityFeedbackRating;
 export function useActivityFeedback(
     id: string,
     onUpdated: (feedback: Feedback | null) => void,
@@ -14,7 +11,6 @@ export function useActivityFeedback(
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [refreshError, setRefreshError] = useState('');
-
     async function update(rating: FeedbackRating | null, comment?: string) {
         setBusy(true);
         setError('');
@@ -22,14 +18,14 @@ export function useActivityFeedback(
         let feedback: Feedback | null = null;
         try {
             if (rating) {
-                feedback = dataOrThrow(
-                    await api.PUT('/api/activity/{id}/feedback', {
-                        params: {path: {id}},
-                        body: {rating, ...(comment === undefined ? {} : {comment})},
-                    }),
-                );
+                feedback = await api.activity.saveActivityFeedback({
+                    id,
+                    activityFeedbackUpdate: {rating, ...(comment === undefined ? {} : {comment})},
+                });
             } else {
-                dataOrThrow(await api.DELETE('/api/activity/{id}/feedback', {params: {path: {id}}}));
+                await api.activity.removeActivityFeedback({
+                    id,
+                });
             }
         } catch (cause) {
             setError(errorMessage(cause));
@@ -43,6 +39,5 @@ export function useActivityFeedback(
         }
         return true;
     }
-
     return {busy, error, refreshError, update};
 }

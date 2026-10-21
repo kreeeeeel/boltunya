@@ -1,0 +1,1 @@
+{{^isNumber}}{{{defaultValue}}}{{/isNumber}}{{#isNumber}}{{^multiplatform}}{{{dataType}}}("{{{defaultValue}}}"){{/multiplatform}}{{#multiplatform}}({{{defaultValue}}}).toDouble(){{/multiplatform}}{{/isNumber}}

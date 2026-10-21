@@ -126,9 +126,9 @@ interface {{classname}} {
         // "{{#lambdaEscapeInNormalString}}{{{path}}}{{/lambdaEscapeInNormalString}}"
         value = ["{{#lambdaEscapeInNormalString}}{{{path}}}{{/lambdaEscapeInNormalString}}"]{{#singleContentTypes}}{{#hasProduces}},
         produces = [{{#vendorExtensions.x-accepts}}"{{{.}}}"{{^-last}}, {{/-last}}{{/vendorExtensions.x-accepts}}]{{/hasProduces}}{{#hasConsumes}},
-        consumes = "{{{vendorExtensions.x-content-type}}}"{{/hasConsumes}}{{/singleContentTypes}}{{^singleContentTypes}}{{#hasProduces}},
+        consumes = "{{#vendorExtensions.x-spring-consumes-any}}*/*{{/vendorExtensions.x-spring-consumes-any}}{{^vendorExtensions.x-spring-consumes-any}}{{{vendorExtensions.x-content-type}}}{{/vendorExtensions.x-spring-consumes-any}}"{{/hasConsumes}}{{/singleContentTypes}}{{^singleContentTypes}}{{#hasProduces}},
         produces = [{{#produces}}"{{{mediaType}}}"{{^-last}}, {{/-last}}{{/produces}}]{{/hasProduces}}{{#hasConsumes}},
-        consumes = [{{#consumes}}"{{{mediaType}}}"{{^-last}}, {{/-last}}{{/consumes}}]{{/hasConsumes}}{{/singleContentTypes}}
+        consumes = [{{#vendorExtensions.x-spring-consumes-any}}"*/*"{{/vendorExtensions.x-spring-consumes-any}}{{^vendorExtensions.x-spring-consumes-any}}{{#consumes}}"{{{mediaType}}}"{{^-last}}, {{/-last}}{{/consumes}}{{/vendorExtensions.x-spring-consumes-any}}]{{/hasConsumes}}{{/singleContentTypes}}
     )
     {{#suspendFunctions}}suspend {{/suspendFunctions}}{{^suspendFunctions}}{{#reactive}}{{^isArray}}suspend {{/isArray}}{{#isArray}}{{#vendorExtensions.x-reactive-array-string-return}}suspend {{/vendorExtensions.x-reactive-array-string-return}}{{^vendorExtensions.x-reactive-array-string-return}}{{^useFlowForArrayReturnType}}suspend {{/useFlowForArrayReturnType}}{{/vendorExtensions.x-reactive-array-string-return}}{{/isArray}}{{/reactive}}{{/suspendFunctions}}fun {{operationId}}({{#allParams}}
         {{>queryParams}}{{>pathParams}}{{>headerParams}}{{>cookieParams}}{{>bodyParams}}{{>formParams}}{{^-last}},{{/-last}}{{/allParams}}{{#includeHttpRequestContext}}{{#hasParams}},

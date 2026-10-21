@@ -1,17 +1,20 @@
 package ru.aigram.ai.profile
 
-import jakarta.inject.Inject
 import org.springframework.stereotype.Component
 import ru.aigram.ai.ModelCatalog
 import ru.aigram.configuration.ApplicationConfiguration
-import ru.aigram.domain.ChatRule
+import ru.aigram.domain.ai.profile.ModelCapabilities
+import ru.aigram.domain.ai.profile.ModelProvider
+import ru.aigram.domain.ai.profile.ModelTask
+import ru.aigram.domain.ai.profile.ResolvedModelTarget
+import ru.aigram.domain.chat.ChatRule
 import ru.aigram.exception.impl.ModelCapabilityUnavailableException
 import ru.aigram.exception.impl.ModelProfileDisabledException
 import ru.aigram.storage.SettingsStore
 import java.net.URI
 
 @Component
-class ModelTargetResolver @Inject constructor(
+class ModelTargetResolver(
     private val profiles: ModelProfileStore,
     private val routing: ModelRoutingStore,
     private val settings: SettingsStore,
@@ -53,11 +56,17 @@ class ModelTargetResolver @Inject constructor(
         } else {
             localModel(resolved.model)
         }
-        if (task == ModelTask.VISION && !target.capabilities.vision) throw ModelCapabilityUnavailableException()
+        if (task == ModelTask.VISION && !target.capabilities.vision) {
+            throw ModelCapabilityUnavailableException()
+        }
         val group = if (!assignments.enabled || !assignments.parallelIndependentTasks) {
             "shared"
         } else {
-            if (target.provider == ModelProvider.OLLAMA || !target.remote) "local" else "api:${target.profileId}"
+            if (target.provider == ModelProvider.OLLAMA || !target.remote) {
+                "local"
+            } else {
+                "api:${target.profileId}"
+            }
         }
         return target.copy(executionGroup = group)
     }
@@ -77,7 +86,9 @@ class ModelTargetResolver @Inject constructor(
 
     fun profile(id: String): ResolvedModelTarget {
         val profile = profiles.get(id)
-        if (!profile.enabled) throw ModelProfileDisabledException()
+        if (!profile.enabled) {
+            throw ModelProfileDisabledException()
+        }
         return ResolvedModelTarget(
             profile.id,
             profile.provider,

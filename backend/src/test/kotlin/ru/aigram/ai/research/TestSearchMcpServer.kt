@@ -55,7 +55,9 @@ class TestSearchMcpServer : AutoCloseable {
                     )?.jsonObject?.get("query")?.jsonPrimitive?.content.orEmpty()
                 buildJsonObject {
                     put("isError", error)
-                    if (limited) put("_meta", buildJsonObject { put("ai.exa/rateLimited", true) })
+                    if (limited) {
+                        put("_meta", buildJsonObject { put("ai.exa/rateLimited", true) })
+                    }
                     put(
                         "content",
                         buildJsonArray {

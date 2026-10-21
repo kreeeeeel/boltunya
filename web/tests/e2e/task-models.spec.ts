@@ -5,9 +5,8 @@ import {workspaceState} from '../fixtures/workspace';
 import {modelProfiles, providerPreset} from '../fixtures/modelProfiles';
 import {chooseSettingsSection, persistTestTheme} from '../fixtures/settings';
 import {syntheticPromptBudget} from '../fixtures/promptBudget';
-import type {components} from '../../src/shared/api/schema';
+import type * as Contract from '@aigram/api-client';
 import ru from '../../src/shared/i18n/ru.json';
-
 test.beforeEach(async ({page}) => {
     const state = structuredClone(workspaceState);
     state.engine.models = [
@@ -38,8 +37,8 @@ test.beforeEach(async ({page}) => {
             supportsVision: true,
         },
     ];
-    let appearance: components['schemas']['AppearanceSettings'] = {mode: 'light', tokens: {}, css: ''};
-    let routing: components['schemas']['ModelTaskRouting'] = {
+    let appearance: Contract.AppearanceSettings = {mode: 'light', tokens: {}, css: ''};
+    let routing: Contract.ModelTaskRouting = {
         enabled: true,
         parallelIndependentTasks: false,
         replyProfileId: '',
@@ -77,7 +76,6 @@ test.beforeEach(async ({page}) => {
         );
     await page.goto(launch);
 });
-
 for (const dark of [false, true]) {
     const theme = dark ? 'dark' : 'light';
     test(`installed task choices persist and model categories combine with search in ${theme} theme`, async ({
@@ -121,7 +119,6 @@ for (const dark of [false, true]) {
             replyProfileId: 'profile-primary',
         });
         await expect(dialog.getByRole('button', {name: ru.saved, exact: true})).toBeVisible();
-
         const vision = dialog.getByRole('combobox', {
             name: ru.modelRouting.tasks.visionProfileId,
             exact: true,
@@ -146,7 +143,6 @@ for (const dark of [false, true]) {
         expect((await saved).postDataJSON()).toMatchObject({visionModel: 'gemma3:4b', visionProfileId: ''});
         await expect(dialog.getByRole('button', {name: ru.saved, exact: true})).toBeVisible();
         await dialog.getByRole('button', {name: ru.close, exact: true}).click();
-
         await page.locator('[data-qa="nav-models"]').click();
         const locals = page.locator('[data-qa="model-card"]');
         const profiles = page.locator('[data-qa="profile-model-card"]');
@@ -182,5 +178,65 @@ for (const dark of [false, true]) {
         await expect(search).toBeInViewport();
         await expect(page.locator('[data-qa="engine-card"]')).toBeInViewport();
         await page.screenshot({path: `../docs/resources/task-models-${theme}.png`, animations: 'disabled'});
+    });
+}
+
+for (const dark of [false, true]) {
+    const theme = dark ? 'dark' : 'light';
+    test(`Ollama restart fits the engine card and retries without duplicate errors in ${theme} theme`, async ({
+        page,
+    }) => {
+        const state = structuredClone(workspaceState);
+        state.engine.canRestart = true;
+        let restartCount = 0;
+        const failure = 'Не удалось перезапустить Ollama.';
+        await page.route('**/api/state', (route) => route.fulfill({json: state}));
+        await page.route('**/api/engine/restart', async (route) => {
+            restartCount += 1;
+            state.engine.error = restartCount === 1 ? failure : '';
+            await route.fulfill(
+                restartCount === 1 ? {status: 503, json: {message: failure}} : {json: {ok: true}},
+            );
+        });
+        if (dark) {
+            await persistTestTheme(page, true);
+            await page.reload();
+        }
+        await page.locator('[data-qa="nav-models"]').click();
+        const card = page.locator('[data-qa="engine-card"]');
+        const restart = card.getByRole('button', {name: ru.restartEngine, exact: true});
+        await expect(restart).toBeEnabled();
+        await restart.click();
+        const notice = page.getByRole('alert', {name: ru.engineErrorTitle, exact: true});
+        await expect(notice).toContainText(failure);
+        await expect(page.locator('[data-qa="workspace-view"]').getByRole('alert')).toHaveCount(1);
+        await expect(restart).toBeEnabled();
+        for (const width of [1440, 640]) {
+            await page.setViewportSize({width, height: 900});
+            await expect(restart).toBeInViewport();
+            const geometry = await restart.evaluate((button) => {
+                const bounds = button.getBoundingClientRect();
+                const parent = button.closest('[data-qa="engine-card"]')!.getBoundingClientRect();
+                const label = button.querySelector('.g-button__text')!.getBoundingClientRect();
+                return {
+                    buttonFits: bounds.left >= parent.left && bounds.right <= parent.right,
+                    textFits: label.left >= bounds.left && label.right <= bounds.right,
+                    clipped: button.scrollWidth > button.clientWidth + 1,
+                    pageOverflow: document.documentElement.scrollWidth > window.innerWidth,
+                };
+            });
+            expect(geometry).toEqual({buttonFits: true, textFits: true, clipped: false, pageOverflow: false});
+            await page.screenshot({
+                path: `../docs/resources/engine-restart-${width === 640 ? 'compact-' : ''}${theme}.png`,
+                animations: 'disabled',
+            });
+        }
+        await restart.click();
+        await expect(notice).toHaveCount(0);
+        expect(restartCount).toBe(2);
+        state.engine.canRestart = false;
+        await expect(restart).toBeDisabled();
+        await expect(restart).toHaveAttribute('title', ru.engineRestartExternal);
+        expect(restartCount).toBe(2);
     });
 }

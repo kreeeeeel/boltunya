@@ -3,6 +3,8 @@ package ru.aigram.storage
 import kotlinx.serialization.json.Json
 import ru.aigram.ai.OllamaInstallation
 import ru.aigram.configuration.ApplicationConfiguration
+import ru.aigram.domain.system.storage.StorageLocation
+import ru.aigram.domain.system.storage.StorageLocationReport
 import ru.aigram.resources.ResourceCatalog
 import java.net.URI
 import java.nio.file.Files
@@ -24,7 +26,11 @@ class StorageLocations(
     fun report(): StorageLocationReport {
         val root = configuration.directory
         val localServer = URI.create(configuration.ollamaUrl).host in LOCAL_HOSTS
-        val runtime = if (localServer) installation.executable()?.parent else null
+        val runtime = if (localServer) {
+            installation.executable()?.parent
+        } else {
+            null
+        }
         val configuredModels = environment.entries.firstOrNull { it.key.equals("OLLAMA_MODELS", true) }
             ?.value?.takeIf { it.isNotBlank() }?.let { Path.of(it) }
         val models = if (localServer && (runtime != null || configuredModels != null)) {

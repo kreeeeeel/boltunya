@@ -1,13 +1,12 @@
 package ru.aigram.automation.activity
 
-import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Component
-import ru.aigram.domain.ActivityDetails
-import ru.aigram.domain.ActivityEntry
-import ru.aigram.domain.ActivityHistoryPage
-import ru.aigram.domain.ActivityHistorySettings
-import ru.aigram.domain.ActivityHistoryStorage
+import ru.aigram.domain.events.ActivityDetails
+import ru.aigram.domain.events.ActivityEntry
+import ru.aigram.domain.events.ActivityHistoryPage
+import ru.aigram.domain.events.ActivityHistorySettings
+import ru.aigram.domain.events.ActivityHistoryStorage
 import ru.aigram.exception.impl.ActivityNotFoundException
 import ru.aigram.exception.impl.MalformedPayloadException
 import ru.aigram.resources.ResourceCatalog
@@ -34,8 +33,7 @@ private val ACTIVE_STATUSES = setOf("queued", "generating")
 
 /** Local, account-scoped conversation history. Diagnostics never receive its contents. */
 @Component
-class ActivityHistoryStore @Inject constructor(directory: Path, private val clock: Clock, resources: ResourceCatalog) :
-    AutoCloseable {
+class ActivityHistoryStore(directory: Path, private val clock: Clock, resources: ResourceCatalog) : AutoCloseable {
     private val closed = AtomicBoolean()
     private val root = directory.resolve("activity")
     private val settingsFile = root.resolve("history-settings.json")
@@ -98,14 +96,22 @@ class ActivityHistoryStore @Inject constructor(directory: Path, private val cloc
         }
         snapshot.stream().map { it.value.ownerId }.distinct().forEach { owner ->
             val error = failed[owner]
-            if (error == null) errors.remove(owner) else errors[owner] = error
+            if (error == null) {
+                errors.remove(owner)
+            } else {
+                errors[owner] = error
+            }
         }
     }
 
     @Synchronized
     fun page(ownerId: String, cursor: String?, limit: Int): ActivityHistoryPage {
-        if (limit !in 1..PAGE_LIMIT) throw MalformedPayloadException()
-        if (!validOwner(ownerId)) return ActivityHistoryPage()
+        if (limit !in 1..PAGE_LIMIT) {
+            throw MalformedPayloadException()
+        }
+        if (!validOwner(ownerId)) {
+            return ActivityHistoryPage()
+        }
         val keys = index(ownerId)
         applyRetention(ownerId, keys)
         val after = cursor?.takeIf(String::isNotEmpty)?.let(::decodeCursor)
@@ -117,7 +123,11 @@ class ActivityHistoryStore @Inject constructor(directory: Path, private val cloc
         }.toList()
         return ActivityHistoryPage(
             entries,
-            if (more) encodeCursor(page.last()) else null,
+            if (more) {
+                encodeCursor(page.last())
+            } else {
+                null
+            },
             more,
             keys.size,
             storage(ownerId),
@@ -126,19 +136,35 @@ class ActivityHistoryStore @Inject constructor(directory: Path, private val cloc
 
     @Synchronized
     fun details(ownerId: String, id: String): ActivityDetails {
-        if (!validOwner(ownerId) || !validId(id)) throw ActivityNotFoundException()
+        if (!validOwner(ownerId) || !validId(id)) {
+            throw ActivityNotFoundException()
+        }
         val key = index(ownerId).stream().filter { it.endsWith("-$id") }.findFirst().orElse(null)
-            ?: throw ActivityNotFoundException()
+
+        if (key == null) {
+            throw ActivityNotFoundException()
+        }
+
         val file = history(ownerId).resolve("$key.trace.json")
-        if (!Files.isRegularFile(file) || Files.size(file) > RECORD_LIMIT_BYTES) throw ActivityNotFoundException()
+        if (!Files.isRegularFile(file) || Files.size(file) > RECORD_LIMIT_BYTES) {
+            throw ActivityNotFoundException()
+        }
         return json.decodeFromString(Files.readString(file))
     }
 
     @Synchronized
     fun storage(ownerId: String): ActivityHistoryStorage {
-        if (validOwner(ownerId)) index(ownerId)
+        if (validOwner(ownerId)) {
+            index(ownerId)
+        }
         val overQuota = policy.maxStorageMb > 0 && (sizes[ownerId] ?: 0) >= policy.maxStorageMb * MEBIBYTE
-        val error = errors[ownerId].orEmpty().ifEmpty { if (overQuota) "ACTIVITY_HISTORY_QUOTA_EXCEEDED" else "" }
+        val error = errors[ownerId].orEmpty().ifEmpty {
+            if (overQuota) {
+                "ACTIVITY_HISTORY_QUOTA_EXCEEDED"
+            } else {
+                ""
+            }
+        }
         return ActivityHistoryStorage(
             policy.retentionDays,
             policy.maxStorageMb,
@@ -154,13 +180,17 @@ class ActivityHistoryStore @Inject constructor(directory: Path, private val cloc
         atomic(settingsFile, json.encodeToString(settings))
         policy = settings
         errors.remove(ownerId)
-        if (validOwner(ownerId)) applyRetention(ownerId, index(ownerId))
+        if (validOwner(ownerId)) {
+            applyRetention(ownerId, index(ownerId))
+        }
         return storage(ownerId)
     }
 
     @Synchronized
     fun clear(ownerId: String) {
-        if (!validOwner(ownerId)) return
+        if (!validOwner(ownerId)) {
+            return
+        }
         val keys = index(ownerId)
         keys.toList().stream().forEach { remove(ownerId, it) }
         val completed = tracked.entries.stream().filter {
@@ -192,14 +222,18 @@ class ActivityHistoryStore @Inject constructor(directory: Path, private val cloc
 
     private fun index(ownerId: String): NavigableSet<String> {
         val existing = indexes[ownerId]
-        if (existing != null) return existing
+        if (existing != null) {
+            return existing
+        }
         val directory = history(ownerId)
         Files.createDirectories(directory)
         val keys = ConcurrentSkipListSet<String>(Comparator.reverseOrder())
         Files.list(directory).use { files ->
             files.filter { it.fileName.toString().endsWith(".entry.json") }.forEach { path ->
                 val key = path.fileName.toString().removeSuffix(".entry.json")
-                if (validKey(key)) keys.add(key)
+                if (validKey(key)) {
+                    keys.add(key)
+                }
             }
         }
         indexes[ownerId] = keys
@@ -212,7 +246,9 @@ class ActivityHistoryStore @Inject constructor(directory: Path, private val cloc
                 files.filter { it.fileName.toString().endsWith(".json") && Files.size(it) <= RECORD_LIMIT_BYTES }
                     .forEach { path ->
                         val details = json.decodeFromString<ActivityDetails>(Files.readString(path))
-                        if (tracked.containsKey(details.entry.id)) return@forEach
+                        if (tracked.containsKey(details.entry.id)) {
+                            return@forEach
+                        }
                         val key = details.entry.date.toString().padStart(20, '0') + "-" + details.entry.id
                         val completedFile = history(ownerId).resolve("$key.trace.json")
                         val completed = if (Files.isRegularFile(completedFile) &&
@@ -234,7 +270,11 @@ class ActivityHistoryStore @Inject constructor(directory: Path, private val cloc
                                     phase = "interrupted",
                                     detail = interrupted,
                                     finishedAt = now,
-                                    durationMs = if (details.entry.startedAt > 0) now - details.entry.startedAt else 0,
+                                    durationMs = if (details.entry.startedAt > 0) {
+                                        now - details.entry.startedAt
+                                    } else {
+                                        0
+                                    },
                                     queuePosition = 0,
                                     thinking = "",
                                 ),
@@ -251,17 +291,25 @@ class ActivityHistoryStore @Inject constructor(directory: Path, private val cloc
     }
 
     private fun save(ownerId: String, details: ActivityDetails, content: String, recovering: Boolean = false): Boolean {
-        if (!validId(details.entry.id)) throw ActivityNotFoundException()
+        if (!validId(details.entry.id)) {
+            throw ActivityNotFoundException()
+        }
         if (content.toByteArray(Charsets.UTF_8).size > RECORD_LIMIT_BYTES) {
             errors[ownerId] = "ACTIVITY_HISTORY_ENTRY_TOO_LARGE"
             return false
         }
         val active = root.resolve(ownerId).resolve("active/${details.entry.id}.json")
-        if (details.entry.status in ACTIVE_STATUSES) return write(ownerId, active, content, recovering)
+        if (details.entry.status in ACTIVE_STATUSES) {
+            return write(ownerId, active, content, recovering)
+        }
         val key = details.entry.date.toString().padStart(20, '0') + "-" + details.entry.id
-        if (!write(ownerId, history(ownerId).resolve("$key.trace.json"), content, recovering)) return false
+        if (!write(ownerId, history(ownerId).resolve("$key.trace.json"), content, recovering)) {
+            return false
+        }
         val summary = json.encodeToString(details.entry)
-        if (!write(ownerId, history(ownerId).resolve("$key.entry.json"), summary, recovering)) return false
+        if (!write(ownerId, history(ownerId).resolve("$key.entry.json"), summary, recovering)) {
+            return false
+        }
         indexes.getValue(ownerId).add(key)
         if (Files.isRegularFile(active)) {
             sizes.compute(ownerId) { _, size -> (size ?: 0) - Files.size(active) }
@@ -271,7 +319,11 @@ class ActivityHistoryStore @Inject constructor(directory: Path, private val cloc
     }
 
     private fun write(ownerId: String, path: Path, content: String, recovering: Boolean): Boolean {
-        val old = if (Files.isRegularFile(path)) Files.size(path) else 0
+        val old = if (Files.isRegularFile(path)) {
+            Files.size(path)
+        } else {
+            0
+        }
         val bytes = content.toByteArray(Charsets.UTF_8).size.toLong()
         val next = (sizes[ownerId] ?: 0) - old + bytes
         if (!recovering && policy.maxStorageMb > 0 && next > policy.maxStorageMb * MEBIBYTE) {
@@ -291,7 +343,9 @@ class ActivityHistoryStore @Inject constructor(directory: Path, private val cloc
     }
 
     private fun applyRetention(ownerId: String, keys: NavigableSet<String>) {
-        if (policy.retentionDays == 0) return
+        if (policy.retentionDays == 0) {
+            return
+        }
         val cutoff = clock.instant().epochSecond - policy.retentionDays * SECONDS_PER_DAY
         keys.toList().stream().filter { it.substringBefore('-').toLong() < cutoff }.forEach { remove(ownerId, it) }
     }
@@ -320,18 +374,24 @@ class ActivityHistoryStore @Inject constructor(directory: Path, private val cloc
     private fun encodeCursor(value: String): String =
         Base64.getUrlEncoder().withoutPadding().encodeToString(value.toByteArray())
     private fun decodeCursor(value: String): String {
-        if (value.length > 200) throw MalformedPayloadException()
+        if (value.length > 200) {
+            throw MalformedPayloadException()
+        }
         val key = try {
             String(Base64.getUrlDecoder().decode(value), Charsets.UTF_8)
         } catch (_: IllegalArgumentException) {
             throw MalformedPayloadException()
         }
-        if (!validKey(key)) throw MalformedPayloadException()
+        if (!validKey(key)) {
+            throw MalformedPayloadException()
+        }
         return key
     }
 
     override fun close() {
-        if (!closed.compareAndSet(false, true)) return
+        if (!closed.compareAndSet(false, true)) {
+            return
+        }
         ticker.cancel(false)
         executor.shutdown()
         try {

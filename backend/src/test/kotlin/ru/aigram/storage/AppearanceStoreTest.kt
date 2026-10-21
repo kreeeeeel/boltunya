@@ -3,7 +3,7 @@ package ru.aigram.storage
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.domain.AppearanceSettings
+import ru.aigram.domain.settings.AppearanceSettings
 import ru.aigram.exception.impl.InvalidAppearanceException
 import java.nio.file.Path
 import kotlin.test.assertEquals

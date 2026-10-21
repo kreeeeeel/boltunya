@@ -1,20 +1,17 @@
 import {Dialog, Flex, Loader, RadioGroup, Text} from '@gravity-ui/uikit';
 import {useEffect, useState} from 'react';
 import {useTranslations} from 'next-intl';
-
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
-import type {components} from '@/shared/api/schema';
+import {api, errorMessage} from '@/shared/api/client';
+import type * as Contract from '@aigram/api-client';
 import type {
     MessageDeletionDialogProps,
     MessageDeletionResult,
 } from '@/modules/messages/MessageDeletionDialog/MessageDeletionDialog.types';
-
-type Scope = components['schemas']['MessageDeletionRequest']['scope'];
-
+type Scope = Contract.MessageDeletionRequest['scope'];
 export function MessageDeletionDialog({chatId, messageId, onClose, onDeleted}: MessageDeletionDialogProps) {
     const t = useTranslations('messageDelete');
     const common = useTranslations();
-    const [options, setOptions] = useState<components['schemas']['MessageDeletionOptions'] | null>(null);
+    const [options, setOptions] = useState<Contract.MessageDeletionOptions | null>(null);
     const [scope, setScope] = useState<Scope>('self');
     const [loading, setLoading] = useState(true);
     const [busy, setBusy] = useState(false);
@@ -24,11 +21,14 @@ export function MessageDeletionDialog({chatId, messageId, onClose, onDeleted}: M
         const controller = new AbortController();
         async function load() {
             try {
-                const permissions = dataOrThrow(
-                    await api.GET('/api/chats/{chatId}/messages/{messageId}/deletion', {
-                        params: {path: {chatId, messageId}},
+                const permissions = await api.chats.messageDeletionOptions(
+                    {
+                        chatId,
+                        messageId,
+                    },
+                    {
                         signal: controller.signal,
-                    }),
+                    },
                 );
                 if (!controller.signal.aborted) {
                     setOptions(permissions);
@@ -47,7 +47,6 @@ export function MessageDeletionDialog({chatId, messageId, onClose, onDeleted}: M
         void load();
         return () => controller.abort();
     }, [chatId, messageId]);
-
     async function remove() {
         if (busy || !options || deleted) {
             return;
@@ -56,12 +55,11 @@ export function MessageDeletionDialog({chatId, messageId, onClose, onDeleted}: M
         setError('');
         let result: MessageDeletionResult;
         try {
-            result = dataOrThrow(
-                await api.DELETE('/api/chats/{chatId}/messages/{messageId}', {
-                    params: {path: {chatId, messageId}},
-                    body: {scope},
-                }),
-            );
+            result = await api.chats.deleteMessage({
+                chatId,
+                messageId,
+                messageDeletionRequest: {scope},
+            });
             setDeleted(result);
         } catch (cause) {
             setError(errorMessage(cause));
@@ -77,7 +75,6 @@ export function MessageDeletionDialog({chatId, messageId, onClose, onDeleted}: M
             setBusy(false);
         }
     }
-
     const available = options?.canDeleteForSelf || options?.canDeleteForEveryone;
     return (
         <Dialog

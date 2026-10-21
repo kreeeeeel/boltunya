@@ -1,8 +1,11 @@
 package ru.aigram.memory
 
-import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Component
+import ru.aigram.domain.memory.ChatMemoryState
+import ru.aigram.domain.memory.FACTUAL_MEMORY_VERSION
+import ru.aigram.domain.memory.OwnerMemoryUpdate
+import ru.aigram.domain.memory.StoredMemory
 import ru.aigram.exception.impl.InvalidMemoryChatException
 import ru.aigram.exception.impl.MemoryConflictException
 import ru.aigram.exception.impl.MemoryNotReadyException
@@ -23,7 +26,7 @@ private const val MAX_SUMMARY_CHARACTERS = 6000
 private const val MAX_DOCUMENT_BYTES = 256L * 1024
 
 @Component
-class MemoryStore @Inject constructor(directory: Path, private val resources: ResourceCatalog) {
+class MemoryStore(directory: Path, private val resources: ResourceCatalog) {
     private val root = directory.resolve("memory")
     private val json = Json {
         prettyPrint = true
@@ -37,7 +40,9 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
         if (!InputRule.CHAT_ID.accepts(ownerId)) {
             throw MemoryNotReadyException()
         }
-        if (accountId == ownerId) return
+        if (accountId == ownerId) {
+            return
+        }
         val index = root.resolve(ownerId).resolve("state.json")
         val loaded = if (Files.exists(
                 index,
@@ -48,9 +53,15 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
             emptyMap()
         }
         val profile = root.resolve(ownerId).resolve("PROFILE.md")
-        if (Files.exists(profile) && Files.size(profile) > MAX_DOCUMENT_BYTES) throw MemoryTooLargeException()
+        if (Files.exists(profile) && Files.size(profile) > MAX_DOCUMENT_BYTES) {
+            throw MemoryTooLargeException()
+        }
         val notes = read("").notes
-        val ownerSummary = if (Files.exists(profile)) Files.readString(profile).trim() else ""
+        val ownerSummary = if (Files.exists(profile)) {
+            Files.readString(profile).trim()
+        } else {
+            ""
+        }
         write(file(""), markdown(notes, content(ownerSummary), version(ownerSummary)))
         accountId = ownerId
         states = loaded
@@ -58,7 +69,9 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
 
     @Synchronized
     fun initialize() {
-        if (!Files.exists(file(""))) write(file(""), defaultNotes(""))
+        if (!Files.exists(file(""))) {
+            write(file(""), defaultNotes(""))
+        }
     }
 
     @Synchronized
@@ -69,8 +82,15 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
 
     @Synchronized
     fun recordAutomaticAttempt(previous: ChatMemoryState, attemptedAt: Long): ChatMemoryState? {
-        val current = states[previous.chatId] ?: return null
-        if (accountId != previous.accountId || current.generation != previous.generation) return null
+        val current = states[previous.chatId]
+
+        if (current == null) {
+            return null
+        }
+
+        if (accountId != previous.accountId || current.generation != previous.generation) {
+            return null
+        }
         val next = current.copy(automaticAttemptAt = maxOf(current.automaticAttemptAt, attemptedAt))
         persist(next)
         return next
@@ -79,21 +99,35 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
     @Synchronized
     fun read(chatId: String): StoredMemory {
         val path = file(chatId)
-        if (Files.exists(path) && Files.size(path) > MAX_DOCUMENT_BYTES) throw MemoryTooLargeException()
-        val text = if (Files.exists(path)) Files.readString(path) else defaultNotes(chatId)
+        if (Files.exists(path) && Files.size(path) > MAX_DOCUMENT_BYTES) {
+            throw MemoryTooLargeException()
+        }
+        val text = if (Files.exists(path)) {
+            Files.readString(path)
+        } else {
+            defaultNotes(chatId)
+        }
         val start = text.indexOf(SUMMARY_START)
         val end = text.indexOf(SUMMARY_END)
         val hasSummary = start >= 0 && end > start
         val notes = if (hasSummary) {
             val prefix = text.substring(0, start).removeSuffix("\n\n")
             val suffix = text.substring(end + SUMMARY_END.length).removePrefix("\n")
-            if (suffix.isEmpty()) prefix else prefix + "\n\n" + suffix
+            if (suffix.isEmpty()) {
+                prefix
+            } else {
+                prefix + "\n\n" + suffix
+            }
         } else if (chatId.isEmpty()) {
             text.removeSuffix("\n")
         } else {
             text
         }
-        val summary = if (hasSummary) text.substring(start + SUMMARY_START.length, end).trim() else ""
+        val summary = if (hasSummary) {
+            text.substring(start + SUMMARY_START.length, end).trim()
+        } else {
+            ""
+        }
         return StoredMemory(notes, content(summary), digest(notes), digest(text), version(summary))
     }
 
@@ -103,7 +137,11 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
     @Synchronized
     fun relativePath(chatId: String): String {
         file(chatId)
-        return if (chatId.isEmpty()) "memory/MEMORY.md" else "memory/$accountId/$chatId/MEMORY.md"
+        return if (chatId.isEmpty()) {
+            "memory/MEMORY.md"
+        } else {
+            "memory/$accountId/$chatId/MEMORY.md"
+        }
     }
 
     @Synchronized
@@ -112,7 +150,9 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
             throw MemoryTooLargeException()
         }
         val previous = read(chatId)
-        if (previous.revision != revision) throw MemoryConflictException()
+        if (previous.revision != revision) {
+            throw MemoryConflictException()
+        }
         write(file(chatId), markdown(notes, previous.summary, previous.factsVersion))
     }
 
@@ -146,7 +186,11 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
             requested = previous.requested || request,
             manual = previous.manual || manual,
             ownerSource = previous.ownerSource || ownerSource,
-            changeVersion = previous.changeVersion + if (changed) 1 else 0,
+            changeVersion = previous.changeVersion + if (changed) {
+                1
+            } else {
+                0
+            },
         ).let { next ->
             if (migrateProfile || migrateFacts) {
                 next.copy(
@@ -180,10 +224,21 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
         next: ChatMemoryState,
         ownerUpdate: OwnerMemoryUpdate? = null,
     ): Boolean {
-        if (summary.length > MAX_SUMMARY_CHARACTERS) throw MemoryTooLargeException()
-        if (ownerUpdate != null && ownerUpdate.summary.length > MAX_SUMMARY_CHARACTERS) throw MemoryTooLargeException()
-        val current = states[previous.chatId] ?: return false
-        if (accountId != previous.accountId) return false
+        if (summary.length > MAX_SUMMARY_CHARACTERS) {
+            throw MemoryTooLargeException()
+        }
+        if (ownerUpdate != null && ownerUpdate.summary.length > MAX_SUMMARY_CHARACTERS) {
+            throw MemoryTooLargeException()
+        }
+        val current = states[previous.chatId]
+
+        if (current == null) {
+            return false
+        }
+
+        if (accountId != previous.accountId) {
+            return false
+        }
         val document = read(previous.chatId)
         if (accountId != previous.accountId || current.generation != previous.generation ||
             document.documentRevision != revision
@@ -192,7 +247,9 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
         }
         if (ownerUpdate != null) {
             val general = read("")
-            if (general.documentRevision != ownerUpdate.previous.documentRevision) return false
+            if (general.documentRevision != ownerUpdate.previous.documentRevision) {
+                return false
+            }
             write(
                 root.resolve(accountId).resolve("PROFILE.md"),
                 FACTS_MARKER + "\n" + ownerUpdate.summary.trim() + "\n",
@@ -218,7 +275,12 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
 
     @Synchronized
     fun cancelCollection(chatId: String, attemptedAt: Long = 0) {
-        val previous = states[chatId] ?: return
+        val previous = states[chatId]
+
+        if (previous == null) {
+            return
+        }
+
         persist(
             previous.copy(
                 requested = false,
@@ -251,18 +313,24 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
 
     @Synchronized
     fun rebuildOwner() {
-        if (accountId.isEmpty()) throw MemoryNotReadyException()
+        if (accountId.isEmpty()) {
+            throw MemoryNotReadyException()
+        }
         val general = read("")
         write(root.resolve(accountId).resolve("PROFILE.md"), "")
         write(file(""), markdown(general.notes, ""))
     }
 
     private fun file(chatId: String): Path {
-        if (chatId.isEmpty()) return root.resolve("MEMORY.md")
+        if (chatId.isEmpty()) {
+            return root.resolve("MEMORY.md")
+        }
         if (!InputRule.CHAT_ID.accepts(chatId)) {
             throw InvalidMemoryChatException()
         }
-        if (accountId.isEmpty()) throw MemoryNotReadyException()
+        if (accountId.isEmpty()) {
+            throw MemoryNotReadyException()
+        }
         return root.resolve(accountId).resolve(chatId).resolve("MEMORY.md")
     }
 
@@ -274,12 +342,22 @@ class MemoryStore @Inject constructor(directory: Path, private val resources: Re
 
     private fun markdown(notes: String, summary: String, factsVersion: Int = FACTUAL_MEMORY_VERSION): String =
         notes + "\n\n" + SUMMARY_START + "\n" +
-            (if (factsVersion == FACTUAL_MEMORY_VERSION) FACTS_MARKER + "\n" else "") +
+            (
+                if (factsVersion == FACTUAL_MEMORY_VERSION) {
+                    FACTS_MARKER + "\n"
+                } else {
+                    ""
+                }
+                ) +
             summary.trim() + "\n" + SUMMARY_END + "\n"
 
     private fun content(summary: String): String = summary.removePrefix(FACTS_MARKER).trim()
 
-    private fun version(summary: String): Int = if (summary.startsWith(FACTS_MARKER)) FACTUAL_MEMORY_VERSION else 0
+    private fun version(summary: String): Int = if (summary.startsWith(FACTS_MARKER)) {
+        FACTUAL_MEMORY_VERSION
+    } else {
+        0
+    }
 
     private fun persist(state: ChatMemoryState) {
         val next = states + (state.chatId to state)

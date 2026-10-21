@@ -22,6 +22,8 @@ class MemoryQueueTask(
     }
 
     fun finish(failure: Throwable?) {
-        if (finished.compareAndSet(false, true)) completed(failure)
+        if (finished.compareAndSet(false, true)) {
+            completed(failure)
+        }
     }
 }

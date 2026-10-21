@@ -1,16 +1,14 @@
 import {Box, Button, Flex, Icon, Loader, Popup, Text, Tooltip} from '@gravity-ui/uikit';
 import {Clock, Star} from '@gravity-ui/icons';
 import {useEffect, useRef, useState} from 'react';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
-import type {components} from '@/shared/api/schema';
+import {api, errorMessage} from '@/shared/api/client';
+import type * as Contract from '@aigram/api-client';
 import {useMediaMessages} from '@/modules/media/i18n/messages';
 import {AnimatedSticker} from '@/modules/workspace/MessageMedia/AnimatedSticker';
 import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
 import styles from '@/modules/media/StickerPicker/StickerPicker.module.css';
-
-type Sticker = components['schemas']['StickerItem'];
-type Catalog = components['schemas']['StickerCatalog'];
-
+type Sticker = Contract.StickerItem;
+type Catalog = Contract.StickerCatalog;
 export function StickerPicker({
     anchor,
     onClose,
@@ -30,9 +28,10 @@ export function StickerPicker({
     useEffect(() => () => setRequest.current?.abort(), []);
     useEffect(() => {
         const controller = new AbortController();
-        void api
-            .GET('/api/stickers', {signal: controller.signal})
-            .then(dataOrThrow)
+        void api.media
+            .stickers({
+                signal: controller.signal,
+            })
             .then((value) => {
                 if (!controller.signal.aborted) {
                     setCatalog(value);
@@ -45,7 +44,6 @@ export function StickerPicker({
             });
         return () => controller.abort();
     }, []);
-
     async function select(id: string) {
         setRequest.current?.abort();
         setRequest.current = null;
@@ -60,8 +58,13 @@ export function StickerPicker({
         setRequest.current = controller;
         setBusy(id);
         try {
-            const items = dataOrThrow(
-                await api.GET('/api/stickers/sets/{id}', {params: {path: {id}}, signal: controller.signal}),
+            const items = await api.media.stickerSet(
+                {
+                    id,
+                },
+                {
+                    signal: controller.signal,
+                },
             );
             if (!controller.signal.aborted && setRequest.current === controller) {
                 setItems(items);
@@ -76,7 +79,6 @@ export function StickerPicker({
             }
         }
     }
-
     async function pick(id: string) {
         if (busy) {
             return;
@@ -92,7 +94,6 @@ export function StickerPicker({
             setBusy('');
         }
     }
-
     const stickers = set === 'recent' ? catalog?.recent : set === 'favorites' ? catalog?.favorites : items;
     return (
         <Popup

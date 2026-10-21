@@ -1,8 +1,8 @@
 package ru.aigram.ai
 
 import org.junit.jupiter.api.Test
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 

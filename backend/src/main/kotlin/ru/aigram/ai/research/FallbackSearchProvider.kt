@@ -1,5 +1,6 @@
 package ru.aigram.ai.research
 
+import ru.aigram.domain.ai.research.ResearchSource
 import ru.aigram.exception.IntegrationException
 import java.time.Clock
 

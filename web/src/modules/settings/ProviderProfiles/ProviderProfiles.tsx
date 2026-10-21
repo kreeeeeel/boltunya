@@ -2,12 +2,12 @@ import {Box, Button, Flex, Icon, Label, Loader, Select, Switch, Text, TextInput}
 import {ArrowLeft, Check, Plus, TrashBin} from '@gravity-ui/icons';
 import {useTranslations} from 'next-intl';
 import {useState} from 'react';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
-import type {components} from '@/shared/api/schema';
+import {api, errorMessage} from '@/shared/api/client';
+import type * as Contract from '@aigram/api-client';
 import {SettingsSection} from '@/modules/settings/SettingsSection/SettingsSection';
 import {ProfileOptions} from '@/modules/settings/ProfileOptions/ProfileOptions';
 import {useModelProfiles} from '@/modules/settings/model/useModelProfiles';
-import type {ModelProfileUpdate} from '@/modules/settings/model/useModelProfiles';
+import type {ModelProfileDraft} from '@/modules/settings/model/ModelProfileDraft';
 import {profileDraft, profilePayload} from '@/modules/settings/model/profileDraft';
 import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
 import styles from '@/modules/settings/ProviderProfiles/ProviderProfiles.module.css';
@@ -16,11 +16,11 @@ export function ProviderProfiles({onRefresh}: {readonly onRefresh: () => Promise
     const common = useTranslations();
     const report = useModelProfiles();
     const [selected, setSelected] = useState<string | null>(null);
-    const [value, setValue] = useState<ModelProfileUpdate | null>(null);
+    const [value, setValue] = useState<ModelProfileDraft | null>(null);
     const [key, setKey] = useState('');
     const [error, setError] = useState('');
     const [busy, setBusy] = useState('');
-    const [result, setResult] = useState<components['schemas']['ModelProfileTestResult'] | null>(null);
+    const [result, setResult] = useState<Contract.ModelProfileTestResult | null>(null);
     const feedback = useSaveFeedback(JSON.stringify([value, key]));
     function edit(id: string) {
         const item = report.profiles.find((profile) => profile.id === id) ?? report.presets[0];
@@ -44,13 +44,13 @@ export function ProviderProfiles({onRefresh}: {readonly onRefresh: () => Promise
             const body = profilePayload(value, key);
             const saved =
                 selected === 'new'
-                    ? dataOrThrow(await api.POST('/api/model-profiles', {body}))
-                    : dataOrThrow(
-                          await api.PUT('/api/model-profiles/{id}', {
-                              params: {path: {id: selected ?? ''}},
-                              body,
-                          }),
-                      );
+                    ? await api.models.createModelProfile({
+                          modelProfileUpdate: body,
+                      })
+                    : await api.models.updateModelProfile({
+                          id: selected ?? '',
+                          modelProfileUpdate: body,
+                      });
             setSelected(saved.id);
             const next = profileDraft(saved);
             setValue(next);
@@ -72,7 +72,9 @@ export function ProviderProfiles({onRefresh}: {readonly onRefresh: () => Promise
         setBusy('delete');
         setError('');
         try {
-            dataOrThrow(await api.DELETE('/api/model-profiles/{id}', {params: {path: {id: selected}}}));
+            await api.models.deleteModelProfile({
+                id: selected,
+            });
             setSelected(null);
             setValue(null);
             await report.refresh();
@@ -93,12 +95,10 @@ export function ProviderProfiles({onRefresh}: {readonly onRefresh: () => Promise
         setResult(null);
         try {
             setResult(
-                dataOrThrow(
-                    await api.POST('/api/model-profiles/{id}/test', {
-                        params: {path: {id: selected}},
-                        body: {confirmGeneration: true},
-                    }),
-                ),
+                await api.models.testModelProfile({
+                    id: selected,
+                    modelProfileTestRequest: {confirmGeneration: true},
+                }),
             );
         } catch (cause) {
             setError(errorMessage(cause));
@@ -108,7 +108,6 @@ export function ProviderProfiles({onRefresh}: {readonly onRefresh: () => Promise
     }
     const savedProfile = report.profiles.find((profile) => profile.id === selected);
     const empty = !value && !report.loading && !report.profiles.length && !report.error && !error;
-
     if (empty) {
         return (
             <Flex direction="column" className={styles.emptyPage}>
@@ -142,7 +141,6 @@ export function ProviderProfiles({onRefresh}: {readonly onRefresh: () => Promise
             </Flex>
         );
     }
-
     return (
         <SettingsSection
             id="providers"

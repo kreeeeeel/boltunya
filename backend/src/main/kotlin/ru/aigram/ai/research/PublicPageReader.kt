@@ -49,13 +49,17 @@ class PublicPageReader(
     fun read(url: String): String = read(url, 0)
 
     private fun read(url: String, redirects: Int): String {
-        if (redirects > 3) throw ResearchRedirectLimitException()
+        if (redirects > 3) {
+            throw ResearchRedirectLimitException()
+        }
         val uri = validate(url)
         val response = Jsoup.connect(uri.toString()).userAgent("Boltun/1.1")
             .timeout(5000).maxBodySize(192 * 1024).followRedirects(false).ignoreHttpErrors(true).execute()
         if (response.statusCode() in setOf(301, 302, 303, 307, 308)) {
             val target = response.header("Location")
-            if (target.isNullOrBlank()) throw ResearchRedirectMissingException()
+            if (target.isNullOrBlank()) {
+                throw ResearchRedirectMissingException()
+            }
             return read(uri.resolve(target).toString(), redirects + 1)
         }
         if (response.statusCode() != 200 || response.contentType()?.contains("html") != true) {
@@ -73,7 +77,9 @@ class PublicPageReader(
     }
 
     private fun embeddedText(encoded: String): String {
-        if (!encoded.startsWith('{') || encoded.length > 64000) return ""
+        if (!encoded.startsWith('{') || encoded.length > 64000) {
+            return ""
+        }
         return try {
             val data = Json.parseToJsonElement(encoded) as? JsonObject
             val paragraphs = data?.get("microFormat") as? JsonArray

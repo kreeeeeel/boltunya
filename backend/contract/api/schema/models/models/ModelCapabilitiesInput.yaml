@@ -1,0 +1,29 @@
+ModelCapabilitiesInput:
+    type: object
+    properties:
+        streaming:
+            type: boolean
+            default: true
+        vision:
+            type: boolean
+            default: false
+        structuredOutput:
+            type: boolean
+            default: false
+        reasoning:
+            type: boolean
+            default: false
+        temperature:
+            type: boolean
+            default: true
+        topP:
+            type: boolean
+            default: true
+        topK:
+            type: boolean
+            default: false
+        penalties:
+            type: boolean
+            default: false
+        tokenLimit:
+            $ref: ./TokenLimitParameter.yaml#/TokenLimitParameter

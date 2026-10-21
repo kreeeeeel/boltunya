@@ -2,7 +2,10 @@ package ru.aigram.memory
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.domain.ChatMessage
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.memory.FACTUAL_MEMORY_VERSION
+import ru.aigram.domain.memory.MemorySource
+import ru.aigram.domain.memory.MemorySpeaker
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.AutomatedReplyStore
 import java.nio.file.Path

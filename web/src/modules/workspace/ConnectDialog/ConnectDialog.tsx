@@ -2,12 +2,10 @@ import {Box, Button, Dialog, Flex, Icon, Link, Text, TextInput} from '@gravity-u
 import {ArrowUpRightFromSquare, LogoTelegram, ShieldCheck} from '@gravity-ui/icons';
 import {useTranslations} from 'next-intl';
 import {useState} from 'react';
-
 import type {ConnectDialogProps} from '@/modules/workspace/ConnectDialog/ConnectDialog.types';
 import styles from '@/modules/workspace/ConnectDialog/ConnectDialog.module.css';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
+import {api, errorMessage} from '@/shared/api/client';
 import {FormSkeleton} from '@/shared/ui/FormSkeleton/FormSkeleton';
-
 function validPhone(value: string) {
     return (
         value.startsWith('+') &&
@@ -16,7 +14,6 @@ function validPhone(value: string) {
         Array.from(value.slice(1)).every((character) => '0123456789'.includes(character))
     );
 }
-
 export function ConnectDialog({status, onClose, onRefresh}: ConnectDialogProps) {
     const t = useTranslations();
     const [apiId, setApiId] = useState('');
@@ -28,7 +25,6 @@ export function ConnectDialog({status, onClose, onRefresh}: ConnectDialogProps) 
     const state = status?.state ?? 'disconnected';
     const needsValue = ['code', 'password', 'email', 'emailCode'].includes(state);
     const starting = state === 'disconnected' || state === 'error';
-
     async function submit() {
         setError('');
         if (
@@ -47,14 +43,14 @@ export function ConnectDialog({status, onClose, onRefresh}: ConnectDialogProps) 
         setBusy(true);
         try {
             if (starting) {
-                dataOrThrow(
-                    await api.POST('/api/telegram/connect', {
-                        body: {apiId: Number(apiId), apiHash, phone: phone.replaceAll(' ', '')},
-                    }),
-                );
+                await api.telegram.connect({
+                    credentials: {apiId: Number(apiId), apiHash, phone: phone.replaceAll(' ', '')},
+                });
                 setApiHash('');
             } else {
-                dataOrThrow(await api.POST('/api/telegram/submit', {body: {value}}));
+                await api.telegram.submit({
+                    value: {value},
+                });
                 setValue('');
             }
             await onRefresh();
@@ -64,11 +60,10 @@ export function ConnectDialog({status, onClose, onRefresh}: ConnectDialogProps) 
             setBusy(false);
         }
     }
-
     async function disconnect() {
         setBusy(true);
         try {
-            dataOrThrow(await api.POST('/api/telegram/logout'));
+            await api.telegram.logout();
             await onRefresh();
         } catch (cause) {
             setError(errorMessage(cause));
@@ -76,7 +71,6 @@ export function ConnectDialog({status, onClose, onRefresh}: ConnectDialogProps) 
             setBusy(false);
         }
     }
-
     return (
         <Dialog
             contentOverflow="auto"

@@ -65,7 +65,11 @@ class RegistryModelInstaller(
             val target = blobRoot.resolve(digest.replace(':', '-'))
             if (!Files.exists(target)) {
                 val size = layer.jsonObject["size"]?.jsonPrimitive?.longOrNull
-                    ?: throw InvalidModelSizeException()
+
+                if (size == null) {
+                    throw InvalidModelSizeException()
+                }
+
                 downloader.download(
                     URI.create("$registry/v2/library/$family/blobs/$digest"),
                     target,
@@ -73,7 +77,9 @@ class RegistryModelInstaller(
                     size,
                 ) { count ->
                     completed += count
-                    if (total > 0) onProgress((completed * 100 / total).toInt())
+                    if (total > 0) {
+                        onProgress((completed * 100 / total).toInt())
+                    }
                 }
             } else {
                 completed += Files.size(target)

@@ -4,8 +4,9 @@ import kotlinx.serialization.json.jsonObject
 import org.junit.jupiter.api.Test
 import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
-import ru.aigram.domain.MediaAttachment
-import ru.aigram.domain.StickerItem
+import ru.aigram.domain.ai.ModelReplyPlan
+import ru.aigram.domain.media.MediaAttachment
+import ru.aigram.domain.media.StickerItem
 import ru.aigram.exception.impl.InvalidModelReplyException
 import ru.aigram.resources.ResourceCatalog
 import kotlin.test.assertEquals

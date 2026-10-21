@@ -2,26 +2,26 @@ package ru.aigram.automation
 
 import ru.aigram.automation.activity.ActivityHistoryStore
 import ru.aigram.automation.activity.ActivityLog
-import ru.aigram.automation.activity.ActivityPhase
-import ru.aigram.automation.activity.ActivityStatus
 import ru.aigram.automation.activity.ReplyJob
 import ru.aigram.automation.activity.ReplyTraceScope
 import ru.aigram.automation.proactive.ProactiveTask
 import ru.aigram.diagnostics.DiagnosticLog
-import ru.aigram.diagnostics.DiagnosticSource
-import ru.aigram.domain.ActivityDetails
-import ru.aigram.domain.ActivityEntry
-import ru.aigram.domain.ActivityFeedback
-import ru.aigram.domain.ActivityFeedbackUpdate
-import ru.aigram.domain.ActivityHistoryPage
-import ru.aigram.domain.ActivityKind
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.ChatSummary
-import ru.aigram.domain.GroupReplyMode
-import ru.aigram.domain.PreviewJob
-import ru.aigram.domain.ReplyQueueState
-import ru.aigram.domain.ReplyResult
+import ru.aigram.domain.ai.PreviewJob
+import ru.aigram.domain.ai.ReplyResult
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.ChatSummary
+import ru.aigram.domain.chat.GroupReplyMode
+import ru.aigram.domain.events.ActivityDetails
+import ru.aigram.domain.events.ActivityEntry
+import ru.aigram.domain.events.ActivityFeedback
+import ru.aigram.domain.events.ActivityFeedbackUpdate
+import ru.aigram.domain.events.ActivityHistoryPage
+import ru.aigram.domain.events.ActivityKind
+import ru.aigram.domain.events.ActivityPhase
+import ru.aigram.domain.events.ActivityStatus
+import ru.aigram.domain.events.ReplyQueueState
+import ru.aigram.domain.events.diagnostics.DiagnosticSource
 import ru.aigram.exception.AppException
 import ru.aigram.exception.impl.ActivityDeliveryStartedException
 import ru.aigram.exception.impl.ActivityFeedbackUnavailableException
@@ -132,7 +132,12 @@ class ReplyCoordinator(
     }
 
     fun historyPage(cursor: String?, limit: Int): ActivityHistoryPage {
-        val page = history?.page(telegram.status().userId, cursor, limit) ?: return ActivityHistoryPage()
+        val page = history?.page(telegram.status().userId, cursor, limit)
+
+        if (page == null) {
+            return ActivityHistoryPage()
+        }
+
         return page.copy(
             entries = page.entries.stream().map { entry ->
                 entry.copy(feedbackRating = feedback?.get(entry.id)?.rating)
@@ -167,14 +172,18 @@ class ReplyCoordinator(
     fun saveFeedback(id: String, update: ActivityFeedbackUpdate): ActivityFeedback = synchronized(gate) {
         val details = log.details(id)
         val store = feedback
-        if (!details.entry.feedbackAvailable || store == null) throw ActivityFeedbackUnavailableException()
+        if (!details.entry.feedbackAvailable || store == null) {
+            throw ActivityFeedbackUnavailableException()
+        }
         store.save(id, update)
     }
 
     fun removeFeedback(id: String) = synchronized(gate) {
         val details = log.details(id)
         val store = feedback
-        if (!details.entry.feedbackAvailable || store == null) throw ActivityFeedbackUnavailableException()
+        if (!details.entry.feedbackAvailable || store == null) {
+            throw ActivityFeedbackUnavailableException()
+        }
         store.remove(id)
     }
 
@@ -185,9 +194,13 @@ class ReplyCoordinator(
     }
 
     fun enqueueDraft(chatId: String, model: String, action: () -> ReplyResult): PreviewJob = synchronized(gate) {
-        if (closed || pending.size >= MAX_PENDING_JOBS) throw ReplyCancelledException()
+        if (closed || pending.size >= MAX_PENDING_JOBS) {
+            throw ReplyCancelledException()
+        }
         val chat = telegram.chats().stream().filter { it.id == chatId }.findFirst().orElse(null)
-        if (chat == null) throw ChatNotFoundException()
+        if (chat == null) {
+            throw ChatNotFoundException()
+        }
         val id = UUID.randomUUID().toString()
         val trace = log.add(
             ActivityEntry(
@@ -270,12 +283,28 @@ class ReplyCoordinator(
 
     fun draft(id: String): PreviewJob = synchronized(gate) {
         val entry = log.details(id).entry
-        if (entry.kind != ActivityKind.DRAFT) throw ActivityNotFoundException()
-        PreviewJob(id, entry.status, drafts[id], if (entry.status == ActivityStatus.ERROR.value) entry.detail else "")
+        if (entry.kind != ActivityKind.DRAFT) {
+            throw ActivityNotFoundException()
+        }
+        PreviewJob(
+            id,
+            entry.status,
+            drafts[id],
+            if (entry.status == ActivityStatus.ERROR.value) {
+                entry.detail
+            } else {
+                ""
+            },
+        )
     }
 
     fun prioritize(id: String) = synchronized(gate) {
-        val job = pending[id] ?: throw ActivityNotFoundException()
+        val job = pending[id]
+
+        if (job == null) {
+            throw ActivityNotFoundException()
+        }
+
         job.order = --priorityOrder
         job.priority = true
         job.trace.prioritize()
@@ -287,13 +316,17 @@ class ReplyCoordinator(
             log.details(id)
             return@synchronized
         }
-        if (job.delivering) throw ActivityDeliveryStartedException()
+        if (job.delivering) {
+            throw ActivityDeliveryStartedException()
+        }
         job.memory?.cancelByUser()
         cancelJob(job)
     }
 
     fun onMessage(message: ChatMessage) = synchronized(gate) {
-        if (closed) return@synchronized
+        if (closed) {
+            return@synchronized
+        }
         typing.cancel(message.chatId)
         latest[message.chatId] = message.id
         ArrayList(pending.values).stream().filter { it.message.chatId == message.chatId && it.memory == null }.forEach {
@@ -305,7 +338,9 @@ class ReplyCoordinator(
         }.forEach(::cancelJob)
         val preferences = settings.get()
         val rule = settings.rule(message.chatId)
-        if (exclusions?.forInference(telegram.status().userId, listOf(message))?.isEmpty() == true) return@synchronized
+        if (exclusions?.forInference(telegram.status().userId, listOf(message))?.isEmpty() == true) {
+            return@synchronized
+        }
         val photo =
             rule.analyzePhotos && message.kind == "photo" &&
                 message.media?.mimeType in setOf("image/jpeg", "image/png", "image/webp")
@@ -318,7 +353,11 @@ class ReplyCoordinator(
             return@synchronized
         }
         val chat = telegram.chats().stream().filter { it.id == message.chatId }.findFirst().orElse(null)
-            ?: return@synchronized
+
+        if (chat == null) {
+            return@synchronized
+        }
+
         val delay = (rule.delaySeconds + preferences.replyDelaySeconds) * 1000L + MESSAGE_DEBOUNCE_MS
         val id = UUID.randomUUID().toString()
         val trace = log.add(
@@ -344,7 +383,9 @@ class ReplyCoordinator(
     }
 
     override fun enqueueMemory(task: MemoryQueueTask) = synchronized(gate) {
-        if (closed || pending.size >= MAX_PENDING_JOBS) throw ReplyCancelledException()
+        if (closed || pending.size >= MAX_PENDING_JOBS) {
+            throw ReplyCancelledException()
+        }
         val trace = log.add(
             ActivityEntry(
                 task.id, task.chatId, task.title, ActivityStatus.QUEUED.value, task.model, Instant.now().epochSecond,
@@ -365,22 +406,40 @@ class ReplyCoordinator(
     }
 
     override fun cancelMemory(id: String, userInitiated: Boolean) = synchronized(gate) {
-        val job = pending[id] ?: active[id] ?: return@synchronized
-        if (job.memory == null) return@synchronized
+        val job = pending[id] ?: active[id]
+
+        if (job == null) {
+            return@synchronized
+        }
+
+        if (job.memory == null) {
+            return@synchronized
+        }
         pending.remove(id)
-        if (userInitiated) job.memory.cancelByUser()
+        if (userInitiated) {
+            job.memory.cancelByUser()
+        }
         cancelJob(job)
     }
 
     override fun memoryQueuePosition(id: String): Int = synchronized(gate) {
-        val job = pending[id] ?: return@synchronized 0
+        val job = pending[id]
+
+        if (job == null) {
+            return@synchronized 0
+        }
+
         pending.values.stream().filter { jobOrder.compare(it, job) < 0 }.count().toInt() + 1
     }
 
     private fun dispatch() = synchronized(gate) {
-        if (closed || queuePaused) return@synchronized
+        if (closed || queuePaused) {
+            return@synchronized
+        }
         val capacity = settings.get().maxParallelTasks - active.size
-        if (capacity <= 0) return@synchronized
+        if (capacity <= 0) {
+            return@synchronized
+        }
         val foregroundPending = pending.values.stream().anyMatch {
             it.memory == null &&
                 (it.draft != null || !settings.get().paused)
@@ -417,7 +476,9 @@ class ReplyCoordinator(
         fun canReply(): Boolean = allowed(message, rule) && (job.proactive?.allowed?.invoke() ?: true)
         var indicator: java.util.concurrent.ScheduledFuture<*>? = null
         try {
-            if (job.cancelled.get() || !canReply()) throw ReplyCancelledException()
+            if (job.cancelled.get() || !canReply()) {
+                throw ReplyCancelledException()
+            }
             job.trace.start()
             if (settings.get().showTyping) {
                 indicator =
@@ -430,8 +491,16 @@ class ReplyCoordinator(
                 val history = telegram.history(
                     message.chatId,
                     maxOf(
-                        if (rule.matchMyStyle) STYLE_HISTORY_MESSAGES else rule.contextMessages,
-                        if (rule.analyzePhotos) MIN_VISION_HISTORY_MESSAGES else rule.contextMessages,
+                        if (rule.matchMyStyle) {
+                            STYLE_HISTORY_MESSAGES
+                        } else {
+                            rule.contextMessages
+                        },
+                        if (rule.analyzePhotos) {
+                            MIN_VISION_HISTORY_MESSAGES
+                        } else {
+                            rule.contextMessages
+                        },
                     ),
                 )
                 val context = if (job.proactive != null || history.stream().anyMatch { it.id == message.id }) {
@@ -445,7 +514,9 @@ class ReplyCoordinator(
                     message.topicId
                 }
                 val globalPrompt = settings.get().globalPrompt
-                if (job.cancelled.get()) throw ReplyCancelledException()
+                if (job.cancelled.get()) {
+                    throw ReplyCancelledException()
+                }
                 val result = job.proactive?.generate?.invoke(rule, context) ?: generate(rule, context)
                 tracing.phase(ActivityPhase.VALIDATING)
                 job.trace.generated(result.text)
@@ -523,7 +594,11 @@ class ReplyCoordinator(
                 diagnostics?.record(DiagnosticSource.REPLY, exception)
                 job.trace.finish(
                     ActivityStatus.ERROR,
-                    if (exception is AppException) exception.message else ReplyDeliveryFailedException().message,
+                    if (exception is AppException) {
+                        exception.message
+                    } else {
+                        ReplyDeliveryFailedException().message
+                    },
                 )
                 System.err.println("Auto-reply failed: ${exception.javaClass.simpleName}")
             }
@@ -546,7 +621,9 @@ class ReplyCoordinator(
             }
             job.trace.start()
             val generate = job.draft
-            if (generate == null) throw ReplyCancelledException()
+            if (generate == null) {
+                throw ReplyCancelledException()
+            }
             tracing.capture(job.trace) {
                 val result = generate()
                 synchronized(gate) {
@@ -567,7 +644,11 @@ class ReplyCoordinator(
                 diagnostics?.record(DiagnosticSource.REPLY, exception)
                 job.trace.finish(
                     ActivityStatus.ERROR,
-                    if (exception is AppException) exception.message else ReplyDeliveryFailedException().message,
+                    if (exception is AppException) {
+                        exception.message
+                    } else {
+                        ReplyDeliveryFailedException().message
+                    },
                 )
             }
         } finally {
@@ -593,9 +674,13 @@ class ReplyCoordinator(
             job.trace.start()
             job.trace.phase(ActivityPhase.MEMORY)
             val task = job.memory
-            if (task == null) throw ReplyCancelledException()
+            if (task == null) {
+                throw ReplyCancelledException()
+            }
             tracing.capture(job.trace) { task.action() }
-            if (job.cancelled.get()) throw ReplyCancelledException()
+            if (job.cancelled.get()) {
+                throw ReplyCancelledException()
+            }
             job.trace.finish(ActivityStatus.READY, task.model)
         } catch (exception: Exception) {
             deferred = exception is BackgroundInferenceDeferredException && !job.cancelled.get() && !closed
@@ -611,13 +696,21 @@ class ReplyCoordinator(
             } else if (cancelled) {
                 job.trace.finish(
                     ActivityStatus.CANCELLED,
-                    if (failure is AppException) failure.message else ReplyCancelledException().message,
+                    if (failure is AppException) {
+                        failure.message
+                    } else {
+                        ReplyCancelledException().message
+                    },
                 )
             } else {
                 diagnostics?.record(DiagnosticSource.MEMORY, exception)
                 job.trace.finish(
                     ActivityStatus.ERROR,
-                    if (exception is AppException) exception.message else MemoryUpdateFailedException().message,
+                    if (exception is AppException) {
+                        exception.message
+                    } else {
+                        MemoryUpdateFailedException().message
+                    },
                 )
             }
         } finally {
@@ -635,16 +728,22 @@ class ReplyCoordinator(
                     deferred = false
                 }
             }
-            if (!deferred) job.memory?.finish(failure)
+            if (!deferred) {
+                job.memory?.finish(failure)
+            }
             log.prune()
         }
     }
 
     private fun cancelJob(job: ReplyJob) {
-        if (job.delivering || !job.trace.active()) return
+        if (job.delivering || !job.trace.active()) {
+            return
+        }
         job.cancel()
         job.trace.finish(ActivityStatus.CANCELLED, ReplyCancelledException().message)
-        if (job.memory == null) typing.cancel(job.message.chatId)
+        if (job.memory == null) {
+            typing.cancel(job.message.chatId)
+        }
         if (job.thread ==
             null
         ) {
@@ -659,13 +758,21 @@ class ReplyCoordinator(
             latest[message.chatId] == message.id && groupAllowed(message, rule)
 
     private fun groupAllowed(message: ChatMessage, rule: ChatRule): Boolean {
-        if (!message.group) return true
-        val mode = if (rule.groupReplies == GroupReplyMode.INHERIT) settings.get().groupReplies else rule.groupReplies
+        if (!message.group) {
+            return true
+        }
+        val mode = if (rule.groupReplies == GroupReplyMode.INHERIT) {
+            settings.get().groupReplies
+        } else {
+            rule.groupReplies
+        }
         return mode == GroupReplyMode.ALL || mode == GroupReplyMode.MENTIONS && message.mentionsMe
     }
 
     fun cancelReplies(chatId: String? = null) = synchronized(gate) {
-        if (chatId == null) epoch.incrementAndGet()
+        if (chatId == null) {
+            epoch.incrementAndGet()
+        }
         ArrayList(pending.values).stream().filter {
             it.memory == null && (chatId == null || it.message.chatId == chatId)
         }.forEach {
@@ -675,7 +782,11 @@ class ReplyCoordinator(
         ArrayList(active.values).stream().filter {
             it.memory == null && (chatId == null || it.message.chatId == chatId)
         }.forEach(::cancelJob)
-        if (chatId == null) typing.cancelAll() else typing.cancel(chatId)
+        if (chatId == null) {
+            typing.cancelAll()
+        } else {
+            typing.cancel(chatId)
+        }
     }
 
     fun cancelPending() = synchronized(gate) {
@@ -696,7 +807,9 @@ class ReplyCoordinator(
     }
 
     fun onDeleted(chatId: String, ids: Set<String>) = synchronized(gate) {
-        if (latest[chatId] !in ids) return@synchronized
+        if (latest[chatId] !in ids) {
+            return@synchronized
+        }
         latest.remove(chatId)
         ArrayList(pending.values).stream().filter { it.message.chatId == chatId }.forEach {
             pending.remove(it.id)

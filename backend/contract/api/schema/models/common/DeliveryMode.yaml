@@ -4,3 +4,4 @@ DeliveryMode:
         - inherit
         - reply
         - send
+    default: inherit

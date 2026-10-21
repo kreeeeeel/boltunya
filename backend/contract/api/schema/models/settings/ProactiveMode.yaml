@@ -5,3 +5,4 @@ ProactiveMode:
         - disabled
         - enabled
     description: 'Default: inherit.'
+    default: inherit

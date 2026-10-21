@@ -11,9 +11,9 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import ru.aigram.ai.research.InternetResearcher
 import ru.aigram.ai.research.RecordedSearchProvider
 import ru.aigram.ai.research.ResearchMarkdown
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.memory.MemoryContext
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.memory.MemoryContext
 import ru.aigram.resources.ResourceCatalog
 import java.nio.file.Files
 import java.nio.file.Path
@@ -63,7 +63,9 @@ class LiveConversationalResearchTest {
                         ),
                     ).text
                     history.add(ChatMessage(history.size.toString(), "live-style", reply, true, 0, automated = true))
-                    if (reply.length > 360) failures.add("Too long: $incoming -> $reply")
+                    if (reply.length > 360) {
+                        failures.add("Too long: $incoming -> $reply")
+                    }
                     if (incoming.contains("погода") && !reply.contains("°") && !reply.contains("градус")) {
                         failures.add("Missing weather facts: $reply")
                     }

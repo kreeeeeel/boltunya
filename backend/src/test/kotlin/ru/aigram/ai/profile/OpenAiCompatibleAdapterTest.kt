@@ -10,8 +10,12 @@ import org.springframework.ai.content.Media
 import org.springframework.core.io.ByteArrayResource
 import org.springframework.util.MimeTypeUtils
 import ru.aigram.automation.activity.ReplyTrace
-import ru.aigram.domain.ActivityEntry
-import ru.aigram.domain.ChatRule
+import ru.aigram.domain.ai.profile.ModelCapabilities
+import ru.aigram.domain.ai.profile.ModelProfileUpdate
+import ru.aigram.domain.ai.profile.ModelProvider
+import ru.aigram.domain.ai.profile.ModelTask
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.events.ActivityEntry
 import ru.aigram.exception.impl.ModelProviderRefusedException
 import java.nio.file.Path
 import kotlin.test.assertEquals

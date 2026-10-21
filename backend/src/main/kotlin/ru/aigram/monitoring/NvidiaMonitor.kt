@@ -1,7 +1,7 @@
 package ru.aigram.monitoring
 
-import jakarta.inject.Inject
 import org.springframework.stereotype.Component
+import ru.aigram.domain.system.monitoring.GpuMetrics
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
@@ -9,11 +9,13 @@ private const val GPU_TIMEOUT_SECONDS = 2L
 private const val MEBIBYTE = 1024L * 1024
 
 @Component
-class NvidiaMonitor @Inject constructor() {
+class NvidiaMonitor {
     private var unavailable = false
 
     fun sample(): GpuMetrics? {
-        if (unavailable) return null
+        if (unavailable) {
+            return null
+        }
         val process = try {
             ProcessBuilder(
                 "nvidia-smi.exe",
@@ -28,17 +30,38 @@ class NvidiaMonitor @Inject constructor() {
             process.destroyForcibly()
             return null
         }
-        if (process.exitValue() != 0) return null
+        if (process.exitValue() != 0) {
+            return null
+        }
         return parse(process.inputStream.bufferedReader().use { it.readLine() }.orEmpty())
     }
 
     internal fun parse(output: String): GpuMetrics? {
         val row = output.lineSequence().firstOrNull().orEmpty().split(',').map(String::trim)
-        val percent = row.getOrNull(0)?.toDoubleOrNull() ?: return null
-        val used = row.getOrNull(1)?.toDoubleOrNull() ?: return null
-        val total = row.getOrNull(2)?.toDoubleOrNull() ?: return null
-        if (!percent.isFinite() || percent !in 0.0..100.0 || !used.isFinite() || !total.isFinite()) return null
-        if (used < 0 || total <= 0 || used > total) return null
+        val percent = row.getOrNull(0)?.toDoubleOrNull()
+
+        if (percent == null) {
+            return null
+        }
+
+        val used = row.getOrNull(1)?.toDoubleOrNull()
+
+        if (used == null) {
+            return null
+        }
+
+        val total = row.getOrNull(2)?.toDoubleOrNull()
+
+        if (total == null) {
+            return null
+        }
+
+        if (!percent.isFinite() || percent !in 0.0..100.0 || !used.isFinite() || !total.isFinite()) {
+            return null
+        }
+        if (used < 0 || total <= 0 || used > total) {
+            return null
+        }
         return GpuMetrics(percent, (used * MEBIBYTE).toLong(), (total * MEBIBYTE).toLong())
     }
 }

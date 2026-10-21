@@ -40,11 +40,19 @@ class ControlledWarmServer : AutoCloseable {
                     requests.computeIfAbsent(model) { AtomicInteger() }.incrementAndGet()
                     val gate = releases.computeIfAbsent(model) { CountDownLatch(1) }
                     started.computeIfAbsent(model) { CountDownLatch(1) }.countDown()
-                    if (gate.await(WARM_GATE_TIMEOUT_SECONDS, TimeUnit.SECONDS)) codes[model] ?: 200 else 504
+                    if (gate.await(WARM_GATE_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                        codes[model] ?: 200
+                    } else {
+                        504
+                    }
                 } else {
                     200
                 }
-                val response = if (code == 200) "{}" else """{"error":"synthetic warmup failure"}"""
+                val response = if (code == 200) {
+                    "{}"
+                } else {
+"""{"error":"synthetic warmup failure"}"""
+                }
                 val bytes = response.toByteArray()
                 exchange.responseHeaders.set("Content-Type", "application/json")
                 exchange.sendResponseHeaders(code, bytes.size.toLong())

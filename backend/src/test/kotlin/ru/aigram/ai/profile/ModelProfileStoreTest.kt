@@ -2,6 +2,9 @@ package ru.aigram.ai.profile
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import ru.aigram.domain.ai.profile.ModelProfileUpdate
+import ru.aigram.domain.ai.profile.ModelProvider
+import ru.aigram.domain.ai.profile.ResolvedModelTarget
 import ru.aigram.exception.impl.InvalidModelProfileException
 import ru.aigram.exception.impl.ModelCredentialMissingException
 import ru.aigram.exception.impl.ModelProfileChangedException

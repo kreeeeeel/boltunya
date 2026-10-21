@@ -2,16 +2,18 @@ import {ThemeProvider} from '@gravity-ui/uikit';
 import {NextIntlClientProvider} from 'next-intl';
 import {fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {beforeEach, expect, it, vi} from 'vitest';
-
 import {ErrorsPanel} from '@/modules/diagnostics/ErrorsPanel/ErrorsPanel';
 import ru from '@/shared/i18n/ru.json';
-
-const mocks = vi.hoisted(() => ({GET: vi.fn(), DELETE: vi.fn()}));
+const mocks = vi.hoisted(() => ({diagnosticErrors: vi.fn(), clearDiagnosticErrors: vi.fn()}));
 vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
-    api: mocks,
+    api: {
+        system: {
+            diagnosticErrors: mocks.diagnosticErrors,
+            clearDiagnosticErrors: mocks.clearDiagnosticErrors,
+        },
+    },
 }));
-
 const entry = {
     id: 'error-1',
     date: 1729411200,
@@ -33,12 +35,10 @@ function mount() {
         </NextIntlClientProvider>,
     );
 }
-
 beforeEach(() => {
-    mocks.GET.mockReset().mockResolvedValue({data: {errors: [entry]}, response: new Response()});
-    mocks.DELETE.mockReset().mockResolvedValue({data: {ok: true}, response: new Response()});
+    mocks.diagnosticErrors.mockReset().mockResolvedValue({errors: [entry]});
+    mocks.clearDiagnosticErrors.mockReset().mockResolvedValue({ok: true});
 });
-
 it('opens separate explanation, recovery and technical blocks from an error card', async () => {
     mount();
     fireEvent.click(await screen.findByRole('button', {name: (name) => name.includes('Ollama недоступна')}));
@@ -49,13 +49,12 @@ it('opens separate explanation, recovery and technical blocks from an error card
     expect(dialog).toHaveTextContent('503');
     expect(dialog.querySelectorAll('[class*="block"]')).toHaveLength(3);
 });
-
 it('shows the real empty state after clearing the error journal', async () => {
     mount();
     await screen.findByText(entry.message);
-    mocks.GET.mockResolvedValue({data: {errors: []}, response: new Response()});
+    mocks.diagnosticErrors.mockResolvedValue({errors: []});
     fireEvent.click(screen.getByRole('button', {name: ru.diagnostics.clear}));
-    await waitFor(() => expect(mocks.DELETE).toHaveBeenCalledWith('/api/diagnostics/errors'));
+    await waitFor(() => expect(mocks.clearDiagnosticErrors).toHaveBeenCalledWith());
     expect(await screen.findByText(ru.diagnostics.empty)).toBeVisible();
     expect(screen.queryByText(entry.message)).toBeNull();
 });

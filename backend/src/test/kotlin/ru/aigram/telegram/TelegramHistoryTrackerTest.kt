@@ -1,15 +1,16 @@
 package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
-import jakarta.inject.Provider
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.aigram.ai.ModelInference
 import ru.aigram.ai.OllamaRuntime
 import ru.aigram.automation.ReplyCoordinator
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.ReplyResult
+import ru.aigram.configuration.testBeanProvider
+import ru.aigram.domain.ai.ReplyResult
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.memory.OwnerMemoryUpdate
 import ru.aigram.memory.DirectMemoryWorkQueue
 import ru.aigram.memory.MemoryBatchBuilder
 import ru.aigram.memory.MemoryCoordinator
@@ -18,7 +19,6 @@ import ru.aigram.memory.MemoryStore
 import ru.aigram.memory.MemorySummarizer
 import ru.aigram.memory.MemoryTelegramGateway
 import ru.aigram.memory.OwnerMemorySummarizer
-import ru.aigram.memory.OwnerMemoryUpdate
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.MessageArchiveStore
@@ -92,9 +92,18 @@ class TelegramHistoryTrackerTest {
         ReplyCoordinator(settings, telegram) { _, _ -> ReplyResult("unused", 0, 0.0) }.use { replies ->
             MemoryCoordinator(
                 bank, settings, telegram, OllamaRuntime("http://127.0.0.1:1"), processor,
-                ModelInference(), clock, automated, Provider { DirectMemoryWorkQueue() },
+                ModelInference(), clock, automated, testBeanProvider { DirectMemoryWorkQueue() },
             ).use { memory ->
-                val tracker = TelegramHistoryTracker(archive, cache, mapper, Provider { replies }, Provider { memory })
+                val tracker =
+                    TelegramHistoryTracker(
+                        archive,
+                        cache,
+                        mapper,
+                        testBeanProvider {
+                            replies
+                        },
+                        testBeanProvider { memory },
+                    )
                 val ownerBefore = bank.read("")
                 tracker.deleted("100", 44, listOf(124))
                 assertEquals(ownerBefore, bank.read(""))

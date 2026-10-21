@@ -3,11 +3,11 @@ package ru.aigram.automation
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.springframework.ai.chat.messages.UserMessage
-import ru.aigram.ai.model.ModelCompletion
 import ru.aigram.automation.activity.ReplyTraceScope
-import ru.aigram.domain.ActivityKind
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.ReplyResult
+import ru.aigram.domain.ai.ReplyResult
+import ru.aigram.domain.ai.model.ModelCompletion
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.events.ActivityKind
 import ru.aigram.exception.impl.BackgroundInferenceDeferredException
 import ru.aigram.exception.impl.ReplyCancelledException
 import ru.aigram.storage.SettingsStore
@@ -157,7 +157,9 @@ class SharedInferenceQueueTest {
             ReplyResult("auto", 0, 0.0)
         }.use { queue ->
             val task = memory(action = {
-                if (runs.incrementAndGet() == 1) throw BackgroundInferenceDeferredException()
+                if (runs.incrementAndGet() == 1) {
+                    throw BackgroundInferenceDeferredException()
+                }
             }, completed = { completed.incrementAndGet() })
             queue.enqueueMemory(task)
             await { queue.details(task.id).entry.status == "ready" && completed.get() == 1 }

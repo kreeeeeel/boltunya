@@ -22,7 +22,9 @@ class OllamaModelInventory(
 ) {
     fun installed(): Set<String> {
         val manifests = root.resolve("manifests")
-        if (!Files.isDirectory(manifests)) return emptySet()
+        if (!Files.isDirectory(manifests)) {
+            return emptySet()
+        }
         return try {
             Files.walk(manifests, MANIFEST_DEPTH).use { files ->
                 files.filter { Files.isRegularFile(it) && manifests.relativize(it).nameCount == MANIFEST_DEPTH }
@@ -34,7 +36,11 @@ class OllamaModelInventory(
                         val relative = manifests.relativize(it)
                         val namespace = relative.getName(1).toString()
                         val model = relative.getName(2).toString() + ":" + relative.fileName
-                        if (namespace == "library") model else "$namespace/$model"
+                        if (namespace == "library") {
+                            model
+                        } else {
+                            "$namespace/$model"
+                        }
                     }.toList().toSet()
             }
         } catch (exception: IOException) {

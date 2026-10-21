@@ -1,9 +1,9 @@
 package ru.aigram.ai.model
 
-import jakarta.inject.Inject
 import org.springframework.ai.chat.model.ChatResponse
 import org.springframework.ai.converter.ThinkingTagCleaner
 import org.springframework.stereotype.Component
+import ru.aigram.domain.ai.model.ModelCompletion
 import java.time.Duration
 
 private const val EVALUATION_DURATION = "eval-duration"
@@ -13,7 +13,7 @@ private const val REASONING_CONTENT = "reasoningContent"
 private val THINKING_TAGS = listOf("<think>", "<thinking>", "<reasoning>")
 
 @Component
-class ModelReplyReader @Inject constructor() {
+class ModelReplyReader {
     private val cleaner = ThinkingTagCleaner()
 
     fun read(response: ChatResponse, elapsedMs: Long): ModelCompletion {
@@ -25,7 +25,11 @@ class ModelReplyReader @Inject constructor() {
         val text = cleaned.take(unfinished).trim()
         val evaluation = response.metadata.get<Duration>(EVALUATION_DURATION)?.toNanos() ?: 0L
         val tokens = response.metadata.usage.completionTokens
-        val speed = if (evaluation > 0) tokens * 1e9 / evaluation else 0.0
+        val speed = if (evaluation > 0) {
+            tokens * 1e9 / evaluation
+        } else {
+            0.0
+        }
         val duration = response.metadata.get<Duration>(TOTAL_DURATION)?.toMillis() ?: elapsedMs
         val thinking = (generation?.output?.metadata?.get(THINKING) as? String)
             .orEmpty().ifEmpty {

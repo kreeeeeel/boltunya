@@ -7,6 +7,6 @@ Preview:
         text:
             type: string
         rule:
-            $ref: ../chats/ChatRule.yaml#/ChatRule
+            $ref: ../chats/ChatRuleInput.yaml#/ChatRuleInput
         chatId:
             type: string

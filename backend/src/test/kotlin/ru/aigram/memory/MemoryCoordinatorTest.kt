@@ -1,11 +1,12 @@
 package ru.aigram.memory
 
-import jakarta.inject.Provider
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.aigram.ai.ModelInference
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
+import ru.aigram.configuration.testBeanProvider
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.memory.OwnerMemoryUpdate
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.SettingsStore
@@ -57,7 +58,7 @@ class MemoryCoordinatorTest {
                 inference,
                 clock,
                 automated,
-                queueProvider = Provider { DirectMemoryWorkQueue() },
+                queueProvider = testBeanProvider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 try {
                     coordinator.refresh("42", immediate = true)
@@ -129,7 +130,7 @@ class MemoryCoordinatorTest {
                 ModelInference(),
                 clock,
                 automated,
-                queueProvider = Provider { DirectMemoryWorkQueue() },
+                queueProvider = testBeanProvider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 coordinator.refresh(rebuild = true)
                 assertEquals("", store.read("").summary)
@@ -197,7 +198,7 @@ class MemoryCoordinatorTest {
                 ModelInference(),
                 clock,
                 automated,
-                queueProvider = Provider { DirectMemoryWorkQueue() },
+                queueProvider = testBeanProvider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 coordinator.refresh("43", immediate = true)
                 assertTrue(summarized.await(3, TimeUnit.SECONDS))
@@ -236,7 +237,7 @@ class MemoryCoordinatorTest {
                 ModelInference(),
                 clock,
                 automated,
-                queueProvider = Provider { DirectMemoryWorkQueue() },
+                queueProvider = testBeanProvider { DirectMemoryWorkQueue() },
             )
                 .use { coordinator ->
                     coordinator.tick()
@@ -294,7 +295,7 @@ class MemoryCoordinatorTest {
                 ModelInference(),
                 clock,
                 AutomatedReplyStore(directory),
-                queueProvider = Provider { DirectMemoryWorkQueue() },
+                queueProvider = testBeanProvider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 coordinator.tick()
                 coordinator.observe(message)
@@ -342,7 +343,7 @@ class MemoryCoordinatorTest {
                 ModelInference(),
                 clock,
                 AutomatedReplyStore(directory),
-                queueProvider = Provider { DirectMemoryWorkQueue() },
+                queueProvider = testBeanProvider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 coordinator.tick()
                 coordinator.tick()
@@ -401,7 +402,7 @@ class MemoryCoordinatorTest {
                 ModelInference(),
                 clock,
                 AutomatedReplyStore(directory),
-                queueProvider = Provider { DirectMemoryWorkQueue() },
+                queueProvider = testBeanProvider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 coordinator.tick()
                 clock.advance(Duration.ofHours(settings.get().memoryIntervalHours.toLong()))
@@ -421,7 +422,7 @@ class MemoryCoordinatorTest {
                 ModelInference(),
                 clock,
                 AutomatedReplyStore(directory),
-                queueProvider = Provider { DirectMemoryWorkQueue() },
+                queueProvider = testBeanProvider { DirectMemoryWorkQueue() },
             ).use { it.tick() }
             assertEquals(readCount, telegram.reads.size)
         }
@@ -462,7 +463,7 @@ class MemoryCoordinatorTest {
                 ModelInference(),
                 clock,
                 AutomatedReplyStore(directory),
-                queueProvider = Provider { DirectMemoryWorkQueue() },
+                queueProvider = testBeanProvider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 coordinator.tick()
                 coordinator.tick()
@@ -517,7 +518,7 @@ class MemoryCoordinatorTest {
                 ModelInference(),
                 clock,
                 AutomatedReplyStore(directory),
-                queueProvider = Provider { DirectMemoryWorkQueue() },
+                queueProvider = testBeanProvider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 coordinator.tick()
                 assertTrue(telegram.reads.isEmpty())

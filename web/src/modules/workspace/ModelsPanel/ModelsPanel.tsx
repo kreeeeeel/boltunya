@@ -1,11 +1,18 @@
 import {Box, Button, Flex, Icon, Label, Loader, Skeleton, Text, TextInput} from '@gravity-ui/uikit';
-import {Check, ArrowDownToLine, HardDrive, Sparkles, Thunderbolt, Magnifier} from '@gravity-ui/icons';
+import {
+    Check,
+    ArrowDownToLine,
+    HardDrive,
+    Sparkles,
+    Thunderbolt,
+    Magnifier,
+    ArrowRotateRight,
+} from '@gravity-ui/icons';
 import {useLocale, useTranslations} from 'next-intl';
 import {useState} from 'react';
-
 import type {ModelsPanelProps} from '@/modules/workspace/ModelsPanel/ModelsPanel.types';
 import styles from '@/modules/workspace/ModelsPanel/ModelsPanel.module.css';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
+import {api, errorMessage} from '@/shared/api/client';
 import {DownloadButton} from '@/modules/workspace/ModelsPanel/DownloadButton';
 import {defaultRule} from '@/shared/api/client';
 import type {Reply} from '@/shared/api/client';
@@ -14,7 +21,7 @@ import {ProfileModelCards} from '@/modules/workspace/ModelsPanel/ProfileModelCar
 import {useModelProfiles} from '@/modules/settings/model/useModelProfiles';
 import {PromptBudgetNotice} from '@/modules/settings/PromptBudgetNotice/PromptBudgetNotice';
 import {SegmentedTabs} from '@/shared/ui/SegmentedTabs/SegmentedTabs';
-
+import {StatusNotice} from '@/shared/ui/StatusNotice/StatusNotice';
 export function ModelsPanel({
     engine,
     defaultModel,
@@ -30,32 +37,27 @@ export function ModelsPanel({
     const [search, setSearch] = useState('');
     const [category, setCategory] = useState('all');
     const [measurements, setMeasurements] = useState<Record<string, Reply>>({});
-
     async function measure(model: string) {
-        const reply = dataOrThrow(
-            await api.POST('/api/preview', {
-                body: {
-                    text: t('benchmarkInput'),
-                    rule: {
-                        ...defaultRule,
-                        model,
-                        useDefaultModel: false,
-                        style: 'concise',
-                        maxTokens: 64,
-                        internetAccess: false,
-                        useMemory: false,
-                        matchMyStyle: false,
-                    },
+        const reply = await api.models.preview({
+            preview: {
+                text: t('benchmarkInput'),
+                rule: {
+                    ...defaultRule,
+                    model,
+                    useDefaultModel: false,
+                    style: 'concise',
+                    maxTokens: 64,
+                    internetAccess: false,
+                    useMemory: false,
+                    matchMyStyle: false,
                 },
-            }),
-        );
+            },
+        });
         setMeasurements((previous) => ({...previous, [model]: reply}));
     }
-
     async function cancelDownload() {
-        await action('cancel-download', async () => dataOrThrow(await api.POST('/api/models/cancel')));
+        await action('cancel-download', async () => await api.models.cancelModelDownload());
     }
-
     async function action(name: string, callback: () => Promise<unknown>) {
         setBusy(name);
         setError('');
@@ -68,17 +70,21 @@ export function ModelsPanel({
             setBusy('');
         }
     }
-
     const Container = embedded ? Box : ScrollArea;
     if (!engine) {
         return (
             <Container className={[styles.root, embedded ? styles.embedded : ''].join(' ')}>
                 <Box className={styles.content} role="status" aria-label={t('loading')} qa="models-skeleton">
-                    <Box className={styles.eyebrow}>
-                        <Skeleton width={96} height={16} />
-                    </Box>
+                    <Flex className={styles.eyebrow} alignItems="center" gap={2}>
+                        <Skeleton width={96} height={21} />
+                    </Flex>
                     <Box className={styles.engineCard} qa="skeleton-engine-card">
-                        <Flex alignItems="center" justifyContent="space-between" gap={4}>
+                        <Flex
+                            className={styles.engine}
+                            alignItems="center"
+                            justifyContent="space-between"
+                            gap={4}
+                        >
                             <Flex gap={3} alignItems="center">
                                 <Skeleton width={23} height={23} />
                                 <Flex direction="column" className={styles.engineText}>
@@ -86,7 +92,15 @@ export function ModelsPanel({
                                     <Skeleton width={220} height={20} />
                                 </Flex>
                             </Flex>
-                            <Skeleton width={100} height={28} />
+                            <Flex
+                                className={`${styles.engineActions} ${styles.engineActionsRestart}`}
+                                direction="column"
+                                gap={2}
+                                alignItems="center"
+                            >
+                                <Skeleton width={100} height={28} />
+                                <Skeleton width="100%" height={36} />
+                            </Flex>
                         </Flex>
                     </Box>
                     <Flex
@@ -144,7 +158,6 @@ export function ModelsPanel({
             </Container>
         );
     }
-
     const query = search.trim().toLocaleLowerCase(locale);
     const engineInstalled = engine.installed ?? engine.online;
     const installingEngine = engine.downloading === 'Ollama';
@@ -206,7 +219,13 @@ export function ModelsPanel({
                                 </Flex>
                             </Flex>
                         </Flex>
-                        <Flex className={styles.engineActions} justifyContent="flex-end" alignItems="center">
+                        <Flex
+                            className={`${styles.engineActions} ${engine.online ? styles.engineActionsRestart : ''}`}
+                            direction="column"
+                            gap={2}
+                            justifyContent="flex-end"
+                            alignItems="center"
+                        >
                             {installingEngine ? (
                                 <DownloadButton
                                     engine={engine}
@@ -224,11 +243,7 @@ export function ModelsPanel({
                                     view="action"
                                     loading={busy === 'start'}
                                     disabled={!!engine.downloading}
-                                    onClick={() =>
-                                        void action('start', async () =>
-                                            dataOrThrow(await api.POST('/api/engine/start')),
-                                        )
-                                    }
+                                    onClick={() => void action('start', async () => await api.models.start())}
                                 >
                                     {t('startEngine')}
                                 </Button>
@@ -240,18 +255,32 @@ export function ModelsPanel({
                                     loading={busy === 'install'}
                                     disabled={!!engine.downloading}
                                     onClick={() =>
-                                        void action('install', async () =>
-                                            dataOrThrow(await api.POST('/api/engine/install')),
-                                        )
+                                        void action('install', async () => await api.models.install())
                                     }
                                 >
                                     {t('installEngine')}
                                 </Button>
                             )}
+                            {engine.online && (
+                                <Button
+                                    className={styles.engineAction}
+                                    size="l"
+                                    view="outlined"
+                                    loading={busy === 'restart'}
+                                    disabled={!engine.canRestart || !!busy || !!engine.downloading}
+                                    title={!engine.canRestart ? t('engineRestartExternal') : undefined}
+                                    onClick={() => void action('restart', () => api.models.restartEngine())}
+                                >
+                                    <Icon data={ArrowRotateRight} size={16} />
+                                    {t('restartEngine')}
+                                </Button>
+                            )}
                         </Flex>
                     </Flex>
                 </Box>
-                {(error || engine?.error) && <Text color="danger">{error || engine?.error}</Text>}
+                {(error || engine.error) && (
+                    <StatusNotice title={t('engineErrorTitle')} description={error || engine.error} />
+                )}
                 <PromptBudgetNotice
                     warningsOnly
                     request={{
@@ -500,14 +529,12 @@ export function ModelsPanel({
                                         aria-busy={busy === model.id || engine.warming === model.id}
                                         onClick={() =>
                                             void action(model.id, async () => {
-                                                dataOrThrow(
-                                                    await api.PATCH('/api/settings', {
-                                                        body: {
-                                                            defaultModel: model.id,
-                                                            defaultModelProfileId: '',
-                                                        },
-                                                    }),
-                                                );
+                                                await api.settings.settings({
+                                                    settingsUpdate: {
+                                                        defaultModel: model.id,
+                                                        defaultModelProfileId: '',
+                                                    },
+                                                });
                                                 await onRefresh();
                                                 if (!measurement) {
                                                     await measure(model.id);
@@ -533,12 +560,12 @@ export function ModelsPanel({
                                         disabled={!engine.online || !!engine.downloading || !!busy}
                                         loading={busy === model.id}
                                         onClick={() =>
-                                            void action(model.id, async () =>
-                                                dataOrThrow(
-                                                    await api.POST('/api/models/pull', {
-                                                        body: {model: model.id},
+                                            void action(
+                                                model.id,
+                                                async () =>
+                                                    await api.models.pull({
+                                                        modelRequest: {model: model.id},
                                                     }),
-                                                ),
                                             )
                                         }
                                     >

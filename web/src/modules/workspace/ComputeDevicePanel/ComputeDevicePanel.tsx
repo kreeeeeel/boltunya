@@ -2,13 +2,10 @@ import {ArrowRotateRight} from '@gravity-ui/icons';
 import {Button, Flex, Icon, Label, Select, Skeleton, Text} from '@gravity-ui/uikit';
 import {useLocale, useTranslations} from 'next-intl';
 import {useEffect, useState} from 'react';
-
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
-import type {components} from '@/shared/api/schema';
+import {api, errorMessage} from '@/shared/api/client';
+import type * as Contract from '@aigram/api-client';
 import styles from '@/modules/workspace/ComputeDevicePanel/ComputeDevicePanel.module.css';
-
 const GIBIBYTE = 1024 ** 3;
-
 export function ComputeDevicePanel({
     value,
     savedValue,
@@ -20,16 +17,16 @@ export function ComputeDevicePanel({
 }) {
     const t = useTranslations('computeDevice');
     const locale = useLocale();
-    const [status, setStatus] = useState<components['schemas']['ComputeDeviceStatus']>();
+    const [status, setStatus] = useState<Contract.ComputeDeviceStatus>();
     const [revision, setRevision] = useState(0);
     const [busy, setBusy] = useState(true);
     const [error, setError] = useState('');
-
     useEffect(() => {
         const controller = new AbortController();
-        void api
-            .GET('/api/engine/devices', {signal: controller.signal})
-            .then(dataOrThrow)
+        void api.models
+            .engineDevices({
+                signal: controller.signal,
+            })
             .then((result) => {
                 if (!controller.signal.aborted) {
                     setStatus(result);
@@ -48,11 +45,9 @@ export function ComputeDevicePanel({
             });
         return () => controller.abort();
     }, [savedValue, revision]);
-
-    function name(device: components['schemas']['ComputeDevice']) {
+    function name(device: Contract.ComputeDevice) {
         return device.kind === 'auto' || device.kind === 'cpu' ? t(device.kind) : device.name;
     }
-
     const options =
         status?.devices.map((device) => ({
             value: device.id,
@@ -82,7 +77,6 @@ export function ComputeDevicePanel({
         });
     }
     const active = status?.devices.find((device) => device.id === status.active);
-
     return (
         <Flex direction="column" gap={3} qa="compute-device-panel">
             <Flex alignItems="center" justifyContent="space-between" gap={2}>

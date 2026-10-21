@@ -10,8 +10,8 @@ import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Test
 import ru.aigram.ai.research.InternetResearcher
 import ru.aigram.ai.research.SearchProvider
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
 import java.net.InetSocketAddress
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals

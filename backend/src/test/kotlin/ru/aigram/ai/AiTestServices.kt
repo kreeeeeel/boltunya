@@ -9,9 +9,9 @@ import ru.aigram.ai.research.ResearchFactGuard
 import ru.aigram.ai.research.ResearchLinkPolicy
 import ru.aigram.ai.research.ResearchPlanner
 import ru.aigram.automation.activity.ReplyTraceScope
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.memory.MemoryContext
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.memory.MemoryContext
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.ModelMeasurementStore
 import java.nio.file.Files

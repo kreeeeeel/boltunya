@@ -1,13 +1,10 @@
 'use client';
-
 import {useCallback, useEffect, useRef, useState} from 'react';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
-import type {components} from '@/shared/api/schema';
-
-type MemoryDocument = components['schemas']['MemoryDocument'];
+import {api, errorMessage} from '@/shared/api/client';
+import type * as Contract from '@aigram/api-client';
+type MemoryDocument = Contract.MemoryDocument;
 const POLL_INTERVAL_MS = 5000;
 const MEMORY_UPDATED_EVENT = 'memory-updated';
-
 export function useMemoryDocument(chatId: string) {
     const [document, setDocument] = useState<MemoryDocument>();
     const [notes, setNotes] = useState('');
@@ -18,14 +15,13 @@ export function useMemoryDocument(chatId: string) {
     const initialized = useRef(false);
     const read = useCallback(
         async () =>
-            dataOrThrow(
-                chatId
-                    ? await api.GET('/api/memory/{chatId}', {params: {path: {chatId}}})
-                    : await api.GET('/api/memory'),
-            ),
+            chatId
+                ? await api.memory.getChatMemory({
+                      chatId,
+                  })
+                : await api.memory.getGlobalMemory(),
         [chatId],
     );
-
     useEffect(() => {
         let active = true;
         let timer: ReturnType<typeof setTimeout>;
@@ -76,7 +72,6 @@ export function useMemoryDocument(chatId: string) {
             window.removeEventListener(MEMORY_UPDATED_EVENT, updated);
         };
     }, [read]);
-
     async function reload() {
         setBusy(true);
         try {
@@ -92,17 +87,19 @@ export function useMemoryDocument(chatId: string) {
             setBusy(false);
         }
     }
-
     async function save() {
         setBusy(true);
         setError('');
         try {
             const body = {notes, revision: revision.current};
-            const value = dataOrThrow(
-                chatId
-                    ? await api.PATCH('/api/memory/{chatId}', {params: {path: {chatId}}, body})
-                    : await api.PATCH('/api/memory', {body}),
-            );
+            const value = chatId
+                ? await api.memory.updateChatMemory({
+                      chatId,
+                      memoryNotesUpdate: body,
+                  })
+                : await api.memory.updateGlobalMemory({
+                      memoryNotesUpdate: body,
+                  });
             setDocument(value);
             setNotes(value.notes);
             revision.current = value.revision;
@@ -114,22 +111,21 @@ export function useMemoryDocument(chatId: string) {
             setBusy(false);
         }
     }
-
     async function refresh(rebuild = false, immediate = false): Promise<boolean> {
         setBusy(true);
         setError('');
         try {
             if (chatId) {
                 setDocument(
-                    dataOrThrow(
-                        await api.POST('/api/memory/{chatId}', {
-                            params: {path: {chatId}},
-                            body: {rebuild, immediate},
-                        }),
-                    ),
+                    await api.memory.refreshChatMemory({
+                        chatId,
+                        memoryRefreshRequest: {rebuild, immediate},
+                    }),
                 );
             } else {
-                dataOrThrow(await api.POST('/api/memory/refresh', {body: {rebuild, immediate}}));
+                await api.memory.refreshChangedMemory({
+                    memoryRefreshRequest: {rebuild, immediate},
+                });
                 setDocument(await read());
             }
             window.dispatchEvent(new Event(MEMORY_UPDATED_EVENT));
@@ -141,16 +137,15 @@ export function useMemoryDocument(chatId: string) {
             setBusy(false);
         }
     }
-
     async function cancel() {
         setBusy(true);
         setError('');
         try {
-            const value = dataOrThrow(
-                chatId
-                    ? await api.POST('/api/memory/{chatId}/cancel', {params: {path: {chatId}}})
-                    : await api.POST('/api/memory/cancel'),
-            );
+            const value = chatId
+                ? await api.memory.cancelChatMemoryCollection({
+                      chatId,
+                  })
+                : await api.memory.cancelGlobalMemoryCollection();
             setDocument(value);
             window.dispatchEvent(new Event(MEMORY_UPDATED_EVENT));
         } catch (cause) {
@@ -159,6 +154,5 @@ export function useMemoryDocument(chatId: string) {
             setBusy(false);
         }
     }
-
     return {document, notes, setNotes, error: error || pollError, busy, reload, save, refresh, cancel};
 }

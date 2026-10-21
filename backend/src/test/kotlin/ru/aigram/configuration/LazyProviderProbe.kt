@@ -1,7 +1,6 @@
 package ru.aigram.configuration
 
-import jakarta.inject.Inject
-import jakarta.inject.Provider
+import org.springframework.beans.factory.ObjectProvider
 import ru.aigram.resources.ResourceCatalog
 
-class LazyProviderProbe @Inject constructor(val resources: Provider<ResourceCatalog>)
+class LazyProviderProbe(val resources: ObjectProvider<ResourceCatalog>)

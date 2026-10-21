@@ -9,11 +9,11 @@ import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import org.springframework.ai.chat.messages.UserMessage
 import ru.aigram.ai.model.ModelPolicies
-import ru.aigram.ai.model.ThinkingMode
-import ru.aigram.automation.activity.ActivityPhase
 import ru.aigram.automation.activity.ReplyTrace
-import ru.aigram.domain.ActivityEntry
-import ru.aigram.domain.ChatRule
+import ru.aigram.domain.ai.model.ThinkingMode
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.events.ActivityEntry
+import ru.aigram.domain.events.ActivityPhase
 import ru.aigram.resources.ResourceCatalog
 import java.nio.file.Files
 import java.nio.file.Path

@@ -2,7 +2,7 @@ package ru.aigram.storage
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.domain.ChatRule
+import ru.aigram.domain.chat.ChatRule
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.test.assertEquals
@@ -16,7 +16,7 @@ class SettingsStoreTest {
     @Test
     fun `persists named styles and resolves their instructions without modifying chat rules`() {
         val store = SettingsStore(directory)
-        val preset = ru.aigram.domain.WritingStyle("friends", "Друзья", "🙂", "Коротко и без официоза")
+        val preset = ru.aigram.domain.chat.WritingStyle("friends", "Друзья", "🙂", "Коротко и без официоза")
         store.update { it.copy(customStyles = listOf(preset), ignoreAssistantTasks = false) }
         val rule =
             ChatRule(style = "custom", styleId = preset.id, instructions = "Не обещай встреч", useDefaultModel = false)
@@ -36,7 +36,7 @@ class SettingsStoreTest {
     @Test
     fun `a builtin tone does not reuse stale named style instructions`() {
         val store = SettingsStore(directory)
-        val preset = ru.aigram.domain.WritingStyle("friends", "Друзья", "🙂", "Разговорный сленг")
+        val preset = ru.aigram.domain.chat.WritingStyle("friends", "Друзья", "🙂", "Разговорный сленг")
         store.update { it.copy(customStyles = listOf(preset)) }
         val resolved = store.resolve(ChatRule(style = "business", styleId = preset.id))
         assertEquals("business", resolved.style)

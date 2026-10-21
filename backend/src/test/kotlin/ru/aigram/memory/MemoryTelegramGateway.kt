@@ -1,10 +1,10 @@
 package ru.aigram.memory
 
 import ru.aigram.automation.FakeTelegramGateway
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.ChatSummary
-import ru.aigram.domain.TelegramStatus
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.ChatSummary
+import ru.aigram.domain.telegram.TelegramStatus
 import ru.aigram.telegram.TelegramGateway
 
 class MemoryTelegramGateway : TelegramGateway by FakeTelegramGateway() {

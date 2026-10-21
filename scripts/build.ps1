@@ -17,6 +17,8 @@ try {
             if ($LASTEXITCODE -ne 0) { throw "Dependencies failed: $directory" }
         }
     }
+    & ./gradlew.bat :backend:contract:client:typescript:generateClient --no-daemon
+    if ($LASTEXITCODE -ne 0) { throw 'API client generation failed' }
     if (-not $SkipChecks) {
         node.exe --test scripts/tests/diagnose-ai.test.cjs scripts/tests/render-icon.test.cjs
         if ($LASTEXITCODE -ne 0) { throw 'Diagnostic script checks failed' }
@@ -40,7 +42,7 @@ try {
     New-Item -ItemType Directory -Force -Path $compileDirectory | Out-Null
     Copy-Item -LiteralPath $clientArchive -Destination (Join-Path $compileDirectory 'Aigram-API-Client.tgz')
     $runtime=Join-Path $projectRoot 'build/runtime'
-    $runtimeModules=@('java.base','java.desktop','java.instrument','java.net.http','jdk.httpserver','jdk.crypto.ec','java.logging','java.management','jdk.management','jdk.unsupported','java.naming','java.sql','jdk.charsets')
+    $runtimeModules=@('java.base','java.desktop','java.instrument','java.net.http','jdk.crypto.ec','java.logging','java.management','java.management.rmi','jdk.management','jdk.unsupported','java.naming','java.sql','java.security.jgss','jdk.charsets')
     $runtimeJava=Join-Path $runtime 'bin/java.exe'
     if (Test-Path -LiteralPath $runtimeJava) {
         $installedModules=@(& $runtimeJava --list-modules | ForEach-Object { $_.Split('@')[0] })

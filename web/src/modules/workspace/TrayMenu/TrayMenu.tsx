@@ -3,10 +3,9 @@ import {Box, Icon, Menu, Text} from '@gravity-ui/uikit';
 import {ArrowUpRightFromSquare, Pause, Play, Sliders, Xmark} from '@gravity-ui/icons';
 import {useEffect, useState} from 'react';
 import {useTranslations} from 'next-intl';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
+import {api, errorMessage} from '@/shared/api/client';
 import styles from '@/modules/workspace/TrayMenu/TrayMenu.module.css';
 import {trayBridge} from '@/shared/desktop/bridge';
-
 export function TrayMenu() {
     const t = useTranslations();
     const [paused, setPaused] = useState(true);
@@ -17,7 +16,7 @@ export function TrayMenu() {
     useEffect(() => {
         const refresh = async () => {
             try {
-                setPaused(dataOrThrow(await api.GET('/api/state')).settings.paused);
+                setPaused((await api.system.state()).settings.paused);
                 setError('');
             } catch (cause) {
                 setError(errorMessage(cause));

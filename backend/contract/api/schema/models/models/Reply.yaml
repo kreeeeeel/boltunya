@@ -9,6 +9,7 @@ Reply:
             type: string
         durationMs:
             type: integer
+            format: int64
         tokensPerSecond:
             type: number
         model:

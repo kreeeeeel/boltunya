@@ -2,6 +2,7 @@ package ru.aigram.ai.research
 
 import org.jsoup.Jsoup
 import org.jsoup.parser.Parser
+import ru.aigram.domain.ai.research.ResearchSource
 import ru.aigram.exception.IntegrationException
 import ru.aigram.exception.impl.WebSearchUnavailableException
 import java.io.IOException
@@ -41,7 +42,11 @@ class WebSearchClient(
         return document.select(".result").stream().map { result ->
             val link = result.selectFirst(".result__a")
             val url = link?.attr("href").orEmpty()
-            val absolute = if (url.startsWith("//")) "https:$url" else url
+            val absolute = if (url.startsWith("//")) {
+                "https:$url"
+            } else {
+                url
+            }
             val uri = runCatching { URI.create(absolute) }.getOrNull()
             val redirect = uri?.rawQuery?.split('&')?.firstOrNull { it.startsWith("uddg=") }
             val target = if (redirect != null) {
@@ -50,7 +55,13 @@ class WebSearchClient(
                 absolute
             }
             source(link?.text().orEmpty(), target, result.selectFirst(".result__snippet")?.text().orEmpty())
-        }.flatMap<ResearchSource> { if (it == null) Stream.empty() else Stream.of(it) }.limit(5).toList()
+        }.flatMap<ResearchSource> {
+            if (it == null) {
+                Stream.empty()
+            } else {
+                Stream.of(it)
+            }
+        }.limit(5).toList()
     }
 
     private fun bing(query: String): List<ResearchSource> {
@@ -67,11 +78,19 @@ class WebSearchClient(
                 item.selectFirst("link")?.text().orEmpty(),
                 item.selectFirst("description")?.text().orEmpty(),
             )
-        }.flatMap<ResearchSource> { if (it == null) Stream.empty() else Stream.of(it) }.limit(5).toList()
+        }.flatMap<ResearchSource> {
+            if (it == null) {
+                Stream.empty()
+            } else {
+                Stream.of(it)
+            }
+        }.limit(5).toList()
     }
 
     private fun source(title: String, url: String, text: String): ResearchSource? {
-        if (title.isBlank() || url.length > 2048) return null
+        if (title.isBlank() || url.length > 2048) {
+            return null
+        }
         return try {
             pages.validate(url)
             ResearchSource(title.take(180), url, Jsoup.parse(text).text().take(650))

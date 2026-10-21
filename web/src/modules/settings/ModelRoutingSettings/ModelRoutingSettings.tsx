@@ -2,32 +2,30 @@ import {Button, Flex, Icon, Loader, Select, Switch, Text} from '@gravity-ui/uiki
 import {Check} from '@gravity-ui/icons';
 import {useEffect, useState} from 'react';
 import {useTranslations} from 'next-intl';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
-import type {components} from '@/shared/api/schema';
+import {api, errorMessage} from '@/shared/api/client';
+import type * as Contract from '@aigram/api-client';
 import {SettingsSection} from '@/modules/settings/SettingsSection/SettingsSection';
 import {useModelProfiles} from '@/modules/settings/model/useModelProfiles';
 import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
 import type {Engine} from '@/shared/api/client';
-
 const tasks = [
     {profile: 'replyProfileId', model: 'replyModel'},
     {profile: 'memoryProfileId', model: 'memoryModel'},
     {profile: 'researchProfileId', model: 'researchModel'},
     {profile: 'visionProfileId', model: 'visionModel'},
 ] as const;
-
 export function ModelRoutingSettings({engine}: {readonly engine?: Engine}) {
     const t = useTranslations('modelRouting');
     const common = useTranslations();
     const report = useModelProfiles();
-    const [value, setValue] = useState<components['schemas']['ModelTaskRouting'] | null>(null);
+    const [value, setValue] = useState<Contract.ModelTaskRouting | null>(null);
     const [error, setError] = useState('');
     const [busy, setBusy] = useState(false);
     const feedback = useSaveFeedback(value);
     useEffect(() => {
-        void api
-            .GET('/api/model-routing')
-            .then((result) => setValue(dataOrThrow(result)))
+        void api.models
+            .modelRouting()
+            .then((result) => setValue(result))
             .catch((cause) => setError(errorMessage(cause)));
     }, []);
     async function save() {
@@ -38,7 +36,9 @@ export function ModelRoutingSettings({engine}: {readonly engine?: Engine}) {
         setError('');
         feedback.clearSaved();
         try {
-            const saved = dataOrThrow(await api.PUT('/api/model-routing', {body: value}));
+            const saved = await api.models.saveModelRouting({
+                modelTaskRouting: value,
+            });
             setValue(saved);
             feedback.markValueSaved(saved);
         } catch (cause) {

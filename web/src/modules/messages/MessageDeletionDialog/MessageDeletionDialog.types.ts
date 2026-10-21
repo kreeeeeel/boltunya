@@ -1,7 +1,5 @@
-import type {components} from '@/shared/api/schema';
-
-export type MessageDeletionResult = components['schemas']['MessageDeletionResult'];
-
+import type * as Contract from '@aigram/api-client';
+export type MessageDeletionResult = Contract.MessageDeletionResult;
 export interface MessageDeletionDialogProps {
     readonly chatId: string;
     readonly messageId: string;

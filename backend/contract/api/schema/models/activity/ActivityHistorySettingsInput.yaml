@@ -1,0 +1,13 @@
+ActivityHistorySettingsInput:
+    type: object
+    properties:
+        retentionDays:
+            type: integer
+            minimum: 0
+            maximum: 36500
+            default: 0
+        maxStorageMb:
+            type: integer
+            minimum: 0
+            maximum: 1048576
+            default: 0

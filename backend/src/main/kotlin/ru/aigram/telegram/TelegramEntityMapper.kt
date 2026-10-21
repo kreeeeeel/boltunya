@@ -1,12 +1,11 @@
 package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
-import jakarta.inject.Inject
 import org.springframework.stereotype.Component
-import ru.aigram.domain.MessageEntity
+import ru.aigram.domain.chat.MessageEntity
 
 @Component
-class TelegramEntityMapper @Inject constructor() {
+class TelegramEntityMapper {
     fun map(text: TdApi.FormattedText): List<MessageEntity> = text.entities.orEmpty().mapNotNull { entity ->
         val type = entity.type
         val name = when (type) {
@@ -40,7 +39,11 @@ class TelegramEntityMapper @Inject constructor() {
                 is TdApi.TextEntityTypeMentionName -> "tg://user?id=${type.userId}"
                 else -> ""
             },
-            if (type is TdApi.TextEntityTypePreCode) type.language else "",
+            if (type is TdApi.TextEntityTypePreCode) {
+                type.language
+            } else {
+                ""
+            },
         )
     }
 }

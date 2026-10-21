@@ -23,6 +23,8 @@ paths:
         $ref: ./operations/models.yaml#/engineInstall
     /api/engine/start:
         $ref: ./operations/models.yaml#/engineStart
+    /api/engine/restart:
+        $ref: ./operations/models.yaml#/engineRestart
     /api/models/pull:
         $ref: ./operations/models.yaml#/modelsPull
     /api/quit:
@@ -339,6 +341,18 @@ components:
             $ref: ./models/settings/SearchConnectionRequest.yaml#/SearchConnectionRequest
         QueuePauseRequest:
             $ref: ./models/activity/QueuePauseRequest.yaml#/QueuePauseRequest
+        ChatRuleInput:
+            $ref: ./models/chats/ChatRuleInput.yaml#/ChatRuleInput
+        ModelProfileOptionsInput:
+            $ref: ./models/models/ModelProfileOptionsInput.yaml#/ModelProfileOptionsInput
+        ModelCapabilitiesInput:
+            $ref: ./models/models/ModelCapabilitiesInput.yaml#/ModelCapabilitiesInput
+        ModelPromptSettingsInput:
+            $ref: ./models/models/ModelPromptSettingsInput.yaml#/ModelPromptSettingsInput
+        AppearanceSettingsInput:
+            $ref: ./models/settings/AppearanceSettingsInput.yaml#/AppearanceSettingsInput
+        ActivityHistorySettingsInput:
+            $ref: ./models/activity/ActivityHistorySettingsInput.yaml#/ActivityHistorySettingsInput
     securitySchemes:
         sessionCookie:
             type: apiKey

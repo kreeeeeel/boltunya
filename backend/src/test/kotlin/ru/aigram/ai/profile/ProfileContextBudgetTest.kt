@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test
 import org.springframework.ai.chat.messages.AssistantMessage
 import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
+import ru.aigram.domain.ai.profile.ModelProfileOptions
+import ru.aigram.domain.ai.profile.ModelProvider
+import ru.aigram.domain.ai.profile.ResolvedModelTarget
 import ru.aigram.exception.impl.ModelContextLimitException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

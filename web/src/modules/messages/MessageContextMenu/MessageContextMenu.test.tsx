@@ -6,10 +6,24 @@ import {useState} from 'react';
 import {MessageContextMenu} from '@/modules/messages/MessageContextMenu/MessageContextMenu';
 import ru from '@/shared/i18n/ru.json';
 import type {Message} from '@/shared/api/client';
-const mocks = vi.hoisted(() => ({GET: vi.fn(), PUT: vi.fn(), DELETE: vi.fn()}));
+const mocks = vi.hoisted(() => ({
+    messageLink: vi.fn(),
+    messageDeletionOptions: vi.fn(),
+    excludeMessageContext: vi.fn(),
+    restoreChatContext: vi.fn(),
+    deleteMessage: vi.fn(),
+}));
 vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
-    api: mocks,
+    api: {
+        chats: {
+            messageLink: mocks.messageLink,
+            excludeMessageContext: mocks.excludeMessageContext,
+            restoreChatContext: mocks.restoreChatContext,
+            messageDeletionOptions: mocks.messageDeletionOptions,
+            deleteMessage: mocks.deleteMessage,
+        },
+    },
 }));
 const message: Message = {
     id: 'opaque-telegram-message-id',
@@ -21,7 +35,10 @@ const message: Message = {
 };
 function mount(onExcludedChanged = vi.fn(async () => {})) {
     function Example() {
-        const [position, setPosition] = useState<{x: number; y: number} | null>({x: 100, y: 120});
+        const [position, setPosition] = useState<{
+            x: number;
+            y: number;
+        } | null>({x: 100, y: 120});
         return (
             <NextIntlClientProvider locale="ru" messages={ru}>
                 <ThemeProvider>
@@ -40,34 +57,36 @@ function mount(onExcludedChanged = vi.fn(async () => {})) {
 it('copies the genuine Telegram link fetched on demand without inventing an opaque ID URL', async () => {
     const copy = vi.fn(async () => {});
     Object.defineProperty(navigator, 'clipboard', {configurable: true, value: {writeText: copy}});
-    mocks.GET.mockResolvedValue({data: {url: 'https://t.me/c/100/321'}, response: new Response()});
+    mocks.messageLink.mockResolvedValue({url: 'https://t.me/c/100/321'});
+    mocks.messageDeletionOptions.mockResolvedValue({url: 'https://t.me/c/100/321'});
     mount();
-    expect(mocks.GET).not.toHaveBeenCalled();
+    expect(mocks.messageLink).not.toHaveBeenCalled();
     fireEvent.click(await screen.findByRole('menuitem', {name: ru.messageMenu.copyLink}));
     await waitFor(() => expect(copy).toHaveBeenCalledWith('https://t.me/c/100/321'));
-    expect(mocks.GET).toHaveBeenCalledWith('/api/chats/{chatId}/messages/{messageId}/link', {
-        params: {path: {chatId: '42', messageId: message.id}},
+    expect(mocks.messageLink).toHaveBeenCalledWith({
+        chatId: '42',
+        messageId: message.id,
     });
 });
 it('uses a nested range action and updates the visible state only after persistence', async () => {
-    mocks.PUT.mockResolvedValue({data: {ok: true}, response: new Response()});
+    mocks.excludeMessageContext.mockResolvedValue({ok: true});
     const refreshed = vi.fn(async () => {});
     mount(refreshed);
     fireEvent.mouseEnter(await screen.findByRole('menuitem', {name: ru.messageMenu.exclude}));
     fireEvent.click(await screen.findByRole('menuitem', {name: ru.messageMenu.scopes.through}));
     await waitFor(() =>
-        expect(mocks.PUT).toHaveBeenCalledWith('/api/chats/{chatId}/messages/{messageId}/context', {
-            params: {path: {chatId: '42', messageId: message.id}},
-            body: {scope: 'through', excluded: true},
+        expect(mocks.excludeMessageContext).toHaveBeenCalledWith({
+            chatId: '42',
+            messageId: message.id,
+            contextExclusionUpdate: {scope: 'through', excluded: true},
         }),
     );
     await waitFor(() =>
         expect(refreshed).toHaveBeenCalledWith({messageId: message.id, scope: 'through', excluded: true}),
     );
 });
-
 it('keeps context flags unchanged when persistence fails and explains the error', async () => {
-    mocks.PUT.mockRejectedValue(new Error('Сохранение недоступно'));
+    mocks.excludeMessageContext.mockRejectedValue(new Error('Сохранение недоступно'));
     const refreshed = vi.fn(async () => {});
     mount(refreshed);
     fireEvent.mouseEnter(await screen.findByRole('menuitem', {name: ru.messageMenu.exclude}));
@@ -75,13 +94,11 @@ it('keeps context flags unchanged when persistence fails and explains the error'
     expect(await screen.findByRole('alert')).toHaveTextContent('Сохранение недоступно');
     expect(refreshed).not.toHaveBeenCalled();
 });
-
 it('opens a separate deletion confirmation while keeping the context menu closed', async () => {
-    mocks.GET.mockResolvedValue({
-        data: {canDeleteForSelf: true, canDeleteForEveryone: false},
-        response: new Response(),
-    });
-    mocks.DELETE.mockClear();
+    mocks.messageLink.mockResolvedValue({canDeleteForSelf: true, canDeleteForEveryone: false});
+    mocks.messageDeletionOptions.mockResolvedValue({canDeleteForSelf: true, canDeleteForEveryone: false});
+    mocks.restoreChatContext.mockClear();
+    mocks.deleteMessage.mockClear();
     mount();
     fireEvent.click(await screen.findByRole('menuitem', {name: ru.messageMenu.delete}));
     expect(await screen.findByRole('dialog', {name: ru.messageDelete.title})).toBeVisible();
@@ -89,7 +106,7 @@ it('opens a separate deletion confirmation while keeping the context menu closed
     await waitFor(() =>
         expect(screen.queryByRole('menuitem', {name: ru.messageMenu.copyText})).not.toBeInTheDocument(),
     );
-    expect(mocks.DELETE).not.toHaveBeenCalled();
+    expect(mocks.restoreChatContext).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', {name: ru.cancel}));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 });

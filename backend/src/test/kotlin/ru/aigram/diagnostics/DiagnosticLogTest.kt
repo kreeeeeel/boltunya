@@ -1,8 +1,11 @@
 package ru.aigram.diagnostics
 
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.exception.AppException
+import ru.aigram.domain.events.diagnostics.DiagnosticEntry
+import ru.aigram.domain.events.diagnostics.DiagnosticReport
+import ru.aigram.domain.events.diagnostics.DiagnosticSource
 import ru.aigram.exception.ErrorCode
 import ru.aigram.exception.impl.EngineUnavailableException
 import ru.aigram.resources.ResourceCatalog
@@ -11,6 +14,7 @@ import java.nio.file.Path
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
+import java.util.stream.IntStream
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -77,13 +81,27 @@ class DiagnosticLogTest {
 
     @Test
     fun `retains at most one hundred grouped errors`() {
+        val previous = IntStream.range(0, 100).mapToObj { index ->
+            DiagnosticEntry(
+                "previous-$index",
+                clock.instant().epochSecond - index,
+                clock.instant().epochSecond - index,
+                "http",
+                ErrorCode.REQUEST_FAILED.name,
+                "Synthetic error",
+                "Try again",
+                "SyntheticFailure$index",
+            )
+        }.toList()
+        Files.createDirectories(directory.resolve("diagnostics"))
+        Files.writeString(directory.resolve("diagnostics/errors.json"), Json.encodeToString(DiagnosticReport(previous)))
         val log = DiagnosticLog(directory, clock, ResourceCatalog())
-        val codes = ErrorCode.entries.stream().limit(110).toList()
-        codes.stream().forEach { log.record(DiagnosticSource.HTTP, AppException(it)) }
+        log.record(DiagnosticSource.HTTP, EngineUnavailableException())
         val errors = log.report().errors
         assertEquals(100, errors.size)
-        assertFalse(errors.any { it.code == codes.first().name })
-        assertTrue(errors.any { it.code == codes.last().name })
+        assertFalse(errors.any { it.id == "previous-99" })
+        assertEquals(ErrorCode.ENGINE_UNAVAILABLE.name, errors.first().code)
+        assertEquals("EngineUnavailableException", errors.first().exceptionType)
         assertEquals(errors, DiagnosticLog(directory, clock, ResourceCatalog()).report().errors)
     }
 }

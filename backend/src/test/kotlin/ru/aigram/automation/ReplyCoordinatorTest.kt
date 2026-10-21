@@ -3,10 +3,10 @@ package ru.aigram.automation
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.aigram.diagnostics.DiagnosticLog
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.ReplyResult
-import ru.aigram.domain.WritingStyle
+import ru.aigram.domain.ai.ReplyResult
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.WritingStyle
 import ru.aigram.exception.impl.InvalidModelReplyException
 import ru.aigram.exception.impl.TelegramRateLimitException
 import ru.aigram.resources.ResourceCatalog
@@ -185,7 +185,9 @@ class ReplyCoordinatorTest {
         gateway.nextSendError = TelegramRateLimitException(1, IllegalStateException("Rate limited"))
         var rejectedAt = 0L
         ReplyCoordinator(settings, gateway) { _, history ->
-            if (rejectedAt == 0L) rejectedAt = System.nanoTime()
+            if (rejectedAt == 0L) {
+                rejectedAt = System.nanoTime()
+            }
             ReplyResult(history.last().text, 0, 0.0)
         }.use { coordinator ->
             gateway.messages.stream().forEach(coordinator::onMessage)

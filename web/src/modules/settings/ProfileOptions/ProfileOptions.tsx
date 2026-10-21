@@ -1,7 +1,7 @@
 import {Box, Button, Flex, Select, Switch, Text, TextArea, TextInput} from '@gravity-ui/uikit';
 import {useTranslations} from 'next-intl';
 import {useState} from 'react';
-import type {ModelProfileUpdate} from '@/modules/settings/model/useModelProfiles';
+import type {ModelProfileDraft} from '@/modules/settings/model/ModelProfileDraft';
 import styles from '@/modules/settings/ProviderProfiles/ProviderProfiles.module.css';
 const numericOptions = [
     'temperature',
@@ -33,8 +33,8 @@ export function ProfileOptions({
     value,
     onUpdate,
 }: {
-    readonly value: ModelProfileUpdate;
-    readonly onUpdate: (value: ModelProfileUpdate) => void;
+    readonly value: ModelProfileDraft;
+    readonly onUpdate: (value: ModelProfileDraft) => void;
 }) {
     const t = useTranslations('modelProfiles');
     const [expanded, setExpanded] = useState(false);
@@ -106,7 +106,7 @@ export function ProfileOptions({
                                     ...value,
                                     options: {
                                         ...value.options,
-                                        thinking: thinking as ModelProfileUpdate['options']['thinking'],
+                                        thinking: thinking as ModelProfileDraft['options']['thinking'],
                                     },
                                 })
                             }
@@ -172,7 +172,7 @@ export function ProfileOptions({
                                     capabilities: {
                                         ...value.capabilities,
                                         tokenLimit:
-                                            tokenLimit as ModelProfileUpdate['capabilities']['tokenLimit'],
+                                            tokenLimit as ModelProfileDraft['capabilities']['tokenLimit'],
                                     },
                                 })
                             }

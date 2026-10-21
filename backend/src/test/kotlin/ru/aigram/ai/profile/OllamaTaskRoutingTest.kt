@@ -12,7 +12,9 @@ import org.springframework.ai.chat.messages.UserMessage
 import org.springframework.ai.content.Media
 import org.springframework.core.io.ByteArrayResource
 import org.springframework.util.MimeTypeUtils
-import ru.aigram.domain.ChatRule
+import ru.aigram.domain.ai.profile.ModelTask
+import ru.aigram.domain.ai.profile.ModelTaskRouting
+import ru.aigram.domain.chat.ChatRule
 import java.net.InetSocketAddress
 import java.nio.file.Path
 import java.util.Base64

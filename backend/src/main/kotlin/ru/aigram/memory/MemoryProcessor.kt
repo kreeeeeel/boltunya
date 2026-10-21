@@ -1,7 +1,10 @@
 package ru.aigram.memory
 
-import jakarta.inject.Inject
 import org.springframework.stereotype.Component
+import ru.aigram.domain.memory.ChatMemoryState
+import ru.aigram.domain.memory.MemoryBatch
+import ru.aigram.domain.memory.MemorySpeaker
+import ru.aigram.domain.memory.OwnerMemoryUpdate
 import ru.aigram.storage.ContextExclusionStore
 import ru.aigram.telegram.TelegramGateway
 import java.time.Clock
@@ -10,7 +13,7 @@ private const val HISTORY_PAGE_MESSAGES = 100
 private const val MESSAGE_SETTLE_SECONDS = 10
 
 @Component
-class MemoryProcessor @Inject constructor(
+class MemoryProcessor(
     private val telegram: TelegramGateway,
     private val store: MemoryStore,
     private val batches: MemoryBatchBuilder,
@@ -32,7 +35,9 @@ class MemoryProcessor @Inject constructor(
         }
         val history = telegram.history(state.chatId, HISTORY_PAGE_MESSAGES, before).sortedBy { it.id.toLong() }
         val fetched = exclusions?.decorate(state.accountId, history) ?: history
-        if (unchanged(state, policyRevision)) roster?.record(state.accountId, state.chatId, fetched)
+        if (unchanged(state, policyRevision)) {
+            roster?.record(state.accountId, state.chatId, fetched)
+        }
         val page = if (recent) {
             val settledBefore = clock.instant().epochSecond - MESSAGE_SETTLE_SECONDS
             fetched.stream().takeWhile { it.date <= settledBefore }.toList()
@@ -47,21 +52,27 @@ class MemoryProcessor @Inject constructor(
         } else {
             page
         }
-        if (recent && page.size != fetched.size && candidates.isEmpty()) return false
+        if (recent && page.size != fetched.size && candidates.isEmpty()) {
+            return false
+        }
         val owner = store.read("")
         val batch = batches.select(candidates) { sources ->
             val owned = sources.filter { it.speaker == MemorySpeaker.OWNER && it.text.isNotBlank() }
             summarizer.fits(model, previous.facts(), sources) &&
                 (owned.isEmpty() || ownerSummarizer.fitsOwner(model, owner.facts(), owned))
         }
-        if (!unchanged(state, policyRevision)) return false
+        if (!unchanged(state, policyRevision)) {
+            return false
+        }
         val ownerSources = batch.sources.filter { it.speaker == MemorySpeaker.OWNER && it.text.isNotBlank() }
         val ownerUpdate = if (ownerSources.isEmpty()) {
             null
         } else {
             OwnerMemoryUpdate(owner, ownerSummarizer.summarizeOwner(model, owner.facts(), ownerSources))
         }
-        if (!unchanged(state, policyRevision)) return false
+        if (!unchanged(state, policyRevision)) {
+            return false
+        }
         val summary = if (batch.sources.any {
                 it.text.isNotBlank()
             }
@@ -87,7 +98,11 @@ class MemoryProcessor @Inject constructor(
             else -> delta(state, page.map { it.id.toLong() }, batch, page.lastOrNull()?.date ?: state.headDate)
         }.copy(
             updatedAt = now,
-            recentUpdatedAt = if (recent) now else state.recentUpdatedAt,
+            recentUpdatedAt = if (recent) {
+                now
+            } else {
+                state.recentUpdatedAt
+            },
             processedMessages = state.processedMessages + batch.messages.size,
             ownerMemoryVersion = 1,
         )
@@ -112,7 +127,11 @@ class MemoryProcessor @Inject constructor(
         newestDate: Long,
     ): ChatMemoryState {
         val target = state.deltaTargetId.takeIf { it != 0L } ?: pageIds.lastOrNull() ?: state.headId
-        val targetDate = if (state.deltaTargetId == 0L) newestDate else state.deltaTargetDate
+        val targetDate = if (state.deltaTargetId == 0L) {
+            newestDate
+        } else {
+            state.deltaTargetDate
+        }
         val cursor = batch.messages.firstOrNull()?.id?.toLong()
         val reachedAnchor =
             cursor == null || pageIds.any { it <= state.headId } && cursor == pageIds.firstOrNull { it > state.headId }
@@ -124,14 +143,13 @@ class MemoryProcessor @Inject constructor(
                 deltaTargetDate = 0,
                 deltaBeforeId = 0,
                 requested = false,
-                dirty =
-                state.observedId > target,
+                dirty = state.observedId > target,
             )
         } else {
             state.copy(
                 deltaTargetId = target,
                 deltaTargetDate = targetDate,
-                deltaBeforeId = cursor ?: state.headId,
+                deltaBeforeId = cursor,
                 requested = false,
             )
         }

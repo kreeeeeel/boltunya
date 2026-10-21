@@ -1,11 +1,11 @@
 package ru.aigram.ai.prompt
 
 import com.knuddels.jtokkit.api.EncodingType
-import jakarta.inject.Inject
 import org.springframework.ai.chat.messages.Message
 import org.springframework.ai.chat.messages.UserMessage
 import org.springframework.ai.tokenizer.JTokkitTokenCountEstimator
 import org.springframework.stereotype.Component
+import ru.aigram.domain.ai.prompt.TokenEncoding
 import kotlin.math.ceil
 
 private const val MESSAGE_OVERHEAD_TOKENS = 16
@@ -17,7 +17,7 @@ private val O200K_MODELS = listOf("gpt-4o", "gpt-4.1", "gpt-5", "gpt-oss", "o1",
 
 /** Text and media estimates reserve a safety margin; the provider's actual tokenizer remains authoritative. */
 @Component
-class PromptTokenEstimator @Inject constructor() {
+class PromptTokenEstimator {
     fun encoding(model: String, requested: TokenEncoding): TokenEncoding = if (requested != TokenEncoding.AUTO) {
         requested
     } else {
@@ -29,8 +29,16 @@ class PromptTokenEstimator @Inject constructor() {
     }
 
     fun estimate(message: Message, model: String, requested: TokenEncoding = TokenEncoding.AUTO): Int {
-        val estimator = if (encoding(model, requested) == TokenEncoding.O200K) o200k else cl100k
-        val images = if (message is UserMessage) message.media.size else 0
+        val estimator = if (encoding(model, requested) == TokenEncoding.O200K) {
+            o200k
+        } else {
+            cl100k
+        }
+        val images = if (message is UserMessage) {
+            message.media.size
+        } else {
+            0
+        }
         return ceil(estimator.estimate(message.text.orEmpty()) * ESTIMATION_MARGIN).toInt() +
             MESSAGE_OVERHEAD_TOKENS + images * IMAGE_TOKEN_ESTIMATE
     }

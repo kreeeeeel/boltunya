@@ -1,9 +1,8 @@
 package ru.aigram.storage
 
-import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Component
-import ru.aigram.domain.ChatMessage
+import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.exception.impl.InvalidHistoryIdentifierException
 import ru.aigram.validation.InputRule
 import java.nio.file.Files
@@ -15,13 +14,15 @@ private const val MESSAGE_ID_SHIFT = 20
 private const val MESSAGES_PER_BUCKET = 128
 
 @Component
-class MessageArchiveStore @Inject constructor(directory: Path, private val clock: Clock) {
+class MessageArchiveStore(directory: Path, private val clock: Clock) {
     private val root = directory.resolve("history")
     private val json = Json { ignoreUnknownKeys = true }
 
     @Synchronized
     fun record(account: String, messages: List<ChatMessage>) {
-        if (account.isEmpty() || messages.isEmpty()) return
+        if (account.isEmpty() || messages.isEmpty()) {
+            return
+        }
         messages.groupBy { it.chatId }.entries.stream().forEach { (chat, items) ->
             val folder = folder(account, chat)
             val deleted = read(folder.resolve("deleted.json"))
@@ -47,18 +48,26 @@ class MessageArchiveStore @Inject constructor(directory: Path, private val clock
                         changedDeleted = true
                     }
                 }
-                if (next != previous) write(path, next)
+                if (next != previous) {
+                    write(path, next)
+                }
             }
-            if (changedDeleted) write(folder.resolve("deleted.json"), deleted)
+            if (changedDeleted) {
+                write(folder.resolve("deleted.json"), deleted)
+            }
         }
     }
 
     @Synchronized
     fun delete(account: String, chat: String, ids: List<Long>, permanent: Boolean, fromCache: Boolean): Boolean {
-        if (account.isEmpty() || !permanent || fromCache || ids.isEmpty()) return false
+        if (account.isEmpty() || !permanent || fromCache || ids.isEmpty()) {
+            return false
+        }
         val folder = folder(account, chat)
         val deleted = read(folder.resolve("deleted.json"))
-        if (ids.stream().allMatch { deleted.containsKey(it.toString()) }) return false
+        if (ids.stream().allMatch { deleted.containsKey(it.toString()) }) {
+            return false
+        }
         ids.groupBy { bucket(it.toString()) }.entries.stream().forEach { (bucket, batch) ->
             val path = folder.resolve("$bucket.json")
             val originals = read(path)
@@ -67,9 +76,13 @@ class MessageArchiveStore @Inject constructor(directory: Path, private val clock
                 val original = originals[key] ?: ChatMessage(key, chat, "", false, 0)
                 val message = deleted[key] ?: original.copy(deleted = true, deletedAt = clock.instant().epochSecond)
                 deleted[key] = message
-                if (key in originals) originals[key] = message
+                if (key in originals) {
+                    originals[key] = message
+                }
             }
-            if (originals.isNotEmpty()) write(path, originals)
+            if (originals.isNotEmpty()) {
+                write(path, originals)
+            }
         }
         write(folder.resolve("deleted.json"), deleted)
         return true
@@ -77,13 +90,17 @@ class MessageArchiveStore @Inject constructor(directory: Path, private val clock
 
     @Synchronized
     fun find(account: String, chat: String, id: String): ChatMessage? {
-        if (account.isEmpty()) return null
+        if (account.isEmpty()) {
+            return null
+        }
         return read(folder(account, chat).resolve("${bucket(id)}.json"))[id]
     }
 
     @Synchronized
     fun deleted(account: String, chat: String, before: Long = 0, limit: Int = 100): List<ChatMessage> {
-        if (account.isEmpty()) return emptyList()
+        if (account.isEmpty()) {
+            return emptyList()
+        }
         return read(folder(account, chat).resolve("deleted.json")).values.stream()
             .filter { it.date > 0 && (before == 0L || it.id.toLong() < before) }
             .sorted(compareByDescending { it.id.toLong() }).limit(limit.toLong()).toList().asReversed()
@@ -104,12 +121,16 @@ class MessageArchiveStore @Inject constructor(directory: Path, private val clock
 
     private fun bucket(id: String): Long {
         val number = id.toLongOrNull()
-        if (number == null || number <= 0) throw InvalidHistoryIdentifierException()
+        if (number == null || number <= 0) {
+            throw InvalidHistoryIdentifierException()
+        }
         return (number shr MESSAGE_ID_SHIFT) / MESSAGES_PER_BUCKET
     }
 
     private fun read(path: Path): MutableMap<String, ChatMessage> {
-        if (!Files.exists(path)) return mutableMapOf()
+        if (!Files.exists(path)) {
+            return mutableMapOf()
+        }
         return json.decodeFromString<Map<String, ChatMessage>>(Files.readString(path)).toMutableMap()
     }
 

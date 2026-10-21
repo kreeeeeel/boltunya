@@ -1,10 +1,10 @@
 package ru.aigram.ai.profile
 
 import com.sun.jna.platform.win32.Crypt32Util
-import jakarta.inject.Inject
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Component
+import ru.aigram.domain.ai.profile.ProtectedModelCredential
 import ru.aigram.exception.impl.InvalidModelProfileException
 import ru.aigram.exception.impl.ModelCredentialMissingException
 import java.nio.file.Files
@@ -14,7 +14,7 @@ import java.util.UUID
 
 /** Windows DPAPI binds credentials to the current OS user; metadata contains no keys. */
 @Component
-class ModelCredentialVault @Inject constructor(directory: Path) {
+class ModelCredentialVault(directory: Path) {
     private val directory = directory.resolve("models/credentials")
 
     fun exists(id: String): Boolean = Files.isRegularFile(file(id))
@@ -22,14 +22,18 @@ class ModelCredentialVault @Inject constructor(directory: Path) {
     @Synchronized
     fun load(id: String, expectedOrigin: String): String {
         val path = file(id)
-        if (!Files.isRegularFile(path)) return ""
+        if (!Files.isRegularFile(path)) {
+            return ""
+        }
         val text = String(Crypt32Util.cryptUnprotectData(Files.readAllBytes(path)), Charsets.UTF_8)
         val credential = try {
             Json.decodeFromString<ProtectedModelCredential>(text)
         } catch (exception: SerializationException) {
             throw ModelCredentialMissingException(exception)
         }
-        if (credential.origin != expectedOrigin) throw ModelCredentialMissingException()
+        if (credential.origin != expectedOrigin) {
+            throw ModelCredentialMissingException()
+        }
         return credential.apiKey
     }
 
@@ -59,7 +63,9 @@ class ModelCredentialVault @Inject constructor(directory: Path) {
         } catch (exception: IllegalArgumentException) {
             throw InvalidModelProfileException(exception)
         }
-        if (uuid.toString() != id) throw InvalidModelProfileException()
+        if (uuid.toString() != id) {
+            throw InvalidModelProfileException()
+        }
         return directory.resolve("$id.credentials")
     }
 }

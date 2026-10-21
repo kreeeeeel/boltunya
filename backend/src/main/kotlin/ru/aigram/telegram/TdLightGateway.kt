@@ -10,19 +10,18 @@ import it.tdlight.client.SimpleTelegramClientFactory
 import it.tdlight.client.TDLibSettings
 import it.tdlight.client.TelegramError
 import it.tdlight.jni.TdApi
-import jakarta.inject.Inject
-import ru.aigram.domain.ChatGallery
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatSummary
-import ru.aigram.domain.MediaFile
-import ru.aigram.domain.MessageDeletionOptions
-import ru.aigram.domain.MessageDeletionResult
-import ru.aigram.domain.MessageDeletionScope
-import ru.aigram.domain.OutgoingMedia
-import ru.aigram.domain.StickerCatalog
-import ru.aigram.domain.StickerItem
-import ru.aigram.domain.TelegramCredentials
-import ru.aigram.domain.TelegramStatus
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatSummary
+import ru.aigram.domain.chat.MessageDeletionOptions
+import ru.aigram.domain.chat.MessageDeletionResult
+import ru.aigram.domain.chat.MessageDeletionScope
+import ru.aigram.domain.media.ChatGallery
+import ru.aigram.domain.media.MediaFile
+import ru.aigram.domain.media.OutgoingMedia
+import ru.aigram.domain.media.StickerCatalog
+import ru.aigram.domain.media.StickerItem
+import ru.aigram.domain.telegram.TelegramCredentials
+import ru.aigram.domain.telegram.TelegramStatus
 import ru.aigram.exception.IntegrationException
 import ru.aigram.exception.InvalidInputException
 import ru.aigram.exception.impl.AuthenticationFailedException
@@ -52,7 +51,7 @@ private const val FILE_LOOKUP_TIMEOUT_SECONDS = 10L
 private const val FILE_DOWNLOAD_TIMEOUT_SECONDS = 60L
 private const val FILE_DOWNLOAD_PRIORITY = 16
 
-class TdLightGateway @Inject constructor(
+class TdLightGateway(
     private val directory: Path,
     private val settingsStore: SettingsStore,
     private val credentialsStore: CredentialStore,
@@ -81,8 +80,12 @@ class TdLightGateway @Inject constructor(
         val active = readyClient()
         val file = active.send(TdApi.GetFile(id)).get(FILE_LOOKUP_TIMEOUT_SECONDS, TimeUnit.SECONDS)
         val expected = mediaFiles.uniqueId(id)
-        if (expected.isNotEmpty() && file.remote?.uniqueId != expected) throw MediaUnavailableException()
-        if (maxOf(file.size, file.expectedSize) > MAX_FILE_BYTES) throw MediaTooLargeException()
+        if (expected.isNotEmpty() && file.remote?.uniqueId != expected) {
+            throw MediaUnavailableException()
+        }
+        if (maxOf(file.size, file.expectedSize) > MAX_FILE_BYTES) {
+            throw MediaTooLargeException()
+        }
         return active.send(
             TdApi.DownloadFile(id, FILE_DOWNLOAD_PRIORITY, 0, 0, true),
         ).get(FILE_DOWNLOAD_TIMEOUT_SECONDS, TimeUnit.SECONDS)
@@ -148,7 +151,9 @@ class TdLightGateway @Inject constructor(
             val activeClient = builder.build(AuthenticationSupplier.user(credentials.phone))
             client = activeClient
             activeClient.meAsync.whenCompleteAsync { me, error ->
-                if (client !== activeClient) return@whenCompleteAsync
+                if (client !== activeClient) {
+                    return@whenCompleteAsync
+                }
                 if (error == null) {
                     cache.ownId = me.id
                     cache.users[me.id] = me
@@ -176,10 +181,16 @@ class TdLightGateway @Inject constructor(
 
     @Synchronized
     override fun restore() {
-        if (connection.status.state == "ready") return
+        if (connection.status.state == "ready") {
+            return
+        }
         try {
             val saved = credentialsStore.load()
-                ?: throw SavedSessionNotFoundException()
+
+            if (saved == null) {
+                throw SavedSessionNotFoundException()
+            }
+
             connection.version++
             interaction.cancel()
             client?.closeAsync()?.get(15, TimeUnit.SECONDS)

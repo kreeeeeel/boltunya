@@ -38,6 +38,9 @@ class ResearchTerms(
             )
     }
 
-    private fun matches(word: String, prefix: String): Boolean =
-        if (prefix.length <= 2) word == prefix else word.startsWith(prefix)
+    private fun matches(word: String, prefix: String): Boolean = if (prefix.length <= 2) {
+        word == prefix
+    } else {
+        word.startsWith(prefix)
+    }
 }

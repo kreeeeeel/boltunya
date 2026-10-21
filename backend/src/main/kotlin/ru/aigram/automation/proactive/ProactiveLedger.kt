@@ -1,15 +1,15 @@
 package ru.aigram.automation.proactive
 
-import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Component
-import ru.aigram.domain.ChatMessage
+import ru.aigram.domain.ai.proactive.ProactiveRecord
+import ru.aigram.domain.chat.ChatMessage
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
 @Component
-class ProactiveLedger @Inject constructor(directory: Path) {
+class ProactiveLedger(directory: Path) {
     private val file = directory.resolve("automation/initiatives.json")
     private val json = Json { ignoreUnknownKeys = true }
     private var records: Map<String, ProactiveRecord> = if (Files.isRegularFile(file)) {
@@ -31,19 +31,43 @@ class ProactiveLedger @Inject constructor(directory: Path) {
 
     @Synchronized
     fun observe(owner: String, message: ChatMessage) {
-        if (message.outgoing || message.deleted || message.automated) return
+        if (message.outgoing || message.deleted || message.automated) {
+            return
+        }
         val key = "$owner/${message.chatId}"
-        val previous = records[key] ?: return
-        val incoming = message.id.toLongOrNull() ?: return
-        val source = previous.sourceMessageId.toLongOrNull() ?: return
-        if (incoming <= maxOf(source, previous.lastIncomingId.toLongOrNull() ?: 0)) return
+        val previous = records[key]
+
+        if (previous == null) {
+            return
+        }
+
+        val incoming = message.id.toLongOrNull()
+
+        if (incoming == null) {
+            return
+        }
+
+        val source = previous.sourceMessageId.toLongOrNull()
+
+        if (source == null) {
+            return
+        }
+
+        if (incoming <= maxOf(source, previous.lastIncomingId.toLongOrNull() ?: 0)) {
+            return
+        }
         save(key, previous.copy(lastIncomingId = message.id, awaitingResponse = false))
     }
 
     @Synchronized
     fun prepareDelivery(owner: String, chatId: String, reservation: ProactiveRecord): Boolean {
         val key = "$owner/$chatId"
-        val current = records[key] ?: return false
+        val current = records[key]
+
+        if (current == null) {
+            return false
+        }
+
         if (current.awaitingResponse || current.attemptedAt != reservation.attemptedAt ||
             current.lastIncomingId != reservation.lastIncomingId
         ) {

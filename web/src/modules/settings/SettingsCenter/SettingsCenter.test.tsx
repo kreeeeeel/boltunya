@@ -6,15 +6,25 @@ import {useState} from 'react';
 import {SettingsCenter} from '@/modules/settings/SettingsCenter/SettingsCenter';
 import {workspaceState} from '@tests/fixtures/workspace';
 import ru from '@/shared/i18n/ru.json';
-const mocks = vi.hoisted(() => ({PATCH: vi.fn()}));
+const mocks = vi.hoisted(() => ({settings: vi.fn(), updateChatMemory: vi.fn(), updateGlobalMemory: vi.fn()}));
 vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
-    api: mocks,
+    api: {
+        settings: {
+            settings: mocks.settings,
+        },
+        memory: {
+            updateChatMemory: mocks.updateChatMemory,
+            updateGlobalMemory: mocks.updateGlobalMemory,
+        },
+    },
 }));
 vi.mock('@/modules/settings/ModelPromptEditor/ModelPromptEditor', () => ({ModelPromptEditor: () => null}));
 it('preserves section drafts and success feedback when refreshed settings arrive', async () => {
     const onClose = vi.fn();
-    mocks.PATCH.mockResolvedValue({data: {ok: true}, response: new Response()});
+    mocks.settings.mockResolvedValue({ok: true});
+    mocks.updateChatMemory.mockResolvedValue({ok: true});
+    mocks.updateGlobalMemory.mockResolvedValue({ok: true});
     const original = {
         ...workspaceState.settings,
         customStyles: [{id: 'style-1', emoji: '🧊', name: 'Спокойный', instructions: 'Коротко и спокойно.'}],
@@ -45,10 +55,9 @@ it('preserves section drafts and success feedback when refreshed settings arrive
     const region = screen.getByRole('region', {name: ru.settingsCenter.sections.styles});
     fireEvent.click(within(region).getByRole('button', {name: ru.save}));
     await waitFor(() =>
-        expect(mocks.PATCH).toHaveBeenCalledWith(
-            '/api/settings',
+        expect(mocks.settings).toHaveBeenCalledWith(
             expect.objectContaining({
-                body: expect.objectContaining({
+                settingsUpdate: expect.objectContaining({
                     globalPrompt: 'Без канцелярита.',
                     customStyles: [expect.objectContaining({name: 'Сдержанный'})],
                 }),
@@ -60,9 +69,10 @@ it('preserves section drafts and success feedback when refreshed settings arrive
     fireEvent.change(screen.getByRole('textbox', {name: ru.styleName}), {target: {value: 'Новый'}});
     expect(within(region).queryByRole('button', {name: ru.saved})).toBeNull();
 });
-
 it('shows a save failure once in the active section while preserving visited drafts', async () => {
-    mocks.PATCH.mockRejectedValue(new Error('Cannot save'));
+    mocks.settings.mockRejectedValue(new Error('Cannot save'));
+    mocks.updateChatMemory.mockRejectedValue(new Error('Cannot save'));
+    mocks.updateGlobalMemory.mockRejectedValue(new Error('Cannot save'));
     render(
         <NextIntlClientProvider locale="ru" messages={ru}>
             <ThemeProvider>
@@ -77,9 +87,10 @@ it('shows a save failure once in the active section while preserving visited dra
     fireEvent.click(screen.getByRole('menuitem', {name: ru.settingsCenter.sections.prompt}));
     expect(screen.getAllByText('Cannot save')).toHaveLength(1);
 });
-
 it('keeps conversation support in a separate section and saves its draft after navigation', async () => {
-    mocks.PATCH.mockResolvedValue({data: {ok: true}, response: new Response()});
+    mocks.settings.mockResolvedValue({ok: true});
+    mocks.updateChatMemory.mockResolvedValue({ok: true});
+    mocks.updateGlobalMemory.mockResolvedValue({ok: true});
     render(
         <NextIntlClientProvider locale="ru" messages={ru}>
             <ThemeProvider>
@@ -96,10 +107,12 @@ it('keeps conversation support in a separate section and saves its draft after n
     const region = screen.getByRole('region', {name: ru.settingsCenter.sections.replies});
     fireEvent.click(within(region).getByRole('button', {name: ru.save}));
     await waitFor(() =>
-        expect(mocks.PATCH).toHaveBeenCalledWith(
-            '/api/settings',
+        expect(mocks.settings).toHaveBeenCalledWith(
             expect.objectContaining({
-                body: expect.objectContaining({proactiveEnabled: true, proactiveIntervalMinutes: 120}),
+                settingsUpdate: expect.objectContaining({
+                    proactiveEnabled: true,
+                    proactiveIntervalMinutes: 120,
+                }),
             }),
         ),
     );

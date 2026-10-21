@@ -1,13 +1,13 @@
 package ru.aigram.telegram
 
-import jakarta.inject.Provider
 import org.junit.jupiter.api.Test
+import ru.aigram.configuration.testBeanProvider
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class TelegramMessageSenderTest {
     private val sender =
-        TelegramMessageSender(Provider { throw UnsupportedOperationException("No Telegram in parser tests") })
+        TelegramMessageSender(testBeanProvider { throw UnsupportedOperationException("No Telegram in parser tests") })
 
     @Test
     fun `extracts structured Telegram rate limit durations without guessing other numbers`() {

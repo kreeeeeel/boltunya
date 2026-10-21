@@ -2,8 +2,8 @@ package ru.aigram.storage
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.domain.ActivityFeedbackRating
-import ru.aigram.domain.ActivityFeedbackUpdate
+import ru.aigram.domain.events.ActivityFeedbackRating
+import ru.aigram.domain.events.ActivityFeedbackUpdate
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Clock

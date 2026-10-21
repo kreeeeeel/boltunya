@@ -14,6 +14,8 @@ import {ConversationGeneration} from '@/modules/workspace/ConversationGeneration
 import {MessageBubble} from '@/modules/workspace/Conversation/MessageBubble';
 import {ConversationComposer} from '@/modules/workspace/Conversation/ConversationComposer';
 import {MediaViewerProvider} from '@/modules/media/MediaViewer/MediaViewerProvider';
+import {DraftPreparationError} from '@/modules/workspace/model/DraftPreparationError';
+import {StatusNotice} from '@/shared/ui/StatusNotice/StatusNotice';
 
 export function Conversation({
     chat,
@@ -44,6 +46,7 @@ export function Conversation({
     const [text, setText] = useState('');
     const [busy, setBusy] = useState<'send' | 'draft' | ''>('');
     const [localError, setLocalError] = useState('');
+    const [draftNotice, setDraftNotice] = useState<{status: 'cancelled' | 'error'; description: string}>();
     const [hasEarlier, setHasEarlier] = useState(true);
     const [loadingEarlier, setLoadingEarlier] = useState(false);
     const scroll = useRef<HTMLDivElement>(null);
@@ -127,6 +130,7 @@ export function Conversation({
         }
         setBusy('send');
         setLocalError('');
+        setDraftNotice(undefined);
         try {
             await onSend(text.trim());
             setText('');
@@ -144,11 +148,15 @@ export function Conversation({
         }
         setBusy('draft');
         setLocalError('');
+        setDraftNotice(undefined);
         try {
             setText(await onDraft(messageId));
         } catch (cause) {
             if (!(cause instanceof DOMException && cause.name === 'AbortError')) {
-                setLocalError(errorMessage(cause));
+                setDraftNotice({
+                    status: cause instanceof DraftPreparationError ? cause.status : 'error',
+                    description: errorMessage(cause),
+                });
             }
         } finally {
             setBusy('');
@@ -308,6 +316,25 @@ export function Conversation({
                             )}
                         </Flex>
                     </ScrollArea>
+                    {draftNotice && (
+                        <StatusNotice
+                            className={styles.notice}
+                            variant={draftNotice.status === 'cancelled' ? 'cancelled' : 'error'}
+                            title={t(
+                                draftNotice.status === 'cancelled'
+                                    ? 'draftQueue.cancelled'
+                                    : 'draftQueue.failed',
+                            )}
+                            description={
+                                draftNotice.status === 'cancelled'
+                                    ? t('draftQueue.cancelledDescription')
+                                    : draftNotice.description === t('draftQueue.failed')
+                                      ? t('draftQueue.failedDescription')
+                                      : draftNotice.description
+                            }
+                            onClose={() => setDraftNotice(undefined)}
+                        />
+                    )}
                     {(error || localError) && (
                         <Text color="danger" role="alert">
                             {localError || error}

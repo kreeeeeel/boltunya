@@ -2,13 +2,14 @@ package ru.aigram.automation.proactive
 
 import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.diagnostics.DiagnosticLog
-import ru.aigram.diagnostics.DiagnosticSource
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.ChatSummary
-import ru.aigram.domain.GroupReplyMode
-import ru.aigram.domain.ProactiveMode
-import ru.aigram.domain.ReplyResult
+import ru.aigram.domain.ai.ReplyResult
+import ru.aigram.domain.ai.proactive.ProactiveObservation
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.ChatSummary
+import ru.aigram.domain.chat.GroupReplyMode
+import ru.aigram.domain.chat.ProactiveMode
+import ru.aigram.domain.events.diagnostics.DiagnosticSource
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.SettingsStore
 import ru.aigram.telegram.TelegramGateway
@@ -44,7 +45,9 @@ class ProactiveCoordinator(
     fun observe(message: ChatMessage) {
         val account = telegram.status().userId
         try {
-            if (account.isNotEmpty()) ledger.observe(account, message)
+            if (account.isNotEmpty()) {
+                ledger.observe(account, message)
+            }
         } catch (exception: Exception) {
             diagnostics.record(DiagnosticSource.REPLY, exception)
             System.err.println("Conversation checkpoint unavailable: ${exception.javaClass.simpleName}")

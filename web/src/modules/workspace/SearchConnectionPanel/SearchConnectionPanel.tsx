@@ -1,23 +1,19 @@
 import {Button, Disclosure, Flex, Link, Skeleton, Text, TextInput} from '@gravity-ui/uikit';
 import {useEffect, useState} from 'react';
 import {useTranslations} from 'next-intl';
-
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
-import type {components} from '@/shared/api/schema';
+import {api, errorMessage} from '@/shared/api/client';
+import type * as Contract from '@aigram/api-client';
 import styles from '@/modules/workspace/SearchConnectionPanel/SearchConnectionPanel.module.css';
-
 export function SearchConnectionPanel() {
     const t = useTranslations('internetSearch');
-    const [connection, setConnection] = useState<components['schemas']['SearchConnection']>();
+    const [connection, setConnection] = useState<Contract.SearchConnection>();
     const [key, setKey] = useState('');
     const [busy, setBusy] = useState('');
     const [error, setError] = useState('');
-
     useEffect(() => {
         let active = true;
-        void api
-            .GET('/api/search/connection')
-            .then(dataOrThrow)
+        void api.settings
+            .searchConnection()
             .then((value) => {
                 if (active) {
                     setConnection(value);
@@ -32,20 +28,21 @@ export function SearchConnectionPanel() {
             active = false;
         };
     }, []);
-
     async function update(action: 'save' | 'remove' | 'check' | 'refresh') {
         setBusy(action);
         setError('');
         try {
             const result =
                 action === 'save'
-                    ? await api.POST('/api/search/connection', {body: {apiKey: key.trim()}})
+                    ? await api.settings.saveSearchKey({
+                          searchConnectionRequest: {apiKey: key.trim()},
+                      })
                     : action === 'remove'
-                      ? await api.DELETE('/api/search/connection')
+                      ? await api.settings.deleteSearchKey()
                       : action === 'check'
-                        ? await api.POST('/api/search/check')
-                        : await api.GET('/api/search/connection');
-            setConnection(dataOrThrow(result));
+                        ? await api.settings.checkSearchConnection()
+                        : await api.settings.searchConnection();
+            setConnection(result);
             if (action === 'save' || action === 'remove') {
                 setKey('');
             }
@@ -55,7 +52,6 @@ export function SearchConnectionPanel() {
             setBusy('');
         }
     }
-
     return (
         <Flex direction="column" gap={3} qa="search-connection">
             <Text variant="subheader-2">{t('title')}</Text>

@@ -4,13 +4,13 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.diagnostics.DiagnosticLog
-import ru.aigram.domain.ActivityKind
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.ChatSummary
-import ru.aigram.domain.GroupReplyMode
-import ru.aigram.domain.ProactiveMode
-import ru.aigram.domain.ReplyResult
+import ru.aigram.domain.ai.ReplyResult
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.ChatSummary
+import ru.aigram.domain.chat.GroupReplyMode
+import ru.aigram.domain.chat.ProactiveMode
+import ru.aigram.domain.events.ActivityKind
 import ru.aigram.memory.AdvancingClock
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.SettingsStore
@@ -219,7 +219,9 @@ class ProactiveCoordinatorTest {
         val attempts = AtomicInteger()
         ReplyCoordinator(settings, gateway) { _, _ -> error("regular") }.use { replies ->
             coordinator(settings, gateway, replies) { _, _ ->
-                if (attempts.incrementAndGet() == 1) error("synthetic generation failure")
+                if (attempts.incrementAndGet() == 1) {
+                    error("synthetic generation failure")
+                }
                 ReplyResult("Hi again", 1, 1.0)
             }.use { coordinator ->
                 coordinator.tick()

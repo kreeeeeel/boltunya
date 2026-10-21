@@ -15,7 +15,9 @@ class DownloadCancellation {
     }
 
     fun check() {
-        if (cancelled || Thread.currentThread().isInterrupted) throw CancellationException()
+        if (cancelled || Thread.currentThread().isInterrupted) {
+            throw CancellationException()
+        }
     }
 
     @Synchronized

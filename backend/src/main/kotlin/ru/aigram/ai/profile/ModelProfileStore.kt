@@ -1,8 +1,12 @@
 package ru.aigram.ai.profile
 
-import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Component
+import ru.aigram.domain.ai.profile.ModelProfile
+import ru.aigram.domain.ai.profile.ModelProfileUpdate
+import ru.aigram.domain.ai.profile.ModelProvider
+import ru.aigram.domain.ai.profile.ModelProviderPreset
+import ru.aigram.domain.ai.profile.ResolvedModelTarget
 import ru.aigram.exception.impl.InvalidModelProfileException
 import ru.aigram.exception.impl.ModelCredentialMissingException
 import ru.aigram.exception.impl.ModelProfileChangedException
@@ -18,7 +22,7 @@ import java.util.UUID
 private const val MAX_PROFILES = 40
 
 @Component
-class ModelProfileStore @Inject constructor(
+class ModelProfileStore(
     directory: Path,
     private val vault: ModelCredentialVault,
     private val resources: ResourceCatalog,
@@ -40,7 +44,9 @@ class ModelProfileStore @Inject constructor(
 
     fun get(id: String): ModelProfile {
         val profile = profiles.stream().filter { it.id == id }.findFirst().orElse(null)
-        if (profile == null) throw ModelProfileNotFoundException()
+        if (profile == null) {
+            throw ModelProfileNotFoundException()
+        }
         return profile.copy(apiKeyConfigured = vault.exists(id))
     }
 
@@ -50,7 +56,9 @@ class ModelProfileStore @Inject constructor(
     @Synchronized
     internal fun credentialSnapshot(target: ResolvedModelTarget): String {
         val profile = get(target.profileId)
-        if (!profile.enabled) throw ModelProfileDisabledException()
+        if (!profile.enabled) {
+            throw ModelProfileDisabledException()
+        }
         if (profile.provider != target.provider || profile.baseUrl != target.baseUrl || profile.model != target.model ||
             profile.options != target.options || profile.capabilities != target.capabilities
         ) {
@@ -67,12 +75,24 @@ class ModelProfileStore @Inject constructor(
 
     @Synchronized
     fun save(id: String?, update: ModelProfileUpdate): ModelProfile {
-        val previous = if (id == null) null else get(id)
-        if (previous == null && profiles.size >= MAX_PROFILES) throw InvalidModelProfileException()
+        val previous = if (id == null) {
+            null
+        } else {
+            get(id)
+        }
+        if (previous == null && profiles.size >= MAX_PROFILES) {
+            throw InvalidModelProfileException()
+        }
         val baseUrl = validateUrl(update.baseUrl)
-        if (presets().stream().noneMatch { it.id == update.preset }) throw InvalidModelProfileException()
-        if (update.options.stop.stream().anyMatch { it.length > 200 }) throw InvalidModelProfileException()
-        if (update.options.maxOutputTokens >= update.options.contextWindow) throw InvalidModelProfileException()
+        if (presets().stream().noneMatch { it.id == update.preset }) {
+            throw InvalidModelProfileException()
+        }
+        if (update.options.stop.stream().anyMatch { it.length > 200 }) {
+            throw InvalidModelProfileException()
+        }
+        if (update.options.maxOutputTokens >= update.options.contextWindow) {
+            throw InvalidModelProfileException()
+        }
         if (update.provider == ModelProvider.OLLAMA && update.preset != "ollama" && update.preset != "custom") {
             throw InvalidModelProfileException()
         }
@@ -89,8 +109,12 @@ class ModelProfileStore @Inject constructor(
         )
         // A stored credential must never silently travel to another host after editing a profile.
         val changedOrigin = previous != null && origin(previous.baseUrl) != origin(baseUrl)
-        if (update.clearApiKey || changedOrigin) vault.delete(identifier)
-        if (key.isNotEmpty()) vault.save(identifier, key, origin(baseUrl))
+        if (update.clearApiKey || changedOrigin) {
+            vault.delete(identifier)
+        }
+        if (key.isNotEmpty()) {
+            vault.save(identifier, key, origin(baseUrl))
+        }
         val entries = profiles.stream().filter { it.id != identifier }.toList() + next
         persist(entries)
         return next.copy(apiKeyConfigured = vault.exists(identifier))

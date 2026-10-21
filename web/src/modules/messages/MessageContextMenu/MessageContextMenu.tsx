@@ -2,7 +2,7 @@ import {Box, Dialog, DropdownMenu, Icon, Portal, Text} from '@gravity-ui/uikit';
 import {Copy, Link, EyeSlash, ArrowRotateLeft, Sparkles, TrashBin} from '@gravity-ui/icons';
 import {useState} from 'react';
 import {useTranslations} from 'next-intl';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
+import {api, errorMessage} from '@/shared/api/client';
 import type {Message} from '@/shared/api/client';
 import styles from '@/modules/messages/MessageContextMenu/MessageContextMenu.module.css';
 import type {ContextExclusionChange} from '@/modules/messages/model/ContextExclusionChange';
@@ -10,7 +10,10 @@ import {MessageDeletionDialog} from '@/modules/messages/MessageDeletionDialog/Me
 import type {MessageDeletionResult} from '@/modules/messages/MessageDeletionDialog/MessageDeletionDialog.types';
 export interface MessageContextMenuProps {
     readonly message: Message;
-    readonly position: {x: number; y: number} | null;
+    readonly position: {
+        x: number;
+        y: number;
+    } | null;
     readonly onClose: () => void;
     readonly onExcludedChanged: (change: ContextExclusionChange) => Promise<void>;
     readonly onDraftRequest?: () => Promise<void>;
@@ -59,10 +62,11 @@ export function MessageContextMenu({
     async function copyLink() {
         const url =
             messageLink ??
-            dataOrThrow(
-                await api.GET('/api/chats/{chatId}/messages/{messageId}/link', {
-                    params: {path: {chatId: message.chatId, messageId: message.id}},
-                }),
+            (
+                await api.chats.messageLink({
+                    chatId: message.chatId,
+                    messageId: message.id,
+                })
             ).url;
         if (!url) {
             throw new Error(t('linkUnavailable'));
@@ -72,12 +76,11 @@ export function MessageContextMenu({
     function exclusion(scope: 'message' | 'through' | 'from', excluded: boolean) {
         void action(
             async () => {
-                dataOrThrow(
-                    await api.PUT('/api/chats/{chatId}/messages/{messageId}/context', {
-                        params: {path: {chatId: message.chatId, messageId: message.id}},
-                        body: {scope, excluded},
-                    }),
-                );
+                await api.chats.excludeMessageContext({
+                    chatId: message.chatId,
+                    messageId: message.id,
+                    contextExclusionUpdate: {scope, excluded},
+                });
             },
             {messageId: message.id, scope, excluded},
         );
@@ -161,14 +164,9 @@ export function MessageContextMenu({
                                             action: () =>
                                                 void action(
                                                     async () => {
-                                                        dataOrThrow(
-                                                            await api.DELETE(
-                                                                '/api/chats/{chatId}/context-exclusions',
-                                                                {
-                                                                    params: {path: {chatId: message.chatId}},
-                                                                },
-                                                            ),
-                                                        );
+                                                        await api.chats.restoreChatContext({
+                                                            chatId: message.chatId,
+                                                        });
                                                     },
                                                     {reset: true},
                                                 ),

@@ -1,6 +1,7 @@
 package ru.aigram.monitoring
 
 import org.junit.jupiter.api.Test
+import ru.aigram.domain.system.monitoring.GpuMetrics
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 

@@ -1,6 +1,13 @@
+FROM eclipse-temurin:21-jdk AS contract
+WORKDIR /workspace
+COPY gradle gradle
+COPY gradlew settings.gradle.kts build.gradle.kts ./
+COPY backend backend
+RUN chmod +x gradlew && ./gradlew :backend:contract:client:typescript:generateClient --no-daemon
+
 FROM node:24-bookworm-slim AS build
 WORKDIR /workspace
-COPY backend/contract backend/contract
+COPY --from=contract /workspace/backend/contract/client/typescript/build/generated/openapi/src backend/contract/client/typescript/build/generated/openapi/src
 COPY web/package*.json web/
 RUN npm ci --prefix web
 COPY web web

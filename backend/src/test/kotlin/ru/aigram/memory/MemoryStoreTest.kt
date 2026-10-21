@@ -2,6 +2,7 @@ package ru.aigram.memory
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import ru.aigram.domain.memory.OwnerMemoryUpdate
 import ru.aigram.exception.impl.InvalidMemoryChatException
 import ru.aigram.exception.impl.MemoryConflictException
 import ru.aigram.resources.ResourceCatalog

@@ -1,9 +1,10 @@
 package ru.aigram.memory
 
-import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Component
-import ru.aigram.domain.ChatMessage
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.memory.ParticipantIdentity
+import ru.aigram.domain.memory.ParticipantRecord
 import ru.aigram.exception.impl.InvalidMemoryChatException
 import ru.aigram.exception.impl.MemoryTooLargeException
 import ru.aigram.storage.ContextExclusionStore
@@ -25,10 +26,7 @@ private const val MAX_CONTEXT_CHARACTERS = 4000
 
 /** A deterministic index of observed group authors. It never fetches a group's member list or infers traits. */
 @Component
-class ParticipantRosterStore @Inject constructor(
-    directory: Path,
-    private val exclusions: ContextExclusionStore? = null,
-) {
+class ParticipantRosterStore(directory: Path, private val exclusions: ContextExclusionStore? = null) {
     private val root = directory.resolve("memory")
     private val json = Json { ignoreUnknownKeys = true }
     private val cache = LinkedHashMap<Path, List<ParticipantRecord>>(MAX_CACHED_ROSTERS, 0.75f, true)
@@ -38,8 +36,16 @@ class ParticipantRosterStore @Inject constructor(
         val path = file(ownerId, chatId)
         val candidates = messages.stream().filter {
             it.chatId == chatId && it.group && !it.contextExcluded && !it.deleted
-        }.map(::participant).flatMap { if (it == null) Stream.empty() else Stream.of(it) }.toList()
-        if (candidates.isEmpty()) return
+        }.map(::participant).flatMap {
+            if (it == null) {
+                Stream.empty()
+            } else {
+                Stream.of(it)
+            }
+        }.toList()
+        if (candidates.isEmpty()) {
+            return
+        }
         val previous = read(path)
         val next = (previous + candidates).stream().filter {
             exclusions?.excludes(ownerId, chatId, it.lastMessageId.toString()) != true
@@ -48,7 +54,9 @@ class ParticipantRosterStore @Inject constructor(
                 compareByDescending<ParticipantRecord> { it.lastSeenDate }
                     .thenByDescending { it.lastMessageId }.thenBy { it.id },
             ).limit(MAX_PARTICIPANTS.toLong()).toList()
-        if (next == previous) return
+        if (next == previous) {
+            return
+        }
         Files.createDirectories(path.parent)
         val temporary = path.resolveSibling("PARTICIPANTS.json.tmp")
         Files.writeString(temporary, json.encodeToString(next))
@@ -69,8 +77,12 @@ class ParticipantRosterStore @Inject constructor(
 
     private fun read(path: Path): List<ParticipantRecord> {
         val existing = cache[path]
-        if (existing != null) return existing
-        if (Files.exists(path) && Files.size(path) > MAX_ROSTER_BYTES) throw MemoryTooLargeException()
+        if (existing != null) {
+            return existing
+        }
+        if (Files.exists(path) && Files.size(path) > MAX_ROSTER_BYTES) {
+            throw MemoryTooLargeException()
+        }
         val records = if (Files.exists(
                 path,
             )
@@ -79,7 +91,9 @@ class ParticipantRosterStore @Inject constructor(
         } else {
             emptyList()
         }
-        if (records.size > MAX_PARTICIPANTS) throw MemoryTooLargeException()
+        if (records.size > MAX_PARTICIPANTS) {
+            throw MemoryTooLargeException()
+        }
         remember(path, records)
         return records
     }
@@ -100,7 +114,12 @@ class ParticipantRosterStore @Inject constructor(
         ) {
             return null
         }
-        val messageId = message.id.toLongOrNull()?.takeIf { it > 0 } ?: return null
+        val messageId = message.id.toLongOrNull()?.takeIf { it > 0 }
+
+        if (messageId == null) {
+            return null
+        }
+
         val name = message.senderName.codePoints().filter { !Character.isISOControl(it) }
             .limit(MAX_PARTICIPANT_NAME.toLong()).mapToObj { String(Character.toChars(it)) }
             .collect(Collectors.joining()).trim()
@@ -112,12 +131,18 @@ class ParticipantRosterStore @Inject constructor(
                         it == '_'.code
                 }
         }.orEmpty()
-        if (name.isEmpty() && username.isEmpty()) return null
+        if (name.isEmpty() && username.isEmpty()) {
+            return null
+        }
         return ParticipantRecord(id, name, username, message.date, messageId)
     }
 
     private fun newer(first: ParticipantRecord, second: ParticipantRecord): ParticipantRecord =
-        if (compareValuesBy(first, second, { it.lastSeenDate }, { it.lastMessageId }) > 0) first else second
+        if (compareValuesBy(first, second, { it.lastSeenDate }, { it.lastMessageId }) > 0) {
+            first
+        } else {
+            second
+        }
 
     private fun file(ownerId: String, chatId: String): Path {
         if (!InputRule.CHAT_ID.accepts(ownerId) || (ownerId.toLongOrNull() ?: 0) <= 0 ||

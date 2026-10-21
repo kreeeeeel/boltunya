@@ -1,20 +1,18 @@
 import {Button, Flex, Skeleton, Text} from '@gravity-ui/uikit';
 import {useEffect, useState} from 'react';
 import {useLocale, useTranslations} from 'next-intl';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
-import type {components} from '@/shared/api/schema';
-
+import {api, errorMessage} from '@/shared/api/client';
+import type * as Contract from '@aigram/api-client';
 export function CachePanel() {
     const t = useTranslations();
     const locale = useLocale();
-    const [stats, setStats] = useState<components['schemas']['CacheStatistics']>();
+    const [stats, setStats] = useState<Contract.CacheStatistics>();
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     useEffect(() => {
         let active = true;
-        void api
-            .GET('/api/cache')
-            .then(dataOrThrow)
+        void api.system
+            .getCacheStatistics()
             .then((value) => {
                 if (active) {
                     setStats(value);
@@ -33,7 +31,7 @@ export function CachePanel() {
         setBusy(true);
         setError('');
         try {
-            setStats(dataOrThrow(clear ? await api.POST('/api/cache/clear') : await api.GET('/api/cache')));
+            setStats(clear ? await api.system.clearMediaCache() : await api.system.getCacheStatistics());
         } catch (cause) {
             setError(errorMessage(cause));
         } finally {

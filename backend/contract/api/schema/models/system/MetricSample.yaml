@@ -14,30 +14,40 @@ MetricSample:
     properties:
         timestamp:
             type: integer
+            format: int64
         cpuPercent:
             type: number
         appCpuPercent:
             type: number
         memoryUsedBytes:
             type: integer
+            format: int64
         memoryTotalBytes:
             type: integer
+            format: int64
         appMemoryBytes:
             type: integer
+            format: int64
         backendMemoryBytes:
             type: integer
+            format: int64
         ollamaMemoryBytes:
             type: integer
+            format: int64
         networkReceiveBytesPerSecond:
             type: integer
+            format: int64
         networkSendBytesPerSecond:
             type: integer
+            format: int64
         gpuPercent:
             type: number
             nullable: true
         gpuMemoryUsedBytes:
             type: integer
             nullable: true
+            format: int64
         gpuMemoryTotalBytes:
             type: integer
             nullable: true
+            format: int64

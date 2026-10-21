@@ -1,6 +1,5 @@
 package ru.aigram.ai
 
-import jakarta.inject.Inject
 import org.springframework.stereotype.Component
 import ru.aigram.exception.IntegrationException
 import ru.aigram.exception.impl.IncompleteModelDownloadException
@@ -32,7 +31,7 @@ import java.util.stream.LongStream
 private const val CHUNK_BYTES = 4L * 1024 * 1024
 
 @Component
-class RegistryBlobDownloader @Inject constructor(private val http: HttpClient) {
+class RegistryBlobDownloader(private val http: HttpClient) {
     fun download(url: URI, target: Path, digest: String, size: Long, onBytes: (Long) -> Unit) {
         if (size <= 0) {
             throw InvalidModelSizeException()
@@ -54,9 +53,15 @@ class RegistryBlobDownloader @Inject constructor(private val http: HttpClient) {
                         val buffer = ByteBuffer.wrap(bytes)
                         var position = start
                         generateSequence {
-                            if (buffer.hasRemaining()) output.write(buffer, position) else null
+                            if (buffer.hasRemaining()) {
+                                output.write(buffer, position)
+                            } else {
+                                null
+                            }
                         }.forEach { written ->
-                            if (written <= 0) throw ModelWriteFailedException()
+                            if (written <= 0) {
+                                throw ModelWriteFailedException()
+                            }
                             position += written
                         }
                         synchronized(onBytes) { onBytes(bytes.size.toLong()) }
@@ -88,7 +93,9 @@ class RegistryBlobDownloader @Inject constructor(private val http: HttpClient) {
         val request = HttpRequest.newBuilder(url).timeout(Duration.ofSeconds(30)).build()
         val response = http.send(request, HttpResponse.BodyHandlers.ofInputStream())
         response.body().close()
-        if (response.statusCode() == 200) return url
+        if (response.statusCode() == 200) {
+            return url
+        }
         val location = response.headers().firstValue("Location").orElse("")
         if (response.statusCode() !in setOf(301, 302, 303, 307, 308) || location.isBlank()) {
             throw ModelLocationMissingException()
@@ -111,18 +118,24 @@ class RegistryBlobDownloader @Inject constructor(private val http: HttpClient) {
                 val range = connection.getHeaderField("Content-Range")
                 val partial = connection.responseCode == 206 && range == "bytes $start-$end/$size"
                 val complete = connection.responseCode == 200 && start == 0L && end == size - 1
-                if (!partial && !complete) throw InvalidModelRangeException()
+                if (!partial && !complete) {
+                    throw InvalidModelRangeException()
+                }
                 return connection.inputStream.use { input ->
                     val expected = (end - start + 1).toInt()
                     val bytes = input.readNBytes(expected)
-                    if (bytes.size != expected) throw IncompleteModelDownloadException()
+                    if (bytes.size != expected) {
+                        throw IncompleteModelDownloadException()
+                    }
                     bytes
                 }
             } finally {
                 connection.disconnect()
             }
         } catch (exception: Exception) {
-            if (exception is InterruptedException || attempt >= 2) throw exception
+            if (exception is InterruptedException || attempt >= 2) {
+                throw exception
+            }
             return readChunk(url, start, end, size, attempt + 1)
         }
     }

@@ -1,12 +1,14 @@
 package ru.aigram.automation.activity
 
 import org.springframework.ai.chat.messages.Message
-import ru.aigram.domain.ActivityAttempt
-import ru.aigram.domain.ActivityDetails
-import ru.aigram.domain.ActivityEntry
-import ru.aigram.domain.ActivityKind
-import ru.aigram.domain.ActivityMessage
-import ru.aigram.domain.ActivityStep
+import ru.aigram.domain.events.ActivityAttempt
+import ru.aigram.domain.events.ActivityDetails
+import ru.aigram.domain.events.ActivityEntry
+import ru.aigram.domain.events.ActivityKind
+import ru.aigram.domain.events.ActivityMessage
+import ru.aigram.domain.events.ActivityPhase
+import ru.aigram.domain.events.ActivityStatus
+import ru.aigram.domain.events.ActivityStep
 
 private val FINAL_STATUSES = setOf(
     ActivityStatus.SENT.value,
@@ -35,19 +37,25 @@ class ReplyTrace(private var entry: ActivityEntry, private var trigger: String) 
 
     @Synchronized
     fun updateTrigger(text: String) {
-        if (active()) trigger = text
+        if (active()) {
+            trigger = text
+        }
     }
 
     @Synchronized
     fun phase(value: ActivityPhase) {
-        if (entry.phase == value.value || !active()) return
+        if (entry.phase == value.value || !active()) {
+            return
+        }
         entry = entry.copy(phase = value.value)
         steps.add(ActivityStep(value.value, System.currentTimeMillis()))
     }
 
     @Synchronized
     fun defer() {
-        if (!active()) return
+        if (!active()) {
+            return
+        }
         val now = System.currentTimeMillis()
         attempts.stream().forEach { it.stop(now) }
         entry = entry.copy(status = ActivityStatus.QUEUED.value)
@@ -56,10 +64,16 @@ class ReplyTrace(private var entry: ActivityEntry, private var trigger: String) 
 
     @Synchronized
     fun start() {
-        if (!active()) return
+        if (!active()) {
+            return
+        }
         entry = entry.copy(
             status = ActivityStatus.GENERATING.value,
-            startedAt = if (entry.startedAt > 0) entry.startedAt else System.currentTimeMillis(),
+            startedAt = if (entry.startedAt > 0) {
+                entry.startedAt
+            } else {
+                System.currentTimeMillis()
+            },
         )
         phase(ActivityPhase.CONTEXT)
     }
@@ -91,21 +105,31 @@ class ReplyTrace(private var entry: ActivityEntry, private var trigger: String) 
 
     @Synchronized
     fun generated(text: String) {
-        if (active() && entry.kind != ActivityKind.MEMORY) response = text
+        if (active() && entry.kind != ActivityKind.MEMORY) {
+            response = text
+        }
     }
 
     @Synchronized
     fun finish(status: ActivityStatus, detail: String, text: String? = null) {
-        if (!active()) return
+        if (!active()) {
+            return
+        }
         phase(ActivityPhase.valueOf(status.name))
-        if (text != null && entry.kind != ActivityKind.MEMORY) response = text
+        if (text != null && entry.kind != ActivityKind.MEMORY) {
+            response = text
+        }
         val now = System.currentTimeMillis()
         attempts.stream().forEach { it.stop(now) }
         entry = entry.copy(
             status = status.value,
             detail = detail,
             finishedAt = now,
-            durationMs = if (entry.startedAt > 0) now - entry.startedAt else 0,
+            durationMs = if (entry.startedAt > 0) {
+                now - entry.startedAt
+            } else {
+                0
+            },
         )
     }
 

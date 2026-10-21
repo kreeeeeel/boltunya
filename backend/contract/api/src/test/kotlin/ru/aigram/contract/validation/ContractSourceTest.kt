@@ -13,12 +13,21 @@ import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.stream.Collectors
+import java.util.stream.Stream
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 private val FEATURE_TAGS = setOf("chats", "telegram", "media", "memory", "activity", "models", "settings", "system")
+private val REQUEST_MODELS = setOf(
+    "ChatRuleInput",
+    "ModelProfileOptionsInput",
+    "ModelCapabilitiesInput",
+    "ModelPromptSettingsInput",
+    "AppearanceSettingsInput",
+    "ActivityHistorySettingsInput",
+)
 
 class ContractSourceTest {
     @TempDir
@@ -28,28 +37,39 @@ class ContractSourceTest {
     fun `all relative sources resolve and preserve every operation model and root wire constraint`() {
         val document = ContractSource(Path.of("schema")).load()
         val expected = fixture("wire-baseline.json")
+        val corrections = fixture("spring-contract-corrections.json")
+        val additions = corrections.getValue("additions").jsonObject
         val extras = fixture("extracted-models.json")
         val audit = ContractWireAudit(document)
-        val actual = audit.snapshot(expected.getValue("schemas").jsonObject.keys)
+        val actual = audit.snapshot(expected.getValue("schemas").jsonObject.keys + REQUEST_MODELS)
         assertEquals(expected.getValue("root"), actual.getValue("root"), "Root metadata or session security changed")
+        assertEquals(setOf("/api/engine/restart"), additions.getValue("paths").jsonObject.keys)
+        assertEquals(setOf("POST /api/engine/restart"), additions.getValue("operations").jsonObject.keys)
+        assertEquals(REQUEST_MODELS, additions.getValue("schemas").jsonObject.keys)
         listOf("paths", "operations", "schemas").stream().forEach { group ->
             val old = expected.getValue(group).jsonObject
             val current = actual.getValue(group).jsonObject
-            assertEquals(old.keys, current.keys, "$group names changed")
-            old.entries.stream().forEach { (name, hash) ->
-                assertEquals(hash, current[name], "Wire semantics changed for $group: $name")
+            val reviewed = corrections.getValue(group).jsonObject
+            val added = additions.getValue(group).jsonObject
+            assertTrue(old.keys.containsAll(reviewed.keys), "$group corrections must name original baseline entries")
+            assertTrue(old.keys.intersect(added.keys).isEmpty(), "$group additions must be new entries")
+            assertTrue(current.keys.containsAll(old.keys), "Original $group names must never disappear")
+            assertEquals(old.keys + added.keys, current.keys, "Unreviewed $group names changed")
+            current.entries.stream().forEach { (name, hash) ->
+                val corrected = added[name] ?: reviewed[name] ?: old.getValue(name)
+                assertEquals(corrected, hash, "Wire semantics changed for $group: $name")
             }
         }
-        assertEquals(59, document.getValue("paths").jsonObject.size)
-        assertEquals(73, audit.operations().size)
+        assertEquals(60, document.getValue("paths").jsonObject.size)
+        assertEquals(74, audit.operations().size)
         assertEquals(
-            expected.getValue("schemas").jsonObject.keys + extras.keys,
+            expected.getValue("schemas").jsonObject.keys + extras.keys + REQUEST_MODELS,
             document.getValue("components").jsonObject.getValue("schemas").jsonObject.keys,
         )
-        assertEquals(108, document.getValue("components").jsonObject.getValue("schemas").jsonObject.size)
+        assertEquals(114, document.getValue("components").jsonObject.getValue("schemas").jsonObject.size)
         assertFalse(Files.exists(Path.of("../api.yaml")), "The old duplicate contract must not remain")
         Files.walk(Path.of("schema")).use { files ->
-            assertEquals(117L, files.filter { Files.isRegularFile(it) && it.toString().endsWith(".yaml") }.count())
+            assertEquals(123L, files.filter { Files.isRegularFile(it) && it.toString().endsWith(".yaml") }.count())
         }
     }
 
@@ -71,9 +91,73 @@ class ContractSourceTest {
             "estimatePromptBudget",
             operations.getValue("POST /api/prompts/budget").getValue("operationId").jsonPrimitive.content,
         )
+        assertEquals(
+            "restartEngine",
+            operations.getValue("POST /api/engine/restart").getValue("operationId").jsonPrimitive.content,
+        )
         val tags = operations.values.stream().map { it.getValue("tags").jsonArray }.toList()
         assertTrue(tags.stream().allMatch { it.size == 1 && it.single().jsonPrimitive.content in FEATURE_TAGS })
         assertEquals(FEATURE_TAGS, tags.stream().map { it.single().jsonPrimitive.content }.collect(Collectors.toSet()))
+    }
+
+    @Test
+    fun `defaulted request models do not weaken complete response requirements`() {
+        val schemas = ContractSource(Path.of("schema")).load().getValue("components").jsonObject
+            .getValue("schemas").jsonObject
+        val chat = schemas.getValue("ChatRule").jsonObject
+        val input = schemas.getValue("ChatRuleInput").jsonObject
+
+        assertEquals(
+            setOf(
+                "enabled", "style", "model", "instructions", "contextMessages", "maxTokens", "delaySeconds",
+                "creativity", "emoji", "modelProfileId", "deliveryMode", "analyzePhotos", "aiStickers",
+            ),
+            chat.getValue("required").jsonArray.stream().map { it.jsonPrimitive.content }.collect(Collectors.toSet()),
+        )
+        assertFalse(input.containsKey("required"))
+        assertEquals(chat.getValue("properties").jsonObject.keys, input.getValue("properties").jsonObject.keys)
+        assertEquals(
+            JsonPrimitive(false),
+            input.getValue("properties").jsonObject.getValue("enabled").jsonObject.getValue("default"),
+        )
+        listOf(
+            "ModelProfileOptions",
+            "ModelCapabilities",
+            "AppearanceSettings",
+            "ActivityHistorySettings",
+        ).stream().forEach { name ->
+            assertTrue(schemas.getValue(name).jsonObject.getValue("required").jsonArray.isNotEmpty(), name)
+            assertFalse(schemas.getValue("${name}Input").jsonObject.containsKey("required"), name)
+        }
+        assertEquals(
+            JsonArray(listOf(JsonPrimitive("model"))),
+            schemas.getValue("ModelPromptSettingsInput").jsonObject.getValue("required"),
+        )
+        assertEquals(
+            JsonPrimitive(true),
+            schemas.getValue("ModelProfileUpdate").jsonObject.getValue("properties").jsonObject
+                .getValue("apiKey").jsonObject.getValue("nullable"),
+        )
+    }
+
+    @Test
+    fun `Kotlin object default marker is restricted to explicitly empty nonnullable input defaults`() {
+        val schemas = ContractSource(Path.of("schema")).load().getValue("components").jsonObject
+            .getValue("schemas").jsonObject
+        val markers = schemas.entries.stream().flatMap { (name, model) ->
+            model.jsonObject["properties"]?.jsonObject?.entries?.stream()
+                ?.filter { it.value.jsonObject["x-kotlin-empty-default"] == JsonPrimitive(true) }
+                ?.map { "$name.${it.key}" to it.value.jsonObject } ?: Stream.empty()
+        }.collect(Collectors.toMap({ it.first }, { it.second }))
+
+        assertEquals(
+            setOf("ModelProfileUpdate.options", "ModelProfileUpdate.capabilities", "AppearanceSettingsInput.tokens"),
+            markers.keys,
+        )
+        markers.entries.stream().forEach { (name, property) ->
+            assertEquals(JsonObject(emptyMap()), property.getValue("default"), name)
+            assertFalse(property["nullable"] == JsonPrimitive(true), name)
+        }
     }
 
     @Test
@@ -98,7 +182,7 @@ class ContractSourceTest {
         ).jsonObject.getValue("/api/uploads").jsonObject.getValue("post").jsonObject
         assertEquals(JsonPrimitive(true), upload.getValue("requestBody").jsonObject.getValue("required"))
         val body = upload.getValue("requestBody").jsonObject.getValue("content").jsonObject
-        assertEquals(setOf("application/octet-stream", "image/jpeg", "image/png", "video/mp4"), body.keys)
+        assertEquals(setOf("application/octet-stream", "image/jpeg", "image/png", "video/mp4", "*/*"), body.keys)
         assertTrue(
             body.values.stream().allMatch {
                 it.jsonObject.getValue("schema").jsonObject.getValue("format") ==
@@ -210,7 +294,7 @@ class ContractSourceTest {
     private fun references(value: JsonElement): List<String> = when (value) {
         is JsonObject -> value.entries.stream().flatMap { (name, child) ->
             if (name == "\$ref") {
-                java.util.stream.Stream.of(child.jsonPrimitive.content)
+                Stream.of(child.jsonPrimitive.content)
             } else {
                 references(child).stream()
             }

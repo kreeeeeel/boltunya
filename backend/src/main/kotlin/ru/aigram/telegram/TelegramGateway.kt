@@ -1,17 +1,17 @@
 package ru.aigram.telegram
 
-import ru.aigram.domain.ChatGallery
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatSummary
-import ru.aigram.domain.MediaFile
-import ru.aigram.domain.MessageDeletionOptions
-import ru.aigram.domain.MessageDeletionResult
-import ru.aigram.domain.MessageDeletionScope
-import ru.aigram.domain.OutgoingMedia
-import ru.aigram.domain.StickerCatalog
-import ru.aigram.domain.StickerItem
-import ru.aigram.domain.TelegramCredentials
-import ru.aigram.domain.TelegramStatus
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatSummary
+import ru.aigram.domain.chat.MessageDeletionOptions
+import ru.aigram.domain.chat.MessageDeletionResult
+import ru.aigram.domain.chat.MessageDeletionScope
+import ru.aigram.domain.media.ChatGallery
+import ru.aigram.domain.media.MediaFile
+import ru.aigram.domain.media.OutgoingMedia
+import ru.aigram.domain.media.StickerCatalog
+import ru.aigram.domain.media.StickerItem
+import ru.aigram.domain.telegram.TelegramCredentials
+import ru.aigram.domain.telegram.TelegramStatus
 import ru.aigram.exception.impl.MediaUnavailableException
 import ru.aigram.exception.impl.MessageDeletionNotAllowedException
 

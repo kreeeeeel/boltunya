@@ -4,3 +4,4 @@ ContextExclusionScope:
         - message
         - through
         - from
+    default: message

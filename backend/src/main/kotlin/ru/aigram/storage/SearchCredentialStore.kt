@@ -1,7 +1,6 @@
 package ru.aigram.storage
 
 import com.sun.jna.platform.win32.Crypt32Util
-import jakarta.inject.Inject
 import org.springframework.stereotype.Component
 import ru.aigram.exception.impl.InvalidSearchKeyException
 import ru.aigram.validation.InputRule
@@ -13,7 +12,7 @@ import java.util.concurrent.atomic.AtomicLong
 private const val KEY_FILE = "search.credentials"
 
 @Component
-class SearchCredentialStore @Inject constructor(directory: Path) {
+class SearchCredentialStore(directory: Path) {
     private val file = directory.resolve(KEY_FILE)
     private val revision = AtomicLong()
 
@@ -24,7 +23,9 @@ class SearchCredentialStore @Inject constructor(directory: Path) {
     @Synchronized
     fun save(value: String) {
         val key = value.trim()
-        if (!InputRule.SEARCH_KEY.accepts(key)) throw InvalidSearchKeyException()
+        if (!InputRule.SEARCH_KEY.accepts(key)) {
+            throw InvalidSearchKeyException()
+        }
         Files.createDirectories(file.parent)
         val temporary = file.resolveSibling("$KEY_FILE.tmp")
         Files.write(temporary, Crypt32Util.cryptProtectData(key.toByteArray(Charsets.UTF_8)))

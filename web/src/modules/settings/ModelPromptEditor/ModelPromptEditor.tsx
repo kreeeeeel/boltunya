@@ -2,18 +2,16 @@ import {Check} from '@gravity-ui/icons';
 import {Button, Flex, Icon, Select, Skeleton, Text, TextArea, TextInput} from '@gravity-ui/uikit';
 import {useEffect, useState} from 'react';
 import {useTranslations} from 'next-intl';
-import {api, dataOrThrow, defaultRule, errorMessage} from '@/shared/api/client';
+import {api, defaultRule, errorMessage} from '@/shared/api/client';
 import type {Engine} from '@/shared/api/client';
-import type {components} from '@/shared/api/schema';
+import type * as Contract from '@aigram/api-client';
 import {useModelProfiles} from '@/modules/settings/model/useModelProfiles';
 import {PromptBudgetNotice} from '@/modules/settings/PromptBudgetNotice/PromptBudgetNotice';
 import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
 import styles from '@/modules/settings/ModelPromptEditor/ModelPromptEditor.module.css';
-
-type ModelPrompt = components['schemas']['ModelPromptSettings'];
+type ModelPrompt = Contract.ModelPromptSettings;
 const modelKey = (value: Pick<ModelPrompt, 'model' | 'profileId'>) =>
     JSON.stringify([value.profileId, value.model]);
-
 export function ModelPromptEditor({
     engine,
     defaultModel,
@@ -53,9 +51,10 @@ export function ModelPromptEditor({
     const feedback = useSaveFeedback(JSON.stringify(value));
     useEffect(() => {
         const controller = new AbortController();
-        void api
-            .GET('/api/model-prompts', {signal: controller.signal})
-            .then(dataOrThrow)
+        void api.models
+            .getModelPrompts({
+                signal: controller.signal,
+            })
             .then((report) => {
                 if (!controller.signal.aborted) {
                     setDrafts(Object.fromEntries(report.prompts.map((prompt) => [modelKey(prompt), prompt])));
@@ -76,11 +75,9 @@ export function ModelPromptEditor({
         setBusy(true);
         setError('');
         try {
-            const saved = dataOrThrow(
-                await api.PUT('/api/model-prompts', {
-                    body: {...value, contextWindow: profileId ? null : value.contextWindow},
-                }),
-            );
+            const saved = await api.models.saveModelPrompts({
+                modelPromptSettings: {...value, contextWindow: profileId ? null : value.contextWindow},
+            });
             setDrafts((previous) => ({...previous, [modelKey(saved)]: saved}));
             feedback.markValueSaved(JSON.stringify(saved));
         } catch (cause) {

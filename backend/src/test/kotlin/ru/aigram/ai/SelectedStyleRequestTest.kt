@@ -8,10 +8,10 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.WritingStyle
-import ru.aigram.memory.MemoryContext
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.WritingStyle
+import ru.aigram.domain.memory.MemoryContext
 import ru.aigram.storage.SettingsStore
 import java.net.InetSocketAddress
 import java.nio.file.Path

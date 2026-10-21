@@ -1,14 +1,14 @@
 package ru.aigram.memory
 
-import jakarta.inject.Provider
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.aigram.ai.ModelInference
 import ru.aigram.ai.OllamaRuntime
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.ContextExclusionUpdate
-import ru.aigram.domain.GroupReplyMode
+import ru.aigram.configuration.testBeanProvider
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.ContextExclusionUpdate
+import ru.aigram.domain.chat.GroupReplyMode
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.ContextExclusionStore
@@ -52,7 +52,7 @@ class ParticipantRosterIntegrationTest {
             ),
             processor, ModelInference(), clock, automated,
             roster = roster, exclusions = exclusions,
-            queueProvider = Provider { DirectMemoryWorkQueue() },
+            queueProvider = testBeanProvider { DirectMemoryWorkQueue() },
         ).use { coordinator ->
             val observed = message(1, "Anna", "anna_example")
             coordinator.observe(observed)

@@ -9,6 +9,7 @@ import type {Message} from '@/shared/api/client';
 import {computeDevices} from '../fixtures/computeDevices';
 import {historyPage} from '../fixtures/activityHistory';
 import {syntheticPromptBudget} from '../fixtures/promptBudget';
+import ru from '../../src/shared/i18n/ru.json';
 
 const launchFile = process.env.TIHO_LAUNCH_FILE ?? join(process.env.LOCALAPPDATA ?? '', 'Tiho', 'launch.url');
 
@@ -2287,3 +2288,99 @@ test('username controls copy the tag and Telegram link', async ({page}) => {
     await header.getByRole('button', {name: 'Копировать ссылку Telegram', exact: true}).click();
     await expect(page.locator('html')).toHaveAttribute('data-copied-value', 'https://t.me/anya_smirnova');
 });
+
+for (const dark of [false, true]) {
+    const theme = dark ? 'dark' : 'light';
+    for (const terminal of ['cancelled', 'error'] as const) {
+        test(`queued draft ${terminal} has one dismissible notice and can be retried in ${theme} theme`, async ({
+            page,
+        }) => {
+            const state = structuredClone(workspaceState);
+            const oldFailure = {
+                ...testActivity[0],
+                id: 'old-auto-failure',
+                status: 'error',
+                phase: 'error',
+                date: 100,
+                detail: 'Ошибка предыдущего автоответа.',
+            };
+            state.activity = [oldFailure];
+            let starts = 0;
+            let job = {
+                id: '',
+                status: 'queued',
+                result: null,
+                error: '',
+            } as import('@aigram/api-client').PreviewJob;
+            await page.route('**/api/state', (route) => route.fulfill({json: state}));
+            await page.route('**/api/preview/jobs', async (route) => {
+                starts += 1;
+                expect(route.request().postDataJSON().chatId).toBe('41');
+                job = {id: `draft-browser-${starts}`, status: 'queued', result: null, error: ''};
+                state.activity = [
+                    oldFailure,
+                    {
+                        ...testActivity[0],
+                        id: job.id,
+                        kind: 'draft',
+                        status: 'queued',
+                        phase: 'queued',
+                        date: 100 + starts,
+                        detail: 'qwen3:1.7b',
+                    },
+                ];
+                await route.fulfill({json: job});
+            });
+            await page.route('**/api/preview/jobs/*', async (route) => {
+                job.status = starts === 1 ? terminal : 'ready';
+                job.error = job.status === 'error' ? 'Локальная модель не ответила.' : '';
+                job.result =
+                    job.status === 'ready'
+                        ? {text: 'Проверенный новый черновик', durationMs: 100, tokensPerSecond: 12}
+                        : null;
+                state.activity[1] = {
+                    ...state.activity[1],
+                    status: job.status,
+                    phase: job.status,
+                    detail: job.error,
+                };
+                await route.fulfill({json: job});
+            });
+            if (dark) {
+                await persistTestTheme(page, true);
+                await page.reload();
+                await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
+            }
+            const input = page.getByRole('textbox', {name: ru.messagePlaceholder, exact: true});
+            await input.fill('Мой незавершённый текст');
+            await expect(page.locator('[data-qa="conversation-generation-error"]')).toHaveCount(1);
+            const prepare = page.getByRole('button', {name: ru.draft, exact: true});
+            await prepare.click();
+            const title = terminal === 'cancelled' ? ru.draftQueue.cancelled : ru.draftQueue.failed;
+            const notice = page.getByRole(terminal === 'cancelled' ? 'status' : 'alert', {
+                name: title,
+                exact: true,
+            });
+            await expect(notice).toBeVisible();
+            await expect(page.locator('[data-qa="conversation-generation-error"]')).toHaveCount(0);
+            const contentAlerts = page.locator('[data-qa="workspace-view"]').getByRole('alert');
+            await expect(contentAlerts).toHaveCount(terminal === 'error' ? 1 : 0);
+            await expect(input).toHaveValue('Мой незавершённый текст');
+            await expect(prepare).toBeEnabled();
+            await page.screenshot({
+                path: `../docs/resources/draft-${terminal}-${theme}.png`,
+                animations: 'disabled',
+            });
+            await notice.getByRole('button').click();
+            await expect(notice).toHaveCount(0);
+            await page.waitForResponse((response) => new URL(response.url()).pathname === '/api/state');
+            await expect(page.locator('[data-qa="conversation-generation-error"]')).toHaveCount(0);
+            await expect(contentAlerts).toHaveCount(0);
+            await prepare.click();
+            await expect(input).toHaveValue('Проверенный новый черновик');
+            await expect(notice).toHaveCount(0);
+            await expect(page.locator('[data-qa="conversation-generation-error"]')).toHaveCount(0);
+            expect(starts).toBe(2);
+        });
+    }
+}

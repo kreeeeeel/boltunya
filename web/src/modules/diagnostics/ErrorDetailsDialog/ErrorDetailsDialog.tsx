@@ -1,14 +1,12 @@
 import {Box, Dialog, Flex, Label, Text} from '@gravity-ui/uikit';
 import {useLocale, useTranslations} from 'next-intl';
-
-import type {components} from '@/shared/api/schema';
+import type * as Contract from '@aigram/api-client';
 import styles from '@/modules/diagnostics/ErrorDetailsDialog/ErrorDetailsDialog.module.css';
-
 export function ErrorDetailsDialog({
     entry,
     onClose,
 }: {
-    readonly entry: components['schemas']['DiagnosticEntry'];
+    readonly entry: Contract.DiagnosticEntry;
     readonly onClose: () => void;
 }) {
     const t = useTranslations('diagnostics');

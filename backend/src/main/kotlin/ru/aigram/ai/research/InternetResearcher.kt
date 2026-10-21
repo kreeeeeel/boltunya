@@ -1,5 +1,8 @@
 package ru.aigram.ai.research
 
+import ru.aigram.domain.ai.research.ResearchContext
+import ru.aigram.domain.ai.research.ResearchPlan
+import ru.aigram.domain.ai.research.ResearchSource
 import ru.aigram.exception.IntegrationException
 import ru.aigram.exception.impl.InvalidResearchPlanException
 import ru.aigram.exception.impl.ResearchUnavailableException
@@ -30,14 +33,20 @@ class InternetResearcher(
     private val cache = ConcurrentHashMap<Pair<ResearchPlan, Long>, Pair<Instant, ResearchContext>>()
 
     fun lookup(plan: ResearchPlan): ResearchContext {
-        if (plan.kind == "none") return ResearchContext()
+        if (plan.kind == "none") {
+            return ResearchContext()
+        }
         if (plan.kind !in setOf("weather", "search") || plan.dayOffset !in 0..6 ||
             plan.query.length > MAX_QUERY_CHARACTERS || plan.location.length > MAX_LOCATION_CHARACTERS ||
             plan.weatherPeriod !in setOf("current", "daily")
         ) {
             throw InvalidResearchPlanException()
         }
-        val publicQuery = if (plan.kind == "weather") plan.location else plan.query
+        val publicQuery = if (plan.kind == "weather") {
+            plan.location
+        } else {
+            plan.query
+        }
         if (privacy.containsContactDetails(publicQuery)) {
             return ResearchContext(
                 "unavailable",
@@ -53,7 +62,9 @@ class InternetResearcher(
         if (plan.kind == "search" && plan.query.isBlank()) {
             return ResearchContext("clarify", resources.prompt("ru/research/query-required"))
         }
-        if (cache.size > MAX_CACHE_ENTRIES) cache.clear()
+        if (cache.size > MAX_CACHE_ENTRIES) {
+            cache.clear()
+        }
         val key = plan to search.revision()
         val value = cache.compute(key) { _, previous ->
             val now = clock.instant()
@@ -63,8 +74,12 @@ class InternetResearcher(
                 now to fetch(plan)
             }
         }
-        if (value == null) throw ResearchUnavailableException()
-        if (value.second.status == "unavailable") cache.remove(key, value)
+        if (value == null) {
+            throw ResearchUnavailableException()
+        }
+        if (value.second.status == "unavailable") {
+            cache.remove(key, value)
+        }
         return value.second
     }
 
@@ -103,7 +118,9 @@ class InternetResearcher(
     }
 
     private fun enrich(sources: List<ResearchSource>): List<ResearchSource> {
-        if (sources.isEmpty()) return sources
+        if (sources.isEmpty()) {
+            return sources
+        }
         return Executors.newFixedThreadPool(MAX_PAGE_READS).use { executor ->
             val pages = sources.take(MAX_PAGE_READS).associate { source ->
                 source.url to executor.submit<String> {

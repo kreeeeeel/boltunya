@@ -1,8 +1,8 @@
 package ru.aigram.monitoring
 
-import jakarta.inject.Inject
 import oshi.SystemInfo
 import oshi.software.os.OSProcess
+import ru.aigram.domain.system.monitoring.MetricSample
 import java.time.Instant
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -12,7 +12,7 @@ private const val HISTORY_SAMPLES = 90
 private const val SAMPLE_INTERVAL_SECONDS = 2L
 private const val PERCENT = 100.0
 
-class MonitoringService @Inject constructor(private val gpu: NvidiaMonitor) : AutoCloseable {
+class MonitoringService(private val gpu: NvidiaMonitor) : AutoCloseable {
     private val closed = AtomicBoolean()
     private val system = SystemInfo()
     private val cpu = system.hardware.processor
@@ -63,9 +63,21 @@ class MonitoringService @Inject constructor(private val gpu: NvidiaMonitor) : Au
         interfaces.stream().forEach { it.updateAttributes() }
         val received = interfaces.stream().mapToLong { it.bytesRecv }.sum()
         val sent = interfaces.stream().mapToLong { it.bytesSent }.sum()
-        val elapsed = if (previousTime == 0L) 0.0 else (now - previousTime) / 1e9
-        val receiveSpeed = if (elapsed > 0) ((received - previousReceive).coerceAtLeast(0) / elapsed).toLong() else 0
-        val sendSpeed = if (elapsed > 0) ((sent - previousSend).coerceAtLeast(0) / elapsed).toLong() else 0
+        val elapsed = if (previousTime == 0L) {
+            0.0
+        } else {
+            (now - previousTime) / 1e9
+        }
+        val receiveSpeed = if (elapsed > 0) {
+            ((received - previousReceive).coerceAtLeast(0) / elapsed).toLong()
+        } else {
+            0
+        }
+        val sendSpeed = if (elapsed > 0) {
+            ((sent - previousSend).coerceAtLeast(0) / elapsed).toLong()
+        } else {
+            0
+        }
         previousReceive = received
         previousSend = sent
         previousTime = now

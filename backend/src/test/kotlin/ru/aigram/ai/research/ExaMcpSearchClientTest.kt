@@ -2,6 +2,8 @@ package ru.aigram.ai.research
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import ru.aigram.domain.ai.research.ResearchSource
+import ru.aigram.domain.ai.research.SearchConnectionState
 import ru.aigram.exception.impl.SearchRateLimitedException
 import ru.aigram.exception.impl.WebSearchUnavailableException
 import ru.aigram.resources.ResourceCatalog

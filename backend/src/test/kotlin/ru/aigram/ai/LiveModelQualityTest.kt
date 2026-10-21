@@ -17,10 +17,10 @@ import org.junit.jupiter.api.function.ThrowingSupplier
 import org.opentest4j.AssertionFailedError
 import ru.aigram.ai.research.ResearchPlanner
 import ru.aigram.automation.activity.ReplyTrace
-import ru.aigram.domain.ActivityEntry
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.memory.MemoryContext
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.events.ActivityEntry
+import ru.aigram.domain.memory.MemoryContext
 import ru.aigram.resources.ResourceCatalog
 import java.nio.file.Files
 import java.nio.file.Path
@@ -103,7 +103,13 @@ class LiveModelQualityTest {
                                     checks.forEach { add(JsonPrimitive(it)) }
                                 },
                             )
-                            println("Model quality: $model / $id / ${if (valid) "PASS" else "FAIL"}")
+                            println(
+                                "Model quality: $model / $id / ${if (valid) {
+                                    "PASS"
+                                } else {
+                                    "FAIL"
+                                }}",
+                            )
                         } catch (exception: AssertionFailedError) {
                             put("passed", false)
                             put("error", "GenerationDeadlineExceeded")

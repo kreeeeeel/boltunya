@@ -1,12 +1,14 @@
 package ru.aigram.memory
 
-import jakarta.inject.Provider
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.aigram.ai.ModelInference
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
+import ru.aigram.configuration.testBeanProvider
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.memory.ChatMemoryState
+import ru.aigram.domain.memory.FACTUAL_MEMORY_VERSION
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.SettingsStore
@@ -127,7 +129,7 @@ class MemoryFactsMigrationTest {
                 ModelInference(),
                 clock,
                 automated,
-                queueProvider = Provider { DirectMemoryWorkQueue() },
+                queueProvider = testBeanProvider { DirectMemoryWorkQueue() },
             ).use { coordinator ->
                 val context = coordinator.context(ChatRule(useMemory = false), telegram.messages)
                 assertEquals("Ручная общая заметка  \n", context.globalNotes)

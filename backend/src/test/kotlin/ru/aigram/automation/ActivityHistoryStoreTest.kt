@@ -4,12 +4,12 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.springframework.ai.chat.messages.UserMessage
-import ru.aigram.ai.model.ModelCompletion
 import ru.aigram.automation.activity.ActivityHistoryStore
-import ru.aigram.automation.activity.ActivityStatus
 import ru.aigram.automation.activity.ReplyTrace
-import ru.aigram.domain.ActivityEntry
-import ru.aigram.domain.ActivityHistorySettings
+import ru.aigram.domain.ai.model.ModelCompletion
+import ru.aigram.domain.events.ActivityEntry
+import ru.aigram.domain.events.ActivityHistorySettings
+import ru.aigram.domain.events.ActivityStatus
 import ru.aigram.exception.impl.ActivityNotFoundException
 import ru.aigram.exception.impl.MalformedPayloadException
 import ru.aigram.resources.ResourceCatalog

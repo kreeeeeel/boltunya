@@ -348,7 +348,7 @@ activityHistorySettings:
             content:
                 application/json:
                     schema:
-                        $ref: ../models/activity/ActivityHistorySettings.yaml#/ActivityHistorySettings
+                        $ref: ../models/activity/ActivityHistorySettingsInput.yaml#/ActivityHistorySettingsInput
         responses:
             '200':
                 description: Successful response
@@ -356,3 +356,4 @@ activityHistorySettings:
                     application/json:
                         schema:
                             $ref: ../models/activity/ActivityHistoryStorage.yaml#/ActivityHistoryStorage
+        x-codegen-request-body-name: activityHistorySettings

@@ -4,10 +4,15 @@ import {fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {beforeEach, expect, it, vi} from 'vitest';
 import {CachePanel} from '@/modules/workspace/CachePanel/CachePanel';
 import ru from '@/shared/i18n/ru.json';
-const mocks = vi.hoisted(() => ({GET: vi.fn(), POST: vi.fn()}));
+const mocks = vi.hoisted(() => ({getCacheStatistics: vi.fn(), clearMediaCache: vi.fn()}));
 vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
-    api: mocks,
+    api: {
+        system: {
+            getCacheStatistics: mocks.getCacheStatistics,
+            clearMediaCache: mocks.clearMediaCache,
+        },
+    },
 }));
 const stats = {
     totalBytes: 10 * 1024 * 1024,
@@ -27,23 +32,26 @@ function mount() {
     );
 }
 beforeEach(() => {
-    mocks.GET.mockReset().mockResolvedValue({data: stats, response: new Response()});
-    mocks.POST.mockReset();
+    mocks.getCacheStatistics.mockReset().mockResolvedValue(stats);
+    mocks.clearMediaCache.mockReset();
 });
 it('shows actual cache size and replaces it with returned remaining statistics after clearing', async () => {
-    mocks.POST.mockResolvedValue({
-        data: {...stats, totalBytes: 0, fileCount: 0, photoBytes: 0, videoBytes: 0},
-        response: new Response(),
+    mocks.clearMediaCache.mockResolvedValue({
+        ...stats,
+        totalBytes: 0,
+        fileCount: 0,
+        photoBytes: 0,
+        videoBytes: 0,
     });
     mount();
     expect(await screen.findByText('10 МБ · файлов: 2')).toBeVisible();
     fireEvent.click(screen.getByRole('button', {name: ru.storage.clear}));
     expect(await screen.findByText('0 МБ · файлов: 0')).toBeVisible();
-    expect(mocks.POST).toHaveBeenCalledWith('/api/cache/clear');
+    expect(mocks.clearMediaCache).toHaveBeenCalledWith();
     expect(screen.getByRole('button', {name: ru.storage.clear})).toBeDisabled();
 });
 it('preserves the displayed size and allows retry when cleanup fails', async () => {
-    mocks.POST.mockRejectedValue(new Error('Файл используется'));
+    mocks.clearMediaCache.mockRejectedValue(new Error('Файл используется'));
     mount();
     await screen.findByText('10 МБ · файлов: 2');
     fireEvent.click(screen.getByRole('button', {name: ru.storage.clear}));

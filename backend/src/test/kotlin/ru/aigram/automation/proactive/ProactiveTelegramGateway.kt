@@ -1,8 +1,8 @@
 package ru.aigram.automation.proactive
 
 import ru.aigram.automation.FakeTelegramGateway
-import ru.aigram.domain.ChatSummary
-import ru.aigram.domain.TelegramStatus
+import ru.aigram.domain.chat.ChatSummary
+import ru.aigram.domain.telegram.TelegramStatus
 import ru.aigram.telegram.TelegramGateway
 
 class ProactiveTelegramGateway(val delegate: FakeTelegramGateway = FakeTelegramGateway()) :

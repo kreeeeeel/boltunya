@@ -2,8 +2,8 @@ package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
 import org.junit.jupiter.api.Test
-import ru.aigram.domain.OutgoingMedia
-import ru.aigram.domain.OutgoingMediaKind
+import ru.aigram.domain.media.OutgoingMedia
+import ru.aigram.domain.media.OutgoingMediaKind
 import ru.aigram.exception.impl.InvalidUploadException
 import java.nio.file.Path
 import kotlin.test.assertEquals

@@ -1,12 +1,11 @@
 package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
-import jakarta.inject.Inject
 import org.springframework.stereotype.Component
-import ru.aigram.domain.CacheStatistics
+import ru.aigram.domain.system.CacheStatistics
 
 @Component
-class TelegramCacheStorage @Inject constructor(
+class TelegramCacheStorage(
     private val client: StorageClient,
     private val media: TelegramMediaStore,
     private val prefetch: MediaPrefetcher,
@@ -19,7 +18,9 @@ class TelegramCacheStorage @Inject constructor(
         val types = current.byChat.orEmpty().flatMap {
             it.byFileType.orEmpty().toList()
         }.map { it.fileType }.distinctBy { it.constructor }.toTypedArray()
-        if (types.isEmpty()) return map(current)
+        if (types.isEmpty()) {
+            return map(current)
+        }
         val result = client.execute(TdApi.OptimizeStorage(0, 0, 0, 0, types, longArrayOf(), longArrayOf(), false, 0))
         media.invalidate()
         return map(result)

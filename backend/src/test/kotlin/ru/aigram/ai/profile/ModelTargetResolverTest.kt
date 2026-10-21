@@ -3,7 +3,11 @@ package ru.aigram.ai.profile
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.aigram.configuration.ApplicationConfiguration
-import ru.aigram.domain.ChatRule
+import ru.aigram.domain.ai.profile.ModelProfileUpdate
+import ru.aigram.domain.ai.profile.ModelProvider
+import ru.aigram.domain.ai.profile.ModelTask
+import ru.aigram.domain.ai.profile.ModelTaskRouting
+import ru.aigram.domain.chat.ChatRule
 import ru.aigram.exception.impl.ModelCapabilityUnavailableException
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.SettingsStore

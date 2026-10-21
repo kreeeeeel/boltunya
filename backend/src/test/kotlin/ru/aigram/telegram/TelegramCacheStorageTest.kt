@@ -34,7 +34,11 @@ class TelegramCacheStorageTest {
         val client =
             StorageClient { request ->
                 requests.add(request)
-                if (request is TdApi.OptimizeStorage)TdApi.StorageStatistics(0, 0, emptyArray()) else current
+                if (request is TdApi.OptimizeStorage) {
+                    TdApi.StorageStatistics(0, 0, emptyArray())
+                } else {
+                    current
+                }
             }
         val settings = Files.writeString(directory.resolve("settings.json"), "{}")
         val retained = Files.writeString(directory.resolve("saved-history.json"), "original text")

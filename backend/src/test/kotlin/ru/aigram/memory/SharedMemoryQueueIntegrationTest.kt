@@ -1,14 +1,14 @@
 package ru.aigram.memory
 
-import jakarta.inject.Provider
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.aigram.ai.ModelInference
 import ru.aigram.automation.ReplyCoordinator
-import ru.aigram.domain.ActivityKind
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.ReplyResult
+import ru.aigram.configuration.testBeanProvider
+import ru.aigram.domain.ai.ReplyResult
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.events.ActivityKind
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.SettingsStore
@@ -48,7 +48,7 @@ class SharedMemoryQueueIntegrationTest {
             MemoryModelServer().use { server ->
                 MemoryCoordinator(
                     store, settings, telegram, server.start().runtime, processor, ModelInference(), Clock.systemUTC(),
-                    automated, Provider { queue },
+                    automated, testBeanProvider { queue },
                 ).use { memory ->
                     memory.refresh("42", immediate = true)
                     await { queue.activities().any { it.kind == ActivityKind.MEMORY } }
@@ -95,7 +95,7 @@ class SharedMemoryQueueIntegrationTest {
             MemoryModelServer().use { server ->
                 MemoryCoordinator(
                     store, settings, telegram, server.start().runtime, processor, ModelInference(), Clock.systemUTC(),
-                    automated, Provider { queue },
+                    automated, testBeanProvider { queue },
                 ).use { memory ->
                     memory.refresh("42", immediate = true)
                     await { queue.activities().any { it.kind == ActivityKind.MEMORY } }

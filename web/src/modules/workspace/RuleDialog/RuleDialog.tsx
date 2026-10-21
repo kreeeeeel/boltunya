@@ -15,10 +15,9 @@ import {
 import {Sparkles} from '@gravity-ui/icons';
 import {useTranslations} from 'next-intl';
 import {useState} from 'react';
-
 import type {RuleDialogProps} from '@/modules/workspace/RuleDialog/RuleDialog.types';
 import styles from '@/modules/workspace/RuleDialog/RuleDialog.module.css';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
+import {api, errorMessage} from '@/shared/api/client';
 import type {Reply, ChatRule} from '@/shared/api/client';
 import {ReplySkeleton} from '@/shared/ui/ReplySkeleton/ReplySkeleton';
 import {communicationStyles} from '@/modules/workspace/model/communicationStyles';
@@ -30,7 +29,6 @@ import {normalizeCommunicationRule} from '@/modules/workspace/model/normalizeCom
 import {useModelProfiles} from '@/modules/settings/model/useModelProfiles';
 import {PromptBudgetNotice} from '@/modules/settings/PromptBudgetNotice/PromptBudgetNotice';
 import {ProactiveInterval} from '@/modules/settings/ProactiveInterval/ProactiveInterval';
-
 export function RuleDialog({
     chat,
     engine,
@@ -55,7 +53,6 @@ export function RuleDialog({
     const [busy, setBusy] = useState('');
     const [error, setError] = useState('');
     const feedback = useSaveFeedback(rule);
-
     async function save() {
         setBusy('save');
         setError('');
@@ -69,17 +66,14 @@ export function RuleDialog({
             setBusy('');
         }
     }
-
     async function preview() {
         setBusy('test');
         setError('');
         try {
             setResult(
-                dataOrThrow(
-                    await api.POST('/api/preview', {
-                        body: {text: test || t('testPlaceholder'), rule, chatId: chat.id},
-                    }),
-                ),
+                await api.models.preview({
+                    preview: {text: test || t('testPlaceholder'), rule, chatId: chat.id},
+                }),
             );
         } catch (cause) {
             setError(errorMessage(cause));
@@ -87,7 +81,6 @@ export function RuleDialog({
             setBusy('');
         }
     }
-
     return (
         <Dialog
             modalClassName={styles.modal}

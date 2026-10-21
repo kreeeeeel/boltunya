@@ -2,26 +2,22 @@ import {ArrowRotateRight, CircleExclamation, TrashBin} from '@gravity-ui/icons';
 import {Box, Button, Flex, Icon, Label, Skeleton, Text} from '@gravity-ui/uikit';
 import {useLocale, useTranslations} from 'next-intl';
 import {useCallback, useEffect, useState} from 'react';
-
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
-import type {components} from '@/shared/api/schema';
+import {api, errorMessage} from '@/shared/api/client';
+import type * as Contract from '@aigram/api-client';
 import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
 import {ErrorDetailsDialog} from '@/modules/diagnostics/ErrorDetailsDialog/ErrorDetailsDialog';
 import styles from '@/modules/diagnostics/ErrorsPanel/ErrorsPanel.module.css';
-
 export function ErrorsPanel() {
     const t = useTranslations('diagnostics');
     const locale = useLocale();
-    const [entries, setEntries] = useState<components['schemas']['DiagnosticEntry'][]>();
-    const [selected, setSelected] = useState<components['schemas']['DiagnosticEntry']>();
+    const [entries, setEntries] = useState<Contract.DiagnosticEntry[]>();
+    const [selected, setSelected] = useState<Contract.DiagnosticEntry>();
     const [error, setError] = useState('');
     const [busy, setBusy] = useState(false);
-
     const refresh = useCallback(async () => {
-        const value = dataOrThrow(await api.GET('/api/diagnostics/errors'));
+        const value = await api.system.diagnosticErrors();
         return value.errors;
     }, []);
-
     useEffect(() => {
         let active = true;
         let timeout: ReturnType<typeof setTimeout>;
@@ -48,13 +44,12 @@ export function ErrorsPanel() {
             clearTimeout(timeout);
         };
     }, [refresh]);
-
     async function act(clear: boolean) {
         setBusy(true);
         setError('');
         try {
             if (clear) {
-                dataOrThrow(await api.DELETE('/api/diagnostics/errors'));
+                await api.system.clearDiagnosticErrors();
             }
             setEntries(await refresh());
         } catch (cause) {
@@ -63,7 +58,6 @@ export function ErrorsPanel() {
             setBusy(false);
         }
     }
-
     return (
         <ScrollArea className={styles.root}>
             <Box className={styles.content}>

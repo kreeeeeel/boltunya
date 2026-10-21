@@ -1,7 +1,6 @@
 package ru.aigram.application
 
 import org.springframework.stereotype.Component
-import ru.aigram.http.ExitAction
 
 private const val RESPONSE_FLUSH_DELAY_MS = 300L
 

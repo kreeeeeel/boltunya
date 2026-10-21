@@ -2,8 +2,8 @@ package ru.aigram.automation
 
 import org.junit.jupiter.api.Test
 import ru.aigram.automation.activity.ActivityLog
-import ru.aigram.automation.activity.ActivityStatus
-import ru.aigram.domain.ActivityEntry
+import ru.aigram.domain.events.ActivityEntry
+import ru.aigram.domain.events.ActivityStatus
 import java.util.stream.IntStream
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

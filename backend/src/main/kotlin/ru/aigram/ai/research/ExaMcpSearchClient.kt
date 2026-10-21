@@ -3,6 +3,9 @@ package ru.aigram.ai.research
 import io.modelcontextprotocol.client.McpClient
 import io.modelcontextprotocol.client.transport.HttpClientStreamableHttpTransport
 import io.modelcontextprotocol.spec.McpSchema
+import ru.aigram.domain.ai.research.ResearchSource
+import ru.aigram.domain.ai.research.SearchConnection
+import ru.aigram.domain.ai.research.SearchConnectionState
 import ru.aigram.exception.IntegrationException
 import ru.aigram.exception.impl.SearchRateLimitedException
 import ru.aigram.exception.impl.WebSearchUnavailableException
@@ -39,7 +42,9 @@ class ExaMcpSearchClient(
         try {
             val request = HttpRequest.newBuilder().timeout(REQUEST_TIMEOUT)
             val key = credentials.load()
-            if (key.isNotEmpty()) request.header("x-api-key", key)
+            if (key.isNotEmpty()) {
+                request.header("x-api-key", key)
+            }
             val transport = HttpClientStreamableHttpTransport.builder(origin)
                 .endpoint(endpoint).connectTimeout(CONNECT_TIMEOUT).requestBuilder(request)
                 .clientBuilder(HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER))
@@ -51,13 +56,19 @@ class ExaMcpSearchClient(
                 val call = McpSchema.CallToolRequest.builder(SEARCH_TOOL)
                     .arguments(mapOf("query" to query, "numResults" to RESULT_COUNT)).build()
                 val result = it.callTool(call)
-                if (result.meta()?.get("ai.exa/rateLimited") == true) throw SearchRateLimitedException()
-                if (result.isError() == true) throw WebSearchUnavailableException()
+                if (result.meta()?.get("ai.exa/rateLimited") == true) {
+                    throw SearchRateLimitedException()
+                }
+                if (result.isError() == true) {
+                    throw WebSearchUnavailableException()
+                }
                 val text = result.content().filterIsInstance<McpSchema.TextContent>().joinToString("\n") { item ->
                     item.text()
                 }
                 val sources = parser.parse(text)
-                if (sources.isEmpty()) throw WebSearchUnavailableException()
+                if (sources.isEmpty()) {
+                    throw WebSearchUnavailableException()
+                }
                 state = SearchConnectionState.READY
                 return sources
             }

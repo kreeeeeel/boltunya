@@ -1,8 +1,8 @@
 import {Box, Dialog, Flex, Label, RadioGroup, Skeleton, Text} from '@gravity-ui/uikit';
 import {useEffect, useState} from 'react';
 import {useLocale, useTranslations} from 'next-intl';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
-import type {components} from '@/shared/api/schema';
+import {api, errorMessage} from '@/shared/api/client';
+import type * as Contract from '@aigram/api-client';
 import {SaveDialogFooter} from '@/shared/ui/SaveDialogFooter/SaveDialogFooter';
 import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
 import styles from '@/modules/activity/ParallelSettingsDialog/ParallelSettingsDialog.module.css';
@@ -23,16 +23,18 @@ export function ParallelSettingsDialog({
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [warning, setWarning] = useState('');
-    const [sample, setSample] = useState<components['schemas']['MetricSample'] | null>(null);
+    const [sample, setSample] = useState<Contract.MetricSample | null>(null);
     const [metricsLoading, setMetricsLoading] = useState(true);
     const [metricsError, setMetricsError] = useState(false);
     const feedback = useSaveFeedback(count);
     useEffect(() => {
         const controller = new AbortController();
-        void api
-            .GET('/api/metrics', {signal: controller.signal})
+        void api.system
+            .getMetrics({
+                signal: controller.signal,
+            })
             .then((result) => {
-                setSample(dataOrThrow(result).at(-1) ?? null);
+                setSample(result.at(-1) ?? null);
             })
             .catch(() => {
                 if (!controller.signal.aborted) {
@@ -52,7 +54,9 @@ export function ParallelSettingsDialog({
         setWarning('');
         feedback.clearSaved();
         try {
-            dataOrThrow(await api.PATCH('/api/settings', {body: {maxParallelTasks: count}}));
+            await api.settings.settings({
+                settingsUpdate: {maxParallelTasks: count},
+            });
             feedback.markSaved();
             void onRefresh().catch(() => setWarning(common('settingsCenter.refreshWarning')));
         } catch (cause) {

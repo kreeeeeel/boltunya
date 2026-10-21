@@ -2,11 +2,12 @@ package ru.aigram.configuration
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import org.springframework.beans.factory.BeanCreationException
 import org.springframework.beans.factory.config.BeanDefinitionCustomizer
 import org.springframework.boot.Banner
 import org.springframework.boot.WebApplicationType
 import org.springframework.boot.builder.SpringApplicationBuilder
+import org.springframework.boot.web.server.AbstractConfigurableWebServerFactory
+import org.springframework.boot.web.server.servlet.context.ServletWebServerApplicationContext
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.support.GenericApplicationContext
@@ -16,16 +17,16 @@ import ru.aigram.application.ApplicationRuntime
 import ru.aigram.automation.MemoryWorkQueue
 import ru.aigram.automation.PersonalReplyGenerator
 import ru.aigram.automation.ReplyCoordinator
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.ReplyResult
+import ru.aigram.domain.ai.ReplyResult
+import ru.aigram.domain.chat.ChatRule
 import ru.aigram.exception.impl.ModelNotReadyForAutomationException
 import ru.aigram.exception.impl.ReplyCancelledException
-import ru.aigram.http.LocalWebServer
 import ru.aigram.memory.MemorySummarizer
 import ru.aigram.memory.OllamaMemorySummarizer
 import ru.aigram.memory.OwnerMemorySummarizer
 import ru.aigram.monitoring.MonitoringService
 import ru.aigram.resources.ResourceCatalog
+import ru.aigram.server.LocalApiServer
 import ru.aigram.storage.SettingsStore
 import ru.aigram.telegram.TdLightGateway
 import ru.aigram.telegram.TelegramGateway
@@ -49,6 +50,24 @@ import kotlin.test.assertTrue
 class SpringApplicationContextTest {
     @TempDir
     lateinit var directory: Path
+
+    @Test
+    fun `command line server properties cannot change the local API origin or context path`() {
+        DiNetworkProbe().start().use { network ->
+            builder(ApplicationConfiguration(directory, false, network.url))
+                .run("--server.address=127.0.0.2", "--server.port=1", "--server.servlet.context-path=/unexpected")
+                .use { application ->
+                    val factory = application.getBean(AbstractConfigurableWebServerFactory::class.java)
+                    val endpoint = URI.create(application.getBean(LocalApiServer::class.java).start())
+                    assertEquals("127.0.0.1", factory.address?.hostAddress)
+                    assertEquals(0, factory.port)
+                    assertEquals("", (application as ServletWebServerApplicationContext).servletContext?.contextPath)
+                    assertEquals("127.0.0.1", endpoint.host)
+                    assertTrue(endpoint.port > 0)
+                    assertEquals(0, network.requests.get())
+                }
+        }
+    }
 
     @Test
     fun `both regular and Windows launches honor automatic assistant startup`() {
@@ -104,8 +123,8 @@ class SpringApplicationContextTest {
                 assertSame(summarizer, application.getBean(MemorySummarizer::class.java))
                 assertSame(summarizer, application.getBean(OwnerMemorySummarizer::class.java))
                 assertSame(
-                    application.getBean(LocalWebServer::class.java),
-                    application.getBean(LocalWebServer::class.java),
+                    application.getBean(LocalApiServer::class.java),
+                    application.getBean(LocalApiServer::class.java),
                 )
                 assertSame(
                     application.getBean(PersonalReplyGenerator::class.java),
@@ -169,13 +188,13 @@ class SpringApplicationContextTest {
         DiNetworkProbe().start().use { network ->
             val existingThreads = serviceThreads().stream().map { it.threadId() }.collect(Collectors.toSet())
             val createdContext = AtomicReference<ConfigurableApplicationContext>()
-            val createdServer = AtomicReference<LocalWebServer>()
+            val createdServer = AtomicReference<LocalApiServer>()
             val createdQueue = AtomicReference<ReplyCoordinator>()
             val ownedThreads = AtomicReference<List<Thread>>(emptyList())
             val listener = AtomicReference("")
             val runtimeAbsent = AtomicBoolean()
             try {
-                val failure = assertFailsWith<BeanCreationException> {
+                val failure = assertFailsWith<RuntimeException> {
                     builder(ApplicationConfiguration(directory, false, network.url))
                         .initializers({ application ->
                             createdContext.set(application)
@@ -184,26 +203,37 @@ class SpringApplicationContextTest {
                             }
                             (application as GenericApplicationContext).registerBean(
                                 "syntheticBootstrapFailure",
-                                String::class.java,
-                                Supplier<String> {
-                                    runtimeAbsent.set(!application.beanFactory.containsSingleton("applicationRuntime"))
-                                    val server = application.getBean(LocalWebServer::class.java)
-                                    createdServer.set(server)
-                                    createdQueue.set(application.getBean(ReplyCoordinator::class.java))
-                                    listener.set(server.start())
-                                    ownedThreads.set(
-                                        serviceThreads().stream().filter { it.threadId() !in existingThreads }.toList(),
-                                    )
-                                    throw IllegalStateException("Synthetic failure after queue and HTTP initialization")
+                                FailedRefreshListener::class.java,
+                                Supplier {
+                                    FailedRefreshListener { ready ->
+                                        runtimeAbsent.set(!ready.beanFactory.containsSingleton("applicationRuntime"))
+                                        val server = ready.getBean(LocalApiServer::class.java)
+                                        createdServer.set(server)
+                                        createdQueue.set(ready.getBean(ReplyCoordinator::class.java))
+                                        listener.set(server.start())
+                                        ownedThreads.set(
+                                            serviceThreads().stream().filter {
+                                                it.threadId() !in existingThreads
+                                            }.toList(),
+                                        )
+                                        throw IllegalStateException(
+                                            "Synthetic failure after queue and HTTP initialization",
+                                        )
+                                    }
                                 },
                                 BeanDefinitionCustomizer {
-                                    it.setDependsOn("replyCoordinator", "localWebServer")
+                                    it.setDependsOn("replyCoordinator", "localApiServer")
                                 },
                             )
                         })
                         .run()
                 }
-                assertEquals("syntheticBootstrapFailure", failure.beanName)
+                assertTrue(
+                    generateSequence<Throwable>(failure) { it.cause }.any {
+                        it.message == "Synthetic failure after queue and HTTP initialization"
+                    },
+                    "The failure must occur after the real servlet HTTP listener has started",
+                )
                 assertTrue(runtimeAbsent.get(), "ApplicationRuntime must not mask partial refresh cleanup")
                 assertTrue(ownedThreads.get().isNotEmpty())
                 assertTrue(
@@ -235,7 +265,7 @@ class SpringApplicationContextTest {
     }
 
     @Test
-    fun `Jakarta Provider resolves a lazy dependency only when requested and preserves singleton identity`() {
+    fun `Spring ObjectProvider resolves a lazy dependency only when requested and preserves singleton identity`() {
         AnnotationConfigApplicationContext().use { application ->
             application.registerBean(
                 "lazyResources",
@@ -246,9 +276,9 @@ class SpringApplicationContextTest {
             application.refresh()
             val probe = application.getBean(LazyProviderProbe::class.java)
             assertFalse(application.beanFactory.containsSingleton("lazyResources"))
-            val resources = probe.resources.get()
+            val resources = probe.resources.getObject()
             assertTrue(application.beanFactory.containsSingleton("lazyResources"))
-            assertSame(resources, probe.resources.get())
+            assertSame(resources, probe.resources.getObject())
             assertSame(resources, application.getBean(ResourceCatalog::class.java))
         }
     }
@@ -258,7 +288,8 @@ class SpringApplicationContextTest {
 
     private fun builder(configuration: ApplicationConfiguration): SpringApplicationBuilder =
         SpringApplicationBuilder(AigramApplication::class.java)
-            .web(WebApplicationType.NONE)
+            .web(WebApplicationType.SERVLET)
+            .properties("server.address=127.0.0.1", "server.port=0", "spring.jmx.enabled=false")
             .bannerMode(Banner.Mode.OFF)
             .logStartupInfo(false)
             .registerShutdownHook(false)

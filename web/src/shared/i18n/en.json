@@ -904,7 +904,9 @@
     },
     "draftQueue": {
         "cancelled": "Reply preparation was cancelled.",
-        "failed": "Could not prepare a reply."
+        "failed": "Could not prepare a reply.",
+        "cancelledDescription": "You can prepare the reply again or write it yourself.",
+        "failedDescription": "Try preparing the reply again or choose another model."
     },
     "chatUi": {
         "photos": "Photos",
@@ -952,5 +954,8 @@
         "failed": "Could not delete the message",
         "refreshFailed": "The message was deleted, but the chat could not be refreshed. Close this window and refresh the chat.",
         "completed": "Message deleted"
-    }
+    },
+    "restartEngine": "Restart Ollama",
+    "engineRestartExternal": "Restart the external Ollama server manually.",
+    "engineErrorTitle": "Ollama error"
 }

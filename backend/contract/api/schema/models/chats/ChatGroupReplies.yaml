@@ -5,3 +5,4 @@ ChatGroupReplies:
         - disabled
         - mentions
         - all
+    default: inherit

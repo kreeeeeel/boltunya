@@ -9,7 +9,9 @@ import org.springframework.ai.chat.messages.Message
 import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
 import ru.aigram.ai.MessageContextFormatter
-import ru.aigram.domain.ChatMessage
+import ru.aigram.domain.ai.research.RecentResearchPlan
+import ru.aigram.domain.ai.research.ResearchPlan
+import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.exception.IntegrationException
 import ru.aigram.exception.impl.ResearchPlanningFailedException
 import ru.aigram.resources.ResourceCatalog
@@ -34,15 +36,29 @@ class ResearchPlanner(
     private val recent = ConcurrentHashMap<String, RecentResearchPlan>()
 
     fun remember(history: List<ChatMessage>, plan: ResearchPlan) {
-        val latest = history.lastOrNull { !it.outgoing } ?: return
-        if (recent.size >= MAX_RESEARCH_TOPICS) recent.clear()
+        val latest = history.lastOrNull { !it.outgoing }
+
+        if (latest == null) {
+            return
+        }
+
+        if (recent.size >= MAX_RESEARCH_TOPICS) {
+            recent.clear()
+        }
         recent[latest.chatId] = RecentResearchPlan(latest.id, plan, clock.instant())
     }
 
     private fun previous(history: List<ChatMessage>): ResearchPlan? {
         val incoming = history.filterNot { it.outgoing }.takeLast(2)
-        if (incoming.size != 2) return null
-        val saved = recent[incoming.last().chatId] ?: return null
+        if (incoming.size != 2) {
+            return null
+        }
+        val saved = recent[incoming.last().chatId]
+
+        if (saved == null) {
+            return null
+        }
+
         if (saved.messageId != incoming.first().id ||
             clock.instant().epochSecond - saved.recordedAt.epochSecond > RESEARCH_TOPIC_SECONDS
         ) {
@@ -68,9 +84,15 @@ class ResearchPlanner(
 
     fun needed(history: List<ChatMessage>): Boolean {
         val text = history.lastOrNull { !it.outgoing && it.text.isNotBlank() }?.text.orEmpty().trim()
-        if (text.isBlank()) return false
-        if (terms.only("small-talk", text)) return false
-        if (terms.contains("web-search", text)) return true
+        if (text.isBlank()) {
+            return false
+        }
+        if (terms.only("small-talk", text)) {
+            return false
+        }
+        if (terms.contains("web-search", text)) {
+            return true
+        }
         return (
             terms.only("research-followup", text) || terms.only("research-reuse", text) ||
                 terms.locationFollowup(text)
@@ -85,7 +107,9 @@ class ResearchPlanner(
     ): ResearchPlan {
         val latest = history.lastOrNull { !it.outgoing }?.text.orEmpty().lowercase()
         val previous = previous(history)
-        if (previous != null && terms.only("research-reuse", latest)) return previous
+        if (previous != null && terms.only("research-reuse", latest)) {
+            return previous
+        }
         if (previous?.kind == "search" && terms.contains("news", previous.query) &&
             terms.locationFollowup(latest)
         ) {
@@ -98,7 +122,11 @@ class ResearchPlanner(
                 }.joinToString(" ")
                 return previous.copy(
                     query = resources.prompt(
-                        if (world) "ru/research/news-world-query" else "ru/research/news-russia-query",
+                        if (world) {
+                            "ru/research/news-world-query"
+                        } else {
+                            "ru/research/news-russia-query"
+                        },
                         mapOf("topic" to topic),
                     ).trim().take(MAX_QUERY_CHARACTERS),
                 )
@@ -135,7 +163,9 @@ class ResearchPlanner(
         } catch (exception: SerializationException) {
             throw ResearchPlanningFailedException(exception)
         }
-        if (plan.kind != "weather") return plan
+        if (plan.kind != "weather") {
+            return plan
+        }
         val day = when {
             terms.contains("day-after", latest) -> 2
             terms.contains("tomorrow", latest) -> 1

@@ -1,16 +1,14 @@
 'use client';
-
 import {Button, Flex, Loader, Text} from '@gravity-ui/uikit';
 import {useSearchParams} from 'next/navigation';
 import {useCallback, useEffect, useState} from 'react';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
+import {api, errorMessage} from '@/shared/api/client';
 import type {Message} from '@/shared/api/client';
 import {desktopBridge} from '@/shared/desktop/bridge';
 import {validMediaAddress} from '@/modules/media/model/gallery';
 import {MediaViewer} from '@/modules/media/MediaViewer/MediaViewer';
 import {useMediaMessages} from '@/modules/media/i18n/messages';
 import styles from '@/modules/media/MediaViewer/MediaViewer.module.css';
-
 export function MediaViewerPage() {
     const params = useSearchParams();
     const chatId = params.get('chatId') ?? '';
@@ -27,18 +25,21 @@ export function MediaViewerPage() {
             window.close();
         }
     }, []);
-
     useEffect(() => {
         if (!validMediaAddress(chatId, messageId)) {
             return;
         }
         const controller = new AbortController();
-        void api
-            .GET('/api/chats/{chatId}/gallery', {
-                params: {path: {chatId}, query: {around: messageId}},
-                signal: controller.signal,
-            })
-            .then(dataOrThrow)
+        void api.chats
+            .chatGallery(
+                {
+                    chatId,
+                    around: messageId,
+                },
+                {
+                    signal: controller.signal,
+                },
+            )
             .then((gallery) => {
                 if (!controller.signal.aborted) {
                     setMessages(gallery.messages);
@@ -51,7 +52,6 @@ export function MediaViewerPage() {
             });
         return () => controller.abort();
     }, [chatId, messageId, retry]);
-
     if (messages) {
         return <MediaViewer key={messageId} messages={messages} initialId={messageId} onClose={close} />;
     }

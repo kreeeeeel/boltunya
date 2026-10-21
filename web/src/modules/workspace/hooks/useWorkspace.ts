@@ -1,12 +1,9 @@
 import {useCallback, useEffect, useState} from 'react';
-
 import {mergeRecentMessages} from '@/modules/workspace/model/mergeMessages';
 import {shareSnapshot} from '@/modules/workspace/model/shareSnapshot';
-
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
+import {api, errorMessage} from '@/shared/api/client';
 import type {AppState, Message} from '@/shared/api/client';
 import {desktopBridge} from '@/shared/desktop/bridge';
-
 export function useWorkspace(chatId: string | null) {
     const [state, setState] = useState<AppState | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -15,10 +12,9 @@ export function useWorkspace(chatId: string | null) {
     if (historyStatus.chatId !== chatId) {
         setHistoryStatus({chatId, resolved: false, error: ''});
     }
-
     const refresh = useCallback(async () => {
         try {
-            const result: AppState = dataOrThrow(await api.GET('/api/state'));
+            const result: AppState = await api.system.state();
             const desktop = desktopBridge();
             if (desktop) {
                 result.window = await desktop.state();
@@ -29,7 +25,6 @@ export function useWorkspace(chatId: string | null) {
             setError(errorMessage(cause));
         }
     }, []);
-
     useEffect(
         () =>
             desktopBridge()?.onState((windowState) => {
@@ -37,7 +32,6 @@ export function useWorkspace(chatId: string | null) {
             }),
         [],
     );
-
     useEffect(() => {
         let active = true;
         let timer: ReturnType<typeof setTimeout>;
@@ -53,7 +47,6 @@ export function useWorkspace(chatId: string | null) {
             clearTimeout(timer);
         };
     }, [refresh]);
-
     useEffect(() => {
         if (!chatId) {
             return;
@@ -62,9 +55,9 @@ export function useWorkspace(chatId: string | null) {
         let timer: ReturnType<typeof setTimeout>;
         async function pollHistory() {
             try {
-                const result = dataOrThrow(
-                    await api.GET('/api/chats/{chatId}/messages', {params: {path: {chatId: chatId ?? ''}}}),
-                );
+                const result = await api.chats.history({
+                    chatId: chatId ?? '',
+                });
                 if (active) {
                     setMessages((previous) => shareSnapshot(previous, mergeRecentMessages(previous, result)));
                     setHistoryStatus({chatId, resolved: true, error: ''});
@@ -85,7 +78,6 @@ export function useWorkspace(chatId: string | null) {
             clearTimeout(timer);
         };
     }, [chatId]);
-
     return {
         state,
         messages,

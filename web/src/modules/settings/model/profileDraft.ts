@@ -3,7 +3,9 @@ import type {
     ModelProfileUpdate,
     ModelProviderPreset,
 } from '@/modules/settings/model/useModelProfiles';
-export function profileDraft(profile: ModelProfile | ModelProviderPreset): ModelProfileUpdate {
+import type {ModelProfileDraft} from '@/modules/settings/model/ModelProfileDraft';
+
+export function profileDraft(profile: ModelProfile | ModelProviderPreset): ModelProfileDraft {
     if ('options' in profile) {
         return {
             name: profile.name,
@@ -20,7 +22,7 @@ export function profileDraft(profile: ModelProfile | ModelProviderPreset): Model
     return {
         name: profile.name,
         provider: profile.provider,
-        preset: profile.id as ModelProfileUpdate['preset'],
+        preset: profile.id as ModelProfileDraft['preset'],
         baseUrl: profile.baseUrl,
         model: profile.model,
         enabled: true,
@@ -29,6 +31,7 @@ export function profileDraft(profile: ModelProfile | ModelProviderPreset): Model
         clearApiKey: false,
     };
 }
+
 export function profilePayload(value: ModelProfileUpdate, key: string): ModelProfileUpdate {
     const draft = {...value};
     delete draft.apiKey;

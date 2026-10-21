@@ -3,9 +3,9 @@ package ru.aigram.ai
 import com.sun.net.httpserver.HttpServer
 import ru.aigram.ai.research.CurrencyRatesClient
 import ru.aigram.ai.research.InternetResearcher
-import ru.aigram.ai.research.ResearchSource
 import ru.aigram.ai.research.SearchProvider
 import ru.aigram.ai.research.WeatherClient
+import ru.aigram.domain.ai.research.ResearchSource
 import java.net.InetSocketAddress
 import java.time.Clock
 import java.time.Instant

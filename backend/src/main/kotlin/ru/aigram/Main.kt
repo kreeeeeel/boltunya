@@ -16,7 +16,7 @@ fun main(args: Array<String>) {
     )
     val configuration = ApplicationConfiguration(directory, args.contains("--startup"))
     val application = SpringApplication(AigramApplication::class.java)
-    application.setWebApplicationType(WebApplicationType.NONE)
+    application.setWebApplicationType(WebApplicationType.SERVLET)
     application.setBannerMode(Banner.Mode.OFF)
     application.setLogStartupInfo(false)
     application.addInitializers({ context ->

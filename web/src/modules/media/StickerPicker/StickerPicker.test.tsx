@@ -5,10 +5,10 @@ import {expect, it, vi} from 'vitest';
 import {StickerPicker} from '@/modules/media/StickerPicker/StickerPicker';
 import ru from '@/shared/i18n/ru.json';
 
-const mocks = vi.hoisted(() => ({GET: vi.fn()}));
+const mocks = vi.hoisted(() => ({stickers: vi.fn(), stickerSet: vi.fn(), media: vi.fn()}));
 vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
-    api: mocks,
+    api: {media: mocks},
 }));
 
 it('ignores a slow prior sticker set after a newer set has been selected', async () => {
@@ -22,25 +22,20 @@ it('ignores a slow prior sticker set after a newer set has been selected', async
         thumbnailFileId: 0,
     };
     const sticker = (id: string, emoji: string) => ({id, emoji, setId: id, media, width: 128, height: 128});
-    const first = Promise.withResolvers<{data: ReturnType<typeof sticker>[]; response: Response}>();
-    mocks.GET.mockImplementation((path: string, options?: {params?: {path?: {id: string}}}) => {
-        if (path === '/api/stickers') {
-            return Promise.resolve({
-                data: {
-                    recent: [],
-                    favorites: [],
-                    sets: [
-                        {id: 'a', title: 'Set A', name: 'a', count: 1},
-                        {id: 'b', title: 'Set B', name: 'b', count: 1},
-                    ],
-                },
-                response: new Response(),
-            });
-        }
-        if (options?.params?.path?.id === 'a') {
+    const first = Promise.withResolvers<ReturnType<typeof sticker>[]>();
+    mocks.stickers.mockResolvedValue({
+        recent: [],
+        favorites: [],
+        sets: [
+            {id: 'a', title: 'Set A', name: 'a', count: 1},
+            {id: 'b', title: 'Set B', name: 'b', count: 1},
+        ],
+    });
+    mocks.stickerSet.mockImplementation(({id}: {id: string}) => {
+        if (id === 'a') {
             return first.promise;
         }
-        return Promise.resolve({data: [sticker('b', 'B sticker')], response: new Response()});
+        return Promise.resolve([sticker('b', 'B sticker')]);
     });
     render(
         <NextIntlClientProvider locale="ru" messages={ru}>
@@ -53,7 +48,7 @@ it('ignores a slow prior sticker set after a newer set has been selected', async
     fireEvent.click(screen.getByRole('tab', {name: 'Set B'}));
     expect(screen.getByRole('tab', {name: 'Set B'})).toHaveAttribute('aria-selected', 'true');
     await screen.findByRole('button', {name: 'B sticker'});
-    await act(async () => first.resolve({data: [sticker('a', 'A sticker')], response: new Response()}));
+    await act(async () => first.resolve([sticker('a', 'A sticker')]));
     await waitFor(() => expect(screen.queryByRole('button', {name: 'A sticker'})).toBeNull());
     expect(screen.getByRole('button', {name: 'B sticker'})).toBeInTheDocument();
 });

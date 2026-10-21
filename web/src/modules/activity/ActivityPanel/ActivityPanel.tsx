@@ -2,18 +2,16 @@ import {CirclePause, CirclePlay, Clock, Sliders, TrashBin} from '@gravity-ui/ico
 import {Box, Button, Flex, Icon, Label, Loader, Text, Tooltip} from '@gravity-ui/uikit';
 import {useTranslations} from 'next-intl';
 import {useState} from 'react';
-
 import {ActivityCard} from '@/modules/activity/ActivityCard/ActivityCard';
 import {ActivityDetailsDialog} from '@/modules/activity/ActivityDetailsDialog/ActivityDetailsDialog';
 import {isActive, mergeActivityEntries, orderActivityEntries} from '@/modules/activity/model/activity';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
+import {api, errorMessage} from '@/shared/api/client';
 import type {Activity, ReplyQueue} from '@/shared/api/client';
 import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
 import styles from '@/modules/activity/ActivityPanel/ActivityPanel.module.css';
 import {ParallelSettingsDialog} from '@/modules/activity/ParallelSettingsDialog/ParallelSettingsDialog';
 import {HistorySettingsDialog} from '@/modules/activity/HistorySettingsDialog/HistorySettingsDialog';
 import {useActivityHistory} from '@/modules/activity/model/useActivityHistory';
-
 export function ActivityPanel({
     entries: currentEntries,
     queue,
@@ -60,8 +58,12 @@ export function ActivityPanel({
             loading={busy === 'enable'}
             disabled={!!busy}
             onClick={() =>
-                void act('enable', async () =>
-                    dataOrThrow(await api.PATCH('/api/settings', {body: {paused: false}})),
+                void act(
+                    'enable',
+                    async () =>
+                        await api.settings.settings({
+                            settingsUpdate: {paused: false},
+                        }),
                 )
             }
         >
@@ -125,12 +127,12 @@ export function ActivityPanel({
                                     view="flat-secondary"
                                     disabled={!!busy}
                                     onClick={() =>
-                                        void act('pause', async () =>
-                                            dataOrThrow(
-                                                await api.PATCH('/api/activity/queue', {
-                                                    body: {paused: !queue?.paused},
+                                        void act(
+                                            'pause',
+                                            async () =>
+                                                await api.activity.pauseReplyQueue({
+                                                    queuePauseRequest: {paused: !queue?.paused},
                                                 }),
-                                            ),
                                         )
                                     }
                                 >
@@ -144,7 +146,7 @@ export function ActivityPanel({
                                         disabled={!!busy || !entries.some((entry) => !isActive(entry))}
                                         onClick={() =>
                                             void act('clear', async () => {
-                                                dataOrThrow(await api.DELETE('/api/activity'));
+                                                await api.activity.clearActivity();
                                                 await history.refresh(true);
                                             })
                                         }
@@ -175,21 +177,21 @@ export function ActivityPanel({
                                     onOpen={() => setSelected(entry.id)}
                                     onRefresh={onRefresh}
                                     onCancel={() =>
-                                        void act(entry.id, async () =>
-                                            dataOrThrow(
-                                                await api.POST('/api/activity/{id}/cancel', {
-                                                    params: {path: {id: entry.id}},
+                                        void act(
+                                            entry.id,
+                                            async () =>
+                                                await api.activity.cancelActivity({
+                                                    id: entry.id,
                                                 }),
-                                            ),
                                         )
                                     }
                                     onPriority={() =>
-                                        void act(entry.id, async () =>
-                                            dataOrThrow(
-                                                await api.POST('/api/activity/{id}/priority', {
-                                                    params: {path: {id: entry.id}},
+                                        void act(
+                                            entry.id,
+                                            async () =>
+                                                await api.activity.prioritizeActivity({
+                                                    id: entry.id,
                                                 }),
-                                            ),
                                         )
                                     }
                                 />

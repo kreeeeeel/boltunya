@@ -2,7 +2,8 @@ package ru.aigram.ai.prompt
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.ai.profile.ResolvedModelTarget
+import ru.aigram.domain.ai.profile.ResolvedModelTarget
+import ru.aigram.domain.ai.prompt.ModelPromptSettings
 import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

@@ -1,9 +1,9 @@
 package ru.aigram.ai.prompt
 
-import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Component
-import ru.aigram.ai.profile.ResolvedModelTarget
+import ru.aigram.domain.ai.profile.ResolvedModelTarget
+import ru.aigram.domain.ai.prompt.ModelPromptSettings
 import ru.aigram.exception.impl.InvalidModelPromptException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -12,7 +12,7 @@ import java.nio.file.StandardCopyOption
 private const val MAX_MODEL_PROMPTS = 200
 
 @Component
-class ModelPromptStore @Inject constructor(directory: Path) {
+class ModelPromptStore(directory: Path) {
     private val file = directory.resolve("models/prompts.json")
     private val json = Json {
         prettyPrint = true
@@ -43,7 +43,9 @@ class ModelPromptStore @Inject constructor(directory: Path) {
     @Synchronized
     fun save(value: ModelPromptSettings): ModelPromptSettings {
         val remaining = entries.filterNot { it.model == value.model && it.profileId == value.profileId }
-        if (remaining.size >= MAX_MODEL_PROMPTS) throw InvalidModelPromptException()
+        if (remaining.size >= MAX_MODEL_PROMPTS) {
+            throw InvalidModelPromptException()
+        }
         val updated = remaining + value
         Files.createDirectories(file.parent)
         val temporary = file.resolveSibling(file.fileName.toString() + ".tmp")

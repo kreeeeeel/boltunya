@@ -1,12 +1,14 @@
 package ru.aigram.ai.profile
 
-import jakarta.inject.Inject
 import org.springframework.ai.chat.messages.Message
 import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import ru.aigram.ai.ModelCatalog
 import ru.aigram.ai.prompt.PromptTokenEstimator
+import ru.aigram.domain.ai.profile.ModelProvider
+import ru.aigram.domain.ai.profile.ResolvedModelTarget
 import ru.aigram.exception.impl.ModelContextLimitException
 import java.util.stream.IntStream
 
@@ -15,7 +17,7 @@ private const val MAX_WINDOW_EXPANSIONS = 24L
 
 /** Keeps system instructions, the latest message and selected images; only older text history may be removed. */
 @Component
-class ProfileContextBudget @Inject constructor(
+class ProfileContextBudget @Autowired constructor(
     private val tokens: PromptTokenEstimator,
     private val catalog: ModelCatalog = ModelCatalog(),
 ) {
@@ -33,7 +35,9 @@ class ProfileContextBudget @Inject constructor(
         messages: List<Message>,
         reservedOutputTokens: Int,
     ): ResolvedModelTarget {
-        if (!target.automaticContext || target.provider != ModelProvider.OLLAMA) return target
+        if (!target.automaticContext || target.provider != ModelProvider.OLLAMA) {
+            return target
+        }
         val required = messages.stream().mapToLong { tokens.estimate(it, target.model, target.tokenEncoding).toLong() }
             .sum() + reservedOutputTokens
         val ceiling = maximum(target)
@@ -48,7 +52,11 @@ class ProfileContextBudget @Inject constructor(
 
     fun reserve(target: ResolvedModelTarget, outputTokens: Int): Int = minOf(
         target.options.maxOutputTokens,
-        outputTokens + if (target.capabilities.reasoning) target.options.reasoningTokens else 0,
+        outputTokens + if (target.capabilities.reasoning) {
+            target.options.reasoningTokens
+        } else {
+            0
+        },
     )
 
     fun select(
@@ -57,7 +65,9 @@ class ProfileContextBudget @Inject constructor(
         outputTokens: Int,
         reservedOutputTokens: Int = reserve(target, outputTokens),
     ): List<Message> {
-        if (messages.isEmpty()) return messages
+        if (messages.isEmpty()) {
+            return messages
+        }
         val costs = messages.map { tokens.estimate(it, target.model, target.tokenEncoding) }
         val last = messages.indexOfLast { it !is SystemMessage }
         fun mandatory(index: Int): Boolean = messages[index] is SystemMessage || index == last ||
@@ -69,10 +79,16 @@ class ProfileContextBudget @Inject constructor(
         if (available < 0) {
             throw ModelContextLimitException(required, target.options.contextWindow)
         }
-        if (last < 0) return messages
+        if (last < 0) {
+            return messages
+        }
         val suffix = IntArray(messages.size + 1)
         IntStream.range(0, messages.size).map { messages.lastIndex - it }.forEach { index ->
-            suffix[index] = suffix[index + 1] + if (mandatory(index)) 0 else costs[index]
+            suffix[index] = suffix[index + 1] + if (mandatory(index)) {
+                0
+            } else {
+                costs[index]
+            }
         }
         val first = IntStream.rangeClosed(0, last).filter { suffix[it] <= available }.findFirst().orElse(last)
         return IntStream.range(0, messages.size).filter { it >= first || mandatory(it) }

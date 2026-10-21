@@ -1,0 +1,6 @@
+package ru.aigram.domain.events
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class ActivityMessage(val role: String, val text: String)

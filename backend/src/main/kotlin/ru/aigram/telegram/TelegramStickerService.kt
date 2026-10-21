@@ -1,11 +1,10 @@
 package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
-import jakarta.inject.Inject
-import jakarta.inject.Provider
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.stereotype.Component
-import ru.aigram.domain.StickerCatalog
-import ru.aigram.domain.StickerItem
+import ru.aigram.domain.media.StickerCatalog
+import ru.aigram.domain.media.StickerItem
 import ru.aigram.exception.impl.InvalidMediaIdentifierException
 import ru.aigram.exception.impl.TelegramSendFailedException
 import ru.aigram.exception.impl.UnknownMediaException
@@ -19,8 +18,8 @@ private const val STICKER_TIMEOUT_SECONDS = 15L
 private const val STICKER_CACHE_MS = 30_000L
 
 @Component
-class TelegramStickerService @Inject constructor(
-    private val gateway: Provider<TdLightGateway>,
+class TelegramStickerService(
+    private val gateway: ObjectProvider<TdLightGateway>,
     private val registry: TelegramStickerRegistry,
     private val clock: Clock,
 ) {
@@ -33,7 +32,9 @@ class TelegramStickerService @Inject constructor(
         val service = activate()
         val now = clock.millis()
         val previous = cached
-        if (previous != null && now - refreshedAt < STICKER_CACHE_MS) return previous
+        if (previous != null && now - refreshedAt < STICKER_CACHE_MS) {
+            return previous
+        }
         val client = service.readyClient()
         return request {
             val recent = client.send(TdApi.GetRecentStickers(false))
@@ -54,10 +55,17 @@ class TelegramStickerService @Inject constructor(
     @Synchronized
     fun set(id: String): List<StickerItem> {
         val service = activate()
-        val number = id.toLongOrNull()?.takeIf { it > 0 } ?: throw InvalidMediaIdentifierException()
+        val number = id.toLongOrNull()?.takeIf { it > 0 }
+
+        if (number == null) {
+            throw InvalidMediaIdentifierException()
+        }
+
         if (!registry.allowsSet(number)) {
             catalog()
-            if (!registry.allowsSet(number)) throw UnknownMediaException()
+            if (!registry.allowsSet(number)) {
+                throw UnknownMediaException()
+            }
         }
         return request {
             items(
@@ -80,14 +88,21 @@ class TelegramStickerService @Inject constructor(
         val input = TdApi.SendMessage().apply {
             this.chatId = service.parseChatId(chatId)
             if (replyToId.isNotEmpty()) {
+                val replyId = replyToId.toLongOrNull()
+                if (replyId == null || replyId <= 0) {
+                    throw InvalidMediaIdentifierException()
+                }
+
                 replyTo = TdApi.InputMessageReplyToMessage(
-                    replyToId.toLongOrNull()?.takeIf { it > 0 } ?: throw InvalidMediaIdentifierException(),
+                    replyId,
                     null,
                     0,
                     "",
                 )
             }
-            if (topicId != 0) this.topicId = TdApi.MessageTopicForum(topicId)
+            if (topicId != 0) {
+                this.topicId = TdApi.MessageTopicForum(topicId)
+            }
             inputMessageContent = registry.content(stickerId)
         }
         return request {
@@ -96,7 +111,7 @@ class TelegramStickerService @Inject constructor(
     }
 
     private fun activate(): TdLightGateway {
-        val service = gateway.get()
+        val service = gateway.getObject()
         service.readyClient()
         val owner = service.status().userId
         if (ownerId != owner) {

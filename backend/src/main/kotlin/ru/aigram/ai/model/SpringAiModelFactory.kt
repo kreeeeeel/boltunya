@@ -1,6 +1,5 @@
 package ru.aigram.ai.model
 
-import jakarta.inject.Inject
 import org.springframework.ai.chat.model.ChatModel
 import org.springframework.ai.ollama.OllamaChatModel
 import org.springframework.ai.ollama.api.OllamaApi
@@ -13,7 +12,7 @@ import java.net.http.HttpClient
 import java.time.Duration
 
 @Component
-class SpringAiModelFactory @Inject constructor() {
+class SpringAiModelFactory {
     fun create(baseUrl: String, connectTimeoutSeconds: Int = 3): ChatModel {
         val http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(connectTimeoutSeconds.toLong())).build()
         val requestFactory = JdkClientHttpRequestFactory(http)

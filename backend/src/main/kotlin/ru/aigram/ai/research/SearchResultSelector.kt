@@ -1,6 +1,7 @@
 package ru.aigram.ai.research
 
 import kotlinx.serialization.json.Json
+import ru.aigram.domain.ai.research.ResearchSource
 import ru.aigram.resources.ResourceCatalog
 import java.net.URI
 import java.time.Clock
@@ -74,8 +75,16 @@ class SearchResultSelector(
     private fun score(source: ResearchSource, terms: Set<String>): Double {
         val title = tokens(source.title).intersect(terms).size
         val body = tokens(source.text).intersect(terms).size
-        val coverage = if (terms.isEmpty()) 0.0 else body.toDouble() / terms.size
-        val article = if (URI.create(source.url).path.trim('/').isEmpty()) 0.0 else 0.5
+        val coverage = if (terms.isEmpty()) {
+            0.0
+        } else {
+            body.toDouble() / terms.size
+        }
+        val article = if (URI.create(source.url).path.trim('/').isEmpty()) {
+            0.0
+        } else {
+            0.5
+        }
         return title * 3 + body + coverage * 4 + article
     }
 

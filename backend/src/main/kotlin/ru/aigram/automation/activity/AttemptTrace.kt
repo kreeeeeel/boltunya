@@ -1,8 +1,8 @@
 package ru.aigram.automation.activity
 
 import org.springframework.ai.chat.model.ChatResponse
-import ru.aigram.ai.model.ModelCompletion
-import ru.aigram.domain.ActivityAttempt
+import ru.aigram.domain.ai.model.ModelCompletion
+import ru.aigram.domain.events.ActivityAttempt
 
 class AttemptTrace(private val request: ActivityAttempt, private val retainContent: Boolean = true) {
     private val response = StringBuilder()
@@ -12,7 +12,9 @@ class AttemptTrace(private val request: ActivityAttempt, private val retainConte
 
     @Synchronized
     fun append(chunk: ChatResponse) {
-        if (!retainContent) return
+        if (!retainContent) {
+            return
+        }
         response.append(chunk.result?.output?.text.orEmpty())
         thinking.append(chunk.result?.output?.metadata?.get("thinking") as? String ?: "")
         val cumulativeReasoning = chunk.result?.output?.metadata?.get("reasoningContent") as? String
@@ -24,13 +26,19 @@ class AttemptTrace(private val request: ActivityAttempt, private val retainConte
 
     @Synchronized
     fun finish(result: ModelCompletion) {
-        completed = if (retainContent) result else result.copy(text = "", rawText = "", thinking = "")
+        completed = if (retainContent) {
+            result
+        } else {
+            result.copy(text = "", rawText = "", thinking = "")
+        }
         endedAt = System.currentTimeMillis()
     }
 
     @Synchronized
     fun stop(date: Long) {
-        if (endedAt == 0L) endedAt = date
+        if (endedAt == 0L) {
+            endedAt = date
+        }
     }
 
     @Synchronized
@@ -46,7 +54,15 @@ class AttemptTrace(private val request: ActivityAttempt, private val retainConte
             response = result?.rawText ?: response.toString(),
             thinking = result?.thinking ?: thinking.toString(),
             durationMs =
-            result?.durationMs ?: ((if (endedAt > 0) endedAt else System.currentTimeMillis()) - request.startedAt),
+            result?.durationMs ?: (
+                (
+                    if (endedAt > 0) {
+                        endedAt
+                    } else {
+                        System.currentTimeMillis()
+                    }
+                    ) - request.startedAt
+                ),
             inputTokens = result?.inputTokens ?: 0,
             outputTokens = result?.outputTokens ?: 0,
             tokensPerSecond = result?.tokensPerSecond ?: 0.0,

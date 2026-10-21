@@ -4,13 +4,31 @@ import {act, fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {MemoryDialog} from '@/modules/memory/MemoryDialog/MemoryDialog';
 import ru from '@/shared/i18n/ru.json';
-
-const mocks = vi.hoisted(() => ({GET: vi.fn(), PATCH: vi.fn(), POST: vi.fn()}));
+const mocks = vi.hoisted(() => ({
+    getChatMemory: vi.fn(),
+    getGlobalMemory: vi.fn(),
+    updateChatMemory: vi.fn(),
+    updateGlobalMemory: vi.fn(),
+    refreshChatMemory: vi.fn(),
+    refreshChangedMemory: vi.fn(),
+    cancelChatMemoryCollection: vi.fn(),
+    cancelGlobalMemoryCollection: vi.fn(),
+}));
 vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
-    api: mocks,
+    api: {
+        memory: {
+            getChatMemory: mocks.getChatMemory,
+            getGlobalMemory: mocks.getGlobalMemory,
+            updateChatMemory: mocks.updateChatMemory,
+            updateGlobalMemory: mocks.updateGlobalMemory,
+            refreshChatMemory: mocks.refreshChatMemory,
+            refreshChangedMemory: mocks.refreshChangedMemory,
+            cancelChatMemoryCollection: mocks.cancelChatMemoryCollection,
+            cancelGlobalMemoryCollection: mocks.cancelGlobalMemoryCollection,
+        },
+    },
 }));
-
 const document = {
     chatId: '42',
     notes: '# Мои заметки',
@@ -34,16 +52,26 @@ function mount() {
     );
 }
 beforeEach(() => {
-    mocks.GET.mockReset().mockResolvedValue({data: document, response: new Response()});
-    mocks.PATCH.mockReset();
-    mocks.POST.mockReset();
+    mocks.getChatMemory.mockReset().mockResolvedValue(document);
+    mocks.getGlobalMemory.mockReset().mockResolvedValue(document);
+    mocks.updateChatMemory.mockReset();
+    mocks.updateGlobalMemory.mockReset();
+    mocks.refreshChatMemory.mockReset();
+    mocks.refreshChangedMemory.mockReset();
+    mocks.cancelChatMemoryCollection.mockReset();
+    mocks.cancelGlobalMemoryCollection.mockReset();
 });
-
 describe('Memory editor', () => {
     it('edits owner notes with their revision and keeps the generated summary read-only', async () => {
-        mocks.PATCH.mockResolvedValue({
-            data: {...document, notes: 'Не обращаться на вы', revision: 'new-revision'},
-            response: new Response(),
+        mocks.updateChatMemory.mockResolvedValue({
+            ...document,
+            notes: 'Не обращаться на вы',
+            revision: 'new-revision',
+        });
+        mocks.updateGlobalMemory.mockResolvedValue({
+            ...document,
+            notes: 'Не обращаться на вы',
+            revision: 'new-revision',
         });
         mount();
         await screen.findByText(document.summary);
@@ -51,15 +79,14 @@ describe('Memory editor', () => {
         fireEvent.change(input, {target: {value: 'Не обращаться на вы'}});
         fireEvent.click(screen.getByRole('button', {name: ru.memory.save}));
         await waitFor(() =>
-            expect(mocks.PATCH).toHaveBeenCalledWith('/api/memory/{chatId}', {
-                params: {path: {chatId: '42'}},
-                body: {notes: 'Не обращаться на вы', revision: 'revision'},
+            expect(mocks.updateChatMemory).toHaveBeenCalledWith({
+                chatId: '42',
+                memoryNotesUpdate: {notes: 'Не обращаться на вы', revision: 'revision'},
             }),
         );
         expect(screen.getByText(document.summary)).toBeVisible();
         expect(screen.getAllByRole('textbox')).toHaveLength(1);
     });
-
     it('updates a background summary without replacing an unsaved notes draft', async () => {
         vi.useFakeTimers();
         const view = mount();
@@ -69,9 +96,15 @@ describe('Memory editor', () => {
             });
             const input = screen.getByRole('textbox', {name: ru.memory.notes});
             fireEvent.change(input, {target: {value: 'Несохранённая заметка'}});
-            mocks.GET.mockResolvedValue({
-                data: {...document, notes: 'Изменено вне приложения', summary: 'Свежая сводка'},
-                response: new Response(),
+            mocks.getChatMemory.mockResolvedValue({
+                ...document,
+                notes: 'Изменено вне приложения',
+                summary: 'Свежая сводка',
+            });
+            mocks.getGlobalMemory.mockResolvedValue({
+                ...document,
+                notes: 'Изменено вне приложения',
+                summary: 'Свежая сводка',
             });
             await act(async () => {
                 await vi.advanceTimersByTimeAsync(5001);

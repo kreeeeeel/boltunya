@@ -51,6 +51,7 @@ mediaByFileIdDownload:
 uploads:
     post:
         operationId: uploadFile
+        x-spring-consumes-any: true
         tags:
             - media
         responses:
@@ -109,6 +110,10 @@ uploads:
                         type: string
                         format: binary
                 video/mp4:
+                    schema:
+                        type: string
+                        format: binary
+                '*/*':
                     schema:
                         type: string
                         format: binary

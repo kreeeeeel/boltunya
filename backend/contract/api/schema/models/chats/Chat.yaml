@@ -16,6 +16,7 @@ Chat:
             type: string
         date:
             type: integer
+            format: int64
         unread:
             type: integer
         rule:

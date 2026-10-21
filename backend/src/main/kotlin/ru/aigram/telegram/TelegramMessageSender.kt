@@ -2,8 +2,7 @@ package ru.aigram.telegram
 
 import it.tdlight.client.TelegramError
 import it.tdlight.jni.TdApi
-import jakarta.inject.Inject
-import jakarta.inject.Provider
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.stereotype.Component
 import ru.aigram.exception.impl.TelegramRateLimitException
 import ru.aigram.exception.impl.TelegramSendFailedException
@@ -17,13 +16,17 @@ private const val DEFAULT_BACKOFF_SECONDS = 60L
 private const val MAX_BACKOFF_SECONDS = 86400L
 
 @Component
-class TelegramMessageSender @Inject constructor(private val gateway: Provider<TdLightGateway>) {
+class TelegramMessageSender(private val gateway: ObjectProvider<TdLightGateway>) {
     fun send(chatId: String, text: String, replyToId: String, topicId: Int): String {
-        val service = gateway.get()
+        val service = gateway.getObject()
         val request = TdApi.SendMessage().apply {
             this.chatId = service.parseChatId(chatId)
-            if (replyToId.isNotBlank()) replyTo = TdApi.InputMessageReplyToMessage(replyToId.toLong(), null, 0, "")
-            if (topicId != 0) this.topicId = TdApi.MessageTopicForum(topicId)
+            if (replyToId.isNotBlank()) {
+                replyTo = TdApi.InputMessageReplyToMessage(replyToId.toLong(), null, 0, "")
+            }
+            if (topicId != 0) {
+                this.topicId = TdApi.MessageTopicForum(topicId)
+            }
             inputMessageContent = TdApi.InputMessageText().apply { this.text = TdApi.FormattedText(text, emptyArray()) }
         }
         try {
@@ -52,16 +55,26 @@ class TelegramMessageSender @Inject constructor(private val gateway: Provider<Td
             retry >= 0 -> text.substring(retry + "retry after".length).trimStart()
             else -> return null
         }
-        val end = suffix.indexOfFirst { it !in '0'..'9' }.let { if (it < 0) suffix.length else it }
+        val end = suffix.indexOfFirst { it !in '0'..'9' }.let {
+            if (it < 0) {
+                suffix.length
+            } else {
+                it
+            }
+        }
         return suffix.substring(0, end).toLongOrNull()
     }
 
     fun typing(chatId: String, active: Boolean) {
-        val service = gateway.get()
+        val service = gateway.getObject()
         val request = TdApi.SendChatAction().apply {
             this.chatId = service.parseChatId(chatId)
             action =
-                if (active) TdApi.ChatActionTyping() else TdApi.ChatActionCancel()
+                if (active) {
+                    TdApi.ChatActionTyping()
+                } else {
+                    TdApi.ChatActionCancel()
+                }
         }
         service.readyClient().send(request).get(TYPING_TIMEOUT_SECONDS, TimeUnit.SECONDS)
     }

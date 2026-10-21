@@ -1,12 +1,11 @@
 package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
-import jakarta.inject.Inject
 import org.springframework.stereotype.Component
-import ru.aigram.domain.ChatMessage
+import ru.aigram.domain.chat.ChatMessage
 
 @Component
-class TelegramMessageView @Inject constructor(
+class TelegramMessageView(
     private val cache: TelegramCache,
     private val mapper: TelegramMessageMapper,
     private val files: TelegramMediaStore,

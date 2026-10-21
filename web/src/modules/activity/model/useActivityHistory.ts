@@ -1,15 +1,13 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
+import {api, errorMessage} from '@/shared/api/client';
 import type {Activity} from '@/shared/api/client';
-import type {components} from '@/shared/api/schema';
+import type * as Contract from '@aigram/api-client';
 import {mergeActivityEntries, orderActivityEntries} from '@/modules/activity/model/activity';
-
 const PAGE_SIZE = 30;
 const POLL_INTERVAL_MS = 5000;
-
 export function useActivityHistory() {
     const [entries, setEntries] = useState<Activity[]>([]);
-    const [storage, setStorage] = useState<components['schemas']['ActivityHistoryStorage']>();
+    const [storage, setStorage] = useState<Contract.ActivityHistoryStorage>();
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState('');
@@ -32,13 +30,14 @@ export function useActivityHistory() {
             setLoadingMore(true);
         }
         try {
-            const page = dataOrThrow(
-                await api.GET('/api/activity/history', {
-                    params: {
-                        query: {limit: PAGE_SIZE, cursor: more ? (cursor.current ?? undefined) : undefined},
-                    },
+            const page = await api.activity.activityHistory(
+                {
+                    limit: PAGE_SIZE,
+                    cursor: more ? (cursor.current ?? undefined) : undefined,
+                },
+                {
                     signal: controller.signal,
-                }),
+                },
             );
             if (controller.signal.aborted || version !== generation.current) {
                 return;

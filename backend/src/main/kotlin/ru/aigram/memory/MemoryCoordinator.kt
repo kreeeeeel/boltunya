@@ -1,21 +1,27 @@
 package ru.aigram.memory
 
-import jakarta.inject.Inject
-import jakarta.inject.Provider
+import org.springframework.beans.factory.ObjectProvider
 import ru.aigram.ai.ModelInference
 import ru.aigram.ai.OllamaRuntime
-import ru.aigram.ai.profile.ModelProvider
 import ru.aigram.ai.profile.ModelTargetResolver
-import ru.aigram.ai.profile.ModelTask
 import ru.aigram.automation.MemoryQueueTask
 import ru.aigram.automation.MemoryWorkQueue
 import ru.aigram.diagnostics.DiagnosticLog
-import ru.aigram.diagnostics.DiagnosticSource
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.ChatSummary
-import ru.aigram.domain.GroupReplyMode
-import ru.aigram.domain.MemoryCollectionScope
+import ru.aigram.domain.ai.profile.ModelProvider
+import ru.aigram.domain.ai.profile.ModelTask
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.ChatSummary
+import ru.aigram.domain.chat.GroupReplyMode
+import ru.aigram.domain.events.diagnostics.DiagnosticSource
+import ru.aigram.domain.memory.ChatMemoryState
+import ru.aigram.domain.memory.MemoryCollectionProgress
+import ru.aigram.domain.memory.MemoryCollectionRequest
+import ru.aigram.domain.memory.MemoryCollectionScope
+import ru.aigram.domain.memory.MemoryContext
+import ru.aigram.domain.memory.MemoryDocument
+import ru.aigram.domain.memory.MemoryStatus
+import ru.aigram.domain.memory.StoredMemory
 import ru.aigram.exception.IntegrationException
 import ru.aigram.exception.impl.BackgroundInferenceDeferredException
 import ru.aigram.exception.impl.MemoryUpdateFailedException
@@ -41,7 +47,7 @@ private const val CONFIG_REFRESH_SECONDS = 60L
 private const val SHUTDOWN_TIMEOUT_SECONDS = 5L
 private const val NO_PROGRESS_RETRY_MILLIS = 10000L
 
-class MemoryCoordinator @Inject constructor(
+class MemoryCoordinator(
     private val store: MemoryStore,
     private val settings: SettingsStore,
     private val telegram: TelegramGateway,
@@ -50,7 +56,7 @@ class MemoryCoordinator @Inject constructor(
     private val inference: ModelInference,
     private val clock: Clock,
     private val automated: AutomatedReplyStore,
-    private val queueProvider: Provider<MemoryWorkQueue>,
+    private val queueProvider: ObjectProvider<MemoryWorkQueue>,
     private val diagnostics: DiagnosticLog? = null,
     private val targets: ModelTargetResolver? = null,
     private val roster: ParticipantRosterStore? = null,
@@ -62,7 +68,7 @@ class MemoryCoordinator @Inject constructor(
                 true
         }
     }
-    private val queue by lazy { queueProvider.get() }
+    private val queue by lazy { queueProvider.getObject() }
     private val outstanding = AtomicReference("")
     private val completion = AtomicReference<CountDownLatch?>()
 
@@ -92,8 +98,12 @@ class MemoryCoordinator @Inject constructor(
     }
 
     fun observe(message: ChatMessage) {
-        if (!settings.get().memoryEnabled || !settings.rule(message.chatId).useMemory) return
-        if (!attach()) return
+        if (!settings.get().memoryEnabled || !settings.rule(message.chatId).useMemory) {
+            return
+        }
+        if (!attach()) {
+            return
+        }
         val rule = settings.rule(message.chatId)
         if (!collectionAllowed(message.chatId, rule, message.group) ||
             message.outgoing && (message.automated || automated.contains(message.chatId, message.id))
@@ -110,11 +120,22 @@ class MemoryCoordinator @Inject constructor(
     }
 
     fun context(rule: ChatRule, history: List<ChatMessage>): MemoryContext {
-        if (!settings.get().memoryEnabled) return MemoryContext()
-        val chatId = history.lastOrNull()?.chatId ?: return MemoryContext()
-        if (chatId.toLongOrNull() == null) return MemoryContext()
+        if (!settings.get().memoryEnabled) {
+            return MemoryContext()
+        }
+        val chatId = history.lastOrNull()?.chatId
+
+        if (chatId == null) {
+            return MemoryContext()
+        }
+
+        if (chatId.toLongOrNull() == null) {
+            return MemoryContext()
+        }
         return try {
-            if (!attach()) return MemoryContext()
+            if (!attach()) {
+                return MemoryContext()
+            }
             if (collectionAllowed(chatId, rule, history.any { it.group })) {
                 store.observe(
                     chatId,
@@ -132,7 +153,11 @@ class MemoryCoordinator @Inject constructor(
                 roster?.record(attachedAccount, chatId, history)
             }
             val general = store.read("")
-            val chat = if (rule.useMemory) store.read(chatId) else StoredMemory("", "", "", "")
+            val chat = if (rule.useMemory) {
+                store.read(chatId)
+            } else {
+                StoredMemory("", "", "", "")
+            }
             MemoryContext(
                 general.notes.takeIf { store.hasNotes("", it) }.orEmpty(),
                 chat.notes.takeIf { store.hasNotes(chatId, it) }.orEmpty(),
@@ -156,14 +181,20 @@ class MemoryCoordinator @Inject constructor(
 
     @Synchronized
     fun refresh(chatId: String? = null, rebuild: Boolean = false, immediate: Boolean = false) {
-        if (closed || !attach()) return
-        if (immediate) collections.removeIf { !pending(it) && processing != it.chatId }
+        if (closed || !attach()) {
+            return
+        }
+        if (immediate) {
+            collections.removeIf { !pending(it) && processing != it.chatId }
+        }
         if (chatId == null) {
             refreshConfigured()
             val selected = store.states().filter(::automaticallyAllowed).filter {
                 rebuild || immediate || hasWork(it)
             }
-            if (rebuild) store.rebuildOwner()
+            if (rebuild) {
+                store.rebuildOwner()
+            }
             selected.stream().forEach { state ->
                 cancelledUntil.remove(state.chatId)
                 if (rebuild) {
@@ -178,28 +209,42 @@ class MemoryCoordinator @Inject constructor(
                     MemoryCollectionRequest(state.chatId, rebuild, store.state(state.chatId)?.processedMessages ?: 0),
                 )
             }
-            if (immediate && selected.isNotEmpty()) scheduleNext()
+            if (immediate && selected.isNotEmpty()) {
+                scheduleNext()
+            }
         } else {
             cancelledUntil.remove(chatId)
             readDirectory()
-            if (rebuild) store.rebuild(chatId) else store.observe(chatId, manual = true, request = true)
+            if (rebuild) {
+                store.rebuild(chatId)
+            } else {
+                store.observe(chatId, manual = true, request = true)
+            }
             failures.remove(chatId)
             errors.remove(chatId)
             collections.removeIf { it.chatId == chatId }
             collections.add(MemoryCollectionRequest(chatId, rebuild, store.state(chatId)?.processedMessages ?: 0))
-            if (immediate) scheduleNext()
+            if (immediate) {
+                scheduleNext()
+            }
         }
     }
 
     fun pause() {
         val id = outstanding.get()
-        if (id.isNotEmpty()) queue.cancelMemory(id, userInitiated = false)
+        if (id.isNotEmpty()) {
+            queue.cancelMemory(id, userInitiated = false)
+        }
     }
 
     @Synchronized
     fun invalidateContext(chatId: String): Boolean {
-        if (closed || !attach()) return false
-        if (store.state(chatId) == null && store.read(chatId).summary.isBlank()) return false
+        if (closed || !attach()) {
+            return false
+        }
+        if (store.state(chatId) == null && store.read(chatId).summary.isBlank()) {
+            return false
+        }
         cancel(chatId)
         store.rebuildOwner()
         store.rebuild(chatId, manual = false)
@@ -209,7 +254,9 @@ class MemoryCoordinator @Inject constructor(
 
     @Synchronized
     fun cancel(chatId: String) {
-        if (!attach()) return
+        if (!attach()) {
+            return
+        }
         val ids = Stream.concat(
             collections.stream().filter {
                 (chatId.isEmpty() || it.chatId == chatId) &&
@@ -220,24 +267,35 @@ class MemoryCoordinator @Inject constructor(
         ids.stream().forEach(::suspendCollection)
         if (queuedChat in ids) {
             val id = outstanding.get()
-            if (id.isNotEmpty()) queue.cancelMemory(id)
+            if (id.isNotEmpty()) {
+                queue.cancelMemory(id)
+            }
         }
     }
 
     private fun suspended(chatId: String): Boolean = clock.instant().epochSecond < (cancelledUntil[chatId] ?: 0)
 
     private fun pending(request: MemoryCollectionRequest): Boolean {
-        val state = store.state(request.chatId) ?: return false
+        val state = store.state(request.chatId)
+
+        if (state == null) {
+            return false
+        }
+
         return allowed(state) && !suspended(request.chatId) &&
             (state.requested || state.deltaTargetId != 0L || !state.backfillComplete)
     }
 
     private fun collection(chatId: String): MemoryCollectionProgress {
-        if (!settings.get().memoryEnabled) return MemoryCollectionProgress()
+        if (!settings.get().memoryEnabled) {
+            return MemoryCollectionProgress()
+        }
         val requests = collections.toList()
         val queue = requests.filter { pending(it) || processing == it.chatId && !suspended(it.chatId) }
         val selected = queue.filter { chatId.isEmpty() || it.chatId == chatId }
-        if (selected.isEmpty()) return MemoryCollectionProgress()
+        if (selected.isEmpty()) {
+            return MemoryCollectionProgress()
+        }
         val workerPosition = queueMemoryPosition()
         val running = selected.any { it.chatId == processing } && workerPosition == 0
         val status = when {
@@ -276,7 +334,11 @@ class MemoryCoordinator @Inject constructor(
         val status = when {
             !enabled -> MemoryStatus.DISABLED
             chatId.isNotEmpty() && suspended(chatId) ->
-                if (document.summary.isNotBlank()) MemoryStatus.READY else MemoryStatus.IDLE
+                if (document.summary.isNotBlank()) {
+                    MemoryStatus.READY
+                } else {
+                    MemoryStatus.IDLE
+                }
             chatId.isEmpty() && processing.isNotEmpty() && queueMemoryPosition() == 0 -> MemoryStatus.PROCESSING
             chatId.isEmpty() && waitingModel && active.isNotEmpty() -> MemoryStatus.WAITING_MODEL
             chatId.isEmpty() && active.any { !it.backfillComplete || it.dirty || it.requested } ->
@@ -303,10 +365,14 @@ class MemoryCoordinator @Inject constructor(
     }
 
     internal fun tick() {
-        if (closed || !settings.get().memoryEnabled || outstanding.get().isNotEmpty()) return
+        if (closed || !settings.get().memoryEnabled || outstanding.get().isNotEmpty()) {
+            return
+        }
         val now = clock.instant().epochSecond
         try {
-            if (!attach()) return
+            if (!attach()) {
+                return
+            }
             if (startup || now - lastRefresh >= CONFIG_REFRESH_SECONDS) {
                 refreshConfigured()
                 startup = false
@@ -319,7 +385,13 @@ class MemoryCoordinator @Inject constructor(
             val selected = store.states().stream().filter { state ->
                 scheduled(state, now)
             }.sorted(
-                compareBy<ChatMemoryState> { if (it.chatId == priority) 0 else 1 }.thenBy {
+                compareBy<ChatMemoryState> {
+                    if (it.chatId == priority) {
+                        0
+                    } else {
+                        1
+                    }
+                }.thenBy {
                     if (it.requested || it.deltaTargetId != 0L ||
                         it.headId == 0L || it.dirty && now - it.recentUpdatedAt >= interval
                     ) {
@@ -329,7 +401,11 @@ class MemoryCoordinator @Inject constructor(
                     }
                 }.thenBy { it.updatedAt },
             ).findFirst().orElse(null)
-                ?: return
+
+            if (selected == null) {
+                return
+            }
+
             val model = memoryTarget?.model ?: settings.get().defaultModel
             waitingModel = try {
                 if (memoryTarget?.provider == ModelProvider.OPENAI_COMPATIBLE) {
@@ -345,12 +421,16 @@ class MemoryCoordinator @Inject constructor(
             } catch (_: IntegrationException) {
                 true
             }
-            if (waitingModel) return
+            if (waitingModel) {
+                return
+            }
             val explicit = collections.stream().anyMatch { it.chatId == selected.chatId && pending(it) }
             val chat = telegram.chats().stream().filter { it.id == selected.chatId }.findFirst().orElse(null)
             val id = UUID.randomUUID().toString()
             val finished = CountDownLatch(1)
-            if (!outstanding.compareAndSet("", id)) return
+            if (!outstanding.compareAndSet("", id)) {
+                return
+            }
             completion.set(finished)
             queuedChat = selected.chatId
             var automaticStarted = false
@@ -364,17 +444,34 @@ class MemoryCoordinator @Inject constructor(
                     ) {
                         throw ReplyCancelledException()
                     }
-                    var current = store.state(selected.chatId) ?: throw ReplyCancelledException()
+                    val saved = store.state(selected.chatId)
 
-                    fun canContinue(): Boolean = !closed && !Thread.currentThread().isInterrupted &&
-                        !suspended(current.chatId) && settings.get().memoryEnabled && allowed(current) &&
-                        current.accountId == selected.accountId && telegram.status().userId == selected.accountId
+                    if (saved == null) {
+                        throw ReplyCancelledException()
+                    }
 
-                    if (!canContinue() || !hasWork(current)) throw ReplyCancelledException()
+                    var current: ChatMemoryState = saved
+                    fun canContinue(): Boolean {
+                        val snapshot = current
+                        return !closed && !Thread.currentThread().isInterrupted &&
+                            !suspended(snapshot.chatId) && settings.get().memoryEnabled && allowed(snapshot) &&
+                            snapshot.accountId == selected.accountId && telegram.status().userId == selected.accountId
+                    }
+
+                    if (!canContinue() || !hasWork(current)) {
+                        throw ReplyCancelledException()
+                    }
                     if (!explicit && !automaticStarted) {
                         val startedAt = clock.instant().epochSecond
-                        if (!automaticDue(current, startedAt)) throw ReplyCancelledException()
-                        current = store.recordAutomaticAttempt(current, startedAt) ?: throw ReplyCancelledException()
+                        if (!automaticDue(current, startedAt)) {
+                            throw ReplyCancelledException()
+                        }
+                        val attempted = store.recordAutomaticAttempt(current, startedAt)
+                        if (attempted == null) {
+                            throw ReplyCancelledException()
+                        }
+
+                        current = attempted
                         automaticStarted = true
                     }
                     val currentInterval = TimeUnit.HOURS.toSeconds(settings.get().memoryIntervalHours.toLong())
@@ -382,7 +479,9 @@ class MemoryCoordinator @Inject constructor(
                         current.dirty && clock.instant().epochSecond - current.recentUpdatedAt >= currentInterval
 
                     if (!processor.process(current, model, recent, ::canContinue)) {
-                        if (!canContinue()) throw ReplyCancelledException()
+                        if (!canContinue()) {
+                            throw ReplyCancelledException()
+                        }
                         throw BackgroundInferenceDeferredException(NO_PROGRESS_RETRY_MILLIS)
                     }
                 },
@@ -440,7 +539,9 @@ class MemoryCoordinator @Inject constructor(
     }
 
     private fun scheduleNext() = synchronized(executor) {
-        if (!closed) executor.execute { tick() }
+        if (!closed) {
+            executor.execute { tick() }
+        }
     }
 
     private fun suspendCollection(chatId: String) {
@@ -456,7 +557,9 @@ class MemoryCoordinator @Inject constructor(
     @Synchronized
     private fun attach(): Boolean {
         val account = telegram.status()
-        if (account.state != "ready" || account.userId.isEmpty()) return false
+        if (account.state != "ready" || account.userId.isEmpty()) {
+            return false
+        }
         store.activate(account.userId)
         if (attachedAccount != account.userId) {
             attachedAccount = account.userId
@@ -495,7 +598,9 @@ class MemoryCoordinator @Inject constructor(
     }
 
     private fun scheduled(state: ChatMemoryState, now: Long): Boolean {
-        if (!allowed(state) || suspended(state.chatId) || now < (failures[state.chatId] ?: 0)) return false
+        if (!allowed(state) || suspended(state.chatId) || now < (failures[state.chatId] ?: 0)) {
+            return false
+        }
         val explicit = collections.stream().anyMatch { it.chatId == state.chatId && pending(it) }
         return hasWork(state) && (explicit || automaticDue(state, now))
     }
@@ -516,15 +621,22 @@ class MemoryCoordinator @Inject constructor(
                 )
 
     private fun allowed(state: ChatMemoryState): Boolean {
-        if (automaticallyAllowed(state)) return true
+        if (automaticallyAllowed(state)) {
+            return true
+        }
         val explicit = state.manual && collections.stream().anyMatch { it.chatId == state.chatId }
         val requested = explicit && (state.requested || state.deltaTargetId != 0L || !state.backfillComplete)
         return state.chatId in listedChatIds && settings.rule(state.chatId).useMemory && requested
     }
 
-    private fun groupEnabled(rule: ChatRule): Boolean =
-        (if (rule.groupReplies == GroupReplyMode.INHERIT) settings.get().groupReplies else rule.groupReplies) !=
-            GroupReplyMode.DISABLED
+    private fun groupEnabled(rule: ChatRule): Boolean = (
+        if (rule.groupReplies == GroupReplyMode.INHERIT) {
+            settings.get().groupReplies
+        } else {
+            rule.groupReplies
+        }
+        ) !=
+        GroupReplyMode.DISABLED
 
     override fun close() {
         synchronized(executor) {

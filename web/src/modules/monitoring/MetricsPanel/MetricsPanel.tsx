@@ -1,17 +1,14 @@
 'use client';
-
 import {Box, Flex, Label, Skeleton, Text} from '@gravity-ui/uikit';
 import {useEffect, useState} from 'react';
 import {useTranslations} from 'next-intl';
-import type {components} from '@/shared/api/schema';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
+import type * as Contract from '@aigram/api-client';
+import {api, errorMessage} from '@/shared/api/client';
 import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
 import {ResourceChart} from '@/modules/monitoring/ResourceChart/ResourceChart';
 import styles from '@/modules/monitoring/MetricsPanel/MetricsPanel.module.css';
-
 const GIBIBYTE = 1024 ** 3;
-type Sample = components['schemas']['MetricSample'];
-
+type Sample = Contract.MetricSample;
 export function MetricsPanel() {
     const t = useTranslations();
     const [samples, setSamples] = useState<Sample[] | null>(null);
@@ -21,7 +18,7 @@ export function MetricsPanel() {
         let timer: ReturnType<typeof setTimeout>;
         async function poll() {
             try {
-                const result = dataOrThrow(await api.GET('/api/metrics'));
+                const result = await api.system.getMetrics();
                 if (active) {
                     setSamples(result);
                     setError('');

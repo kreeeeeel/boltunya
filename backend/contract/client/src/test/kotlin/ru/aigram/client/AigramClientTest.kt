@@ -1,6 +1,5 @@
 package ru.aigram.client
 
-import jakarta.inject.Provider
 import org.junit.jupiter.api.Test
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import ru.aigram.client.configuration.AigramClientFactory
@@ -48,7 +47,7 @@ class AigramClientTest {
                 """.trimIndent(),
             )
             server.binaryResponse("/api/media/7", bytes)
-            AigramClientFactory().create(server.baseUri, Provider { "synthetic-session" }).use { client ->
+            AigramClientFactory().create(server.baseUri, { "synthetic-session" }).use { client ->
                 val uploaded = assertNotNull(client.media.uploadFile("picture.bin", bytes).block(REQUEST_TIMEOUT))
                 assertEquals("picture.bin", uploaded.fileName)
                 assertEquals(bytes.size.toLong(), uploaded.propertySize)
@@ -73,7 +72,7 @@ class AigramClientTest {
             server.response("/api/diagnostics/errors", """{"errors":[]}""")
             server.response("/api/chats/42/messages/9007199254740993/link", """{"url":"https://t.me/example/7"}""")
             val token = AtomicReference("first-session")
-            AigramClientFactory().create(server.baseUri, Provider { token.get() }).use { client ->
+            AigramClientFactory().create(server.baseUri, { token.get() }).use { client ->
                 val pending = client.system.diagnosticErrors()
                 assertTrue(server.requests.isEmpty(), "Constructing a client or Mono must not send requests")
                 token.set("rotated-session")
@@ -103,15 +102,15 @@ class AigramClientTest {
             server.response(
                 "/api/chats/$chatId/messages",
                 """
-                [{"id":"$messageId","chatId":"$chatId","text":"Привет",
+                [{"id":"$messageId","chatId":"$chatId","text":"РџСЂРёРІРµС‚",
                   "outgoing":false,"date":1,"kind":"text","media":null}]
                 """.trimIndent(),
             )
-            AigramClientFactory().create(server.baseUri, Provider { "synthetic-session" }).use { client ->
+            AigramClientFactory().create(server.baseUri, { "synthetic-session" }).use { client ->
                 val message = assertNotNull(client.chats.history(chatId, messageId).block(REQUEST_TIMEOUT)).single()
                 assertEquals(messageId, message.id)
                 assertEquals(chatId, message.chatId)
-                assertEquals("Привет", message.text)
+                assertEquals("РџСЂРёРІРµС‚", message.text)
                 assertNull(message.media)
                 assertEquals("before=$messageId", server.requests.single().query)
             }
@@ -123,8 +122,8 @@ class AigramClientTest {
         ClientTestServer().start().use { server ->
             server.response("/api/diagnostics/errors", """{"errors":[]}""")
             val first = AtomicReference("owner-one")
-            AigramClientFactory().create(server.baseUri, Provider { first.get() }).use { one ->
-                AigramClientFactory().create(server.baseUri, Provider { "owner-two" }).use { two ->
+            AigramClientFactory().create(server.baseUri, { first.get() }).use { one ->
+                AigramClientFactory().create(server.baseUri, { "owner-two" }).use { two ->
                     one.system.diagnosticErrors().block(REQUEST_TIMEOUT)
                     two.system.diagnosticErrors().block(REQUEST_TIMEOUT)
                     first.set("owner-one-new")
@@ -143,7 +142,7 @@ class AigramClientTest {
         ClientTestServer().start().use { server ->
             val response = """{"code":"SYNTHETIC_FAILURE","message":"Synthetic failure"}"""
             server.response("/api/settings", response, 503)
-            AigramClientFactory().create(server.baseUri, Provider { "synthetic-session" }).use { client ->
+            AigramClientFactory().create(server.baseUri, { "synthetic-session" }).use { client ->
                 val failure = assertFailsWith<WebClientResponseException> {
                     client.settings.settings(SettingsUpdate(globalPrompt = "Synthetic prompt")).block(REQUEST_TIMEOUT)
                 }
@@ -162,7 +161,7 @@ class AigramClientTest {
     fun `an empty required response fails clearly instead of a null assertion`() {
         ClientTestServer().start().use { server ->
             server.response("/api/diagnostics/errors", "")
-            AigramClientFactory().create(server.baseUri, Provider { "synthetic-session" }).use { client ->
+            AigramClientFactory().create(server.baseUri, { "synthetic-session" }).use { client ->
                 val failure = assertFailsWith<IllegalStateException> {
                     client.system.diagnosticErrors().block(REQUEST_TIMEOUT)
                 }
@@ -184,14 +183,14 @@ class AigramClientTest {
             "http://example.test:0",
         ).stream().forEach { value ->
             val failure = assertFailsWith<InvalidClientUriException> {
-                factory.create(URI.create(value), Provider { "token" })
+                factory.create(URI.create(value), { "token" })
             }
             assertEquals(AigramClientErrorCode.INVALID_URI, failure.code)
             assertEquals("An explicit HTTP or HTTPS API origin is required", failure.message)
         }
         ClientTestServer().start().use { server ->
             listOf("", "one; other=two", "one\r\nInjected: value").stream().forEach { token ->
-                factory.create(server.baseUri, Provider { token }).use { client ->
+                factory.create(server.baseUri, { token }).use { client ->
                     val failure = assertFailsWith<InvalidClientSessionException> {
                         client.system.diagnosticErrors().block(REQUEST_TIMEOUT)
                     }

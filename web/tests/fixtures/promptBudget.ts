@@ -1,8 +1,7 @@
-import type {components} from '@/shared/api/schema';
-
+import type * as Contract from '@aigram/api-client';
 export function syntheticPromptBudget(
-    request: components['schemas']['PromptBudgetRequest'] = {},
-): components['schemas']['PromptBudgetReport'] {
+    request: Contract.PromptBudgetRequest = {},
+): Contract.PromptBudgetReport {
     const model = request.rule?.model ?? 'qwen3:1.7b';
     const profileId = request.rule?.modelProfileId ?? '';
     const preferences = request.preferences ?? {
@@ -14,7 +13,7 @@ export function syntheticPromptBudget(
     };
     const contextWindow = preferences.contextWindow ?? 8192;
     const systemTokens =
-        200 + Math.ceil(((request.globalPrompt?.length ?? 0) + preferences.instructions.length) / 4);
+        200 + Math.ceil(((request.globalPrompt?.length ?? 0) + (preferences.instructions?.length ?? 0)) / 4);
     const reservedOutputTokens = 512 + (request.rule?.maxTokens ?? 128);
     const remainingTokens = contextWindow - systemTokens - reservedOutputTokens;
     return {

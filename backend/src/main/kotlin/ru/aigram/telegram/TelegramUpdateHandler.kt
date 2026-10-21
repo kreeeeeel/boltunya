@@ -2,38 +2,41 @@ package ru.aigram.telegram
 
 import it.tdlight.client.SimpleTelegramClientBuilder
 import it.tdlight.jni.TdApi
-import jakarta.inject.Inject
-import jakarta.inject.Provider
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.stereotype.Component
 import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.automation.proactive.ProactiveCoordinator
-import ru.aigram.domain.TelegramStatus
+import ru.aigram.domain.telegram.TelegramStatus
 import ru.aigram.exception.impl.TelegramRequestRejectedException
 import ru.aigram.exception.impl.TelegramUpdateFailedException
 import ru.aigram.memory.MemoryCoordinator
 
 @Component
-class TelegramUpdateHandler @Inject constructor(
+class TelegramUpdateHandler(
     private val cache: TelegramCache,
     private val connection: TelegramConnectionState,
     private val messages: TelegramMessageView,
-    private val replies: Provider<ReplyCoordinator>,
-    private val memory: Provider<MemoryCoordinator>,
+    private val replies: ObjectProvider<ReplyCoordinator>,
+    private val memory: ObjectProvider<MemoryCoordinator>,
     private val history: TelegramHistoryTracker,
     private val media: TelegramMediaStore,
     private val prefetch: MediaPrefetcher,
     private val typing: TelegramTypingStore,
     private val delivery: TelegramMediaDeliveryTracker,
-    private val initiatives: Provider<ProactiveCoordinator>,
+    private val initiatives: ObjectProvider<ProactiveCoordinator>,
 ) {
     fun register(builder: SimpleTelegramClientBuilder, version: Long) {
         builder.addDefaultExceptionHandler {
-            if (connection.version != version) return@addDefaultExceptionHandler
+            if (connection.version != version) {
+                return@addDefaultExceptionHandler
+            }
             connection.status =
                 connection.status.copy(error = TelegramRequestRejectedException().message)
         }
         builder.addUpdateExceptionHandler {
-            if (connection.version != version) return@addUpdateExceptionHandler
+            if (connection.version != version) {
+                return@addUpdateExceptionHandler
+            }
             connection.status =
                 connection.status.copy(error = TelegramUpdateFailedException().message)
         }
@@ -52,20 +55,28 @@ class TelegramUpdateHandler @Inject constructor(
             }
         }
         builder.addUpdateHandler(TdApi.UpdateBasicGroup::class.java) { update ->
-            if (connection.version == version) cache.basicGroups[update.basicGroup.id] = update.basicGroup
+            if (connection.version == version) {
+                cache.basicGroups[update.basicGroup.id] = update.basicGroup
+            }
         }
         builder.addUpdateHandler(TdApi.UpdateSupergroup::class.java) { update ->
-            if (connection.version == version) cache.supergroups[update.supergroup.id] = update.supergroup
+            if (connection.version == version) {
+                cache.supergroups[update.supergroup.id] = update.supergroup
+            }
         }
         builder.addUpdateHandler(TdApi.UpdateChatBackground::class.java) { update ->
-            if (connection.version != version) return@addUpdateHandler
+            if (connection.version != version) {
+                return@addUpdateHandler
+            }
             cache.updateChat(update.chatId) {
                 it.background =
                     update.background
             }
         }
         builder.addUpdateHandler(TdApi.UpdateDefaultBackground::class.java) { update ->
-            if (connection.version != version) return@addUpdateHandler
+            if (connection.version != version) {
+                return@addUpdateHandler
+            }
             if (update.forDarkTheme) {
                 cache.darkBackground = update.background
             } else {
@@ -73,14 +84,18 @@ class TelegramUpdateHandler @Inject constructor(
             }
         }
         builder.addUpdateHandler(TdApi.UpdateChatPhoto::class.java) { update ->
-            if (connection.version != version) return@addUpdateHandler
+            if (connection.version != version) {
+                return@addUpdateHandler
+            }
             cache.updateChat(update.chatId) {
                 it.photo =
                     update.photo
             }
         }
         builder.addUpdateHandler(TdApi.UpdateChatLastMessage::class.java) { update ->
-            if (connection.version != version) return@addUpdateHandler
+            if (connection.version != version) {
+                return@addUpdateHandler
+            }
             cache.updateChat(update.chatId) {
                 it.lastMessage =
                     update.lastMessage
@@ -88,20 +103,28 @@ class TelegramUpdateHandler @Inject constructor(
             }
         }
         builder.addUpdateHandler(TdApi.UpdateChatPosition::class.java) { update ->
-            if (connection.version == version) cache.updatePosition(update.chatId, update.position)
+            if (connection.version == version) {
+                cache.updatePosition(update.chatId, update.position)
+            }
         }
         builder.addUpdateHandler(TdApi.UpdateChatDraftMessage::class.java) { update ->
-            if (connection.version == version) cache.updateChat(update.chatId) { it.positions = update.positions }
+            if (connection.version == version) {
+                cache.updateChat(update.chatId) { it.positions = update.positions }
+            }
         }
         builder.addUpdateHandler(TdApi.UpdateChatReadInbox::class.java) { update ->
-            if (connection.version != version) return@addUpdateHandler
+            if (connection.version != version) {
+                return@addUpdateHandler
+            }
             cache.updateChat(update.chatId) {
                 it.unreadCount =
                     update.unreadCount
             }
         }
         builder.addUpdateHandler(TdApi.UpdateChatReadOutbox::class.java) { update ->
-            if (connection.version != version) return@addUpdateHandler
+            if (connection.version != version) {
+                return@addUpdateHandler
+            }
             cache.updateChat(update.chatId) {
                 it.lastReadOutboxMessageId =
                     update.lastReadOutboxMessageId
@@ -117,15 +140,17 @@ class TelegramUpdateHandler @Inject constructor(
                     System.err.println("Message archive failed: ${exception.javaClass.simpleName}")
                     mapped
                 }
-                if (message.deleted || update.message.date.toLong() < cache.startedAt) return@addUpdateHandler
+                if (message.deleted || update.message.date.toLong() < cache.startedAt) {
+                    return@addUpdateHandler
+                }
                 prefetch.observe(message)
                 try {
-                    memory.get().observe(message)
+                    memory.getObject().observe(message)
                 } catch (exception: Exception) {
                     System.err.println("Memory tracking failed: ${exception.javaClass.simpleName}")
                 }
-                initiatives.get().observe(message)
-                replies.get().onMessage(message)
+                initiatives.getObject().observe(message)
+                replies.getObject().onMessage(message)
             }
         }
         builder.addUpdateHandler(TdApi.UpdateFile::class.java) {
@@ -156,14 +181,20 @@ class TelegramUpdateHandler @Inject constructor(
             }
         }
         builder.addUpdateHandler(TdApi.UpdateChatAction::class.java) {
-            if (connection.version == version) typing.update(it.chatId, it.senderId, it.action)
+            if (connection.version == version) {
+                typing.update(it.chatId, it.senderId, it.action)
+            }
         }
         builder.addUpdateHandler(TdApi.UpdateDeleteMessages::class.java) { update ->
-            if (connection.version != version) return@addUpdateHandler
+            if (connection.version != version) {
+                return@addUpdateHandler
+            }
             history.deleted(update)
         }
         builder.addUpdateHandler(TdApi.UpdateAuthorizationState::class.java) { update ->
-            if (connection.version != version) return@addUpdateHandler
+            if (connection.version != version) {
+                return@addUpdateHandler
+            }
             when (update.authorizationState) {
                 is TdApi.AuthorizationStateReady ->
                     connection.status =

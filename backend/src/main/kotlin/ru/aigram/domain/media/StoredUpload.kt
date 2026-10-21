@@ -1,6 +1,5 @@
 package ru.aigram.domain.media
 
-import ru.aigram.domain.UploadedFile
 import java.nio.file.Path
 
 internal data class StoredUpload(

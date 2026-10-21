@@ -4,3 +4,4 @@ TokenEncoding:
         - auto
         - cl100k
         - o200k
+    default: auto

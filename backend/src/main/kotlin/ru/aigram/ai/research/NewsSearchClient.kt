@@ -3,6 +3,7 @@ package ru.aigram.ai.research
 import kotlinx.serialization.json.Json
 import org.jsoup.Jsoup
 import org.jsoup.parser.Parser
+import ru.aigram.domain.ai.research.ResearchSource
 import ru.aigram.resources.ResourceCatalog
 import java.io.IOException
 import java.time.Clock
@@ -37,7 +38,9 @@ class NewsSearchClient(
 
     @Synchronized
     fun search(query: String): List<ResearchSource>? {
-        if (!intents.contains("news", query)) return null
+        if (!intents.contains("news", query)) {
+            return null
+        }
         val now = clock.instant()
         if (now.epochSecond - refreshedAt.epochSecond >= NEWS_CACHE_SECONDS) {
             cached = Executors.newFixedThreadPool(MAX_FEED_WORKERS).use { executor ->
@@ -84,7 +87,9 @@ class NewsSearchClient(
             .ignoreContentType(true).parser(Parser.xmlParser()).get()
         document.select("channel > item").mapNotNull { item ->
             val published = item.selectFirst("pubDate")?.text().orEmpty()
-            if (published.isBlank()) return@mapNotNull null
+            if (published.isBlank()) {
+                return@mapNotNull null
+            }
             val date = try {
                 ZonedDateTime.parse(published, DateTimeFormatter.RFC_1123_DATE_TIME).toInstant()
             } catch (_: DateTimeParseException) {
@@ -92,7 +97,9 @@ class NewsSearchClient(
             }
             val title = item.selectFirst("title")?.text().orEmpty()
             val url = urls.canonical(item.selectFirst("link")?.text().orEmpty())
-            if (title.isBlank() || url.isBlank()) return@mapNotNull null
+            if (title.isBlank() || url.isBlank()) {
+                return@mapNotNull null
+            }
             val description = Jsoup.parse(item.selectFirst("description")?.text().orEmpty()).text()
             val categories = item.select("category").joinToString("; ") { it.text() }
             ResearchSource(

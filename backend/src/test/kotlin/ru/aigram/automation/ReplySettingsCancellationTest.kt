@@ -2,7 +2,7 @@ package ru.aigram.automation
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.domain.ReplyResult
+import ru.aigram.domain.ai.ReplyResult
 import ru.aigram.storage.SettingsStore
 import java.nio.file.Path
 import java.util.concurrent.CountDownLatch

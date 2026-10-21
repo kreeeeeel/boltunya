@@ -28,12 +28,26 @@ class ResearchNumbers {
                 val parts = chunk.split(' ', '\u00a0', '\u202f').filter(String::isNotBlank)
                 val grouped = parts.size > 1 && parts.first().length in 1..3 &&
                     parts.drop(1).all { it.substringBefore('.').substringBefore(',').length == 3 }
-                (if (grouped) listOf(parts.joinToString("")) else parts).stream()
+                (
+                    if (grouped) {
+                        listOf(parts.joinToString(""))
+                    } else {
+                        parts
+                    }
+                    ).stream()
             }.map { candidate ->
                 val value = candidate.trim('.', ',')
-                if (value.count { it == '.' || it == ',' } > 1) null else value.replace(',', '.').toBigDecimalOrNull()
+                if (value.count { it == '.' || it == ',' } > 1) {
+                    null
+                } else {
+                    value.replace(',', '.').toBigDecimalOrNull()
+                }
             }.flatMap { value ->
-                if (value == null) Stream.empty() else Stream.of(value.stripTrailingZeros())
+                if (value == null) {
+                    Stream.empty()
+                } else {
+                    Stream.of(value.stripTrailingZeros())
+                }
             }.toList().toSet()
     }
 }

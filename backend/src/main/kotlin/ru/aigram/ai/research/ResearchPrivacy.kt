@@ -7,11 +7,19 @@ class ResearchPrivacy {
             val at = word.indexOf('@')
             at > 0 && at < word.lastIndex && word.substring(at + 1).contains('.')
         }
-        if (email) return true
+        if (email) {
+            return true
+        }
         val phone = StringBuilder(query.length)
         query.chars().forEach { code ->
             val character = code.toChar()
-            phone.append(if (character.isDigit() || character in " +()-") character else '|')
+            phone.append(
+                if (character.isDigit() || character in " +()-") {
+                    character
+                } else {
+                    '|'
+                },
+            )
         }
         return phone.toString().split('|').any { it.count(Char::isDigit) in 10..15 }
     }

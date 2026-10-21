@@ -4,6 +4,11 @@ import kotlinx.serialization.json.JsonObject
 import org.junit.jupiter.api.Test
 import org.springframework.ai.ollama.api.OllamaChatOptions
 import org.springframework.ai.openai.OpenAiChatOptions
+import ru.aigram.domain.ai.profile.ModelCapabilities
+import ru.aigram.domain.ai.profile.ModelProfileOptions
+import ru.aigram.domain.ai.profile.ModelProvider
+import ru.aigram.domain.ai.profile.ModelTokenLimit
+import ru.aigram.domain.ai.profile.ResolvedModelTarget
 import ru.aigram.exception.impl.ModelCapabilityUnavailableException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

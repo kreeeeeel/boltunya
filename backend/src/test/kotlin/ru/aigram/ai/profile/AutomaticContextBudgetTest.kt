@@ -7,6 +7,7 @@ import org.springframework.ai.content.Media
 import org.springframework.core.io.ByteArrayResource
 import org.springframework.util.MimeTypeUtils
 import ru.aigram.ai.prompt.PromptTokenEstimator
+import ru.aigram.domain.ai.profile.ResolvedModelTarget
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 

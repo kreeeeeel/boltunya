@@ -1,23 +1,25 @@
 package ru.aigram.ai
 
-import jakarta.inject.Inject
 import ru.aigram.diagnostics.DiagnosticLog
-import ru.aigram.diagnostics.DiagnosticSource
-import ru.aigram.domain.ComputeDevice
-import ru.aigram.domain.ComputeDeviceStatus
-import ru.aigram.domain.EngineStatus
-import ru.aigram.domain.ModelInfo
+import ru.aigram.domain.ai.ComputeDevice
+import ru.aigram.domain.ai.ComputeDeviceStatus
+import ru.aigram.domain.ai.EngineStatus
+import ru.aigram.domain.ai.model.ModelInfo
+import ru.aigram.domain.events.diagnostics.DiagnosticSource
 import ru.aigram.exception.IntegrationException
 import ru.aigram.exception.InvalidInputException
 import ru.aigram.exception.impl.DownloadAlreadyRunningException
 import ru.aigram.exception.impl.EngineDownloadFailedException
 import ru.aigram.exception.impl.EngineInstallFailedException
+import ru.aigram.exception.impl.EngineRestartUnavailableException
+import ru.aigram.exception.impl.EngineUnavailableException
 import ru.aigram.exception.impl.EngineWarmupFailedException
 import ru.aigram.exception.impl.InvalidEngineArchiveException
 import ru.aigram.exception.impl.ModelPullInterruptedException
 import ru.aigram.exception.impl.RegistryRedirectException
 import ru.aigram.exception.impl.UnsupportedModelException
 import ru.aigram.storage.ModelMeasurementStore
+import java.io.IOException
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -25,13 +27,16 @@ import java.net.http.HttpResponse
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import java.util.zip.ZipInputStream
 
 private const val OLLAMA_VERSION = "0.40.4"
+private const val RESTART_SHUTDOWN_SECONDS = 3L
 
-class EngineManager @Inject constructor(
+class EngineManager(
     private val directory: Path,
     private val ollama: OllamaRuntime,
     private val models: ModelCatalog = ModelCatalog(),
@@ -44,6 +49,7 @@ class EngineManager @Inject constructor(
     private val localModels: OllamaModelInventory = OllamaModelInventory(),
     private val diagnostics: DiagnosticLog? = null,
     private val devices: OllamaDeviceSelector? = null,
+    private val startProcess: (ProcessBuilder) -> ProcessHandle = { it.start().toHandle() },
 ) : AutoCloseable {
     private val closed = AtomicBoolean()
     private val executor = Executors.newSingleThreadExecutor()
@@ -79,12 +85,17 @@ class EngineManager @Inject constructor(
             ollama.installed()
         } catch (exception: IntegrationException) {
             online = false
-            if (ollama.isLocalServer) localModels.installed() else emptySet()
+            if (ollama.isLocalServer) {
+                localModels.installed()
+            } else {
+                emptySet()
+            }
         }
         return EngineStatus(
             online, catalog(installed), downloading, progress, failure, warming,
             downloadedBytes, totalBytes, downloadStage,
             installed = online || (ollama.isLocalServer && installation.executable() != null),
+            canRestart = ollama.isDefaultLocalServer && managedServer?.isAlive == true,
         )
     }
 
@@ -118,11 +129,50 @@ class EngineManager @Inject constructor(
             }
             return
         }
-        if (managedServer?.isAlive == true || !ollama.isDefaultLocalServer) return
-        val executable = installation.executable() ?: return
+        if (managedServer?.isAlive == true || !ollama.isDefaultLocalServer) {
+            return
+        }
+        val executable = installation.executable()
+
+        if (executable == null) {
+            return
+        }
+
+        launch(executable)
+    }
+
+    @Synchronized
+    fun restart() {
+        val active = managedServer
+        if (!ollama.isDefaultLocalServer || active?.isAlive != true) {
+            throw EngineRestartUnavailableException()
+        }
+        val executable = installation.executable()
+        if (executable == null) {
+            throw EngineUnavailableException()
+        }
+        warmupVersion.incrementAndGet()
+        warming = ""
+        failure = ""
+        terminateEngineProcess(active)
+        try {
+            active.onExit().get(RESTART_SHUTDOWN_SECONDS, TimeUnit.SECONDS)
+        } catch (exception: TimeoutException) {
+            throw EngineUnavailableException(exception)
+        }
+        managedServer = null
+        activeDevice = null
+        launch(executable)
+    }
+
+    private fun launch(executable: Path) {
         val selected = devices?.selected() ?: "auto"
-        managedServer = prepareProcess(executable, selected).start().toHandle()
-        activeDevice = selected
+        try {
+            managedServer = startProcess(prepareProcess(executable, selected))
+            activeDevice = selected
+        } catch (exception: IOException) {
+            throw EngineUnavailableException(exception)
+        }
     }
 
     internal fun prepareProcess(executable: Path, selected: String = devices?.selected() ?: "auto"): ProcessBuilder {
@@ -136,13 +186,17 @@ class EngineManager @Inject constructor(
 
     @Synchronized
     fun warm(model: String) {
-        if (warming == model) return
+        if (warming == model) {
+            return
+        }
         val version = warmupVersion.incrementAndGet()
         warming = model
         failure = ""
         executor.submit {
             try {
-                if (version != warmupVersion.get()) return@submit
+                if (version != warmupVersion.get()) {
+                    return@submit
+                }
                 if (model !in ollama.installed()) {
                     return@submit
                 }
@@ -150,12 +204,16 @@ class EngineManager @Inject constructor(
             } catch (exception: IntegrationException) {
                 diagnostics?.record(DiagnosticSource.ENGINE, exception)
                 synchronized(this@EngineManager) {
-                    if (version == warmupVersion.get()) failure = EngineWarmupFailedException().message
+                    if (version == warmupVersion.get()) {
+                        failure = EngineWarmupFailedException().message
+                    }
                 }
                 System.err.println("Model warmup unavailable: ${exception.javaClass.simpleName}")
             } finally {
                 synchronized(this@EngineManager) {
-                    if (version == warmupVersion.get()) warming = ""
+                    if (version == warmupVersion.get()) {
+                        warming = ""
+                    }
                 }
             }
         }
@@ -200,7 +258,11 @@ class EngineManager @Inject constructor(
                         task.check()
                         downloadedBytes = received
                         totalBytes = total
-                        progress = if (total > 0) (received * 85 / total).toInt().coerceIn(0, 85) else 0
+                        progress = if (total > 0) {
+                            (received * 85 / total).toInt().coerceIn(0, 85)
+                        } else {
+                            0
+                        }
                     }
                     downloadStage = "extract"
                     progress = 90
@@ -290,7 +352,9 @@ class EngineManager @Inject constructor(
 
     @Synchronized
     private fun finishDownload(task: DownloadCancellation) {
-        if (cancellation !== task) return
+        if (cancellation !== task) {
+            return
+        }
         cancellation = null
         downloading = ""
     }
@@ -302,7 +366,12 @@ class EngineManager @Inject constructor(
         cancelDownload()
         executor.shutdownNow()
         ollama.releaseModels()
-        val active = managedServer ?: return
+        val active = managedServer
+
+        if (active == null) {
+            return
+        }
+
         terminateEngineProcess(active)
     }
 }

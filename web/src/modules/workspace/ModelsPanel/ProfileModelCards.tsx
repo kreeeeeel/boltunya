@@ -2,7 +2,7 @@ import {Box, Button, Flex, Icon, Label, Text} from '@gravity-ui/uikit';
 import {Globe} from '@gravity-ui/icons';
 import {useTranslations} from 'next-intl';
 import {useState} from 'react';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
+import {api, errorMessage} from '@/shared/api/client';
 import type {ModelProfile} from '@/modules/settings/model/useModelProfiles';
 import styles from '@/modules/workspace/ModelsPanel/ModelsPanel.module.css';
 export function ProfileModelCards({
@@ -23,7 +23,9 @@ export function ProfileModelCards({
         setBusy(id);
         setError('');
         try {
-            dataOrThrow(await api.PATCH('/api/settings', {body: {defaultModelProfileId: id}}));
+            await api.settings.settings({
+                settingsUpdate: {defaultModelProfileId: id},
+            });
             await onRefresh();
         } catch (cause) {
             setError(errorMessage(cause));

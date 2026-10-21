@@ -64,6 +64,37 @@ engineInstall:
                             $ref: ../models/common/Error.yaml#/Error
         tags:
             - models
+engineRestart:
+    post:
+        operationId: restartEngine
+        description: Restart the app-managed local Ollama process. External servers are never stopped.
+        tags:
+            - models
+        responses:
+            '200':
+                description: Ollama process restarted
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Ok.yaml#/Ok
+            '401':
+                description: Local session required
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '409':
+                description: Ollama is not managed by the application
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
+            '502':
+                description: Ollama could not be restarted
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/common/Error.yaml#/Error
 engineStart:
     post:
         operationId: start
@@ -515,7 +546,7 @@ modelPrompts:
             content:
                 application/json:
                     schema:
-                        $ref: ../models/models/ModelPromptSettings.yaml#/ModelPromptSettings
+                        $ref: ../models/models/ModelPromptSettingsInput.yaml#/ModelPromptSettingsInput
         responses:
             '200':
                 description: Success
@@ -526,6 +557,7 @@ modelPrompts:
         tags:
             - models
         operationId: saveModelPrompts
+        x-codegen-request-body-name: modelPromptSettings
 promptsBudget:
     post:
         description: >-

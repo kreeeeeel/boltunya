@@ -1,31 +1,39 @@
 package ru.aigram.telegram
 
 import it.tdlight.jni.TdApi
-import jakarta.inject.Inject
 import org.springframework.stereotype.Component
-import ru.aigram.domain.MediaAttachment
-import ru.aigram.domain.StickerItem
-import ru.aigram.domain.StickerSet
+import ru.aigram.domain.media.MediaAttachment
+import ru.aigram.domain.media.StickerItem
+import ru.aigram.domain.media.StickerSet
 import ru.aigram.exception.impl.UnknownMediaException
 import java.util.concurrent.ConcurrentHashMap
 
 @Component
-class TelegramStickerRegistry @Inject constructor(private val files: TelegramMediaStore) {
+class TelegramStickerRegistry(private val files: TelegramMediaStore) {
     private var ownerId = ""
     private val stickers = ConcurrentHashMap<String, StickerItem>()
     private val sets = ConcurrentHashMap.newKeySet<Long>()
 
     @Synchronized
     fun activate(owner: String) {
-        if (ownerId == owner) return
+        if (ownerId == owner) {
+            return
+        }
         ownerId = owner
         stickers.clear()
         sets.clear()
     }
 
     fun remember(sticker: TdApi.Sticker): StickerItem? {
-        val file = sticker.sticker ?: return null
-        if (file.id <= 0 || sticker.fullType !is TdApi.StickerFullTypeRegular) return null
+        val file = sticker.sticker
+
+        if (file == null) {
+            return null
+        }
+
+        if (file.id <= 0 || sticker.fullType !is TdApi.StickerFullTypeRegular) {
+            return null
+        }
         val mime = when (sticker.format) {
             is TdApi.StickerFormatTgs -> "application/x-tgsticker"
             is TdApi.StickerFormatWebm -> "video/webm"
@@ -54,7 +62,9 @@ class TelegramStickerRegistry @Inject constructor(private val files: TelegramMed
                 sticker.height,
             )
         stickers[item.id] = item
-        if (sticker.setId > 0) sets.add(sticker.setId)
+        if (sticker.setId > 0) {
+            sets.add(sticker.setId)
+        }
         return item
     }
 
@@ -69,8 +79,15 @@ class TelegramStickerRegistry @Inject constructor(private val files: TelegramMed
     fun allowsSet(id: Long): Boolean = id in sets
 
     fun resolve(id: String): StickerItem {
-        val item = stickers[id] ?: throw UnknownMediaException()
-        if (files.conflicts(item.media)) throw UnknownMediaException()
+        val item = stickers[id]
+
+        if (item == null) {
+            throw UnknownMediaException()
+        }
+
+        if (files.conflicts(item.media)) {
+            throw UnknownMediaException()
+        }
         return item
     }
 

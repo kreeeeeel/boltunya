@@ -1,19 +1,18 @@
 package ru.aigram.memory
 
-import jakarta.inject.Inject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
 import org.springframework.stereotype.Component
 import ru.aigram.ai.model.ChatCompletionService
+import ru.aigram.domain.memory.MemorySource
+import ru.aigram.domain.memory.MemorySpeaker
 import ru.aigram.resources.ResourceCatalog
 
 @Component
-class OllamaMemorySummarizer @Inject constructor(
-    private val completion: ChatCompletionService,
-    private val resources: ResourceCatalog,
-) : MemorySummarizer,
+class OllamaMemorySummarizer(private val completion: ChatCompletionService, private val resources: ResourceCatalog) :
+    MemorySummarizer,
     OwnerMemorySummarizer {
     override fun fitsOwner(model: String, existing: String, sources: List<MemorySource>): Boolean =
         completion.fitsSummary(model, resources.prompt("ru/memory/owner-summarize"), data(existing, sources))

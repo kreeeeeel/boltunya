@@ -1,9 +1,9 @@
 import {useCallback, useEffect, useState} from 'react';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
-import type {components} from '@/shared/api/schema';
-export type ModelProfile = components['schemas']['ModelProfile'];
-export type ModelProfileUpdate = components['schemas']['ModelProfileUpdate'];
-export type ModelProviderPreset = components['schemas']['ModelProviderPreset'];
+import {api, errorMessage} from '@/shared/api/client';
+import type * as Contract from '@aigram/api-client';
+export type ModelProfile = Contract.ModelProfile;
+export type ModelProfileUpdate = Contract.ModelProfileUpdate;
+export type ModelProviderPreset = Contract.ModelProviderPreset;
 export function useModelProfiles() {
     const [profiles, setProfiles] = useState<ModelProfile[]>([]);
     const [presets, setPresets] = useState<ModelProviderPreset[]>([]);
@@ -11,7 +11,7 @@ export function useModelProfiles() {
     const [loading, setLoading] = useState(true);
     const refresh = useCallback(async () => {
         try {
-            const report = dataOrThrow(await api.GET('/api/model-profiles'));
+            const report = await api.models.modelProfiles();
             setProfiles(report.profiles);
             setPresets(report.presets);
             setError('');

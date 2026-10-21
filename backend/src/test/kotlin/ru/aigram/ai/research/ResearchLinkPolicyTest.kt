@@ -1,9 +1,11 @@
 package ru.aigram.ai.research
 
 import org.junit.jupiter.api.Test
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.SourceLinks
+import ru.aigram.domain.ai.research.ResearchContext
+import ru.aigram.domain.ai.research.ResearchSource
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.SourceLinks
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

@@ -1,5 +1,5 @@
-import type {components} from '../../src/shared/api/schema';
-export const providerPreset: components['schemas']['ModelProviderPreset'] = {
+import type * as Contract from '@aigram/api-client';
+export const providerPreset: Contract.ModelProviderPreset = {
     id: 'openai',
     name: 'OpenAI',
     provider: 'openai-compatible',
@@ -37,7 +37,7 @@ export const providerPreset: components['schemas']['ModelProviderPreset'] = {
         tokenLimit: 'max_completion_tokens',
     },
 };
-export const modelProfiles: components['schemas']['ModelProfile'][] = [
+export const modelProfiles: Contract.ModelProfile[] = [
     {
         id: 'profile-primary',
         name: 'Cloud text',

@@ -7,23 +7,30 @@ import {workspaceState} from '@tests/fixtures/workspace';
 import {modelProfiles} from '@tests/fixtures/modelProfiles';
 import {syntheticPromptBudget} from '@tests/fixtures/promptBudget';
 import ru from '@/shared/i18n/ru.json';
-
-const mocks = vi.hoisted(() => ({GET: vi.fn(), PUT: vi.fn(), POST: vi.fn()}));
+const mocks = vi.hoisted(() => ({
+    getModelPrompts: vi.fn(),
+    modelProfiles: vi.fn(),
+    saveModelPrompts: vi.fn(),
+    estimatePromptBudget: vi.fn(),
+}));
 vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
-    api: mocks,
+    api: {
+        models: {
+            getModelPrompts: mocks.getModelPrompts,
+            saveModelPrompts: mocks.saveModelPrompts,
+            modelProfiles: mocks.modelProfiles,
+            estimatePromptBudget: mocks.estimatePromptBudget,
+        },
+    },
 }));
-
 it('saves only the selected model additions and keeps API context limits in the connection', async () => {
-    mocks.GET.mockImplementation(async (path) => ({
-        data: path === '/api/model-prompts' ? {prompts: []} : {profiles: modelProfiles, presets: []},
-        response: new Response(),
-    }));
-    mocks.PUT.mockImplementation(async (_, {body}) => ({data: body, response: new Response()}));
-    mocks.POST.mockImplementation(async (_, {body}) => ({
-        data: syntheticPromptBudget(body),
-        response: new Response(),
-    }));
+    mocks.getModelPrompts.mockImplementation(async () => ({prompts: []}));
+    mocks.modelProfiles.mockImplementation(async () => ({profiles: modelProfiles, presets: []}));
+    mocks.saveModelPrompts.mockImplementation(async ({modelPromptSettings: body}) => body);
+    mocks.estimatePromptBudget.mockImplementation(async ({promptBudgetRequest: body}) =>
+        syntheticPromptBudget(body),
+    );
     render(
         <NextIntlClientProvider locale="ru" messages={ru}>
             <ThemeProvider>
@@ -44,8 +51,8 @@ it('saves only the selected model additions and keeps API context limits in the 
     });
     fireEvent.click(screen.getByRole('button', {name: ru.modelPrompts.save}));
     await waitFor(() =>
-        expect(mocks.PUT).toHaveBeenCalledWith('/api/model-prompts', {
-            body: expect.objectContaining({
+        expect(mocks.saveModelPrompts).toHaveBeenCalledWith({
+            modelPromptSettings: expect.objectContaining({
                 model: 'qwen3:1.7b',
                 profileId: '',
                 instructions: 'Additional concise wording',
@@ -68,30 +75,23 @@ it('saves only the selected model additions and keeps API context limits in the 
         'Additional concise wording',
     );
 });
-
 it('keeps preferences distinct for each model within one API connection', async () => {
     const profiles = structuredClone(modelProfiles);
     const record = {profileId: 'profile-primary', contextWindow: null, tokenEncoding: 'auto'};
-    mocks.GET.mockImplementation(async (path) => ({
-        data:
-            path === '/api/model-prompts'
-                ? {
-                      prompts: [
-                          {
-                              ...record,
-                              model: 'example-model',
-                              instructions: 'Instructions for the current model',
-                          },
-                          {...record, model: 'older-model', instructions: 'Instructions for the old model'},
-                      ],
-                  }
-                : {profiles, presets: []},
-        response: new Response(),
+    mocks.getModelPrompts.mockImplementation(async () => ({
+        prompts: [
+            {
+                ...record,
+                model: 'example-model',
+                instructions: 'Instructions for the current model',
+            },
+            {...record, model: 'older-model', instructions: 'Instructions for the old model'},
+        ],
     }));
-    mocks.POST.mockImplementation(async (_, {body}) => ({
-        data: syntheticPromptBudget(body),
-        response: new Response(),
-    }));
+    mocks.modelProfiles.mockImplementation(async () => ({profiles, presets: []}));
+    mocks.estimatePromptBudget.mockImplementation(async ({promptBudgetRequest: body}) =>
+        syntheticPromptBudget(body),
+    );
     render(
         <NextIntlClientProvider locale="ru" messages={ru}>
             <ThemeProvider>

@@ -53,7 +53,13 @@
     flex: 0 1 176px;
     width: 176px;
     max-width: 100%;
-    min-width: 0;
+    min-width: min(176px, 100%);
+}
+
+.engineActionsRestart {
+    flex: 0 1 224px;
+    width: 224px;
+    min-width: min(224px, 100%);
 }
 
 .engineAction {

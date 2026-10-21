@@ -14,9 +14,15 @@ class TypingIndicator(private val telegram: TelegramGateway) : AutoCloseable {
 
     @Synchronized
     fun start(chatId: String, allowed: () -> Boolean): ScheduledFuture<*>? {
-        if (closed) return null
+        if (closed) {
+            return null
+        }
         val task = executor.scheduleAtFixedRate({
-            if (allowed()) send(chatId, true) else cancel(chatId)
+            if (allowed()) {
+                send(chatId, true)
+            } else {
+                cancel(chatId)
+            }
         }, 0, 4, TimeUnit.SECONDS)
         active[chatId] = task
         return task
@@ -24,9 +30,16 @@ class TypingIndicator(private val telegram: TelegramGateway) : AutoCloseable {
 
     @Synchronized
     fun cancel(chatId: String) {
-        val task = active.remove(chatId) ?: return
+        val task = active.remove(chatId)
+
+        if (task == null) {
+            return
+        }
+
         task.cancel(false)
-        if (!closed) executor.execute { send(chatId, false) }
+        if (!closed) {
+            executor.execute { send(chatId, false) }
+        }
     }
 
     fun cancelAll() {
@@ -34,7 +47,9 @@ class TypingIndicator(private val telegram: TelegramGateway) : AutoCloseable {
     }
 
     fun stop(chatId: String, task: ScheduledFuture<*>?) {
-        if (task != null && active[chatId] === task) cancel(chatId)
+        if (task != null && active[chatId] === task) {
+            cancel(chatId)
+        }
     }
 
     private fun send(chatId: String, active: Boolean) {

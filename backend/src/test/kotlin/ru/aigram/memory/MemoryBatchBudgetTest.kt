@@ -2,7 +2,7 @@ package ru.aigram.memory
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.domain.ChatMessage
+import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.exception.impl.MemorySourceContextLimitException
 import ru.aigram.storage.AutomatedReplyStore
 import java.nio.file.Path

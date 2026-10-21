@@ -4,8 +4,10 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ContextExclusionUpdate
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ContextExclusionUpdate
+import ru.aigram.domain.memory.MemoryContext
+import ru.aigram.domain.memory.ParticipantIdentity
 import ru.aigram.exception.impl.InvalidMemoryChatException
 import ru.aigram.storage.ContextExclusionStore
 import java.nio.file.Files

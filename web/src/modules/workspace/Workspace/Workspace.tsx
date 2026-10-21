@@ -1,10 +1,8 @@
 'use client';
-
 import {Box, Button, Flex, Icon, Text, Tooltip} from '@gravity-ui/uikit';
 import {Clock, Comments, Moon, Sparkles, ChartColumn, CircleExclamation} from '@gravity-ui/icons';
 import {useTranslations} from 'next-intl';
 import {useEffect, useRef, useState} from 'react';
-
 import {ActivityPanel} from '@/modules/activity/ActivityPanel/ActivityPanel';
 import {ChatList} from '@/modules/workspace/ChatList/ChatList';
 import {SettingsDialog} from '@/modules/workspace/SettingsDialog/SettingsDialog';
@@ -20,7 +18,7 @@ import {useWorkspace} from '@/modules/workspace/hooks/useWorkspace';
 import {Welcome} from '@/modules/workspace/Welcome/Welcome';
 import {mergeMessages, mergeRecentMessages} from '@/modules/workspace/model/mergeMessages';
 import styles from '@/modules/workspace/Workspace/Workspace.module.css';
-import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
+import {api, errorMessage} from '@/shared/api/client';
 import type {Chat, ChatRule} from '@/shared/api/client';
 import {usePreferences} from '@/shared/theme/Preferences';
 import {desktopBridge} from '@/shared/desktop/bridge';
@@ -28,7 +26,6 @@ import {MemoryDialog} from '@/modules/memory/MemoryDialog/MemoryDialog';
 import {ContextCollectionDialog} from '@/modules/memory/ContextCollectionDialog/ContextCollectionDialog';
 import {DeletedMessagesDialog} from '@/modules/workspace/DeletedMessagesDialog/DeletedMessagesDialog';
 import {ErrorsPanel} from '@/modules/diagnostics/ErrorsPanel/ErrorsPanel';
-
 import {ProfileMenu} from '@/modules/settings/ProfileMenu/ProfileMenu';
 import type {SettingsSectionId} from '@/modules/settings/model/settingsSections';
 import {useModelProfiles} from '@/modules/settings/model/useModelProfiles';
@@ -36,7 +33,6 @@ import {useQueuedDraft} from '@/modules/workspace/hooks/useQueuedDraft';
 import {applyContextExclusion} from '@/modules/messages/model/applyContextExclusion';
 import type {ContextExclusionChange} from '@/modules/messages/model/ContextExclusionChange';
 import type {MessageDeletionResult} from '@/modules/messages/MessageDeletionDialog/MessageDeletionDialog.types';
-
 export function Workspace() {
     const t = useTranslations();
     const modelProfiles = useModelProfiles();
@@ -98,12 +94,12 @@ export function Workspace() {
         return () => window.removeEventListener('keydown', closeChat);
     }, [selected, tab, setMessages]);
     async function saveRule(target: Chat, rule: ChatRule) {
-        dataOrThrow(
-            await api.PUT('/api/chats/{chatId}/rule', {params: {path: {chatId: target.id}}, body: rule}),
-        );
+        await api.chats.rule({
+            chatId: target.id,
+            chatRule: rule,
+        });
         await refresh();
     }
-
     async function toggleRule(target: Chat, rule: ChatRule) {
         try {
             await saveRule(target, rule);
@@ -112,46 +108,44 @@ export function Workspace() {
             setActionError(errorMessage(cause));
         }
     }
-
     async function pause() {
         try {
-            dataOrThrow(await api.PATCH('/api/settings', {body: {paused: !paused}}));
+            await api.settings.settings({
+                settingsUpdate: {paused: !paused},
+            });
             await refresh();
         } catch (cause) {
             setActionError(errorMessage(cause));
         }
     }
-
     async function send(text: string) {
         if (!chat) {
             return;
         }
-        dataOrThrow(
-            await api.POST('/api/chats/{chatId}/messages', {params: {path: {chatId: chat.id}}, body: {text}}),
-        );
+        await api.chats.send({
+            chatId: chat.id,
+            text: {text},
+        });
         await refreshConversation();
     }
-
     async function refreshConversation() {
         if (!chat) {
             return;
         }
-        const latest = dataOrThrow(
-            await api.GET('/api/chats/{chatId}/messages', {params: {path: {chatId: chat.id}}}),
-        );
+        const latest = await api.chats.history({
+            chatId: chat.id,
+        });
         setMessages((previous) =>
             selectedChat.current === chat.id ? mergeRecentMessages(previous, latest) : previous,
         );
         await refresh();
     }
-
     async function updateContextFlags(change: ContextExclusionChange) {
         if (chat && selectedChat.current === chat.id) {
             setMessages((previous) => applyContextExclusion(previous, chat.id, change));
         }
         await refresh();
     }
-
     async function messageDeleted(result: MessageDeletionResult) {
         setMessages((previous) =>
             previous.map((message) =>
@@ -162,14 +156,12 @@ export function Workspace() {
         );
         await refresh();
     }
-
     async function draft(messageId?: string) {
         if (!chat) {
             return '';
         }
         return queuedDraft(chat.rule, messageId);
     }
-
     function select(id: string) {
         if (id === selected) {
             return;
@@ -178,16 +170,14 @@ export function Workspace() {
         setSelected(id);
         setMessages([]);
     }
-
     async function earlier() {
         if (!chat || messages.length === 0) {
             return false;
         }
-        const page = dataOrThrow(
-            await api.GET('/api/chats/{chatId}/messages', {
-                params: {path: {chatId: chat.id}, query: {before: messages[0].id}},
-            }),
-        );
+        const page = await api.chats.history({
+            chatId: chat.id,
+            before: messages[0].id,
+        });
         if (selectedChat.current !== chat.id) {
             return false;
         }
@@ -196,10 +186,9 @@ export function Workspace() {
         );
         return page.some((message) => !messages.some((existing) => existing.id === message.id));
     }
-
     async function logout() {
         try {
-            dataOrThrow(await api.POST('/api/telegram/logout'));
+            await api.telegram.logout();
             selectedChat.current = null;
             setSelected(null);
             setMessages([]);
@@ -208,21 +197,19 @@ export function Workspace() {
             setActionError(errorMessage(cause));
         }
     }
-
     async function stop() {
         try {
             const desktop = desktopBridge();
             if (desktop) {
                 await desktop.quit();
             } else {
-                dataOrThrow(await api.POST('/api/quit'));
+                await api.system.quit();
             }
             setQuit(true);
         } catch (cause) {
             setActionError(errorMessage(cause));
         }
     }
-
     if (state?.telegram.state !== 'ready') {
         return (
             <Flex direction="column" className={styles.root} qa="workspace-shell" data-aigram-css-scope="">
@@ -245,7 +232,6 @@ export function Workspace() {
             </Flex>
         );
     }
-
     return (
         <Flex direction="column" className={styles.root} qa="workspace-shell" data-aigram-css-scope="">
             {tab === 'chats' && chat && (

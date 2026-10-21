@@ -6,11 +6,11 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
 import org.springframework.ai.chat.messages.Message
-import ru.aigram.ai.research.ResearchContext
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.CommunicationStyle
-import ru.aigram.memory.MemoryContext
+import ru.aigram.domain.ai.research.ResearchContext
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.CommunicationStyle
+import ru.aigram.domain.memory.MemoryContext
 import ru.aigram.resources.ResourceCatalog
 import java.time.Clock
 import java.time.Instant

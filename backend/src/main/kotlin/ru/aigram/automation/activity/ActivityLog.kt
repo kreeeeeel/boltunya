@@ -1,7 +1,7 @@
 package ru.aigram.automation.activity
 
-import ru.aigram.domain.ActivityDetails
-import ru.aigram.domain.ActivityEntry
+import ru.aigram.domain.events.ActivityDetails
+import ru.aigram.domain.events.ActivityEntry
 import ru.aigram.exception.impl.ActivityNotFoundException
 
 private const val MAX_COMPLETED_ENTRIES = 100
@@ -29,7 +29,12 @@ class ActivityLog(private val history: ActivityHistoryStore? = null, private val
     fun details(id: String): ActivityDetails = if (owners[id] == owner() && traces[id] != null) {
         traces.getValue(id).details()
     } else {
-        history?.details(owner(), id) ?: throw ActivityNotFoundException()
+        val details = history?.details(owner(), id)
+        if (details == null) {
+            throw ActivityNotFoundException()
+        }
+
+        details
     }
 
     @Synchronized

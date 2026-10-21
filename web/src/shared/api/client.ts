@@ -1,29 +1,40 @@
-import createClient from 'openapi-fetch';
-
-import type {components, paths} from '@/shared/api/schema';
+import {
+    ActivityApi,
+    ChatsApi,
+    MediaApi,
+    MemoryApi,
+    ModelsApi,
+    SettingsApi,
+    SystemApi,
+    TelegramApi,
+} from '@aigram/api-client';
+import type * as Contract from '@aigram/api-client';
+import {apiConfiguration} from '@/shared/api/configuration';
 import type {DesktopWindowState} from '@/shared/desktop/bridge';
 
-export const api = createClient<paths>({baseUrl: '', credentials: 'same-origin'});
+export const api = {
+    activity: new ActivityApi(apiConfiguration),
+    chats: new ChatsApi(apiConfiguration),
+    media: new MediaApi(apiConfiguration),
+    memory: new MemoryApi(apiConfiguration),
+    models: new ModelsApi(apiConfiguration),
+    settings: new SettingsApi(apiConfiguration),
+    system: new SystemApi(apiConfiguration),
+    telegram: new TelegramApi(apiConfiguration),
+};
 
-export type Chat = components['schemas']['Chat'];
-export type MessageEntity = components['schemas']['MessageEntity'];
-export type Message = components['schemas']['Message'];
-export type ChatRule = components['schemas']['ChatRule'];
-export type AppState = components['schemas']['State'] & {window?: DesktopWindowState};
-export type Reply = components['schemas']['Reply'];
-export type Engine = components['schemas']['Engine'];
-export type Telegram = components['schemas']['Telegram'];
-export type Activity = components['schemas']['Activity'];
-export type ActivityDetails = components['schemas']['ActivityDetails'];
-export type ActivityAttempt = components['schemas']['ActivityAttempt'];
-export type ReplyQueue = components['schemas']['ReplyQueue'];
-
-export function dataOrThrow<T>(result: {data?: T; error?: {message: string}; response: Response}): T {
-    if (result.error || result.data === undefined) {
-        throw new Error(result.error?.message ?? `HTTP ${result.response.status}`);
-    }
-    return result.data;
-}
+export type Chat = Contract.Chat;
+export type MessageEntity = Contract.MessageEntity;
+export type Message = Contract.Message;
+export type ChatRule = Contract.ChatRule;
+export type AppState = Contract.State & {window?: DesktopWindowState};
+export type Reply = Contract.Reply;
+export type Engine = Contract.Engine;
+export type Telegram = Contract.Telegram;
+export type Activity = Contract.Activity;
+export type ActivityDetails = Contract.ActivityDetails;
+export type ActivityAttempt = Contract.ActivityAttempt;
+export type ReplyQueue = Contract.ReplyQueue;
 
 export function errorMessage(error: unknown): string {
     return error instanceof Error ? error.message : String(error);

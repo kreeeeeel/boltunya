@@ -208,6 +208,7 @@ appearance:
             content:
                 application/json:
                     schema:
-                        $ref: ../models/settings/AppearanceSettings.yaml#/AppearanceSettings
+                        $ref: ../models/settings/AppearanceSettingsInput.yaml#/AppearanceSettingsInput
         tags:
             - settings
+        x-codegen-request-body-name: appearanceSettings

@@ -11,6 +11,7 @@ const config: NextConfig = {
     trailingSlash: true,
     images: {unoptimized: true},
     env: {NEXT_PUBLIC_APP_ENV: profile},
+    experimental: {extensionAlias: {'.js': ['.ts', '.tsx', '.js']}},
 };
 
 export default config;

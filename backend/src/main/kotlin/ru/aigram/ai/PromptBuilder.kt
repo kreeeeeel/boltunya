@@ -7,14 +7,14 @@ import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
 import org.springframework.ai.content.Media
 import ru.aigram.ai.profile.ProfileContextBudget
-import ru.aigram.ai.profile.ResolvedModelTarget
 import ru.aigram.ai.prompt.PromptTokenEstimator
-import ru.aigram.ai.research.ResearchContext
 import ru.aigram.ai.research.ResearchLinkPolicy
-import ru.aigram.domain.ChatMessage
-import ru.aigram.domain.ChatRule
-import ru.aigram.domain.CommunicationStyle
-import ru.aigram.memory.MemoryContext
+import ru.aigram.domain.ai.profile.ResolvedModelTarget
+import ru.aigram.domain.ai.research.ResearchContext
+import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.CommunicationStyle
+import ru.aigram.domain.memory.MemoryContext
 import ru.aigram.resources.ResourceCatalog
 import java.time.Clock
 import java.time.ZonedDateTime
@@ -60,7 +60,11 @@ class PromptBuilder(
             rule.resolvedStyleInstructions
         } else {
             resources.prompt(
-                "ru/style/" + if (style == CommunicationStyle.CUSTOM) CommunicationStyle.FRIENDLY.key else style.key,
+                "ru/style/" + if (style == CommunicationStyle.CUSTOM) {
+                    CommunicationStyle.FRIENDLY.key
+                } else {
+                    style.key
+                },
             )
         }
         val emoji = if (rule.emoji) {
@@ -81,7 +85,11 @@ class PromptBuilder(
             mapOf("tone" to tone, "emoji" to emoji, "voice" to voice),
         )
         val baseSystem = resources.prompt(
-            if (research.status == "none") "ru/conversation/system" else "ru/research/system",
+            if (research.status == "none") {
+                "ru/conversation/system"
+            } else {
+                "ru/research/system"
+            },
             mapOf(
                 "globalPrompt" to (globalPrompt),
                 "instructions" to rule.instructions,
@@ -96,7 +104,11 @@ class PromptBuilder(
                 "value1" to data,
                 "value2" to
                     resources.prompt(
-                        if (links.visible(rule, history)) "ru/research/links-visible" else "ru/research/links-hidden",
+                        if (links.visible(rule, history)) {
+                            "ru/research/links-visible"
+                        } else {
+                            "ru/research/links-hidden"
+                        },
                     ),
             ),
         )
@@ -152,7 +164,16 @@ class PromptBuilder(
             }.mapToInt {
                 tokens.estimate(
                     UserMessage.builder()
-                        .text(authors.content(it, if (it.id == latest?.id) Int.MAX_VALUE else MAX_MESSAGE_CHARACTERS))
+                        .text(
+                            authors.content(
+                                it,
+                                if (it.id == latest?.id) {
+                                    Int.MAX_VALUE
+                                } else {
+                                    MAX_MESSAGE_CHARACTERS
+                                },
+                            ),
+                        )
                         .media(images[it.id].orEmpty()).build(),
                     inputTarget.model,
                     inputTarget.tokenEncoding,
@@ -188,7 +209,11 @@ class PromptBuilder(
             .filter { !it.contextExcluded && !it.deleted }
             .filter { it.text.isNotBlank() || images[it.id].orEmpty().isNotEmpty() }
             .map { message ->
-                val limit = if (message.id == latest?.id) Int.MAX_VALUE else MAX_MESSAGE_CHARACTERS
+                val limit = if (message.id == latest?.id) {
+                    Int.MAX_VALUE
+                } else {
+                    MAX_MESSAGE_CHARACTERS
+                }
                 UserMessage.builder().text(authors.content(message, limit)).media(images[message.id].orEmpty()).build()
             }.collect(Collectors.toList()).asReversed()
 
