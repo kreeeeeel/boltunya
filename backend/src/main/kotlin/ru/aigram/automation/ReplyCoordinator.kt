@@ -6,6 +6,7 @@ import ru.aigram.automation.activity.ActivityPhase
 import ru.aigram.automation.activity.ActivityStatus
 import ru.aigram.automation.activity.ReplyJob
 import ru.aigram.automation.activity.ReplyTraceScope
+import ru.aigram.automation.proactive.ProactiveTask
 import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.diagnostics.DiagnosticSource
 import ru.aigram.domain.ActivityDetails
@@ -16,6 +17,7 @@ import ru.aigram.domain.ActivityHistoryPage
 import ru.aigram.domain.ActivityKind
 import ru.aigram.domain.ChatMessage
 import ru.aigram.domain.ChatRule
+import ru.aigram.domain.ChatSummary
 import ru.aigram.domain.GroupReplyMode
 import ru.aigram.domain.PreviewJob
 import ru.aigram.domain.ReplyQueueState
@@ -212,6 +214,59 @@ class ReplyCoordinator(
         PreviewJob(id, ActivityStatus.QUEUED.value)
     }
 
+    fun hasWork(chatId: String): Boolean = synchronized(gate) {
+        pending.values.any { it.message.chatId == chatId } || active.values.any { it.message.chatId == chatId }
+    }
+
+    fun hasInitiative(): Boolean = synchronized(gate) {
+        pending.values.any { it.proactive != null } || active.values.any { it.proactive != null }
+    }
+
+    fun enqueueInitiative(chat: ChatSummary, accountId: String, task: ProactiveTask): Boolean = synchronized(gate) {
+        if (closed || queuePaused || settings.get().paused || pending.size >= MAX_PENDING_JOBS ||
+            hasWork(chat.id) || !task.allowed()
+        ) {
+            return@synchronized false
+        }
+        val id = UUID.randomUUID().toString()
+        val trace = log.add(
+            ActivityEntry(
+                id,
+                chat.id,
+                chat.title,
+                ActivityStatus.QUEUED.value,
+                settings.rule(chat.id).model,
+                Instant.now().epochSecond,
+                avatarUrl = chat.avatarUrl,
+                kind = ActivityKind.INITIATIVE,
+            ),
+            task.trigger,
+        )
+        latest[chat.id] = chat.lastMessageId
+        val delay = TimeUnit.SECONDS.toNanos(
+            (settings.get().replyDelaySeconds + settings.rule(chat.id).delaySeconds).toLong(),
+        )
+        pending[id] = ReplyJob(
+            id,
+            ChatMessage(
+                chat.lastMessageId,
+                chat.id,
+                "",
+                true,
+                chat.date,
+                group = chat.kind != "private",
+                mentionsMe = true,
+            ),
+            trace,
+            System.nanoTime() + delay,
+            System.currentTimeMillis() + TimeUnit.NANOSECONDS.toMillis(delay),
+            ++order,
+            accountId = accountId,
+            proactive = task,
+        )
+        true
+    }
+
     fun draft(id: String): PreviewJob = synchronized(gate) {
         val entry = log.details(id).entry
         if (entry.kind != ActivityKind.DRAFT) throw ActivityNotFoundException()
@@ -358,14 +413,15 @@ class ReplyCoordinator(
         val rule = settings.rule(message.chatId)
         val resolvedRule = settings.resolve(rule)
         val generationEpoch = epoch.get()
+        fun canReply(): Boolean = allowed(message, rule) && (job.proactive?.allowed?.invoke() ?: true)
         var indicator: java.util.concurrent.ScheduledFuture<*>? = null
         try {
-            if (job.cancelled.get() || !allowed(message, rule)) throw ReplyCancelledException()
+            if (job.cancelled.get() || !canReply()) throw ReplyCancelledException()
             job.trace.start()
             if (settings.get().showTyping) {
                 indicator =
                     typing.start(message.chatId) {
-                        !job.cancelled.get() && allowed(message, rule) &&
+                        !job.cancelled.get() && canReply() &&
                             settings.get().showTyping
                     }
             }
@@ -374,10 +430,19 @@ class ReplyCoordinator(
                     message.chatId,
                     if (rule.matchMyStyle) STYLE_HISTORY_MESSAGES else rule.contextMessages,
                 )
-                val context = if (history.stream().anyMatch { it.id == message.id }) history else history + message
+                val context = if (job.proactive != null || history.stream().anyMatch { it.id == message.id }) {
+                    history
+                } else {
+                    history + message
+                }
+                val topicId = if (job.proactive != null) {
+                    context.lastOrNull { it.id == message.id }?.topicId ?: message.topicId
+                } else {
+                    message.topicId
+                }
                 val globalPrompt = settings.get().globalPrompt
                 if (job.cancelled.get()) throw ReplyCancelledException()
-                val result = generate(rule, context)
+                val result = job.proactive?.generate?.invoke(rule, context) ?: generate(rule, context)
                 tracing.phase(ActivityPhase.VALIDATING)
                 job.trace.generated(result.text)
                 deliveryLock.lockInterruptibly()
@@ -388,7 +453,7 @@ class ReplyCoordinator(
                         TimeUnit.NANOSECONDS.sleep(remaining)
                     }
                     synchronized(gate) {
-                        if (job.cancelled.get() || !allowed(message, rule) || settings.rule(message.chatId) != rule ||
+                        if (job.cancelled.get() || !canReply() || settings.rule(message.chatId) != rule ||
                             settings.resolve(settings.rule(message.chatId)) != resolvedRule ||
                             settings.get().globalPrompt != globalPrompt || epoch.get() != generationEpoch
                         ) {
@@ -397,12 +462,17 @@ class ReplyCoordinator(
                         tracing.phase(ActivityPhase.SENDING)
                         job.delivering = true
                     }
+                    if ((result.text.isNotBlank() || result.stickerId.isNotEmpty()) &&
+                        job.proactive?.prepareDelivery?.invoke() == false
+                    ) {
+                        throw ReplyCancelledException()
+                    }
                     if (result.text.isNotBlank()) {
                         val sentId = telegram.send(
                             message.chatId,
                             result.text,
                             delivery.replyTo(rule, message.id),
-                            message.topicId,
+                            topicId,
                         )
                         synchronized(gate) {
                             nextReplyAt =
@@ -416,7 +486,7 @@ class ReplyCoordinator(
                             message.chatId,
                             result.stickerId,
                             delivery.replyTo(rule, message.id),
-                            message.topicId,
+                            topicId,
                         )
                         automated?.record(message.chatId, sentId)
                         synchronized(gate) {
@@ -586,6 +656,20 @@ class ReplyCoordinator(
         if (!message.group) return true
         val mode = if (rule.groupReplies == GroupReplyMode.INHERIT) settings.get().groupReplies else rule.groupReplies
         return mode == GroupReplyMode.ALL || mode == GroupReplyMode.MENTIONS && message.mentionsMe
+    }
+
+    fun cancelReplies(chatId: String? = null) = synchronized(gate) {
+        if (chatId == null) epoch.incrementAndGet()
+        ArrayList(pending.values).stream().filter {
+            it.memory == null && (chatId == null || it.message.chatId == chatId)
+        }.forEach {
+            pending.remove(it.id)
+            cancelJob(it)
+        }
+        ArrayList(active.values).stream().filter {
+            it.memory == null && (chatId == null || it.message.chatId == chatId)
+        }.forEach(::cancelJob)
+        if (chatId == null) typing.cancelAll() else typing.cancel(chatId)
     }
 
     fun cancelPending() = synchronized(gate) {

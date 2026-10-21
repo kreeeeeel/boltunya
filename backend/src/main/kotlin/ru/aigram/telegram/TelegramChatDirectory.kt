@@ -33,9 +33,9 @@ class TelegramChatDirectory @Inject constructor(
             chat.lastMessage?.date?.toLong() ?: 0,
             unread = chat.unreadCount, rule = settings.rule(chat.id.toString()),
             avatarUrl = avatar?.let { "/api/media/${files.register(it, "image/jpeg", "avatar.jpg")}" }.orEmpty(),
-            kind = when (chat.type) {
+            kind = when (val type = chat.type) {
                 is TdApi.ChatTypeBasicGroup -> "group"
-                is TdApi.ChatTypeSupergroup -> "supergroup"
+                is TdApi.ChatTypeSupergroup -> if (type.isChannel) "channel" else "supergroup"
                 else -> "private"
             },
             wallpaper = wallpaper.map(chat.background, cache.lightBackground),

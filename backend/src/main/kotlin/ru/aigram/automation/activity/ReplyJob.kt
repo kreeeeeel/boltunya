@@ -1,6 +1,7 @@
 package ru.aigram.automation.activity
 
 import ru.aigram.automation.MemoryQueueTask
+import ru.aigram.automation.proactive.ProactiveTask
 import ru.aigram.domain.ChatMessage
 import ru.aigram.domain.ReplyResult
 import java.util.concurrent.atomic.AtomicBoolean
@@ -15,6 +16,7 @@ class ReplyJob(
     val draft: (() -> ReplyResult)? = null,
     val accountId: String = "",
     val memory: MemoryQueueTask? = null,
+    val proactive: ProactiveTask? = null,
 ) {
     val cancelled = AtomicBoolean()
     var priority = false

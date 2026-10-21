@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.aigram.ai.AiTestServices
 import ru.aigram.ai.EngineManager
+import ru.aigram.ai.profile.ModelRoutingStore
 import ru.aigram.ai.profile.OpenAiStubServer
 import ru.aigram.automation.FakeTelegramGateway
 import ru.aigram.automation.ReplyCoordinator
@@ -72,6 +73,31 @@ class ModelProfilesEndpointTest {
                         assertTrue(listed.body().contains("apiKeyConfigured"))
                         assertFalse(listed.body().contains("private-stub-key"))
                         assertEquals(400, request("/api/model-profiles/$id/test", "POST", "{}").statusCode())
+                        assertEquals(0, provider.requests.get())
+                        assertEquals(
+                            200,
+                            request(
+                                "/api/model-routing",
+                                "PUT",
+                                """{"enabled":true,"replyModel":"qwen3:1.7b","memoryModel":"gemma3:4b",
+                                    |"researchModel":"qwen2.5:7b","visionModel":"qwen3-vl:2b"}
+                                """.trimMargin(),
+                            ).statusCode(),
+                        )
+                        assertEquals("qwen3-vl:2b", ModelRoutingStore(directory).get().visionModel)
+                        assertTrue(request("/api/model-routing", "GET").body().contains("gemma3:4b"))
+                        assertEquals(
+                            400,
+                            request(
+                                "/api/model-routing",
+                                "PUT",
+                                """{"replyProfileId":"$id","replyModel":"qwen3:1.7b"}""",
+                            ).statusCode(),
+                        )
+                        assertEquals(
+                            400,
+                            request("/api/model-routing", "PUT", """{"visionModel":"gemma3:1b"}""").statusCode(),
+                        )
                         assertEquals(0, provider.requests.get())
                         assertEquals(
                             200,

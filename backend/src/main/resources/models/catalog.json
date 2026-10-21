@@ -43,7 +43,8 @@
     "quality": "best",
     "thinking": false,
     "contextTokens": 131072,
-    "license": "Gemma"
+    "license": "Gemma",
+    "supportsVision": true
   },
   {
     "id": "qwen3:4b",
@@ -118,7 +119,8 @@
     "quality": "basic",
     "thinking": false,
     "contextTokens": 262144,
-    "license": "Apache-2.0"
+    "license": "Apache-2.0",
+    "supportsVision": true
   },
   {
     "id": "qwen3.5:2b",
@@ -133,7 +135,8 @@
     "quality": "good",
     "thinking": false,
     "contextTokens": 262144,
-    "license": "Apache-2.0"
+    "license": "Apache-2.0",
+    "supportsVision": true
   },
   {
     "id": "qwen3.5:4b",
@@ -148,7 +151,8 @@
     "quality": "best",
     "thinking": false,
     "contextTokens": 262144,
-    "license": "Apache-2.0"
+    "license": "Apache-2.0",
+    "supportsVision": true
   },
   {
     "id": "qwen3.5:9b",
@@ -163,7 +167,8 @@
     "quality": "best",
     "thinking": false,
     "contextTokens": 262144,
-    "license": "Apache-2.0"
+    "license": "Apache-2.0",
+    "supportsVision": true
   },
   {
     "id": "gemma3:1b",
@@ -193,7 +198,8 @@
     "quality": "best",
     "thinking": false,
     "contextTokens": 131072,
-    "license": "Gemma"
+    "license": "Gemma",
+    "supportsVision": true
   },
   {
     "id": "gemma3:27b",
@@ -208,7 +214,8 @@
     "quality": "best",
     "thinking": false,
     "contextTokens": 131072,
-    "license": "Gemma"
+    "license": "Gemma",
+    "supportsVision": true
   },
   {
     "id": "deepseek-r1:1.5b",
@@ -404,5 +411,53 @@
     "thinking": false,
     "contextTokens": 32768,
     "license": "Apache-2.0"
+  },
+  {
+    "id": "qwen3-vl:2b",
+    "name": "Qwen 3 VL · 2B",
+    "size": "1.9 GB",
+    "description": "",
+    "installed": false,
+    "recommended": false,
+    "family": "qwen-vl",
+    "memoryGb": 4,
+    "speed": "fast",
+    "quality": "best",
+    "thinking": false,
+    "contextTokens": 262144,
+    "license": "Apache-2.0",
+    "supportsVision": true
+  },
+  {
+    "id": "qwen3-vl:4b",
+    "name": "Qwen 3 VL · 4B",
+    "size": "3.3 GB",
+    "description": "",
+    "installed": false,
+    "recommended": false,
+    "family": "qwen-vl",
+    "memoryGb": 8,
+    "speed": "balanced",
+    "quality": "best",
+    "thinking": false,
+    "contextTokens": 262144,
+    "license": "Apache-2.0",
+    "supportsVision": true
+  },
+  {
+    "id": "qwen3-vl:8b",
+    "name": "Qwen 3 VL · 8B",
+    "size": "6.2 GB",
+    "description": "",
+    "installed": false,
+    "recommended": false,
+    "family": "qwen-vl",
+    "memoryGb": 12,
+    "speed": "balanced",
+    "quality": "best",
+    "thinking": false,
+    "contextTokens": 262144,
+    "license": "Apache-2.0",
+    "supportsVision": true
   }
 ]

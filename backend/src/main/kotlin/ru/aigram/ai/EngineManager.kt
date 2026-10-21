@@ -25,6 +25,7 @@ import java.net.http.HttpResponse
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicLong
 import java.util.zip.ZipInputStream
 
 private const val OLLAMA_VERSION = "0.40.4"
@@ -44,6 +45,7 @@ class EngineManager @Inject constructor(
     private val devices: OllamaDeviceSelector? = null,
 ) : AutoCloseable {
     private val executor = Executors.newSingleThreadExecutor()
+    private val warmupVersion = AtomicLong()
 
     @Volatile
     private var downloading = ""
@@ -130,22 +132,29 @@ class EngineManager @Inject constructor(
         return process
     }
 
+    @Synchronized
     fun warm(model: String) {
+        if (warming == model) return
+        val version = warmupVersion.incrementAndGet()
+        warming = model
+        failure = ""
         executor.submit {
             try {
+                if (version != warmupVersion.get()) return@submit
                 if (model !in ollama.installed()) {
                     return@submit
                 }
-                warming = model
                 inference.foreground { ollama.warm(model) }
             } catch (exception: IntegrationException) {
                 diagnostics?.record(DiagnosticSource.ENGINE, exception)
-                if (warming.isNotBlank()) {
-                    failure = EngineWarmupFailedException().message
+                synchronized(this@EngineManager) {
+                    if (version == warmupVersion.get()) failure = EngineWarmupFailedException().message
                 }
                 System.err.println("Model warmup unavailable: ${exception.javaClass.simpleName}")
             } finally {
-                warming = ""
+                synchronized(this@EngineManager) {
+                    if (version == warmupVersion.get()) warming = ""
+                }
             }
         }
     }

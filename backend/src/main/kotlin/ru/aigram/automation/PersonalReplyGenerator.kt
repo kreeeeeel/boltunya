@@ -11,6 +11,7 @@ import ru.aigram.domain.ReplyResult
 import ru.aigram.exception.impl.ChatUnavailableException
 import ru.aigram.http.InputValidation
 import ru.aigram.memory.MemoryCoordinator
+import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.ContextExclusionStore
 import ru.aigram.storage.SettingsStore
@@ -29,13 +30,22 @@ class PersonalReplyGenerator @Inject constructor(
     private val targets: ModelTargetResolver,
     private val telegram: TelegramGateway,
     private val exclusions: ContextExclusionStore,
+    private val resources: ResourceCatalog,
 ) {
     fun reply(rule: ChatRule, history: List<ChatMessage>): ReplyResult = generate(rule, history, true)
 
     fun draft(rule: ChatRule, history: List<ChatMessage>): ReplyResult =
         generate(rule.copy(aiStickers = false), history, false)
 
-    private fun generate(rule: ChatRule, history: List<ChatMessage>, forAutomation: Boolean): ReplyResult {
+    fun initiate(rule: ChatRule, history: List<ChatMessage>): ReplyResult =
+        generate(rule.copy(aiStickers = false, internetAccess = false), history, true, initiative = true)
+
+    private fun generate(
+        rule: ChatRule,
+        history: List<ChatMessage>,
+        forAutomation: Boolean,
+        initiative: Boolean = false,
+    ): ReplyResult {
         val resolved = settings.resolve(rule)
         val owner = telegram.status().userId
         val context = exclusions.forInference(
@@ -60,7 +70,11 @@ class PersonalReplyGenerator @Inject constructor(
         return conversation.reply(
             resolved,
             context,
-            settings.get().globalPrompt,
+            settings.get().globalPrompt + if (initiative) {
+                "\n\n" + resources.prompt("ru/conversation/initiative")
+            } else {
+                ""
+            },
             if (rule.matchMyStyle) {
                 exclusions.forInference(
                     owner,

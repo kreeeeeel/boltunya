@@ -12,6 +12,7 @@ class MemoryTelegramGateway : TelegramGateway by FakeTelegramGateway() {
     var messages: List<ChatMessage> = emptyList()
     var chatIds: List<String> = listOf("42", "43")
     var groupChats: Set<String> = emptySet()
+    var channelChats: Set<String> = emptySet()
     val reads = mutableListOf<Pair<String, Long>>()
     override fun status(): TelegramStatus = TelegramStatus(state = "ready", userId = ownerId)
     override fun chats(): List<ChatSummary> = chatIds.map { id ->
@@ -24,7 +25,9 @@ class MemoryTelegramGateway : TelegramGateway by FakeTelegramGateway() {
             0,
             ChatRule(),
             lastMessageId = last?.id.orEmpty(),
-            kind = if (id in
+            kind = if (id in channelChats) {
+                "channel"
+            } else if (id in
                 groupChats
             ) {
                 "group"

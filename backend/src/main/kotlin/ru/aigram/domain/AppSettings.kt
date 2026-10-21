@@ -25,6 +25,9 @@ data class AppSettings(
     val showTyping: Boolean = true,
     val ignoreAssistantTasks: Boolean = true,
     val memoryEnabled: Boolean = true,
+    val memoryCollectionScope: MemoryCollectionScope = MemoryCollectionScope.AI_ENABLED,
+    val proactiveEnabled: Boolean = false,
+    @field:Min(5) @field:Max(43200) val proactiveIntervalMinutes: Int = 60,
     @field:Min(1) @field:Max(168)
     val memoryIntervalHours: Int = 6,
     val autoDownloadPhotos: Boolean = true,

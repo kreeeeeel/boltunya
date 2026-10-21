@@ -19,4 +19,5 @@ data class ModelInfo(
     val contextTokens: Int = 8192,
     val license: String = "Apache-2.0",
     val measurement: ModelMeasurement? = null,
+    val supportsVision: Boolean = false,
 )

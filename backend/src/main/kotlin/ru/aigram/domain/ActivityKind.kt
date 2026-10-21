@@ -13,4 +13,7 @@ enum class ActivityKind {
 
     @SerialName("memory")
     MEMORY,
+
+    @SerialName("initiative")
+    INITIATIVE,
 }

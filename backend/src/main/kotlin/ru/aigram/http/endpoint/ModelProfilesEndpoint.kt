@@ -20,6 +20,7 @@ import ru.aigram.ai.profile.ModelTask
 import ru.aigram.ai.profile.ModelTaskRouting
 import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.exception.AppException
+import ru.aigram.exception.impl.InvalidModelProfileException
 import ru.aigram.exception.impl.ModelCapabilityUnavailableException
 import ru.aigram.exception.impl.ModelProfileInUseException
 import ru.aigram.exception.impl.ModelProviderFailedException
@@ -68,6 +69,19 @@ class ModelProfilesEndpoint @Inject constructor(
         validation.validate(update)
         ModelTask.entries.stream().forEach { task ->
             val id = update.profileId(task)
+            val model = update.model(task)
+            if (id.isNotEmpty() && model.isNotEmpty()) throw InvalidModelProfileException()
+            if (model.isNotEmpty()) {
+                if (!model.codePoints().allMatch {
+                        Character.isLetterOrDigit(it) || it.toChar() in "-_.:/"
+                    }
+                ) {
+                    throw InvalidModelProfileException()
+                }
+                if (task == ModelTask.VISION && !targets.localModel(model).capabilities.vision) {
+                    throw ModelCapabilityUnavailableException()
+                }
+            }
             if (id.isNotEmpty()) {
                 val target = targets.profile(id)
                 if (task == ModelTask.VISION && !target.capabilities.vision) throw ModelCapabilityUnavailableException()

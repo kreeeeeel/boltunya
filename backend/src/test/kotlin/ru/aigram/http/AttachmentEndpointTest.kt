@@ -42,7 +42,7 @@ class AttachmentEndpointTest {
                         ).header("X-File-Name", "report%20name.pdf")
                             .header("Content-Type", "application/octet-stream").POST(
                                 HttpRequest.BodyPublishers.ofByteArray(
-                                    ByteArray(600_000) {
+                                    ByteArray(if (authenticated) 600_000 else 0) {
                                         1
                                     },
                                 ),

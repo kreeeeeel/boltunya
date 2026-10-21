@@ -13,7 +13,9 @@ import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.diagnostics.DiagnosticSource
 import ru.aigram.domain.ChatMessage
 import ru.aigram.domain.ChatRule
+import ru.aigram.domain.ChatSummary
 import ru.aigram.domain.GroupReplyMode
+import ru.aigram.domain.MemoryCollectionScope
 import ru.aigram.exception.IntegrationException
 import ru.aigram.exception.impl.BackgroundInferenceDeferredException
 import ru.aigram.exception.impl.MemoryUpdateFailedException
@@ -92,14 +94,13 @@ class MemoryCoordinator @Inject constructor(
         if (!settings.get().memoryEnabled || !settings.rule(message.chatId).useMemory) return
         if (!attach()) return
         val rule = settings.rule(message.chatId)
-        if (!rule.enabled ||
+        if (!collectionAllowed(message.chatId, rule, message.group) ||
             message.outgoing && (message.automated || automated.contains(message.chatId, message.id))
         ) {
             return
         }
         if (message.group) {
             groupChatIds = groupChatIds + message.chatId
-            if (!groupEnabled(rule)) return
         }
         if (message.group && exclusions?.excludes(attachedAccount, message.chatId, message.id) != true) {
             roster?.record(attachedAccount, message.chatId, listOf(message))
@@ -113,8 +114,22 @@ class MemoryCoordinator @Inject constructor(
         if (chatId.toLongOrNull() == null) return MemoryContext()
         return try {
             if (!attach()) return MemoryContext()
-            if (rule.useMemory && rule.enabled) store.observe(chatId, history.last().id.toLongOrNull() ?: 0)
-            if (rule.useMemory && rule.enabled) roster?.record(attachedAccount, chatId, history)
+            if (collectionAllowed(chatId, rule, history.any { it.group })) {
+                store.observe(
+                    chatId,
+                    history.last().id.toLongOrNull() ?: 0,
+                )
+            }
+            if (collectionAllowed(
+                    chatId,
+                    rule,
+                    history.any {
+                        it.group
+                    },
+                )
+            ) {
+                roster?.record(attachedAccount, chatId, history)
+            }
             val general = store.read("")
             val chat = if (rule.useMemory) store.read(chatId) else StoredMemory("", "", "", "")
             MemoryContext(
@@ -176,9 +191,7 @@ class MemoryCoordinator @Inject constructor(
             }
         } else {
             cancelledUntil.remove(chatId)
-            val chats = telegram.chats()
-            listedChatIds = chats.map { it.id }.toSet()
-            groupChatIds = chats.filter { it.kind != "private" }.map { it.id }.toSet()
+            readDirectory()
             if (rebuild) store.rebuild(chatId) else store.observe(chatId, manual = true, request = true)
             failures.remove(chatId)
             errors.remove(chatId)
@@ -186,6 +199,11 @@ class MemoryCoordinator @Inject constructor(
             collections.add(MemoryCollectionRequest(chatId, rebuild, store.state(chatId)?.processedMessages ?: 0))
             if (immediate) scheduleNext()
         }
+    }
+
+    fun pause() {
+        val id = outstanding.get()
+        if (id.isNotEmpty()) queue.cancelMemory(id, userInitiated = false)
     }
 
     @Synchronized
@@ -443,17 +461,23 @@ class MemoryCoordinator @Inject constructor(
             errors.clear()
             collections.clear()
             cancelledUntil.clear()
+            readDirectory()
         }
         return true
     }
 
-    private fun refreshConfigured(onStartup: Boolean) {
+    private fun readDirectory(): List<ChatSummary> {
         val chats = telegram.chats()
-        listedChatIds = chats.map { it.id }.toSet()
+        listedChatIds = chats.filter { it.kind != "channel" }.map { it.id }.toSet()
         groupChatIds = chats.filter { it.kind != "private" }.map { it.id }.toSet()
+        return chats
+    }
+
+    private fun refreshConfigured(onStartup: Boolean) {
+        val chats = readDirectory()
         chats.stream().filter { chat ->
             val rule = settings.rule(chat.id)
-            rule.enabled && rule.useMemory && (chat.kind == "private" || groupEnabled(rule))
+            collectionAllowed(chat.id, rule, chat.kind != "private")
         }.forEach { chat ->
             val id = chat.lastMessageId.toLongOrNull() ?: 0
             val previous = store.state(chat.id)
@@ -463,9 +487,15 @@ class MemoryCoordinator @Inject constructor(
 
     private fun automaticallyAllowed(state: ChatMemoryState): Boolean {
         val rule = settings.rule(state.chatId)
-        return state.chatId in listedChatIds && rule.useMemory && rule.enabled &&
-            (state.chatId !in groupChatIds || groupEnabled(rule))
+        return collectionAllowed(state.chatId, rule, state.chatId in groupChatIds)
     }
+
+    private fun collectionAllowed(chatId: String, rule: ChatRule, group: Boolean): Boolean =
+        chatId in listedChatIds && rule.useMemory &&
+            (
+                settings.get().memoryCollectionScope == MemoryCollectionScope.ALL_ALLOWED ||
+                    rule.enabled && (!group || groupEnabled(rule))
+                )
 
     private fun allowed(state: ChatMemoryState): Boolean {
         if (automaticallyAllowed(state)) return true

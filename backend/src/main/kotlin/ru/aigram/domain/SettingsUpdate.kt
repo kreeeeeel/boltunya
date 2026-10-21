@@ -24,6 +24,9 @@ data class SettingsUpdate(
     val showTyping: Boolean? = null,
     val ignoreAssistantTasks: Boolean? = null,
     val memoryEnabled: Boolean? = null,
+    val memoryCollectionScope: MemoryCollectionScope? = null,
+    val proactiveEnabled: Boolean? = null,
+    @field:Min(5) @field:Max(43200) val proactiveIntervalMinutes: Int? = null,
     @field:Min(1) @field:Max(168)
     val memoryIntervalHours: Int? = null,
     val autoDownloadPhotos: Boolean? = null,

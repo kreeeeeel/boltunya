@@ -41,7 +41,10 @@ class ReplyImageContextTest {
             assertTrue(builder.build(ChatRule(), listOf(message)).isEmpty())
             assertEquals(0, telegram.downloads)
             assertFailsWith<ModelCapabilityUnavailableException> {
-                builder.build(ChatRule(analyzePhotos = true), listOf(message))
+                builder.build(
+                    ChatRule(analyzePhotos = true, model = "qwen3:1.7b", useDefaultModel = false),
+                    listOf(message),
+                )
             }
             assertEquals(0, telegram.downloads)
             val profile = services.profiles.save(

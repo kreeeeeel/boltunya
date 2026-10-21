@@ -5,6 +5,7 @@ import it.tdlight.jni.TdApi
 import jakarta.inject.Inject
 import jakarta.inject.Provider
 import ru.aigram.automation.ReplyCoordinator
+import ru.aigram.automation.proactive.ProactiveCoordinator
 import ru.aigram.domain.TelegramStatus
 import ru.aigram.exception.impl.TelegramRequestRejectedException
 import ru.aigram.exception.impl.TelegramUpdateFailedException
@@ -21,6 +22,7 @@ class TelegramUpdateHandler @Inject constructor(
     private val prefetch: MediaPrefetcher,
     private val typing: TelegramTypingStore,
     private val delivery: TelegramMediaDeliveryTracker,
+    private val initiatives: Provider<ProactiveCoordinator>,
 ) {
     fun register(builder: SimpleTelegramClientBuilder, version: Long) {
         builder.addDefaultExceptionHandler {
@@ -120,6 +122,7 @@ class TelegramUpdateHandler @Inject constructor(
                 } catch (exception: Exception) {
                     System.err.println("Memory tracking failed: ${exception.javaClass.simpleName}")
                 }
+                initiatives.get().observe(message)
                 replies.get().onMessage(message)
             }
         }

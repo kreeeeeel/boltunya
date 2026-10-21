@@ -14,19 +14,19 @@ import ru.aigram.storage.ModelMeasurementStore
 import ru.aigram.storage.SettingsStore
 import java.nio.file.Path
 
-class ProfileAiTestServices(directory: Path) : AutoCloseable {
+class ProfileAiTestServices(directory: Path, baseUrl: String = "http://127.0.0.1:1") : AutoCloseable {
     private val resources = ResourceCatalog()
     val profiles = ModelProfileStore(directory, ModelCredentialVault(directory), resources)
     val prompts = ModelPromptStore(directory)
     val routing = ModelRoutingStore(directory)
     val settings = SettingsStore(directory)
-    val targets = ModelTargetResolver(profiles, routing, settings, ApplicationConfiguration(directory, false))
+    val targets = ModelTargetResolver(profiles, routing, settings, ApplicationConfiguration(directory, false, baseUrl))
     private val factory = SpringAiModelFactory()
     private val clients = ProfileModelFactory(profiles, factory)
     val tracing = ReplyTraceScope()
     val completion = ChatCompletionService(
-        factory.create("http://127.0.0.1:1"), ModelPolicies(resources), ModelReplyReader(),
-        OllamaRuntime("http://127.0.0.1:1"), ModelInference(), ModelMeasurementStore(directory), tracing,
+        factory.create(baseUrl), ModelPolicies(resources), ModelReplyReader(),
+        OllamaRuntime(baseUrl), ModelInference(), ModelMeasurementStore(directory), tracing,
         targets = targets, clients = clients, promptSettings = prompts,
     )
 

@@ -63,6 +63,8 @@ import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.automation.ReplyDeliveryPolicy
 import ru.aigram.automation.activity.ActivityHistoryStore
 import ru.aigram.automation.activity.ReplyTraceScope
+import ru.aigram.automation.proactive.ProactiveCoordinator
+import ru.aigram.automation.proactive.ProactiveLedger
 import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.http.ApiRouter
 import ru.aigram.http.ExitAction
@@ -164,6 +166,7 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
         bind(Path::class.java).toInstance(configuration.directory)
         Stream.of(
             PersonalReplyGenerator::class.java,
+            ProactiveLedger::class.java,
             ReplyDeliveryPolicy::class.java,
             ReplyImageContext::class.java,
             ReplyMediaPlanner::class.java,
@@ -402,6 +405,27 @@ class ApplicationModule(private val configuration: ApplicationConfiguration) : A
         exclusions = exclusions,
         history = history,
         generate = generator::reply,
+    )
+
+    @Provides @Singleton
+    fun initiatives(
+        settings: SettingsStore,
+        telegram: TelegramGateway,
+        replies: ReplyCoordinator,
+        ledger: ProactiveLedger,
+        clock: Clock,
+        resources: ResourceCatalog,
+        diagnostics: DiagnosticLog,
+        generator: PersonalReplyGenerator,
+    ): ProactiveCoordinator = ProactiveCoordinator(
+        settings,
+        telegram,
+        replies,
+        ledger,
+        clock,
+        resources,
+        diagnostics,
+        generator::initiate,
     )
 
     @Provides @Singleton

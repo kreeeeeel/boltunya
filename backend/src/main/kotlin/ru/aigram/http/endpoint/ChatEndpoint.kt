@@ -84,8 +84,9 @@ class ChatEndpoint @Inject constructor(
         validation.validate(rule)
         val resolved = settings.resolveModel(rule)
         validation.target(resolved, forAutomation = rule.enabled)
+        val previous = settings.rule(id)
         settings.saveRule(id, rule)
-        replies.cancelPending()
+        if (settings.rule(id) != previous) replies.cancelReplies(id)
         validation.localModel(resolved)?.let { engine.warm(it) }
     }
 }

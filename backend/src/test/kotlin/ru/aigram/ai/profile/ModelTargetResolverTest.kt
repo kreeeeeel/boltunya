@@ -136,6 +136,67 @@ class ModelTargetResolverTest {
                 settings,
                 ApplicationConfiguration(directory, false),
             )
-        assertFailsWith<ModelCapabilityUnavailableException> { targets.resolve(ModelTask.VISION, ChatRule()) }
+        assertFailsWith<ModelCapabilityUnavailableException> {
+            targets.resolve(ModelTask.VISION, ChatRule(model = "qwen3:1.7b", useDefaultModel = false))
+        }
+    }
+
+    @Test
+    fun `persisted native task assignments override a global API while explicit chat replies keep their model`() {
+        ProfileAiTestServices(directory).use { services ->
+            val api = services.profiles.save(
+                null,
+                ModelProfileUpdate(
+                    "Global API",
+                    ModelProvider.OPENAI_COMPATIBLE,
+                    baseUrl = "https://example.test/v1",
+                    model = "api-model",
+                ),
+            )
+            services.settings.update { it.copy(defaultModelProfileId = api.id) }
+            val assigned = ModelTaskRouting(
+                enabled = true,
+                parallelIndependentTasks = true,
+                replyModel = "qwen3:1.7b",
+                memoryModel = "gemma3:4b",
+                researchModel = "qwen2.5:7b",
+                visionModel = "qwen3-vl:2b",
+            )
+            services.routing.save(assigned)
+            assertEquals(assigned, ModelRoutingStore(directory).get())
+            ModelTask.entries.stream().forEach { task ->
+                val target = services.targets.resolve(task, ChatRule())
+                assertEquals(assigned.model(task), target.model)
+                assertEquals("", target.profileId)
+                assertEquals(ModelProvider.OLLAMA, target.provider)
+                assertEquals("local", target.executionGroup)
+            }
+            val explicit = ChatRule(model = "gemma3:12b", useDefaultModel = false)
+            assertEquals("gemma3:12b", services.targets.resolve(ModelTask.REPLY, explicit).model)
+            assertEquals("gemma3:4b", services.targets.resolve(ModelTask.MEMORY, explicit).model)
+            services.routing.save(ModelTaskRouting(enabled = true, replyModel = "qwen3:1.7b"))
+            assertEquals("qwen3:1.7b", services.targets.resolve(ModelTask.RESEARCH, ChatRule()).model)
+            assertEquals(api.id, services.targets.resolve(ModelTask.MEMORY, ChatRule()).profileId)
+            services.routing.save(assigned.copy(enabled = false))
+            assertEquals(api.id, services.targets.resolve(ModelTask.REPLY, ChatRule()).profileId)
+        }
+    }
+
+    @Test
+    fun `only confirmed native vision variants may receive an image`() {
+        ProfileAiTestServices(directory).use { services ->
+            services.routing.save(ModelTaskRouting(enabled = true, visionModel = "gemma3:1b"))
+            assertFailsWith<ModelCapabilityUnavailableException> {
+                services.targets.resolve(ModelTask.VISION, ChatRule())
+            }
+            services.routing.save(ModelTaskRouting(enabled = true, visionModel = "gemma3:latest"))
+            assertTrue(services.targets.resolve(ModelTask.VISION, ChatRule()).capabilities.vision)
+            services.routing.save(ModelTaskRouting(enabled = true, visionModel = "qwen3.5:4b"))
+            assertTrue(services.targets.resolve(ModelTask.VISION, ChatRule()).capabilities.vision)
+            services.routing.save(ModelTaskRouting(enabled = true, visionModel = "custom:unknown"))
+            assertFailsWith<ModelCapabilityUnavailableException> {
+                services.targets.resolve(ModelTask.VISION, ChatRule())
+            }
+        }
     }
 }

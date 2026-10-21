@@ -22,7 +22,7 @@ class InputValidation @Inject constructor(
     }
 
     fun model(name: String, forAutomation: Boolean = false) {
-        if (!models.contains(name)) throw UnknownModelException()
+        if (!models.selectable(name)) throw UnknownModelException()
         if (forAutomation && !models.supportsAutomation(name)) throw ModelNotReadyForAutomationException(name)
     }
 

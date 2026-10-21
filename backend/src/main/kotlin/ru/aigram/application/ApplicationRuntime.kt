@@ -4,6 +4,7 @@ import jakarta.inject.Inject
 import ru.aigram.ai.EngineManager
 import ru.aigram.ai.profile.ModelTargetResolver
 import ru.aigram.automation.ReplyCoordinator
+import ru.aigram.automation.proactive.ProactiveCoordinator
 import ru.aigram.configuration.ApplicationConfiguration
 import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.diagnostics.DiagnosticSource
@@ -31,6 +32,7 @@ class ApplicationRuntime @Inject constructor(
     private val prefetch: MediaPrefetcher,
     private val targets: ModelTargetResolver,
     private val diagnostics: DiagnosticLog,
+    private val initiatives: ProactiveCoordinator,
 ) : AutoCloseable {
     private val directory = configuration.directory
     private val closed = AtomicBoolean()
@@ -59,6 +61,7 @@ class ApplicationRuntime @Inject constructor(
         }
         memory.start()
         prefetch.start()
+        initiatives.start()
         Thread.ofVirtual().start {
             try {
                 if (credentials.exists()) telegram.restore()
@@ -71,7 +74,7 @@ class ApplicationRuntime @Inject constructor(
 
     override fun close() {
         if (!closed.compareAndSet(false, true)) return
-        listOf(memory, prefetch, replies, server, engine, monitor, telegram).stream().forEach { service ->
+        listOf(initiatives, memory, prefetch, replies, server, engine, monitor, telegram).stream().forEach { service ->
             try {
                 service.close()
             } catch (exception: Exception) {
