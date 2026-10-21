@@ -11,6 +11,8 @@ import java.util.concurrent.TimeoutException
 import java.util.stream.IntStream
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class TelegramMediaDeliveryTrackerTest {
     @Test
@@ -38,6 +40,21 @@ class TelegramMediaDeliveryTrackerTest {
         clock.advance(Duration.ofSeconds(1))
         IntStream.range(2, 1001).forEach { tracker.succeeded("42", 100, it.toLong(), it + 100L) }
         assertEquals(listOf("101"), tracker.await("42", listOf(pending(1)), Duration.ZERO))
+    }
+
+    @Test
+    fun `terminal callback waits for a late album receipt after caller timeout`() {
+        val tracker = TelegramMediaDeliveryTracker(Clock.systemUTC())
+        val terminal = tracker.track("42", listOf(pending(1), pending(2)))
+        var complete = false
+        terminal.whenComplete { _, _ -> complete = true }
+        assertFailsWith<TimeoutException> { terminal.get(0, java.util.concurrent.TimeUnit.MILLISECONDS) }
+        assertFalse(complete)
+        tracker.succeeded("42", 100, 1, 101)
+        assertFalse(complete)
+        tracker.succeeded("42", 100, 2, 102)
+        assertEquals(listOf("101", "102"), terminal.join())
+        assertTrue(complete)
     }
 
     private fun pending(messageId: Long) = TdApi.Message().apply {

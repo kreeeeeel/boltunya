@@ -9,21 +9,32 @@ class TelegramCacheStorage(
     private val client: StorageClient,
     private val media: TelegramMediaStore,
     private val prefetch: MediaPrefetcher,
+    private val outgoingFiles: TelegramOutgoingFileStore,
 ) {
-    fun statistics(): CacheStatistics = map(client.execute(TdApi.GetStorageStatistics(0)))
+    fun statistics(): CacheStatistics = includingOutgoing(map(client.execute(TdApi.GetStorageStatistics(0))))
 
     fun clear(): CacheStatistics {
         prefetch.cancelPending()
+        outgoingFiles.clearCompleted()
+        media.invalidate()
         val current = client.execute(TdApi.GetStorageStatistics(0))
         val types = current.byChat.orEmpty().flatMap {
             it.byFileType.orEmpty().toList()
         }.map { it.fileType }.distinctBy { it.constructor }.toTypedArray()
         if (types.isEmpty()) {
-            return map(current)
+            return includingOutgoing(map(current))
         }
         val result = client.execute(TdApi.OptimizeStorage(0, 0, 0, 0, types, longArrayOf(), longArrayOf(), false, 0))
-        media.invalidate()
-        return map(result)
+        return includingOutgoing(map(result))
+    }
+
+    private fun includingOutgoing(statistics: CacheStatistics): CacheStatistics {
+        val owned = outgoingFiles.statistics()
+        return statistics.copy(
+            totalBytes = statistics.totalBytes + owned.totalBytes,
+            fileCount = statistics.fileCount + owned.fileCount,
+            documentBytes = statistics.documentBytes + owned.documentBytes,
+        )
     }
 
     internal fun map(statistics: TdApi.StorageStatistics): CacheStatistics {

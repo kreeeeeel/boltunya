@@ -34,6 +34,7 @@ class TelegramVoiceSenderTest {
                 Clock.systemUTC(),
             ),
             connection,
+            TelegramOutgoingFileStore(directory, Clock.systemUTC()),
         )
         Thread.currentThread().interrupt()
         try {

@@ -21,6 +21,7 @@ import ru.aigram.telegram.TelegramMessageDeletion
 import ru.aigram.telegram.TelegramMessageEditing
 import ru.aigram.telegram.TelegramMessageLinks
 import ru.aigram.telegram.TelegramMessageSender
+import ru.aigram.telegram.TelegramOutgoingFileStore
 import ru.aigram.telegram.TelegramStickerService
 import ru.aigram.telegram.TelegramUpdateHandler
 import ru.aigram.telegram.TelegramVoiceSender
@@ -29,13 +30,19 @@ import java.nio.file.Path
 @Configuration(proxyBeanMethods = false)
 class TelegramConfiguration {
     @Bean
-    fun telegramMediaStore(directory: Path, gateway: ObjectProvider<TdLightGateway>): TelegramMediaStore =
-        TelegramMediaStore(
-            directory.resolve("telegram/files"),
-            listOf("profile_photos", "stickers", "thumbnails", "wallpapers").stream().map {
-                directory.resolve("telegram/data/$it")
-            }.toList(),
-        ) { gateway.getObject().downloadFile(it) }
+    fun telegramMediaStore(
+        directory: Path,
+        gateway: ObjectProvider<TdLightGateway>,
+        outgoingFiles: TelegramOutgoingFileStore,
+        connection: TelegramConnectionState,
+    ): TelegramMediaStore = TelegramMediaStore(
+        directory.resolve("telegram/files"),
+        listOf("profile_photos", "stickers", "thumbnails", "wallpapers").stream().map {
+            directory.resolve("telegram/data/$it")
+        }.toList(),
+        outgoingFiles,
+        { connection.version },
+    ) { gateway.getObject().downloadFile(it) }
 
     @Bean
     fun telegramInteraction(connection: TelegramConnectionState): TelegramInteraction = TelegramInteraction {

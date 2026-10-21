@@ -25,7 +25,10 @@ class TelegramMediaDeliveryTracker(private val clock: Clock) {
         receipt(Triple(ownerId, chatId, temporaryId)).result.completeExceptionally(TelegramSendFailedException())
     }
 
-    fun await(ownerId: String, messages: List<TdApi.Message>, timeout: Duration = Duration.ofMinutes(3)): List<String> {
+    fun await(ownerId: String, messages: List<TdApi.Message>, timeout: Duration = Duration.ofMinutes(3)): List<String> =
+        track(ownerId, messages).get(timeout.toMillis(), TimeUnit.MILLISECONDS)
+
+    fun track(ownerId: String, messages: List<TdApi.Message>): CompletableFuture<List<String>> {
         if (messages.isEmpty() || messages.stream().anyMatch { it.sendingState is TdApi.MessageSendingStateFailed }) {
             throw TelegramSendFailedException()
         }
@@ -33,8 +36,7 @@ class TelegramMediaDeliveryTracker(private val clock: Clock) {
             Triple(ownerId, it.chatId, it.id)
         }.toList()
         val results = pending.stream().map { receipt(it).result }.toList()
-        return try {
-            CompletableFuture.allOf(*results.toTypedArray()).get(timeout.toMillis(), TimeUnit.MILLISECONDS)
+        return CompletableFuture.allOf(*results.toTypedArray()).thenApply {
             messages.stream().map { message ->
                 val index = pending.indexOf(Triple(ownerId, message.chatId, message.id))
                 if (index < 0) {
@@ -43,7 +45,7 @@ class TelegramMediaDeliveryTracker(private val clock: Clock) {
                     results[index].join().toString()
                 }
             }.toList()
-        } finally {
+        }.whenComplete { _, _ ->
             pending.stream().forEach { receipts.remove(it) }
         }
     }

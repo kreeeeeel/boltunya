@@ -22,11 +22,14 @@ private val SUPPORTED_MIME_TYPES = setOf(
 class TelegramMediaStore(
     private val directory: Path,
     private val cacheDirectories: List<Path> = emptyList(),
+    private val outgoingFiles: TelegramOutgoingFileStore? = null,
+    private val sessionVersion: () -> Long = { 0 },
     private val download: (Int) -> TdApi.File,
 ) {
     private val files = ConcurrentHashMap<Int, MediaAttachment>()
     private val downloaded = ConcurrentHashMap<Int, Boolean>()
     private val revision = AtomicLong()
+    private val recovered = ConcurrentHashMap<Triple<Long, Int, String>, Path>()
 
     fun isDownloaded(id: Int): Boolean = downloaded[id] == true
     fun uniqueId(id: Int): String = files[id]?.uniqueId.orEmpty()
@@ -42,11 +45,12 @@ class TelegramMediaStore(
     }
     fun invalidate() {
         downloaded.replaceAll { _, _ -> false }
+        recovered.clear()
         revision.incrementAndGet()
     }
 
     fun register(file: TdApi.File, mimeType: String, fileName: String): Int {
-        downloaded.putIfAbsent(file.id, file.local?.isDownloadingCompleted == true)
+        downloaded[file.id] = file.local?.isDownloadingCompleted == true
         files[file.id] = MediaAttachment(
             fileId = file.id,
             mimeType = mimeType.takeIf { it in SUPPORTED_MIME_TYPES } ?: "application/octet-stream",
@@ -58,6 +62,7 @@ class TelegramMediaStore(
     }
 
     fun get(fileId: Int): MediaFile {
+        val version = sessionVersion()
         val metadata = files[fileId]
 
         if (metadata == null) {
@@ -68,7 +73,7 @@ class TelegramMediaStore(
             throw MediaTooLargeException()
         }
         val file = download(fileId)
-        if (metadata.uniqueId.isNotEmpty() &&
+        if (sessionVersion() != version || file.id != fileId || metadata.uniqueId.isNotEmpty() &&
             file.remote?.uniqueId != metadata.uniqueId
         ) {
             throw MediaUnavailableException()
@@ -81,9 +86,32 @@ class TelegramMediaStore(
         if (local == null || !local.isDownloadingCompleted || local.path.isBlank()) {
             throw MediaNotReadyException()
         }
-        val path = Path.of(local.path).toRealPath()
+        val original = Path.of(local.path)
+        if (!Files.isRegularFile(original)) {
+            throw MediaUnavailableException()
+        }
+        var path = original.toRealPath()
         val roots = (listOf(directory) + cacheDirectories).filter(Files::isDirectory).map { it.toRealPath() }
-        if (roots.none(path::startsWith) || !Files.isRegularFile(path) ||
+        if (roots.none(path::startsWith) && metadata.mimeType == "audio/ogg" &&
+            metadata.fileName == "voice.ogg" && metadata.uniqueId.isNotEmpty()
+        ) {
+            val retained = outgoingFiles
+            if (retained != null) {
+                val copy = recovered.compute(Triple(version, fileId, metadata.uniqueId)) { _, previous ->
+                    if (previous != null && Files.isRegularFile(previous)) {
+                        previous
+                    } else {
+                        retained.recoverVoice(original)
+                    }
+                }
+                if (copy == null) {
+                    throw MediaUnavailableException()
+                }
+                path = copy.toRealPath()
+            }
+        }
+        val allowedRoots = (listOf(directory) + cacheDirectories).filter(Files::isDirectory).map { it.toRealPath() }
+        if (sessionVersion() != version || allowedRoots.none(path::startsWith) || !Files.isRegularFile(path) ||
             Files.size(path) > MAX_FILE_BYTES
         ) {
             throw MediaUnavailableException()
@@ -94,5 +122,6 @@ class TelegramMediaStore(
     fun clear() {
         files.clear()
         downloaded.clear()
+        recovered.clear()
     }
 }

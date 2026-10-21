@@ -19,6 +19,7 @@ class TelegramVoiceSender(
     private val content: TelegramVoiceContent,
     private val automatedSends: TelegramAutomatedSendRegistry,
     private val connection: TelegramConnectionState,
+    private val outgoingFiles: TelegramOutgoingFileStore,
 ) {
     fun send(
         chatId: String,
@@ -43,19 +44,34 @@ class TelegramVoiceSender(
         } else {
             null
         }
+        val retained = try {
+            outgoingFiles.retain(voice.path)
+        } catch (exception: Exception) {
+            if (send != null) {
+                automatedSends.rejected(send)
+            }
+            throw exception
+        }
+        val input = request.inputMessageContent as TdApi.InputMessageVoiceNote
+        input.voiceNote.voiceNote = TdApi.InputFileLocal(retained.toString())
         if (connection.version != version || service.status().userId != owner ||
             send != null && (send.version != version || send.ownerId != owner)
         ) {
             if (send != null) {
                 automatedSends.rejected(send)
             }
+            outgoingFiles.completed(retained)
             throw TelegramNotConnectedException()
         }
         if (send != null) {
             request.options = TdApi.MessageSendOptions().apply { sendingId = send.sendingId }
         }
+        var dispatched = false
         return try {
-            val message = client.sendMessage(request, true).get(VOICE_SEND_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            val future = client.sendMessage(request, true)
+            outgoingFiles.track(listOf(retained), future)
+            dispatched = true
+            val message = future.get(VOICE_SEND_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             if (send != null) {
                 automatedSends.completed(send, message)
             }
@@ -70,6 +86,13 @@ class TelegramVoiceSender(
         } catch (exception: InterruptedException) {
             Thread.currentThread().interrupt()
             throw TelegramSendFailedException(exception)
+        } finally {
+            if (!dispatched) {
+                outgoingFiles.completed(retained)
+                if (send != null) {
+                    automatedSends.rejected(send)
+                }
+            }
         }
     }
 }

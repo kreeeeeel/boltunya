@@ -6,6 +6,7 @@ import org.junit.jupiter.api.io.TempDir
 import ru.aigram.storage.SettingsStore
 import java.nio.file.Files
 import java.nio.file.Path
+import java.time.Clock
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -50,7 +51,12 @@ class TelegramCacheStorageTest {
             },
         )
         MediaPrefetcher(files, MediaDownloadPolicy(SettingsStore(directory))).use { prefetch ->
-            val service = TelegramCacheStorage(client, files, prefetch)
+            val service = TelegramCacheStorage(
+                client,
+                files,
+                prefetch,
+                TelegramOutgoingFileStore(directory, Clock.systemUTC()),
+            )
             val stats = service.statistics()
             assertEquals(600L, stats.totalBytes)
             assertEquals(100L, stats.photoBytes)
@@ -67,6 +73,29 @@ class TelegramCacheStorageTest {
             assertEquals("{}", Files.readString(settings))
             assertEquals("original text", Files.readString(retained))
             assertFalse(files.isDownloaded(1))
+        }
+    }
+
+    @Test
+    fun `reports owned outgoing payloads without sidecars and clears only completed copies`() {
+        val outgoing = TelegramOutgoingFileStore(directory, Clock.systemUTC())
+        val source = Files.writeString(directory.resolve("voice.ogg"), "OggS synthetic")
+        val active = outgoing.retain(source)
+        val finished = outgoing.retain(source)
+        outgoing.completed(finished)
+        val files = TelegramMediaStore(directory) { error("No download") }
+        val client = StorageClient { TdApi.StorageStatistics(0, 0, emptyArray()) }
+        MediaPrefetcher(files, MediaDownloadPolicy(SettingsStore(directory))).use { prefetch ->
+            val service = TelegramCacheStorage(client, files, prefetch, outgoing)
+            val expectedBytes = Files.size(source)
+            assertEquals(expectedBytes * 2, service.statistics().totalBytes)
+            assertEquals(2L, service.statistics().fileCount)
+            val remaining = service.clear()
+            assertEquals(expectedBytes, remaining.totalBytes)
+            assertEquals(expectedBytes, remaining.documentBytes)
+            assertEquals(1L, remaining.fileCount)
+            assertTrue(Files.exists(active))
+            assertFalse(Files.exists(finished))
         }
     }
 }
