@@ -1,5 +1,5 @@
-import {Button, Dialog, Flex, Loader, Text} from '@gravity-ui/uikit';
-import {lazy, Suspense, useState} from 'react';
+import {Box, Button, Dialog, Flex, Loader, Text} from '@gravity-ui/uikit';
+import {lazy, Suspense, useLayoutEffect, useRef, useState} from 'react';
 import {useTranslations} from 'next-intl';
 import type {Message} from '@/shared/api/client';
 import {useMessageEditSession} from '@/modules/messages/MessageEditDialog/useMessageEditSession';
@@ -25,10 +25,27 @@ export function MessageEditDialog({
     const t = useTranslations('messageEdit');
     const session = useMessageEditSession(message.chatId, message.id, onUpdated);
     const [confirmation, setConfirmation] = useState<'close' | 'reload' | null>(null);
+    const editorContainer = useRef<HTMLDivElement>(null);
+    const restoreEditorFocus = useRef(false);
     const caption = session.options?.kind === 'caption' || message.kind !== 'text';
     const title = t(caption ? 'titleCaption' : 'titleText');
     const disabled =
         session.busy || session.refreshing || session.needsRefresh || session.conflict || session.unavailable;
+
+    useLayoutEffect(() => {
+        if (confirmation || !restoreEditorFocus.current) {
+            return;
+        }
+        restoreEditorFocus.current = false;
+        editorContainer.current
+            ?.querySelector<HTMLElement>('[contenteditable][role="textbox"], textarea')
+            ?.focus({preventScroll: true});
+    }, [confirmation]);
+
+    function continueEditing() {
+        restoreEditorFocus.current = true;
+        setConfirmation(null);
+    }
 
     function request(action: 'close' | 'reload') {
         if (session.busy) {
@@ -44,25 +61,32 @@ export function MessageEditDialog({
     }
 
     return (
-        <>
-            <Dialog
-                open
-                maxWidth="m"
-                aria-label={title}
-                qa="message-edit-dialog"
-                returnFocus={false}
-                disableOutsideClick={session.busy || confirmation !== null}
-                disableEscapeKeyDown={session.busy || confirmation !== null}
-                onClose={() => request('close')}
-                onEnterKeyDown={(event) => {
-                    if ((event.ctrlKey || event.metaKey) && !event.isComposing) {
-                        event.preventDefault();
-                        void session.save();
-                    }
-                }}
-            >
-                <Dialog.Header caption={title} />
-                <Dialog.Body>
+        <Dialog
+            open
+            maxWidth={confirmation ? 's' : 'm'}
+            aria-label={confirmation ? t('discardTitle') : title}
+            qa="message-edit-dialog"
+            returnFocus={false}
+            initialFocus="cancel"
+            disableOutsideClick={session.busy}
+            disableEscapeKeyDown={session.busy}
+            onClose={() => {
+                if (confirmation) {
+                    continueEditing();
+                } else {
+                    request('close');
+                }
+            }}
+            onEnterKeyDown={(event) => {
+                if (!confirmation && (event.ctrlKey || event.metaKey) && !event.isComposing) {
+                    event.preventDefault();
+                    void session.save();
+                }
+            }}
+        >
+            <Dialog.Header caption={confirmation ? t('discardTitle') : title} />
+            <Dialog.Body>
+                <Box ref={editorContainer} hidden={confirmation !== null}>
                     <Flex direction="column" gap={4} className={styles.body}>
                         {session.loading && (
                             <Flex alignItems="center" gap={3} role="status">
@@ -144,7 +168,27 @@ export function MessageEditDialog({
                             </Button>
                         )}
                     </Flex>
-                </Dialog.Body>
+                </Box>
+                {confirmation && <Text>{t('discardDescription')}</Text>}
+            </Dialog.Body>
+            {confirmation ? (
+                <Dialog.Footer
+                    textButtonCancel={t('keepEditing')}
+                    onClickButtonCancel={continueEditing}
+                    propsButtonCancel={{autoFocus: true}}
+                    textButtonApply={t('discard')}
+                    propsButtonApply={{view: 'outlined-danger'}}
+                    onClickButtonApply={() => {
+                        const action = confirmation;
+                        setConfirmation(null);
+                        if (action === 'close') {
+                            onClose();
+                        } else {
+                            void session.reload();
+                        }
+                    }}
+                />
+            ) : (
                 <SaveDialogFooter
                     saved={session.saved}
                     busy={session.busy}
@@ -160,36 +204,7 @@ export function MessageEditDialog({
                     onSave={() => void session.save()}
                     onClose={() => request('close')}
                 />
-            </Dialog>
-            {confirmation && (
-                <Dialog
-                    open
-                    maxWidth="s"
-                    aria-label={t('discardTitle')}
-                    returnFocus={false}
-                    onClose={() => setConfirmation(null)}
-                >
-                    <Dialog.Header caption={t('discardTitle')} />
-                    <Dialog.Body>
-                        <Text>{t('discardDescription')}</Text>
-                    </Dialog.Body>
-                    <Dialog.Footer
-                        textButtonCancel={t('keepEditing')}
-                        onClickButtonCancel={() => setConfirmation(null)}
-                        textButtonApply={t('discard')}
-                        propsButtonApply={{view: 'outlined-danger'}}
-                        onClickButtonApply={() => {
-                            const action = confirmation;
-                            setConfirmation(null);
-                            if (action === 'close') {
-                                onClose();
-                            } else {
-                                void session.reload();
-                            }
-                        }}
-                    />
-                </Dialog>
             )}
-        </>
+        </Dialog>
     );
 }

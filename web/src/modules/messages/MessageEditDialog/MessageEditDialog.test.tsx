@@ -1,6 +1,6 @@
 import {ThemeProvider, TextArea} from '@gravity-ui/uikit';
 import {NextIntlClientProvider} from 'next-intl';
-import {fireEvent, render, screen, waitFor, within} from '@testing-library/react';
+import {fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {useState} from 'react';
 import {beforeEach, expect, it, vi} from 'vitest';
 import {MessageEditDialog} from '@/modules/messages/MessageEditDialog/MessageEditDialog';
@@ -134,10 +134,21 @@ it('keeps a conflicting draft until an explicit discard and reload', async () =>
     fireEvent.click(screen.getByRole('button', {name: ru.messageEdit.save}));
     expect(await screen.findByRole('alert')).toHaveTextContent(ru.messageEdit.changedElsewhere);
     expect(input).toHaveValue('Unsaved draft');
+    const editorPortal = screen
+        .getByRole('dialog', {name: ru.messageEdit.titleText})
+        .closest('[data-floating-ui-portal]');
     fireEvent.click(screen.getByRole('button', {name: ru.messageEdit.reload}));
-    const confirmation = await screen.findByRole('dialog', {name: ru.messageEdit.discardTitle});
+    expect(await screen.findByRole('dialog', {name: ru.messageEdit.discardTitle})).toBeVisible();
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    expect(screen.queryByRole('textbox', {name: ru.messageEdit.titleText})).toBeNull();
+    expect(input).toBeInTheDocument();
     expect(mocks.messageEditOptions).toHaveBeenCalledOnce();
-    fireEvent.click(await within(confirmation).findByRole('button', {name: ru.messageEdit.keepEditing}));
+    await waitFor(() => expect(screen.getByRole('button', {name: ru.messageEdit.keepEditing})).toHaveFocus());
+    const keepEditing = screen.getByRole('button', {name: ru.messageEdit.keepEditing});
+    expect(editorPortal).toContainElement(keepEditing);
+    fireEvent.click(keepEditing);
+    await waitFor(() => expect(screen.queryByRole('dialog', {name: ru.messageEdit.discardTitle})).toBeNull());
+    expect(screen.getByRole('textbox', {name: ru.messageEdit.titleText})).toBe(input);
     expect(input).toHaveValue('Unsaved draft');
     expect(mocks.editMessage).toHaveBeenCalledOnce();
 });
@@ -169,9 +180,25 @@ it('asks before Escape discards changes and never mutates Telegram on cancellati
     const input = await screen.findByRole('textbox', {name: ru.messageEdit.titleText});
     fireEvent.change(input, {target: {value: 'My draft'}});
     fireEvent.keyDown(document, {key: 'Escape', code: 'Escape'});
-    const confirmation = await screen.findByRole('dialog', {name: ru.messageEdit.discardTitle});
+    expect(await screen.findByRole('dialog', {name: ru.messageEdit.discardTitle})).toBeVisible();
     expect(onClose).not.toHaveBeenCalled();
-    fireEvent.click(await within(confirmation).findByRole('button', {name: ru.messageEdit.discard}));
+    await waitFor(() => expect(screen.getByRole('button', {name: ru.messageEdit.keepEditing})).toHaveFocus());
+    fireEvent.keyDown(screen.getByRole('button', {name: ru.messageEdit.keepEditing}), {
+        key: 'Enter',
+        code: 'Enter',
+        ctrlKey: true,
+    });
+    expect(mocks.editMessage).not.toHaveBeenCalled();
+    expect(input).toHaveValue('My draft');
+    const focus = vi.spyOn(input, 'focus');
+    fireEvent.click(screen.getByRole('button', {name: ru.messageEdit.keepEditing}));
+    await waitFor(() => expect(screen.getByRole('textbox', {name: ru.messageEdit.titleText})).toHaveFocus());
+    expect(screen.getByRole('textbox', {name: ru.messageEdit.titleText})).toBe(input);
+    expect(input).toHaveValue('My draft');
+    expect(focus).toHaveBeenCalledWith({preventScroll: true});
+    fireEvent.keyDown(input, {key: 'Escape', code: 'Escape'});
+    expect(await screen.findByRole('dialog', {name: ru.messageEdit.discardTitle})).toBeVisible();
+    fireEvent.click(await screen.findByRole('button', {name: ru.messageEdit.discard}));
     expect(onClose).toHaveBeenCalledOnce();
     expect(mocks.editMessage).not.toHaveBeenCalled();
 });

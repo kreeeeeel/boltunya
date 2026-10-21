@@ -17,11 +17,12 @@ Release versions are assigned by Windows CI. Each GitHub release includes the fi
 - Update edited archive content and invalidate only the affected AI context and writing samples. Automated replies retain their provenance and stay excluded from owner-style learning.
 - Protect confirmed edits from delayed history polling, including multiple edits with the same second-resolution timestamp. Retain original link previews, photo/video placement and local context exclusions.
 - Preserve adjacent copied custom emoji as separate entities and literal Markdown-like text as plain text. Load the visual editor only when it is opened.
+- Keep discard confirmation inside one accessible dialog, preserving the mounted editor and undo history. Focus stays on the safe action, and Ctrl/Cmd+Enter cannot save while confirmation is open. Empty captions no longer show an unrelated command-menu placeholder.
 
 ### Verification
 
 - The final full Gradle quality gate passed 489 Kotlin tests (11 optional live tests skipped) and nine installed TypeScript SDK tests. The unchanged original wire baseline is checked alongside explicitly reviewed edit operations, entity models and optional `editedAt`.
-- The UI unit suite passed 211 tests, followed by 25 final editor/dialog regressions covering the real Gravity view, UTF-16 ranges, overlapping entities, clipboard, IME, undo/redo and save/conflict handling. TypeScript, ESLint, Stylelint and Prettier passed.
+- The final UI unit suite passed all 213 tests, including the real Gravity view, UTF-16 ranges, overlapping entities, clipboard, IME, undo/redo, save/conflict handling and confirmation accessibility. TypeScript, ESLint, Stylelint and Prettier passed.
 - Verified all 117 browser scenarios across the full regression run and the final four editing scenarios: both themes, a compact caption editor, pagination/scroll preservation and stale-history protection. All 38 Electron unit tests and 10 script tests passed.
 - Release publication additionally requires the Windows packaging, native window/tray, updater and media gates. Published asset hashes and the actual-profile launch result are recorded in the release verification notes.
 

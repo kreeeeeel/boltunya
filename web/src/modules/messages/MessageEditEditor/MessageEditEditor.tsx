@@ -79,7 +79,11 @@ export function MessageEditEditor({
             preset: 'zero',
             initial: {markup: '', mode: 'wysiwyg', toolbarVisible: false},
             md: {html: false, linkify: false},
-            wysiwygConfig: {extensions: createMessageEditExtension(bridge), searchPanel: false},
+            wysiwygConfig: {
+                extensions: createMessageEditExtension(bridge),
+                searchPanel: false,
+                placeholderOptions: {value: ''},
+            },
             experimental: {
                 beforeEditorModeChange: ({mode, reason}) => {
                     if (reason === 'error-boundary') {

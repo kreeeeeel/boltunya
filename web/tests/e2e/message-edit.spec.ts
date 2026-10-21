@@ -317,7 +317,31 @@ test('compact caption editor confirms discard and allows an empty caption', asyn
     await page.keyboard.press('Escape');
     const confirmation = page.getByRole('dialog', {name: ru.messageEdit.discardTitle, exact: true});
     await expect(confirmation).toBeVisible();
-    await confirmation.getByRole('button', {name: ru.messageEdit.keepEditing, exact: true}).click();
+    const keepEditing = confirmation.getByRole('button', {
+        name: ru.messageEdit.keepEditing,
+        exact: true,
+    });
+    await expect(keepEditing).toBeFocused();
+    await expect(keepEditing).toBeInViewport({ratio: 1});
+    const confirmationBounds = await confirmation.boundingBox();
+    expect(confirmationBounds!.x).toBeGreaterThanOrEqual(0);
+    expect(confirmationBounds!.y).toBeGreaterThanOrEqual(0);
+    expect(confirmationBounds!.x + confirmationBounds!.width).toBeLessThanOrEqual(520);
+    expect(confirmationBounds!.y + confirmationBounds!.height).toBeLessThanOrEqual(740);
+    await page.screenshot({
+        path: '../build/message-edit-confirmation-compact.png',
+        animations: 'disabled',
+    });
+    await keepEditing.press('Control+Enter');
+    expect(scenario.requests).toHaveLength(0);
+    await expect(confirmation).toBeVisible();
+    await keepEditing.click();
+    await expect(editor).toBeFocused();
+    await expect(editor).toHaveText('');
+    await dialog.getByRole('button', {name: ru.messageEditFormat.undo, exact: true}).click();
+    await expect(editor).toContainText('Полезная ссылка и секрет.');
+    await dialog.getByRole('button', {name: ru.messageEditFormat.redo, exact: true}).click();
+    await expect(editor).toHaveText('');
     await dialog.getByRole('button', {name: ru.messageEdit.save, exact: true}).click();
     await expect(dialog.getByRole('button', {name: ru.saved, exact: true})).toBeVisible();
     expect(scenario.requests[0].text).toBe('');
