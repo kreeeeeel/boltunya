@@ -28,6 +28,61 @@ function inside(parent, child) {
     return child;
 }
 
+async function regularFile(file) {
+    try {
+        const details = await fs.lstat(file);
+        return details.isFile() && !details.isSymbolicLink();
+    } catch (error) {
+        if (error.code === 'ENOENT') return false;
+        throw error;
+    }
+}
+
+function payloadEntries(listing, target) {
+    const lines = listing.split('\n').map(line => line.trimEnd());
+    const separator = lines.indexOf('----------');
+    assert.ok(separator >= 0, 'Expected a 7-Zip archive listing');
+    const entries = lines.slice(separator + 1);
+    const names = entries.filter(line => line.startsWith('Path = ')).map(line => line.slice(7));
+    assert.ok(names.length > 0 && names.length < 50_000, 'Unexpected portable payload entry count');
+    for (const name of names) {
+        const segments = name.replaceAll('\\', '/').split('/');
+        assert.ok(!path.win32.isAbsolute(name) && !name.includes(':'));
+        assert.ok(segments.every(segment => segment && segment !== '.' && segment !== '..'));
+        inside(target, path.join(target, ...segments));
+    }
+    assert.equal(entries.some(line => line.startsWith('Symbolic Link = ') || line.startsWith('Hard Link = ')), false,
+        'Portable payload must not contain links');
+}
+
+async function applicationPayload(executable, verification) {
+    if (await regularFile(path.join(path.dirname(executable), 'resources/app.asar'))) {
+        return {executable, portablePayloadExtracted: false};
+    }
+    const sevenZip = path.join(path.dirname(require.resolve('electron-winstaller/package.json')), 'vendor/7z-x64.exe');
+    assert.ok(await regularFile(sevenZip), 'The installed Windows 7-Zip helper is required');
+    const directory = inside(verification, await fs.mkdtemp(path.join(verification, 'packaged-extract-')));
+    const options = {windowsHide: true, timeout: 120_000, maxBuffer: 8 * 1024 * 1024};
+    const outer = await execute(sevenZip, ['l', '-slt', executable], options);
+    const payloadMember = '$PLUGINSDIR\\app-64.7z';
+    assert.equal(outer.stdout.split('\n').map(line => line.trimEnd()).filter(line =>
+        line.startsWith('Path = ') && line.slice(7).replaceAll('\\', '/') === '$PLUGINSDIR/app-64.7z',
+    ).length, 1, 'Expected the fixed NSIS x64 application payload');
+    // Extract only the fixed payload, without executing or debugging the portable launcher.
+    await execute(sevenZip, ['e', '-y', '-o' + directory, executable, payloadMember], options);
+    const archive = inside(directory, path.join(directory, 'app-64.7z'));
+    assert.ok(await regularFile(archive), 'The portable application payload is missing');
+    const target = inside(directory, path.join(directory, 'app'));
+    await fs.mkdir(target);
+    const inner = await execute(sevenZip, ['l', '-slt', archive], options);
+    payloadEntries(inner.stdout, target);
+    await execute(sevenZip, ['x', '-y', '-o' + target, archive], options);
+    const application = inside(target, path.join(target, 'Aigram.exe'));
+    assert.ok(await regularFile(application), 'The extracted Aigram executable is missing');
+    assert.ok(await regularFile(path.join(target, 'resources/app.asar')), 'The extracted application archive is missing');
+    return {executable: application, portablePayloadExtracted: true, directory};
+}
+
 async function verifyArtifact(directory, definition) {
     const name = path.posix.basename(new URL(definition.downloadUrl).pathname);
     assert.equal(name.includes('..'), false);
@@ -247,6 +302,12 @@ async function descriptorRemoved(profile) {
     let failure;
     const started = Date.now();
     try {
+        report.stage = 'portable-payload';
+        const payload = await applicationPayload(executable, verification);
+        report.portablePayloadExtracted = payload.portablePayloadExtracted;
+        report.payloadExecutableSha256 = await fingerprint(payload.executable);
+        if (payload.directory) report.extractedPayload = path.relative(root, payload.directory);
+        report.stage = 'fixtures';
         await installFixtures(root, profile, definitions, artifacts);
         await fs.writeFile(path.join(profile, 'settings.json'), JSON.stringify({
             paused: true, closeToTray: false, launchAtLogin: false, resumeOnStartup: false,
@@ -261,7 +322,7 @@ async function descriptorRemoved(profile) {
         delete environment.PORTABLE_EXECUTABLE_FILE;
         delete environment.PORTABLE_EXECUTABLE_DIR;
         delete environment.ELECTRON_RUN_AS_NODE;
-        application = await electron.launch({executablePath: executable, env: environment, timeout: 60_000});
+        application = await electron.launch({executablePath: payload.executable, env: environment, timeout: 60_000});
         const page = await application.firstWindow();
         await page.getByRole('button', {name: ru.connect, exact: true}).waitFor({timeout: 45_000});
         report.version = await application.evaluate(({app}) => app.getVersion());
