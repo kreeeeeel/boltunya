@@ -2,6 +2,34 @@
 
 Release versions are assigned by Windows CI. Each GitHub release includes the first dated entry below, the tested source commit and its verification run.
 
+## 2026-10-21 — Lossless Telegram message editing
+
+### Added
+
+- Edit the owner's sent text and photo/video captions from the message menu, with a compact visual Gravity editor, formatting controls, undo/redo and an edited timestamp.
+- Preserve Telegram entities directly, including overlapping formatting, links, spoilers, custom emoji, user mentions and unsupported entity metadata. Original types stay on the backend; text and ranges never round-trip through Markdown or HTML.
+- Add revision-protected edit operations to the canonical contract and all generated clients. Recheck ownership, Telegram permission and account/connection identity before saving; use Telegram's active Unicode character limits.
+- Keep the editor open after saving, retain the normal composer draft, warn before discarding edits and preserve a conflicting draft until explicitly reloaded. A failed post-save refresh retries reading without sending the edit twice.
+
+### Fixed
+
+- Resolve event avatars from the exact current Telegram chat, including archived events and detail dialogs. Never reuse archived TDLib file URLs after reconnecting; missing photos show initials.
+- Update edited archive content and invalidate only the affected AI context and writing samples. Automated replies retain their provenance and stay excluded from owner-style learning.
+- Protect confirmed edits from delayed history polling, including multiple edits with the same second-resolution timestamp. Retain original link previews, photo/video placement and local context exclusions.
+- Preserve adjacent copied custom emoji as separate entities and literal Markdown-like text as plain text. Load the visual editor only when it is opened.
+
+### Verification
+
+- The final full Gradle quality gate passed 489 Kotlin tests (11 optional live tests skipped) and nine installed TypeScript SDK tests. The unchanged original wire baseline is checked alongside explicitly reviewed edit operations, entity models and optional `editedAt`.
+- The UI unit suite passed 211 tests, followed by 25 final editor/dialog regressions covering the real Gravity view, UTF-16 ranges, overlapping entities, clipboard, IME, undo/redo and save/conflict handling. TypeScript, ESLint, Stylelint and Prettier passed.
+- Verified all 117 browser scenarios across the full regression run and the final four editing scenarios: both themes, a compact caption editor, pagination/scroll preservation and stale-history protection. All 38 Electron unit tests and 10 script tests passed.
+- Release publication additionally requires the Windows packaging, native window/tray, updater and media gates. Published asset hashes and the actual-profile launch result are recorded in the release verification notes.
+
+### Compatibility
+
+- Existing Telegram sessions, JSON/Markdown stores and settings remain compatible. Telegram's own editing permissions and time limits still apply. Tests use synthetic messages and never edit real conversations.
+- TDLib has no atomic conditional edit: changes from another Telegram client between the final revision check and the actual native edit remain subject to Telegram's server ordering.
+
 ## 2026-10-21 — Extension-based DTO mapping
 
 ### Changed

@@ -2,7 +2,7 @@
 
 [English version](en.md)
 
-Единственный исходный контракт — [`backend/contract/api/schema/api.yaml`](../../backend/contract/api/schema/api.yaml). Он описывает 60 путей, 74 операции и 114 именованных схем. Операции находятся в `schema/operations/`, общие модели и перечисления — в `schema/models/`. Файлы связаны относительными ссылками.
+Единственный исходный контракт — [`backend/contract/api/schema/api.yaml`](../../backend/contract/api/schema/api.yaml). Он описывает 61 путь, 76 операций и 119 именованных схем. Операции находятся в `schema/operations/`, общие модели и перечисления — в `schema/models/`. Файлы связаны относительными ссылками. Редактирование использует операции `messageEditOptions` и `editMessage` с проверкой ревизии; см. [редактирование](../messages/ru.md).
 
 Spring Boot управляет зависимостями и встроенным servlet-сервером. Контроллеры по функциям реализуют все восемь сгенерированных интерфейсов Spring MVC; компоненты используют сервисы приложения, а stateless extension-функции верхнего уровня связывают generated DTO с domain-моделями без Spring-бинов. Предыдущий сервер и роутер `ru.aigram.http` удалены. Веб-интерфейс вызывает generated-операции по функциям из `@aigram/api-client`; workspace alias использует SDK, созданный из единого контракта. Прежние транспорт `openapi-fetch`, отдельный генератор типов и промежуточный schema-файл удалены.
 

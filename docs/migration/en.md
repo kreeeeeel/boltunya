@@ -50,7 +50,17 @@ The completed migration was published in [v2.6.33](https://github.com/kreeeeeel/
 - [x] Enforce extension-only production transformer files with an AST check and verify that the real Spring context registers no mapping bean.
 - [x] Pass the full Kotlin quality gate: 468 Kotlin tests (11 optional live tests skipped), eight installed TypeScript SDK tests, real HTTP compatibility/security tests, mapping regressions, formatting and the AST architecture check.
 
-Release completion still requires Windows CI, packaging and verification of the published EXE/SDK. The exact release/source, checksums and actual-profile launch result are recorded in the GitHub Release and local `complie/VERIFICATION.md`.
+Published and verified in [v2.6.34](https://github.com/kreeeeeel/boltunya/releases/tag/v2.6.34), source `a31d547`. Windows CI passed. Published EXE/SDK hashes and tag matched; the downloaded EXE launched with Telegram authorization, settings and manual notes preserved. Evidence is recorded in local `complie/VERIFICATION.md`.
+
+## Current checkpoint — editing and event avatars
+
+- [x] Define revision-protected edit operations and lossless entity references. Generate all three transports and pass contract compatibility tests without changing the original baseline.
+- [x] Verify the visual editor dependency with an isolated clean `npm ci`; existing resolved versions remain unchanged.
+- [x] Complete native editing, archive/context invalidation and visual editor integration. Preserve raw Telegram entities, link previews, caption placement, exact whitespace and configured Unicode limits.
+- [x] Resolve event avatars from matching current chats, with initials when unavailable, in live cards, archived pages and details.
+- [x] Protect archive and UI snapshots from same-second edits and account changes; retain deleted-message content and automated/excluded provenance. Pass 489 Kotlin tests (11 optional live skipped), nine installed SDK tests, the UI suite and final focused cases, 117 browser scenarios, 38 Electron tests and 10 script tests. Inspect light/dark/compact editor screenshots.
+
+Implementation details: [editing sent messages](../messages/en.md). The implementation checkpoint is complete. Packaging, native smoke gates and publication run in Windows CI; exact EXE/SDK hashes, tag/source identity and the actual-profile restart result are recorded in the release notes and local `complie/VERIFICATION.md`. A pushed commit alone is not a verified release.
 
 ## Required verification
 
@@ -59,7 +69,6 @@ Run `:backend:check`, generated-contract validation and clean generation when in
 ## Backlog after migration verification
 
 1. **Feedback-based local quality comparisons.** Add an opt-in replay set built from user-approved rated replies, complementing the existing synthetic model matrix. Compare factual accuracy, adherence to the selected tone, time to first token and token usage on the same inputs; replay must never send Telegram messages or automatically train a model. Ratings and traces already exist; this curated comparison workflow does not.
-2. **Edit messages from the conversation.** Add explicit editing of the owner's sent text and media captions through TDLib, with permission checks and visible edit errors. Incoming Telegram edits are already tracked; the missing feature is an outgoing edit action and editor, rather than another history-refresh mechanism. Read-only API research confirmed that `GetMarkdownText`/`ParseMarkdown` keep unsupported formatting as entity metadata: a plain string must not discard it. The editor must preserve those entities, current link previews and caption placement, recheck Telegram edit permission before saving and use Telegram's configured text/caption limits. This feature remains unimplemented while the human-requested mapping refactor is completed.
 
 These are follow-up candidates, not part of this migration's implementation or release gate.
 
