@@ -14,3 +14,9 @@
     margin-top: 12px;
     pointer-events: auto;
 }
+
+.failure {
+    padding: 16px;
+    border-radius: 16px;
+    background: var(--tiho-panel);
+}

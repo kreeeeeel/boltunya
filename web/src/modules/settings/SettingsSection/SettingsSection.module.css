@@ -12,8 +12,8 @@
 
 .content {
     width: 100%;
-    max-width: 740px;
-    padding: 40px 44px;
+    max-width: none;
+    padding: 32px 24px;
     margin-inline: auto;
     line-height: 1.6;
 }
@@ -29,7 +29,7 @@
 
 .actions {
     flex-shrink: 0;
-    padding: 18px 40px;
+    padding: 16px 24px;
     background: var(--tiho-panel);
     box-shadow: 0 -1px 0 var(--tiho-line);
 }

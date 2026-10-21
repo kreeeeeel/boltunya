@@ -11,6 +11,7 @@ vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
     api: mocks,
 }));
+vi.mock('@/modules/settings/ModelPromptEditor/ModelPromptEditor', () => ({ModelPromptEditor: () => null}));
 it('preserves section drafts and success feedback when refreshed settings arrive', async () => {
     const onClose = vi.fn();
     mocks.PATCH.mockResolvedValue({data: {ok: true}, response: new Response()});

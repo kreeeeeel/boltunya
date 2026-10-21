@@ -182,7 +182,8 @@ test('storage paths open through the allowlisted desktop bridge', async ({page})
 
 test('generated memory renders Markdown without visible syntax markers', async ({page}) => {
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
-    await page.getByRole('menuitem', {name: 'Память', exact: true}).click();
+    await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
+    await chooseSettingsSection(page, 'memory');
     const summary = page.locator('[data-qa="memory-summary"]');
     await expect(summary.getByRole('heading', {name: 'Обо мне'})).toBeVisible();
     await expect(summary.locator('strong')).toHaveText('чай');

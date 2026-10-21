@@ -27,7 +27,8 @@ export function StylesEditor({
                 {items.map((item) => (
                     <Button
                         key={item.id}
-                        view={item.id === selected ? 'outlined-info' : 'outlined'}
+                        view="normal"
+                        selected={item.id === selected}
                         onClick={() => setSelected(item.id)}
                     >
                         {item.emoji} {item.name || t('newStyle')}

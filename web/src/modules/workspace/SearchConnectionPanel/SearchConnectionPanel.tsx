@@ -4,6 +4,7 @@ import {useTranslations} from 'next-intl';
 
 import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
 import type {components} from '@/shared/api/schema';
+import styles from '@/modules/workspace/SearchConnectionPanel/SearchConnectionPanel.module.css';
 
 export function SearchConnectionPanel() {
     const t = useTranslations('internetSearch');
@@ -60,8 +61,8 @@ export function SearchConnectionPanel() {
             <Text variant="subheader-2">{t('title')}</Text>
             <Text color="secondary">{t('hint')}</Text>
             <Text>{t('free')}</Text>
-            <Disclosure summary={t('optionalExa')} size="l">
-                <Flex direction="column" gap={3}>
+            <Disclosure summary={t('optionalExa')} size="l" className={styles.advanced}>
+                <Flex direction="column" gap={3} className={styles.content}>
                     {!connection && !error && <Skeleton height={56} />}
                     {connection && (
                         <>

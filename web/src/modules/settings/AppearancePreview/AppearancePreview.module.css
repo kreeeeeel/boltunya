@@ -1,0 +1,47 @@
+.root {
+    border: 1px solid;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.heading {
+    padding: 14px 16px;
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    color: #fff;
+    font-weight: 650;
+}
+
+.name {
+    font-weight: 650;
+}
+
+.messages {
+    padding: 20px 16px;
+}
+
+.incoming,
+.outgoing {
+    max-width: 85%;
+    padding: 9px 13px;
+    border-radius: 12px;
+    line-height: 1.5;
+}
+
+.incoming {
+    align-self: flex-start;
+}
+
+.outgoing {
+    align-self: flex-end;
+}
+
+.input {
+    padding: 12px 16px;
+    margin: 0 12px 12px;
+    border-radius: 12px;
+}

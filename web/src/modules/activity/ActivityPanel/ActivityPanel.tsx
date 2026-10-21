@@ -1,5 +1,5 @@
-import {CirclePause, CirclePlay, Sliders, TrashBin} from '@gravity-ui/icons';
-import {Box, Button, Flex, Icon, Label, Text, Tooltip} from '@gravity-ui/uikit';
+import {CirclePause, CirclePlay, Clock, Sliders, TrashBin} from '@gravity-ui/icons';
+import {Box, Button, Flex, Icon, Label, Loader, Text, Tooltip} from '@gravity-ui/uikit';
 import {useTranslations} from 'next-intl';
 import {useState} from 'react';
 
@@ -11,9 +11,11 @@ import type {Activity, ReplyQueue} from '@/shared/api/client';
 import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
 import styles from '@/modules/activity/ActivityPanel/ActivityPanel.module.css';
 import {ParallelSettingsDialog} from '@/modules/activity/ParallelSettingsDialog/ParallelSettingsDialog';
+import {HistorySettingsDialog} from '@/modules/activity/HistorySettingsDialog/HistorySettingsDialog';
+import {useActivityHistory} from '@/modules/activity/model/useActivityHistory';
 
 export function ActivityPanel({
-    entries,
+    entries: currentEntries,
     queue,
     assistantPaused,
     maxParallelTasks = 1,
@@ -28,6 +30,11 @@ export function ActivityPanel({
     const t = useTranslations();
     const [selected, setSelected] = useState<string | null>(null);
     const [parallelOpen, setParallelOpen] = useState(false);
+    const [historyOpen, setHistoryOpen] = useState(false);
+    const history = useActivityHistory();
+    const entries = [
+        ...new Map([...history.entries, ...currentEntries].map((entry) => [entry.id, entry])).values(),
+    ];
     const [busy, setBusy] = useState('');
     const [error, setError] = useState('');
     async function act(key: string, action: () => Promise<unknown>) {
@@ -70,7 +77,11 @@ export function ActivityPanel({
     return (
         <ScrollArea className={styles.root}>
             <Box className={styles.content}>
-                {entries.length === 0 ? (
+                {entries.length === 0 && history.loading ? (
+                    <Flex alignItems="center" justifyContent="center" className={styles.empty}>
+                        <Loader size="m" />
+                    </Flex>
+                ) : entries.length === 0 ? (
                     <Flex direction="column" gap={3} className={styles.empty} qa="empty-activity">
                         <Box
                             as="img"
@@ -103,6 +114,13 @@ export function ActivityPanel({
                             <Flex gap={2}>
                                 <Button
                                     view="flat-secondary"
+                                    aria-label={t('events.archive.title')}
+                                    onClick={() => setHistoryOpen(true)}
+                                >
+                                    <Icon data={Clock} size={18} />
+                                </Button>
+                                <Button
+                                    view="flat-secondary"
                                     aria-label={t('events.parallel.title')}
                                     onClick={() => setParallelOpen(true)}
                                 >
@@ -130,9 +148,10 @@ export function ActivityPanel({
                                         aria-label={t('events.clear')}
                                         disabled={!!busy || !entries.some((entry) => !isActive(entry))}
                                         onClick={() =>
-                                            void act('clear', async () =>
-                                                dataOrThrow(await api.DELETE('/api/activity')),
-                                            )
+                                            void act('clear', async () => {
+                                                dataOrThrow(await api.DELETE('/api/activity'));
+                                                await history.refresh(true);
+                                            })
                                         }
                                     >
                                         <Icon data={TrashBin} size={18} />
@@ -143,6 +162,14 @@ export function ActivityPanel({
                         <Text className={styles.privacy} color="secondary">
                             {t('events.retention')}
                         </Text>
+                        {history.storage && !history.storage.recording && (
+                            <Text role="alert" color="warning" className={styles.privacy}>
+                                {t('events.archive.notRecording')}{' '}
+                                <Button view="flat-secondary" onClick={() => setHistoryOpen(true)}>
+                                    {t('events.archive.title')}
+                                </Button>
+                            </Text>
+                        )}
                         {assistantPaused && <Box className={styles.enable}>{enableButton}</Box>}
                         <Box className={styles.cards} qa="events-grid">
                             {ordered.map((entry) => (
@@ -173,11 +200,29 @@ export function ActivityPanel({
                                 />
                             ))}
                         </Box>
+                        {history.hasMore && (
+                            <Flex justifyContent="center" className={styles.more}>
+                                <Button
+                                    size="l"
+                                    view="normal"
+                                    loading={history.loadingMore}
+                                    disabled={history.loadingMore}
+                                    onClick={() => void history.loadMore()}
+                                >
+                                    {t('events.archive.loadMore')}
+                                </Button>
+                            </Flex>
+                        )}
                     </>
                 )}
                 {error && (
                     <Text color="danger" role="alert">
                         {error}
+                    </Text>
+                )}
+                {history.error && (
+                    <Text color="danger" role="alert">
+                        {history.error}
                     </Text>
                 )}
             </Box>
@@ -194,6 +239,12 @@ export function ActivityPanel({
                     value={queue?.maxParallelTasks ?? maxParallelTasks}
                     onClose={() => setParallelOpen(false)}
                     onRefresh={onRefresh}
+                />
+            )}
+            {historyOpen && (
+                <HistorySettingsDialog
+                    onClose={() => setHistoryOpen(false)}
+                    onRefresh={() => history.refresh(true)}
                 />
             )}
         </ScrollArea>

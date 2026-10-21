@@ -55,3 +55,7 @@
         min-height: calc(100dvh - 68px);
     }
 }
+
+.more {
+    padding-top: 24px;
+}

@@ -8,16 +8,41 @@
 
 .root {
     width: min(380px, calc(100vw - 32px));
-    height: 380px;
-    padding: 12px;
-    gap: 12px;
+    height: 360px;
+    padding: 10px;
+    gap: 8px;
 }
 
 .tabs {
     flex-shrink: 0;
     overflow-x: auto;
     padding: 2px;
-    scrollbar-width: thin;
+    min-height: 42px;
+    align-items: center;
+}
+
+.pack {
+    --g-button-border-radius: 10px;
+
+    flex-shrink: 0;
+    max-width: 116px;
+    min-width: 36px;
+    height: 36px;
+    border-radius: 10px;
+}
+
+.pack[aria-selected='true'] {
+    --g-button-background-color: var(--tiho-selected);
+    --g-button-background-color-hover: var(--tiho-selected);
+    --g-button-text-color: var(--g-color-text-brand);
+    --g-button-text-color-hover: var(--g-color-text-brand);
+}
+
+.pack::before,
+.pack::after {
+    border: 0;
+    box-shadow: none;
+    border-radius: inherit;
 }
 
 .content {
@@ -36,9 +61,17 @@
     --g-button-height: 78px;
     --g-button-padding: 4px;
     --g-button-background-color-hover: transparent;
+    --g-button-background-color-active: transparent;
 
     width: 100%;
     border-radius: 12px;
+}
+
+.sticker::before,
+.sticker::after {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
 }
 
 .sticker img,

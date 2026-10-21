@@ -28,6 +28,7 @@ import {SaveDialogFooter} from '@/shared/ui/SaveDialogFooter/SaveDialogFooter';
 import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
 import {normalizeCommunicationRule} from '@/modules/workspace/model/normalizeCommunicationRule';
 import {useModelProfiles} from '@/modules/settings/model/useModelProfiles';
+import {PromptBudgetNotice} from '@/modules/settings/PromptBudgetNotice/PromptBudgetNotice';
 
 export function RuleDialog({
     chat,
@@ -286,6 +287,7 @@ export function RuleDialog({
                             controlProps={{'aria-label': t('instructions'), maxLength: 4000}}
                         />
                     </Box>
+                    <PromptBudgetNotice request={{rule}} />
                     <Box>
                         <Switch
                             checked={rule.matchMyStyle ?? true}

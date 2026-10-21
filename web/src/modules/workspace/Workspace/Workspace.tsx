@@ -8,6 +8,7 @@ import {useEffect, useRef, useState} from 'react';
 import {ActivityPanel} from '@/modules/activity/ActivityPanel/ActivityPanel';
 import {ChatList} from '@/modules/workspace/ChatList/ChatList';
 import {SettingsDialog} from '@/modules/workspace/SettingsDialog/SettingsDialog';
+import {visibleChatActivity} from '@/modules/workspace/model/visibleChatActivity';
 import {WindowBar} from '@/modules/workspace/WindowBar/WindowBar';
 import {Conversation} from '@/modules/workspace/Conversation/Conversation';
 import {ChatWallpaper} from '@/modules/workspace/ChatWallpaper/ChatWallpaper';
@@ -223,6 +224,7 @@ export function Workspace() {
                 {settingsSection !== null && state && (
                     <SettingsDialog
                         settings={state.settings}
+                        engine={state.engine}
                         initialSection={settingsSection}
                         onClose={() => setSettingsSection(null)}
                         onRefresh={refresh}
@@ -336,11 +338,7 @@ export function Workspace() {
                                     onMediaSent={refreshConversation}
                                     onContextChanged={updateContextFlags}
                                     messages={messages}
-                                    activeReply={state?.activity.find(
-                                        (item) =>
-                                            item.chatId === selected &&
-                                            ['generating', 'queued'].includes(item.status),
-                                    )}
+                                    activeReply={visibleChatActivity(state.activity, selected)}
                                     onRefresh={refresh}
                                     error={historyError}
                                     loading={stateLoading || historyLoading}
@@ -438,6 +436,7 @@ export function Workspace() {
             {settingsSection !== null && (
                 <SettingsDialog
                     settings={state.settings}
+                    engine={state.engine}
                     initialSection={settingsSection}
                     onClose={() => setSettingsSection(null)}
                     onRefresh={refresh}

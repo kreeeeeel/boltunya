@@ -1,13 +1,16 @@
 import {Box, Button, Flex, Icon, Select, Text, TextArea, TextInput} from '@gravity-ui/uikit';
 import {Check} from '@gravity-ui/icons';
+import {unstable_ColorPicker as ColorPicker} from '@gravity-ui/uikit/unstable';
 import {useTranslations} from 'next-intl';
 import {useState} from 'react';
 import {SettingsSection} from '@/modules/settings/SettingsSection/SettingsSection';
 import {usePreferences} from '@/shared/theme/Preferences';
-import {defaultAppearance, themeTokens, compileAppearance, validThemeColor} from '@/shared/theme/appearance';
+import {defaultAppearance, themeTokens, compileAppearance} from '@/shared/theme/appearance';
 import {errorMessage} from '@/shared/api/client';
 import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
 import styles from '@/modules/settings/AppearanceSettings/AppearanceSettings.module.css';
+import {AppearancePreview} from '@/modules/settings/AppearancePreview/AppearancePreview';
+import {appearancePalette} from '@/modules/settings/model/appearancePalette';
 export function AppearanceSettings() {
     const t = useTranslations('appearance');
     const common = useTranslations();
@@ -16,6 +19,15 @@ export function AppearanceSettings() {
     const [error, setError] = useState('');
     const [busy, setBusy] = useState(false);
     const feedback = useSaveFeedback(value);
+    const palette = appearancePalette(value, preferences.theme);
+    function updateColor(token: string, color: string) {
+        setValue({
+            ...value,
+            tokens: color
+                ? {...value.tokens, [token]: color}
+                : Object.fromEntries(Object.entries(value.tokens).filter(([name]) => name !== token)),
+        });
+    }
     function preview() {
         try {
             compileAppearance(value);
@@ -93,40 +105,39 @@ export function AppearanceSettings() {
                 />
             </Flex>
             <Flex direction="column" gap={3}>
+                <Text variant="subheader-2">{t('livePreview')}</Text>
+                <Text color="secondary">{t('livePreviewHint')}</Text>
+                <AppearancePreview value={value} theme={preferences.theme} />
+            </Flex>
+            <Flex direction="column" gap={3}>
                 <Text variant="subheader-2">{t('colors')}</Text>
                 <Text color="secondary">{t('colorsHint')}</Text>
                 <Box className={styles.colors}>
                     {Object.keys(themeTokens).map((token) => (
                         <Flex key={token} direction="column" gap={2}>
                             <Text>{t('tokens.' + token)}</Text>
-                            <TextInput
-                                size="l"
-                                value={value.tokens[token] ?? ''}
-                                onUpdate={(color) =>
-                                    setValue({
-                                        ...value,
-                                        tokens: color
-                                            ? {...value.tokens, [token]: color}
-                                            : Object.fromEntries(
-                                                  Object.entries(value.tokens).filter(
-                                                      ([name]) => name !== token,
-                                                  ),
-                                              ),
-                                    })
-                                }
-                                startContent={
-                                    <Box
-                                        className={styles.swatch}
-                                        style={{
-                                            background: validThemeColor(value.tokens[token] ?? '')
-                                                ? value.tokens[token]
-                                                : 'transparent',
-                                        }}
+                            <Flex alignItems="center" gap={2}>
+                                <Box
+                                    role="group"
+                                    aria-label={t('pickColor', {name: t('tokens.' + token)})}
+                                    className={styles.picker}
+                                >
+                                    <ColorPicker
+                                        compact
+                                        size="l"
+                                        withAlpha
+                                        value={palette[token as keyof typeof palette]}
+                                        onUpdate={(color) => updateColor(token, color)}
                                     />
-                                }
-                                placeholder={t('defaultColor')}
-                                controlProps={{'aria-label': t('tokens.' + token), maxLength: 9}}
-                            />
+                                </Box>
+                                <TextInput
+                                    size="l"
+                                    value={value.tokens[token] ?? ''}
+                                    onUpdate={(color) => updateColor(token, color)}
+                                    placeholder={t('defaultColor')}
+                                    controlProps={{'aria-label': t('tokens.' + token), maxLength: 9}}
+                                />
+                            </Flex>
                         </Flex>
                     ))}
                 </Box>

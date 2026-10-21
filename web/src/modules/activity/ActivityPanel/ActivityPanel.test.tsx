@@ -5,8 +5,9 @@ import {expect, it, vi} from 'vitest';
 
 import {ActivityPanel} from '@/modules/activity/ActivityPanel/ActivityPanel';
 import ru from '@/shared/i18n/ru.json';
+import {historyPage} from '@tests/fixtures/activityHistory';
 
-const mocks = vi.hoisted(() => ({PATCH: vi.fn()}));
+const mocks = vi.hoisted(() => ({PATCH: vi.fn(), GET: vi.fn()}));
 vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
     api: mocks,
@@ -14,6 +15,7 @@ vi.mock('@/shared/api/client', async (original) => ({
 
 it('enables the assistant from the empty events description', async () => {
     mocks.PATCH.mockResolvedValue({data: {ok: true}, response: new Response()});
+    mocks.GET.mockResolvedValue({data: historyPage(), response: new Response()});
     const refresh = vi.fn();
     const view = render(
         <NextIntlClientProvider locale="ru" messages={ru}>
@@ -22,7 +24,7 @@ it('enables the assistant from the empty events description', async () => {
             </ThemeProvider>
         </NextIntlClientProvider>,
     );
-    fireEvent.click(screen.getByRole('button', {name: ru.events.enableAi}));
+    fireEvent.click(await screen.findByRole('button', {name: ru.events.enableAi}));
     await waitFor(() => expect(mocks.PATCH).toHaveBeenCalledWith('/api/settings', {body: {paused: false}}));
     await waitFor(() => expect(refresh).toHaveBeenCalled());
     view.rerender(

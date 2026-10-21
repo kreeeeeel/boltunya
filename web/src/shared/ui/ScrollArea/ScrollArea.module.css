@@ -33,6 +33,15 @@
     inset: 0 0 0 auto;
     width: 10px;
     z-index: 5;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--tiho-duration);
+}
+
+.root:hover > .track,
+.root:has(:focus-visible) > .track {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .thumb {

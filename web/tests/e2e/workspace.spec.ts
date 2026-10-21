@@ -7,6 +7,8 @@ import {testHistory} from '../fixtures/chats';
 import {testActivity} from '../fixtures/activity';
 import type {Message} from '@/shared/api/client';
 import {computeDevices} from '../fixtures/computeDevices';
+import {historyPage} from '../fixtures/activityHistory';
+import {syntheticPromptBudget} from '../fixtures/promptBudget';
 
 const launchFile = process.env.TIHO_LAUNCH_FILE ?? join(process.env.LOCALAPPDATA ?? '', 'Tiho', 'launch.url');
 
@@ -30,6 +32,12 @@ test.beforeEach(async ({page}) => {
         if (path === '/api/appearance') {
             if (request.method() === 'PUT') appearance = request.postDataJSON();
             await route.fulfill({json: appearance});
+        } else if (path === '/api/activity/history') {
+            await route.fulfill({json: historyPage(state.activity)});
+        } else if (path === '/api/prompts/budget') {
+            await route.fulfill({json: syntheticPromptBudget(request.postDataJSON())});
+        } else if (path === '/api/model-prompts') {
+            await route.fulfill({json: request.method() === 'PUT' ? request.postDataJSON() : {prompts: []}});
         } else if (path === '/api/model-profiles') {
             await route.fulfill({json: {profiles: [], presets: []}});
         } else if (path === '/api/state') {
@@ -595,8 +603,9 @@ test('dark/light dialogs follow the active palette and preferences survive reloa
     }
     await toggleTheme(page);
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
-    await page.getByRole('menuitem', {name: 'Язык', exact: true}).click();
-    await page.getByRole('button', {name: 'English', exact: true}).click();
+    await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
+    await chooseSettingsSection(page, 'language');
+    await page.getByRole('radio', {name: 'English', exact: true}).click();
     await page.keyboard.press('Escape');
     await expect(page.getByRole('textbox', {name: 'Search chats'})).toBeVisible();
     await page.reload();
@@ -860,7 +869,8 @@ test('global scroll and reduced motion remain usable on short windows', async ({
 test('profile menu saves shared instructions and signs out without a settings page', async ({page}) => {
     await expect(page.getByRole('button', {name: 'Настройки', exact: true})).toHaveCount(0);
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
-    await page.getByRole('menuitem', {name: 'Общий промпт', exact: true}).click();
+    await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
+    await chooseSettingsSection(page, 'prompt');
     const field = page.getByRole('textbox', {name: 'Общий промпт', exact: true});
     await field.fill('Не назначай встречи без моего подтверждения.');
     const patch = page.waitForRequest(
@@ -875,7 +885,8 @@ test('profile menu saves shared instructions and signs out without a settings pa
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
-    await page.getByRole('menuitem', {name: 'Общий промпт', exact: true}).click();
+    await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
+    await chooseSettingsSection(page, 'prompt');
     await expect(field).toHaveValue('Не назначай встречи без моего подтверждения.');
     await page.getByRole('button', {name: 'Отмена', exact: true}).click();
     const disconnected = {
@@ -1324,16 +1335,41 @@ test('Electron title bar uses its isolated bridge and native drag region', async
     ).toEqual(['minimize', 'maximize', 'maximize', 'close']);
 });
 
-test('profile language submenu includes SVG flags and persists Kazakh and Ukrainian', async ({page}) => {
+test('language settings include SVG flags and persist Kazakh and Ukrainian', async ({page}) => {
     for (const item of [
-        {profile: 'Мой профиль', menu: 'Язык', label: 'Қазақша', search: 'Сұхбаттарды іздеу', id: 'kk'},
-        {profile: 'Менің профилім', menu: 'Тіл', label: 'Українська', search: 'Пошук діалогів', id: 'uk'},
-        {profile: 'Мій профіль', menu: 'Мова', label: 'Русский', search: 'Поиск по диалогам', id: 'ru'},
+        {
+            profile: 'Мой профиль',
+            settings: 'Настройки',
+            menu: 'Язык',
+            label: 'Қазақша',
+            search: 'Сұхбаттарды іздеу',
+            id: 'kk',
+        },
+        {
+            profile: 'Менің профилім',
+            settings: 'Баптаулар',
+            menu: 'Тіл',
+            label: 'Українська',
+            search: 'Пошук діалогів',
+            id: 'uk',
+        },
+        {
+            profile: 'Мій профіль',
+            settings: 'Налаштування',
+            menu: 'Мова',
+            label: 'Русский',
+            search: 'Поиск по диалогам',
+            id: 'ru',
+        },
     ]) {
         await page.getByRole('button', {name: item.profile, exact: true}).click();
-        await page.getByRole('menuitem', {name: item.menu, exact: true}).click();
-        const language = page.getByRole('button', {name: item.label, exact: true});
-        await expect(language.locator(`img[src="/assets/flags/${item.id}.svg"]`)).toBeVisible();
+        await page.getByRole('menuitem', {name: item.settings, exact: true}).click();
+        await page.getByRole('dialog').getByRole('menuitem', {name: item.menu, exact: true}).click();
+        const language = page.getByRole('radio', {name: item.label, exact: true});
+        await expect(page.locator(`label:has(input[value="${item.id}"]) img`)).toHaveAttribute(
+            'src',
+            `/assets/flags/${item.id}.svg`,
+        );
         await language.click();
         await page.keyboard.press('Escape');
         await expect(page.getByRole('textbox', {name: item.search})).toBeVisible();
@@ -1344,10 +1380,10 @@ test('profile language submenu includes SVG flags and persists Kazakh and Ukrain
 
 test('named writing styles can be saved and selected for a conversation', async ({page}) => {
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
-    await page.getByRole('menuitem', {name: 'Свои стили', exact: true}).click();
+    await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
+    await chooseSettingsSection(page, 'styles');
     const dialog = page.getByRole('dialog');
-    expect((await dialog.boundingBox())?.width).toBeGreaterThan(900);
-    expect((await dialog.boundingBox())?.width).toBeLessThan(1200);
+    await expect.poll(async () => Math.round((await dialog.boundingBox())!.width)).toBe(960);
     await page.getByRole('button', {name: 'Создать стиль', exact: true}).click();
     await page.getByLabel('Название', {exact: true}).fill('Спокойный');
     await page.getByRole('button', {name: 'Выбрать эмодзи', exact: true}).click();
@@ -1835,7 +1871,8 @@ test('global memory and its background interval are accessible from profile sett
         await route.fulfill({json: document});
     });
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
-    await page.getByRole('menuitem', {name: 'Память', exact: true}).click();
+    await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
+    await chooseSettingsSection(page, 'memory');
     await expect(page.getByText('Диалогов в памяти: 2')).toBeVisible();
     await expect(page.getByText('Пишет коротко. Любит чай.', {exact: true})).toBeVisible();
     await page
@@ -2094,7 +2131,8 @@ test('global collection can be started from profile with a complete rebuild', as
         return route.fulfill({json: {ok: true}});
     });
     await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
-    await page.getByRole('menuitem', {name: 'Общий сбор контекста', exact: true}).click();
+    await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
+    await chooseSettingsSection(page, 'collection');
     const dialog = page.getByRole('dialog', {name: 'Настройки', exact: true});
     await expect(dialog.getByText('Диалогов в памяти: 2')).toBeVisible();
     await dialog.getByRole('radio', {name: 'Вся доступная история'}).click();

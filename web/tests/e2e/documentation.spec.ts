@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs';
 import type {AppState, Message} from '@/shared/api/client';
 import {workspaceState} from '../fixtures/workspace';
 import {persistTestTheme} from '../fixtures/settings';
+import {syntheticPromptBudget} from '../fixtures/promptBudget';
 
 test('documents the workspace using synthetic conversations and verifies the refreshed layout', async ({
     page,
@@ -63,6 +64,8 @@ test('documents the workspace using synthetic conversations and verifies the ref
             }
             await route.fulfill({json: appearance});
         } else if (path === '/api/model-profiles') await route.fulfill({json: {profiles: [], presets: []}});
+        else if (path === '/api/prompts/budget')
+            await route.fulfill({json: syntheticPromptBudget(route.request().postDataJSON())});
         else await route.fulfill({status: 400, json: {error: 'Unexpected documentation request'}});
     });
     await page.goto(base);

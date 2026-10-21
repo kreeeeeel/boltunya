@@ -1,4 +1,5 @@
-import {Box, Button, Flex, Loader, Popup, Text} from '@gravity-ui/uikit';
+import {Box, Button, Flex, Icon, Loader, Popup, Text, Tooltip} from '@gravity-ui/uikit';
+import {Clock, Star} from '@gravity-ui/icons';
 import {useEffect, useRef, useState} from 'react';
 import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
 import type {components} from '@/shared/api/schema';
@@ -107,21 +108,34 @@ export function StickerPicker({
             className={styles.popup}
             aria-label={t.stickers}
         >
-            <Flex direction="column" className={styles.root}>
-                <Flex className={styles.tabs} gap={1}>
+            <Flex direction="column" className={styles.root} qa="sticker-picker">
+                <Flex className={styles.tabs} gap={1} role="tablist" aria-label={t.stickers}>
                     {[
                         {id: 'recent', title: t.recent},
                         {id: 'favorites', title: t.favorites},
                         ...(catalog?.sets ?? []),
                     ].map((item) => (
-                        <Button
-                            key={item.id}
-                            view={set === item.id ? 'outlined-action' : 'flat-secondary'}
-                            onClick={() => void select(item.id)}
-                            disabled={busy === 'send'}
-                        >
-                            {item.title}
-                        </Button>
+                        <Tooltip key={item.id} content={item.title}>
+                            <Button
+                                key={item.id}
+                                view="flat-secondary"
+                                selected={set === item.id}
+                                role="tab"
+                                aria-selected={set === item.id}
+                                aria-label={item.title}
+                                className={styles.pack}
+                                onClick={() => void select(item.id)}
+                                disabled={busy === 'send'}
+                            >
+                                {item.id === 'recent' ? (
+                                    <Icon data={Clock} size={20} />
+                                ) : item.id === 'favorites' ? (
+                                    <Icon data={Star} size={20} />
+                                ) : (
+                                    <Text ellipsis>{item.title}</Text>
+                                )}
+                            </Button>
+                        </Tooltip>
                     ))}
                 </Flex>
                 <ScrollArea className={styles.content}>

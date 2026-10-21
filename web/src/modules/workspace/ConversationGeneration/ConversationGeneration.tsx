@@ -8,18 +8,52 @@ import {seconds} from '@/modules/activity/model/activity';
 import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
 import type {Activity} from '@/shared/api/client';
 import styles from '@/modules/workspace/ConversationGeneration/ConversationGeneration.module.css';
+import {ActivityDetailsDialog} from '@/modules/activity/ActivityDetailsDialog/ActivityDetailsDialog';
 
 export function ConversationGeneration({
     entry,
     onRefresh,
+    onRetry,
 }: {
     readonly entry: Activity;
     readonly onRefresh: () => Promise<void>;
+    readonly onRetry?: () => Promise<void>;
 }) {
     const t = useTranslations('events');
     const locale = useLocale();
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
+    const [details, setDetails] = useState(false);
+
+    if (entry.status === 'error' || entry.status === 'interrupted') {
+        return (
+            <Box className={`${styles.root} ${styles.failure}`} qa="conversation-generation-error">
+                <Flex direction="column" gap={3}>
+                    <Text variant="subheader-2">{t('failed')}</Text>
+                    <Text color="danger" role="alert">
+                        {entry.detail}
+                    </Text>
+                    <Flex gap={2} wrap>
+                        <Button view="normal" onClick={() => setDetails(true)}>
+                            {t('history')}
+                        </Button>
+                        {onRetry && (
+                            <Button view="action" onClick={() => void onRetry()}>
+                                {t('retryDraft')}
+                            </Button>
+                        )}
+                    </Flex>
+                </Flex>
+                {details && (
+                    <ActivityDetailsDialog
+                        id={entry.id}
+                        onClose={() => setDetails(false)}
+                        onRefresh={onRefresh}
+                    />
+                )}
+            </Box>
+        );
+    }
 
     async function cancel() {
         setBusy(true);

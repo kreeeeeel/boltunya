@@ -49,8 +49,9 @@ it('ignores a slow prior sticker set after a newer set has been selected', async
             </ThemeProvider>
         </NextIntlClientProvider>,
     );
-    fireEvent.click(await screen.findByRole('button', {name: 'Set A'}));
-    fireEvent.click(screen.getByRole('button', {name: 'Set B'}));
+    fireEvent.click(await screen.findByRole('tab', {name: 'Set A'}));
+    fireEvent.click(screen.getByRole('tab', {name: 'Set B'}));
+    expect(screen.getByRole('tab', {name: 'Set B'})).toHaveAttribute('aria-selected', 'true');
     await screen.findByRole('button', {name: 'B sticker'});
     await act(async () => first.resolve({data: [sticker('a', 'A sticker')], response: new Response()}));
     await waitFor(() => expect(screen.queryByRole('button', {name: 'A sticker'})).toBeNull());

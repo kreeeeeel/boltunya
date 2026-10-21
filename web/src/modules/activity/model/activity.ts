@@ -5,6 +5,9 @@ export function isActive(entry: Activity): boolean {
 }
 
 export function statusLabelKey(entry: Pick<Activity, 'status' | 'kind'>): string {
+    if (entry.status === 'interrupted') {
+        return 'phase.interrupted';
+    }
     if (entry.status === 'ready') {
         if (entry.kind === 'memory') {
             return 'memoryReady';
@@ -23,7 +26,7 @@ export function statusTheme(status: string): 'success' | 'danger' | 'info' | 'no
     if (status === 'error') {
         return 'danger';
     }
-    return status === 'cancelled' ? 'normal' : 'info';
+    return status === 'cancelled' || status === 'interrupted' ? 'normal' : 'info';
 }
 
 export function seconds(ms: number, locale: string): string {

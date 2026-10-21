@@ -3,10 +3,9 @@ import {Box, Button, Dialog, Flex, Icon, Select, Text} from '@gravity-ui/uikit';
 import {useTranslations} from 'next-intl';
 import {useState} from 'react';
 import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
-import type {AppState} from '@/shared/api/client';
+import type {AppState, Engine} from '@/shared/api/client';
 import {desktopBridge} from '@/shared/desktop/bridge';
 import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
-import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
 import {SettingsNavigation} from '@/modules/settings/SettingsNavigation/SettingsNavigation';
 import {SettingsSection} from '@/modules/settings/SettingsSection/SettingsSection';
 import {settingsSections} from '@/modules/settings/model/settingsSections';
@@ -31,11 +30,13 @@ import styles from '@/modules/settings/SettingsCenter/SettingsCenter.module.css'
 
 export function SettingsCenter({
     settings,
+    engine,
     initialSection = 'application',
     onClose,
     onRefresh,
 }: {
     readonly settings: AppState['settings'];
+    readonly engine?: Engine;
     readonly initialSection?: SettingsSectionId;
     readonly onClose: () => void;
     readonly onRefresh: () => Promise<void>;
@@ -130,7 +131,14 @@ export function SettingsCenter({
             >
                 {id === 'application' && <ApplicationSettings {...common} />}
                 {id === 'replies' && <ReplySettings {...common} />}
-                {id === 'prompt' && <PromptSettings {...common} />}
+                {id === 'prompt' && (
+                    <PromptSettings
+                        {...common}
+                        engine={engine}
+                        defaultModel={settings.defaultModel}
+                        defaultProfileId={settings.defaultModelProfileId ?? ''}
+                    />
+                )}
                 {id === 'styles' && (
                     <StylesEditor
                         value={value.customStyles}
@@ -175,9 +183,9 @@ export function SettingsCenter({
             qa="settings-center"
         >
             <Flex className={styles.shell}>
-                <ScrollArea className={styles.sidebar}>
+                <Flex direction="column" className={styles.sidebar}>
                     <SettingsNavigation selected={section} onSelect={select} />
-                </ScrollArea>
+                </Flex>
                 <Flex direction="column" className={styles.main}>
                     <Flex className={styles.mobileHeading} alignItems="center" gap={3}>
                         <Text variant="subheader-3">{t('settings')}</Text>

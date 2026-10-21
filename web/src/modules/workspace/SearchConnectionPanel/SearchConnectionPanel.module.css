@@ -1,0 +1,9 @@
+.advanced {
+    padding: 18px;
+    border-radius: 16px;
+    background: var(--tiho-bg);
+}
+
+.content {
+    padding-top: 16px;
+}

@@ -85,6 +85,7 @@ export function MessageContextMenu({
         <>
             <DropdownMenu
                 open={position !== null}
+                hideOnScroll={false}
                 onOpenToggle={(open: boolean) => {
                     if (!open) {
                         onClose();

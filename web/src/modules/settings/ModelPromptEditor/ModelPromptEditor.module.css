@@ -1,0 +1,9 @@
+.root {
+    padding: 20px;
+    border-radius: 16px;
+    background: var(--tiho-bg);
+}
+
+.save {
+    align-self: flex-start;
+}

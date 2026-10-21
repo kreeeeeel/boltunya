@@ -291,6 +291,7 @@ export function Conversation({
                                     key={activeReply.id}
                                     entry={activeReply}
                                     onRefresh={onRefresh}
+                                    onRetry={() => draft()}
                                 />
                             )}
                         </Flex>

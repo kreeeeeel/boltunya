@@ -12,6 +12,7 @@ import type {Reply} from '@/shared/api/client';
 import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
 import {ProfileModelCards} from '@/modules/workspace/ModelsPanel/ProfileModelCards';
 import {useModelProfiles} from '@/modules/settings/model/useModelProfiles';
+import {PromptBudgetNotice} from '@/modules/settings/PromptBudgetNotice/PromptBudgetNotice';
 
 export function ModelsPanel({
     engine,
@@ -241,6 +242,17 @@ export function ModelsPanel({
                     </Flex>
                 </Box>
                 {(error || engine?.error) && <Text color="danger">{error || engine?.error}</Text>}
+                <PromptBudgetNotice
+                    warningsOnly
+                    request={{
+                        rule: {
+                            ...defaultRule,
+                            model: defaultModel,
+                            modelProfileId: defaultModelProfileId,
+                            useDefaultModel: false,
+                        },
+                    }}
+                />
                 <Flex
                     alignItems="center"
                     justifyContent="space-between"

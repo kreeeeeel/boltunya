@@ -468,7 +468,16 @@
         "resume": "Resume",
         "clear": "Clear completed events",
         "clearHint": "Remove completed history. Pending tasks remain in the queue.",
-        "retention": "Request history stays in app memory until exit: up to 100 completed events and 16 MB of text.",
+        "retention": "History stays on this computer and remains available after a restart.",
+        "archive": {
+            "title": "History storage",
+            "hint": "History includes model requests and replies. It is stored locally for the current Telegram account.",
+            "retentionDays": "Keep history, days",
+            "maxStorageMb": "Storage limit, MB",
+            "zero": "0 means unlimited. All history is kept by default.",
+            "notRecording": "New events are not being saved. Check free space and history settings.",
+            "loadMore": "Show earlier events"
+        },
         "details": "Reply history",
         "attempt": "Request {count}",
         "tokenPair": "Input: {input} · Output: {output}",
@@ -517,10 +526,12 @@
             "ready": "Ready",
             "memory": "Updating context",
             "waiting-resource": "Waiting for the model resource",
-            "waiting-delivery": "Waiting for delivery to finish"
+            "waiting-delivery": "Waiting for delivery to finish",
+            "interrupted": "Interrupted when the app closed"
         },
         "requestTitle": "Sent to model",
         "enableAi": "Enable AI",
+        "retryDraft": "Retry as a draft",
         "feedback": {
             "title": "Rate this reply",
             "good": "Good",
@@ -610,7 +621,7 @@
         "memory": "{value} GiB",
         "refresh": "Refresh devices",
         "unavailableSelection": "Selected device unavailable",
-        "nextStart": "The selection is saved in settings and takes effect the next time the app starts Ollama. Current generation will continue.",
+        "nextStart": "Applies at the next Ollama launch. The current reply will continue.",
         "restartRequired": "Applies next time Ollama starts",
         "active": "Running Ollama mode: {name}",
         "nvidiaOnly": "Individual device selection supports NVIDIA. AMD and Intel remain available in automatic mode.",
@@ -625,6 +636,29 @@
             "compute": "This GPU is not supported by this Ollama version.",
             "driver": "An NVIDIA driver update is recommended. Ollama will check compatibility."
         }
+    },
+    "modelPrompts": {
+        "title": "Model instructions",
+        "hint": "Added to the global prompt only when this model prepares a reply. The selected writing style retains priority.",
+        "model": "Model to configure",
+        "instructions": "Additional instructions",
+        "contextWindow": "Working context, tokens",
+        "contextHint": "Leave empty for the default working window. A larger context requires more memory.",
+        "apiContextHint": "The limit is configured in this model connection.",
+        "encoding": "Token counting",
+        "auto": "Automatic",
+        "save": "Save for this model"
+    },
+    "promptBudget": {
+        "title": "Model context",
+        "estimated": "Estimate",
+        "overLimit": "Over the limit",
+        "contextWindow": "Working window",
+        "systemTokens": "Instructions",
+        "reservedOutputTokens": "Reply and thinking",
+        "remainingTokens": "For history and memory",
+        "hint": "An estimate without history or memory. Their messages will use the remaining space.",
+        "tooLong": "Instructions and the reply reserve do not fit. Shorten the instructions or increase the working context."
     },
     "settingsCenter": {
         "groups": {
@@ -689,6 +723,13 @@
         },
         "colors": "Color palette",
         "colorsHint": "Leave a color empty to use the base theme.",
+        "livePreview": "Theme example",
+        "livePreviewHint": "Colors update the example immediately. Preview applies the settings across the app.",
+        "pickColor": "Choose color: {name}",
+        "exampleName": "Anna",
+        "exampleIncoming": "Hey! How do you like the new theme?",
+        "exampleOutgoing": "This looks good to me 🙂",
+        "examplePlaceholder": "Write a message…",
         "defaultColor": "Default",
         "tokens": {
             "accent": "Accent",

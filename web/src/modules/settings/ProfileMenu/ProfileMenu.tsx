@@ -1,13 +1,4 @@
-import {
-    ArrowRightFromSquare,
-    BookOpen,
-    Books,
-    Globe,
-    Palette,
-    Sliders,
-    Sparkles,
-    Xmark,
-} from '@gravity-ui/icons';
+import {ArrowRightFromSquare, Sliders, Xmark} from '@gravity-ui/icons';
 import {Button, DropdownMenu, Icon} from '@gravity-ui/uikit';
 import {useTranslations} from 'next-intl';
 
@@ -53,43 +44,6 @@ export function ProfileMenu({
                         text: t('settings'),
                         iconStart: <Icon data={Sliders} size={18} />,
                         action: () => onSettings('application'),
-                    },
-                    {
-                        text: t('globalPrompt'),
-                        iconStart: <Icon data={Sliders} size={18} />,
-                        action: () => onSettings('prompt'),
-                    },
-                    {
-                        text: t('customStyles'),
-                        iconStart: <Icon data={Sparkles} size={18} />,
-                        action: () => onSettings('styles'),
-                    },
-                    {
-                        text: t('memory.title'),
-                        iconStart: <Icon data={BookOpen} size={18} />,
-                        action: () => onSettings('memory'),
-                    },
-                    {
-                        text: t('context.globalTitle'),
-                        iconStart: <Icon data={Books} size={18} />,
-                        action: () => onSettings('collection'),
-                    },
-                ],
-                [
-                    {
-                        text: t('settingsCenter.sections.providers'),
-                        iconStart: <Icon data={Sparkles} size={18} />,
-                        action: () => onSettings('providers'),
-                    },
-                    {
-                        text: t('settingsCenter.sections.appearance'),
-                        iconStart: <Icon data={Palette} size={18} />,
-                        action: () => onSettings('appearance'),
-                    },
-                    {
-                        text: t('language'),
-                        iconStart: <Icon data={Globe} size={18} />,
-                        action: () => onSettings('language'),
                     },
                 ],
                 [

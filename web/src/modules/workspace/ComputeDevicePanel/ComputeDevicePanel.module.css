@@ -10,3 +10,13 @@
 .option > :last-child {
     white-space: nowrap;
 }
+
+.note {
+    font-size: 13px;
+    line-height: 1.5;
+    max-width: 440px;
+}
+
+.notice {
+    align-self: flex-start;
+}

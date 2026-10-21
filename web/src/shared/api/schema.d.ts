@@ -857,6 +857,136 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/activity/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["activityHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/activity/history/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["activityHistorySettings"];
+        put: operations["configureActivityHistory"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/model-prompts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ModelPromptReport"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ModelPromptSettings"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ModelPromptSettings"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/prompts/budget": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Estimate saved or draft instructions without reading Telegram history or calling a model. Generation validates the full assembled context separately. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PromptBudgetRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PromptBudgetReport"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1635,6 +1765,60 @@ export interface components {
             /** @enum {string} */
             scope: "message" | "through" | "from";
             excluded: boolean;
+        };
+        ActivityHistorySettings: {
+            /** @default 0 */
+            retentionDays: number;
+            /** @default 0 */
+            maxStorageMb: number;
+        };
+        ActivityHistoryStorage: {
+            retentionDays: number;
+            maxStorageMb: number;
+            /** Format: int64 */
+            bytes: number;
+            recording: boolean;
+            errorCode: string;
+        };
+        ActivityHistoryPage: {
+            entries: components["schemas"]["Activity"][];
+            nextCursor: string | null;
+            hasMore: boolean;
+            total: number;
+            storage: components["schemas"]["ActivityHistoryStorage"];
+        };
+        ModelPromptSettings: {
+            model: string;
+            /** @default  */
+            profileId: string;
+            /** @default  */
+            instructions: string;
+            contextWindow?: number | null;
+            /** @enum {string} */
+            tokenEncoding?: "auto" | "cl100k" | "o200k";
+        };
+        ModelPromptReport: {
+            prompts: components["schemas"]["ModelPromptSettings"][];
+        };
+        PromptBudgetRequest: {
+            rule?: components["schemas"]["ChatRule"];
+            globalPrompt?: string;
+            preferences?: components["schemas"]["ModelPromptSettings"];
+        };
+        PromptBudgetReport: {
+            model: string;
+            profileId: string;
+            contextWindow: number;
+            maxContextTokens: number;
+            systemTokens: number;
+            reservedOutputTokens: number;
+            remainingTokens: number;
+            fits: boolean;
+            /** @enum {string} */
+            tokenEncoding: "auto" | "cl100k" | "o200k";
+            preferences: components["schemas"]["ModelPromptSettings"];
+            estimated: boolean;
+            includesHistory: boolean;
         };
     };
     responses: never;
@@ -4609,6 +4793,73 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    activityHistory: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityHistoryPage"];
+                };
+            };
+        };
+    };
+    activityHistorySettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityHistoryStorage"];
+                };
+            };
+        };
+    };
+    configureActivityHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityHistorySettings"];
+            };
+        };
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityHistoryStorage"];
                 };
             };
         };

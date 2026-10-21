@@ -121,9 +121,15 @@ export function ComputeDevicePanel({
                     {!status.selectionSupported && status.limitation && (
                         <Text color="secondary">{t('limitations.' + status.limitation)}</Text>
                     )}
-                    {status.selectionSupported && <Text color="secondary">{t('nextStart')}</Text>}
+                    {status.selectionSupported && (
+                        <Text className={styles.note} color="secondary">
+                            {t('nextStart')}
+                        </Text>
+                    )}
                     {status.restartRequired && status.selectionSupported && (
-                        <Label theme="warning">{t('restartRequired')}</Label>
+                        <Label className={styles.notice} theme="warning">
+                            {t('restartRequired')}
+                        </Label>
                     )}
                     {active && status.managed && (
                         <Text color="secondary">{t('active', {name: name(active)})}</Text>

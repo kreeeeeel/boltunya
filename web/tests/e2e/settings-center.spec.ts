@@ -2,6 +2,9 @@ import {test, expect} from '@playwright/test';
 import {workspaceState} from '../fixtures/workspace';
 import {modelProfiles, providerPreset} from '../fixtures/modelProfiles';
 import {chooseSettingsSection} from '../fixtures/settings';
+import {persistTestTheme} from '../fixtures/settings';
+import {syntheticPromptBudget} from '../fixtures/promptBudget';
+import {computeDevices} from '../fixtures/computeDevices';
 import type {components} from '../../src/shared/api/schema';
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
@@ -10,6 +13,7 @@ test.beforeEach(async ({page}) => {
     const state = structuredClone(workspaceState);
     let appearance: components['schemas']['AppearanceSettings'] = {mode: 'light', tokens: {}, css: ''};
     const profiles = structuredClone(modelProfiles);
+    const prompts = new Map<string, components['schemas']['ModelPromptSettings']>();
     let routing = {
         enabled: false,
         parallelIndependentTasks: false,
@@ -27,6 +31,20 @@ test.beforeEach(async ({page}) => {
         } else if (path === '/api/appearance') {
             if (request.method() === 'PUT') appearance = request.postDataJSON();
             await route.fulfill({json: appearance});
+        } else if (path === '/api/engine/devices') {
+            await route.fulfill({json: computeDevices});
+        } else if (path === '/api/search/connection') {
+            await route.fulfill({json: {configured: false, state: 'unchecked'}});
+        } else if (path === '/api/prompts/budget') {
+            await route.fulfill({json: syntheticPromptBudget(request.postDataJSON())});
+        } else if (path === '/api/model-prompts') {
+            if (request.method() === 'PUT') {
+                const body = request.postDataJSON();
+                prompts.set(body.profileId || body.model, body);
+                await route.fulfill({json: body});
+            } else {
+                await route.fulfill({json: {prompts: [...prompts.values()]}});
+            }
         } else if (path === '/api/settings') {
             Object.assign(state.settings, request.postDataJSON());
             await route.fulfill({json: state.settings});
@@ -83,7 +101,7 @@ test.beforeEach(async ({page}) => {
 });
 test('center navigation preserves drafts and keeps actions visible on short screens', async ({page}) => {
     const dialog = page.getByRole('dialog', {name: ru.settings, exact: true});
-    await expect.poll(async () => Math.round((await dialog.boundingBox())!.width)).toBe(1160);
+    await expect.poll(async () => Math.round((await dialog.boundingBox())!.width)).toBe(960);
     await chooseSettingsSection(page, 'prompt');
     await dialog.getByRole('textbox', {name: ru.globalPrompt, exact: true}).fill('Prefer short messages.');
     await chooseSettingsSection(page, 'replies');
@@ -130,7 +148,8 @@ test('custom CSS stays scoped, blocks remote resources and persists with a safe 
     await page.reload();
     await expect.poll(() => page.locator('style[data-aigram-theme]').textContent()).toContain('#a855f7');
     await page.getByRole('button', {name: ru.profileMenu, exact: true}).click();
-    await page.getByRole('menuitem', {name: ru.settingsCenter.sections.appearance, exact: true}).click();
+    await page.getByRole('menuitem', {name: ru.settings, exact: true}).click();
+    await chooseSettingsSection(page, 'appearance');
     await css.fill('.x { background: url(https://example.com/tracker); }');
     await dialog.getByRole('button', {name: ru.appearance.preview, exact: true}).click();
     await expect(dialog.getByRole('alert')).toHaveText(ru.appearance.unsafeCss);
@@ -193,4 +212,133 @@ test('routing offers only vision-capable profiles for image analysis', async ({p
         parallelIndependentTasks: true,
     });
     await expect(page.getByRole('button', {name: ru.saved, exact: true})).toBeVisible();
+});
+
+for (const dark of [false, true]) {
+    test(`settings navigation stays fixed and language cards align in ${dark ? 'dark' : 'light'} theme`, async ({
+        page,
+    }) => {
+        if (dark) {
+            await persistTestTheme(page, true);
+            await page.reload();
+            await page.getByRole('button', {name: ru.profileMenu, exact: true}).click();
+            await page.getByRole('menuitem', {name: ru.settings, exact: true}).click();
+        }
+        const dialog = page.getByRole('dialog', {name: ru.settings, exact: true});
+        await expect.poll(async () => Math.round((await dialog.boundingBox())!.width)).toBe(960);
+        const brand = page.locator('[data-qa="settings-brand"]');
+        const initial = await brand.boundingBox();
+        await chooseSettingsSection(page, 'language');
+        expect((await brand.boundingBox())!.y).toBe(initial!.y);
+        const geometry = await dialog.getByRole('radio').evaluateAll((radios) =>
+            radios.map((radio) => {
+                const label = radio.closest('label')!;
+                const card = label.getBoundingClientRect();
+                const flag = label.querySelector('img')!.getBoundingClientRect();
+                const name = label.querySelector('.g-control-label__text .g-text')!;
+                const indicator = radio.getBoundingClientRect();
+                return {
+                    flagCenter: Math.abs(flag.y + flag.height / 2 - card.y - card.height / 2),
+                    radioCenter: Math.abs(indicator.y + indicator.height / 2 - card.y - card.height / 2),
+                    right: card.right - indicator.right,
+                    border: getComputedStyle(label).borderWidth,
+                    bold: Number(getComputedStyle(name).fontWeight),
+                };
+            }),
+        );
+        expect(geometry).toHaveLength(4);
+        geometry.forEach((card) => {
+            expect(card.flagCenter).toBeLessThan(1);
+            expect(card.radioCenter).toBeLessThan(1);
+            expect(card.right).toBeGreaterThanOrEqual(16);
+            expect(card.right).toBeLessThanOrEqual(20);
+            expect(card.border).toBe('0px');
+            expect(card.bold).toBeGreaterThanOrEqual(600);
+        });
+        const nav = page.locator('[data-qa="settings-navigation-scroll"]');
+        const track = nav.locator('..').getByRole('scrollbar').locator('..');
+        await page.mouse.move(1100, 70);
+        await expect(track).toHaveCSS('opacity', '0');
+        await dialog.getByRole('menuitem', {name: ru.settingsCenter.sections.language, exact: true}).hover();
+        await expect(track).toHaveCSS('opacity', '1');
+        await page.mouse.move(1100, 70);
+        await nav.locator('..').getByRole('scrollbar').focus();
+        await nav.locator('..').getByRole('scrollbar').press('ArrowDown');
+        await expect(track).toHaveCSS('opacity', '1');
+        await page.screenshot({
+            path: `../docs/resources/settings-language-${dark ? 'dark' : 'light'}.png`,
+            animations: 'disabled',
+        });
+        await chooseSettingsSection(page, 'compute');
+        await expect(page.getByRole('combobox', {name: ru.computeDevice.label, exact: true})).toBeVisible();
+        await page.screenshot({
+            path: `../docs/resources/settings-compute-${dark ? 'dark' : 'light'}.png`,
+            animations: 'disabled',
+        });
+        await chooseSettingsSection(page, 'search');
+        await page.getByText(ru.internetSearch.optionalExa, {exact: true}).click();
+        await page.screenshot({
+            path: `../docs/resources/settings-search-${dark ? 'dark' : 'light'}.png`,
+            animations: 'disabled',
+        });
+        await chooseSettingsSection(page, 'appearance');
+        await expect(page.locator('[data-qa="appearance-live-preview"]')).toBeVisible();
+        await page.screenshot({
+            path: `../docs/resources/settings-appearance-${dark ? 'dark' : 'light'}.png`,
+            animations: 'disabled',
+        });
+    });
+}
+
+test('the color picker updates its field and live example before applying the whole theme', async ({
+    page,
+}) => {
+    await chooseSettingsSection(page, 'appearance');
+    const picker = page.getByRole('group', {
+        name: ru.appearance.pickColor.replace('{name}', ru.appearance.tokens.accent),
+    });
+    await picker.getByRole('button').click();
+    const color = page.locator('.g-color-picker__popup input').first();
+    await color.fill('#34d399ff');
+    await color.blur();
+    await expect(page.getByRole('textbox', {name: ru.appearance.tokens.accent, exact: true})).toHaveValue(
+        '#34d399ff',
+    );
+    await page.locator('[data-qa="appearance-live-preview"]').getByText(ru.appearance.exampleName).click();
+    await expect(page.locator('[data-qa="appearance-live-preview"]')).toContainText(
+        ru.appearance.exampleOutgoing,
+    );
+    await expect(page.locator('[data-qa="appearance-live-preview"] > :first-child > :first-child')).toHaveCSS(
+        'background-color',
+        'rgb(52, 211, 153)',
+    );
+    await page.screenshot({path: '../docs/resources/appearance-color-picker.png', animations: 'disabled'});
+});
+
+test('model additions save separately, preserve drafts and display token estimates', async ({page}) => {
+    await chooseSettingsSection(page, 'prompt');
+    await page.getByRole('textbox', {name: ru.globalPrompt, exact: true}).fill('Shared wording');
+    await page
+        .getByRole('textbox', {name: ru.modelPrompts.instructions, exact: true})
+        .fill('Prefer a direct answer');
+    await page.getByRole('spinbutton', {name: ru.modelPrompts.contextWindow, exact: true}).fill('16384');
+    await expect(page.locator('[data-qa="prompt-budget"]')).toContainText(ru.promptBudget.estimated);
+    const saved = page.waitForRequest(
+        (request) => request.url().endsWith('/api/model-prompts') && request.method() === 'PUT',
+    );
+    await page.getByRole('button', {name: ru.modelPrompts.save, exact: true}).click();
+    expect((await saved).postDataJSON()).toMatchObject({
+        instructions: 'Prefer a direct answer',
+        contextWindow: 16384,
+        profileId: '',
+    });
+    expect((await saved).postDataJSON()).not.toHaveProperty('globalPrompt');
+    await page.getByRole('combobox', {name: ru.modelPrompts.model, exact: true}).click();
+    await page.getByRole('option', {name: 'Cloud text · API', exact: true}).click();
+    await expect(
+        page.getByRole('spinbutton', {name: ru.modelPrompts.contextWindow, exact: true}),
+    ).toBeDisabled();
+    await expect(page.getByRole('textbox', {name: ru.globalPrompt, exact: true})).toHaveValue(
+        'Shared wording',
+    );
 });

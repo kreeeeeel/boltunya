@@ -20,6 +20,7 @@ vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
     api: mocks,
 }));
+vi.mock('@/modules/settings/PromptBudgetNotice/PromptBudgetNotice', () => ({PromptBudgetNotice: () => null}));
 
 it('labels models that are restricted to manual drafts', () => {
     const engine = structuredClone(workspaceState.engine);

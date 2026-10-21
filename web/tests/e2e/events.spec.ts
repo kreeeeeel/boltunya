@@ -6,6 +6,7 @@ import {workspaceState} from '../fixtures/workspace';
 import {activityDetails, testActivity} from '../fixtures/activity';
 import type {components} from '@/shared/api/schema';
 import {persistTestTheme} from '../fixtures/settings';
+import {historyPage, historyStorage} from '../fixtures/activityHistory';
 
 test.beforeEach(async ({page}) => {
     const state = structuredClone(workspaceState);
@@ -29,6 +30,12 @@ test.beforeEach(async ({page}) => {
                 appearance = request.postDataJSON();
             }
             await route.fulfill({json: appearance});
+        } else if (path === '/api/activity/history') {
+            await route.fulfill({json: historyPage(state.activity)});
+        } else if (path === '/api/activity/history/settings') {
+            await route.fulfill({
+                json: {...historyStorage, ...(request.method() === 'PUT' ? request.postDataJSON() : {})},
+            });
         } else if (path === '/api/model-profiles') {
             await route.fulfill({json: {profiles: [], presets: []}});
         } else if (path === '/api/metrics') {
@@ -311,3 +318,68 @@ test('parallel queue settings persist without fabricated resource forecasts', as
     await page.getByRole('button', {name: 'Параллельные задачи', exact: true}).click();
     await expect(page.getByRole('radio', {name: '4', exact: true})).toBeChecked();
 });
+
+for (const dark of [false, true]) {
+    test(`persisted history loads older pages without duplicating live cards in ${dark ? 'dark' : 'light'} theme`, async ({
+        page,
+    }) => {
+        const archived = {
+            ...testActivity[2],
+            id: 'archived',
+            title: 'Архивный собеседник',
+            date: 1700000000,
+            preview: 'Ответ из сохранённой истории',
+        };
+        await page.route('**/api/activity/history?**', (route) => {
+            const cursor = new URL(route.request().url()).searchParams.get('cursor');
+            return route.fulfill({
+                json: cursor
+                    ? historyPage([archived])
+                    : {
+                          ...historyPage([testActivity[2]]),
+                          hasMore: true,
+                          nextCursor: 'opaque-page-2',
+                          total: 2,
+                      },
+            });
+        });
+        await page.route('**/api/activity/archived', (route) =>
+            route.fulfill({json: activityDetails(archived)}),
+        );
+        if (dark) {
+            await persistTestTheme(page, true);
+        }
+        await page.reload();
+        await page.locator('[data-qa="nav-activity"]').click();
+        await expect(page.locator('[data-qa="event-sent"]')).toHaveCount(1);
+        await page.getByRole('button', {name: 'Показать более ранние события', exact: true}).click();
+        const card = page.locator('[data-qa="event-archived"]');
+        await expect(card).toContainText('Ответ из сохранённой истории');
+        await expect(page.locator('[data-qa="event-sent"]')).toHaveCount(1);
+        await card.hover();
+        expect(
+            await card
+                .getByRole('button', {name: 'История: Архивный собеседник', exact: true})
+                .evaluate((element) => getComputedStyle(element, '::before').borderRadius),
+        ).toBe('20px');
+        await page.screenshot({
+            path: `../docs/resources/history-${dark ? 'dark' : 'light'}.png`,
+            animations: 'disabled',
+        });
+        await page.getByRole('button', {name: 'Хранение истории', exact: true}).click();
+        const dialog = page.getByRole('dialog', {name: 'Хранение истории', exact: true});
+        await expect(dialog.getByRole('spinbutton', {name: 'Срок хранения, дней', exact: true})).toHaveValue(
+            '0',
+        );
+        await expect(dialog.getByRole('spinbutton', {name: 'Лимит места, МБ', exact: true})).toHaveValue('0');
+        await dialog.getByRole('spinbutton', {name: 'Лимит места, МБ', exact: true}).fill('1024');
+        const saved = page.waitForRequest(
+            (request) =>
+                new URL(request.url()).pathname === '/api/activity/history/settings' &&
+                request.method() === 'PUT',
+        );
+        await dialog.getByRole('button', {name: 'Сохранить настройки', exact: true}).click();
+        expect((await saved).postDataJSON()).toEqual({retentionDays: 0, maxStorageMb: 1024});
+        await expect(dialog.getByRole('button', {name: 'Сохранено', exact: true})).toBeVisible();
+    });
+}

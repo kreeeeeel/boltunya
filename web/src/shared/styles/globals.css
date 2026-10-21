@@ -14,8 +14,13 @@ textarea,
 
 * {
     box-sizing: border-box;
-    scrollbar-width: auto;
-    scrollbar-color: auto;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+}
+
+*:hover,
+*:has(:focus-visible) {
+    scrollbar-color: var(--tiho-scrollbar, #a2adba) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -49,8 +54,13 @@ textarea,
 }
 
 *::-webkit-scrollbar-thumb {
-    background: var(--tiho-scrollbar, #a2adba);
+    background: transparent;
     border-radius: 6px;
+}
+
+*:hover::-webkit-scrollbar-thumb,
+*:has(:focus-visible)::-webkit-scrollbar-thumb {
+    background: var(--tiho-scrollbar, #a2adba);
 }
 
 *::-webkit-scrollbar-thumb:hover {
@@ -73,6 +83,8 @@ textarea,
     --g-modal-border-radius: 16px;
     --g-font-family-monospace: 'Consolas', monospace;
     --g-color-base-brand: #2878c9;
+    --g-color-base-selection: var(--tiho-selected);
+    --g-color-base-selection-hover: var(--tiho-selected);
     --g-color-text-brand-contrast: #fff;
     --g-color-base-brand-hover: #237bd1;
     --g-color-text-brand: #2884d7;
