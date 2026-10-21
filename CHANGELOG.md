@@ -25,6 +25,7 @@ Release versions are assigned by Windows CI. Each GitHub release includes the fi
 - Preserved raw uploads with arbitrary MIME types, including WebP, and legacy requests without a Content-Type header. Removed API routes still return the original structured 404 response.
 - Kept partial chat rules, nested model options, appearance and prompt settings compatible with their previous defaults. Explicit invalid nulls and scalar coercions are rejected at the HTTP boundary.
 - Prevented a completed manual draft error from duplicating its local notice or reviving an older automatic-reply failure after polling.
+- Restored complete optional N-API/WASM dependency metadata for clean npm installation after removing the old transport. Existing resolved package versions remain unchanged.
 
 ### Removed
 
@@ -36,6 +37,7 @@ Release versions are assigned by Windows CI. Each GitHub release includes the fi
 - The UI unit suite passed 168 tests; focused reruns after the final form/layout changes covered 21 cases. TypeScript, ESLint, Stylelint and Prettier passed. All 113 browser scenarios, 38 Electron tests and 10 script tests passed.
 - Packaged and launched local Aigram 2.6.31 with bundled Java. Native window/tray/startup, updater recovery/profile migration and media checks passed. The packaged JAR contains nine MVC controllers and no legacy HTTP/injection classes or Guice/JSR-330 libraries. Packaged desktop modules, update helper and backend JAR match the checked artifacts.
 - The actual profile restored Telegram authorization automatically; saved settings and manual memory notes were preserved. Release publication still requires the green Windows workflow and published EXE/SDK checksum verification.
+- A clean isolated installation passed with the CI resolver, npm 11.19.0; npm 11.6.2 compatibility and byte-stable lockfile regeneration were also verified.
 - No database migration, model download or real Telegram send is required for these tests.
 
 ## 2026-10-21 — Generated contract and HTTP clients
