@@ -16,9 +16,6 @@ import ru.aigram.contract.dto.ModelPromptSettings
 import ru.aigram.contract.dto.ModelPromptSettingsInput
 import ru.aigram.contract.dto.SettingsUpdate
 import ru.aigram.domain.chat.ChatRule
-import ru.aigram.transformer.chat.ChatRuleTransformer
-import ru.aigram.transformer.models.ModelPromptTransformer
-import ru.aigram.transformer.settings.AppearanceTransformer
 import tools.jackson.core.JacksonException
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.KotlinModule
@@ -27,6 +24,9 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import ru.aigram.domain.ai.prompt.ModelPromptSettings as DomainModelPromptSettings
 import ru.aigram.domain.settings.AppearanceSettings as DomainAppearanceSettings
+import ru.aigram.transformer.chat.toDomain as toChatDomain
+import ru.aigram.transformer.models.toDomain as toModelDomain
+import ru.aigram.transformer.settings.toDomain as toSettingsDomain
 
 class ApiJsonConfigurationTest {
     private fun mapper(): JsonMapper {
@@ -102,12 +102,11 @@ class ApiJsonConfigurationTest {
     @Test
     fun `partial chat request uses complete domain defaults without making response fields optional`() {
         val json = mapper()
-        val transformer = ChatRuleTransformer()
         val empty = json.readValue("{}", ChatRuleInput::class.java)
         val partial = json.readValue("""{"enabled":true,"instructions":"Keep it brief"}""", ChatRuleInput::class.java)
 
-        assertEquals(ChatRule(), transformer.toDomain(empty))
-        assertEquals(ChatRule(enabled = true, instructions = "Keep it brief"), transformer.toDomain(partial))
+        assertEquals(ChatRule(), empty.toChatDomain())
+        assertEquals(ChatRule(enabled = true, instructions = "Keep it brief"), partial.toChatDomain())
         listOf("""{"enabled":null}""", """{"style":null}""", """{"contextMessages":null}""").stream()
             .forEach { payload ->
                 assertFailsWith<JacksonException> { json.readValue(payload, ChatRuleInput::class.java) }
@@ -125,11 +124,11 @@ class ApiJsonConfigurationTest {
 
         assertEquals(
             DomainModelPromptSettings("qwen3:1.7b"),
-            ModelPromptTransformer(ChatRuleTransformer()).toDomain(prompts),
+            prompts.toModelDomain(),
         )
         assertEquals(
             DomainAppearanceSettings(),
-            AppearanceTransformer().toDomain(appearance),
+            appearance.toSettingsDomain(),
         )
         assertFailsWith<JacksonException> {
             json.readValue("""{"tokens":null}""", AppearanceSettingsInput::class.java)

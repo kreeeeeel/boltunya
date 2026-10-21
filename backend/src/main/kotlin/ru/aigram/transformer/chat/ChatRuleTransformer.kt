@@ -1,6 +1,5 @@
 package ru.aigram.transformer.chat
 
-import org.springframework.stereotype.Component
 import ru.aigram.contract.dto.ChatGroupReplies
 import ru.aigram.contract.dto.ChatRuleInput
 import ru.aigram.contract.dto.SourceLinksMode
@@ -14,55 +13,52 @@ import ru.aigram.contract.dto.CommunicationStyle as ContractCommunicationStyle
 import ru.aigram.contract.dto.DeliveryMode as ContractDeliveryMode
 import ru.aigram.contract.dto.ProactiveMode as ContractProactiveMode
 
-@Component
-class ChatRuleTransformer {
-    fun toContract(value: ChatRule): ContractChatRule = ContractChatRule(
-        enabled = value.enabled,
-        style = ContractCommunicationStyle.forValue(value.style),
-        model = value.model,
-        instructions = value.instructions,
-        contextMessages = value.contextMessages,
-        maxTokens = value.maxTokens,
-        delaySeconds = value.delaySeconds,
-        creativity = value.creativity,
-        emoji = value.emoji,
-        modelProfileId = value.modelProfileId,
-        deliveryMode = ContractDeliveryMode.valueOf(value.deliveryMode.name),
-        analyzePhotos = value.analyzePhotos,
-        aiStickers = value.aiStickers,
-        internetAccess = value.internetAccess,
-        matchMyStyle = value.matchMyStyle,
-        styleId = value.styleId,
-        groupReplies = ChatGroupReplies.valueOf(value.groupReplies.name),
-        useMemory = value.useMemory,
-        sourceLinks = SourceLinksMode.valueOf(value.sourceLinks.name),
-        useDefaultModel = value.useDefaultModel,
-        proactiveMode = ContractProactiveMode.valueOf(value.proactiveMode.name),
-        proactiveIntervalMinutes = value.proactiveIntervalMinutes,
-    )
+fun ChatRule.toContract(): ContractChatRule = ContractChatRule(
+    enabled = enabled,
+    style = ContractCommunicationStyle.forValue(style),
+    model = model,
+    instructions = instructions,
+    contextMessages = contextMessages,
+    maxTokens = maxTokens,
+    delaySeconds = delaySeconds,
+    creativity = creativity,
+    emoji = emoji,
+    modelProfileId = modelProfileId,
+    deliveryMode = ContractDeliveryMode.valueOf(deliveryMode.name),
+    analyzePhotos = analyzePhotos,
+    aiStickers = aiStickers,
+    internetAccess = internetAccess,
+    matchMyStyle = matchMyStyle,
+    styleId = styleId,
+    groupReplies = ChatGroupReplies.valueOf(groupReplies.name),
+    useMemory = useMemory,
+    sourceLinks = SourceLinksMode.valueOf(sourceLinks.name),
+    useDefaultModel = useDefaultModel,
+    proactiveMode = ContractProactiveMode.valueOf(proactiveMode.name),
+    proactiveIntervalMinutes = proactiveIntervalMinutes,
+)
 
-    fun toDomain(value: ChatRuleInput): ChatRule = ChatRule(
-        enabled = value.enabled,
-        style = value.style.value,
-        model = value.model,
-        instructions = value.instructions,
-        contextMessages = value.contextMessages,
-        maxTokens = value.maxTokens,
-        delaySeconds = value.delaySeconds,
-        creativity = value.creativity,
-        emoji = value.emoji,
-        modelProfileId = value.modelProfileId,
-        deliveryMode = DeliveryMode.valueOf(value.deliveryMode.name),
-        analyzePhotos = value.analyzePhotos,
-        aiStickers = value.aiStickers,
-        internetAccess = value.internetAccess,
-        matchMyStyle = value.matchMyStyle,
-        styleId = value.styleId,
-        groupReplies = GroupReplyMode.valueOf(value.groupReplies.name),
-        useMemory = value.useMemory,
-        sourceLinks = SourceLinks.valueOf(value.sourceLinks.name),
-        useDefaultModel = value.useDefaultModel,
-        proactiveMode = ProactiveMode.valueOf(value.proactiveMode.name),
-        proactiveIntervalMinutes = value.proactiveIntervalMinutes,
-    )
-}
+fun ChatRuleInput.toDomain(): ChatRule = ChatRule(
+    enabled = enabled,
+    style = style.value,
+    model = model,
+    instructions = instructions,
+    contextMessages = contextMessages,
+    maxTokens = maxTokens,
+    delaySeconds = delaySeconds,
+    creativity = creativity,
+    emoji = emoji,
+    modelProfileId = modelProfileId,
+    deliveryMode = DeliveryMode.valueOf(deliveryMode.name),
+    analyzePhotos = analyzePhotos,
+    aiStickers = aiStickers,
+    internetAccess = internetAccess,
+    matchMyStyle = matchMyStyle,
+    styleId = styleId,
+    groupReplies = GroupReplyMode.valueOf(groupReplies.name),
+    useMemory = useMemory,
+    sourceLinks = SourceLinks.valueOf(sourceLinks.name),
+    useDefaultModel = useDefaultModel,
+    proactiveMode = ProactiveMode.valueOf(proactiveMode.name),
+    proactiveIntervalMinutes = proactiveIntervalMinutes,
+)

@@ -7,13 +7,12 @@ import ru.aigram.contract.api.TelegramApi
 import ru.aigram.contract.dto.Credentials
 import ru.aigram.contract.dto.Ok
 import ru.aigram.contract.dto.Value
-import ru.aigram.transformer.telegram.TelegramTransformer
+import ru.aigram.transformer.telegram.toDomain
 
 @RestController
-class TelegramController(private val telegram: TelegramComponent, private val transformer: TelegramTransformer) :
-    TelegramApi {
+class TelegramController(private val telegram: TelegramComponent) : TelegramApi {
     override fun connect(credentials: Credentials): ResponseEntity<Ok> {
-        telegram.connect(transformer.toDomain(credentials))
+        telegram.connect(credentials.toDomain())
         return ResponseEntity.ok(Ok(true))
     }
 

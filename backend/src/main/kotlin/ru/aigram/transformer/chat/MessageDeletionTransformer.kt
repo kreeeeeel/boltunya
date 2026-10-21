@@ -1,21 +1,17 @@
 package ru.aigram.transformer.chat
 
-import org.springframework.stereotype.Component
 import ru.aigram.domain.chat.MessageDeletionOptions
 import ru.aigram.domain.chat.MessageDeletionResult
 import ru.aigram.contract.dto.MessageDeletionOptions as ContractMessageDeletionOptions
 import ru.aigram.contract.dto.MessageDeletionResult as ContractMessageDeletionResult
 
-@Component
-class MessageDeletionTransformer {
-    fun toContract(value: MessageDeletionOptions): ContractMessageDeletionOptions = ContractMessageDeletionOptions(
-        canDeleteForSelf = value.canDeleteForSelf,
-        canDeleteForEveryone = value.canDeleteForEveryone,
-    )
+fun MessageDeletionOptions.toContract(): ContractMessageDeletionOptions = ContractMessageDeletionOptions(
+    canDeleteForSelf = canDeleteForSelf,
+    canDeleteForEveryone = canDeleteForEveryone,
+)
 
-    fun toContract(value: MessageDeletionResult): ContractMessageDeletionResult = ContractMessageDeletionResult(
-        chatId = value.chatId,
-        messageId = value.messageId,
-        deletedAt = value.deletedAt,
-    )
-}
+fun MessageDeletionResult.toContract(): ContractMessageDeletionResult = ContractMessageDeletionResult(
+    chatId = chatId,
+    messageId = messageId,
+    deletedAt = deletedAt,
+)

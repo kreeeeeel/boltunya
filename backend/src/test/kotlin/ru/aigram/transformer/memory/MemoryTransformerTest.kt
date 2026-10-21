@@ -22,7 +22,7 @@ class MemoryTransformerTest {
             ),
         )
 
-        val mapped = MemoryTransformer().toContract(value)
+        val mapped = value.toContract()
 
         assertEquals(value.chatId, mapped.chatId)
         assertEquals("Manual **note**", mapped.notes)

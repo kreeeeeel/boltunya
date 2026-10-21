@@ -8,18 +8,17 @@ import ru.aigram.contract.dto.ContextExclusionScope as ContractContextExclusionS
 import ru.aigram.contract.dto.ContextExclusionUpdate as ContractContextExclusionUpdate
 
 class ContextExclusionTransformerTest {
-    private val transformer = ContextExclusionTransformer()
 
     @Test
     fun `empty legacy update excludes only the selected message`() {
-        assertEquals(ContextExclusionUpdate(), transformer.toDomain(ContractContextExclusionUpdate()))
+        assertEquals(ContextExclusionUpdate(), ContractContextExclusionUpdate().toDomain())
     }
 
     @Test
     fun `retains range restoration rather than substituting exclusion defaults`() {
         assertEquals(
             ContextExclusionUpdate(ContextExclusionScope.THROUGH, false),
-            transformer.toDomain(ContractContextExclusionUpdate(ContractContextExclusionScope.THROUGH, false)),
+            ContractContextExclusionUpdate(ContractContextExclusionScope.THROUGH, false).toDomain(),
         )
     }
 }

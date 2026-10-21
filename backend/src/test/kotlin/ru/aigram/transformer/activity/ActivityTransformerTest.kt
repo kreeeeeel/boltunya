@@ -17,8 +17,6 @@ import ru.aigram.domain.events.ActivityFeedbackRating as DomainFeedbackRating
 import ru.aigram.domain.events.ActivityKind as DomainActivityKind
 
 class ActivityTransformerTest {
-    private val transformer = ActivityTransformer()
-
     @Test
     fun `event details preserve full timestamps reasoning traces and human feedback`() {
         val timestamp = 4_000_000_000L
@@ -46,7 +44,7 @@ class ActivityTransformerTest {
             feedback = ActivityFeedback(DomainFeedbackRating.GOOD, "Useful", timestamp),
         )
 
-        val mapped = transformer.toContract(value)
+        val mapped = value.toContract()
 
         assertEquals(timestamp, mapped.entry.date)
         assertEquals(3_000_000_000L, mapped.entry.durationMs)
@@ -63,7 +61,7 @@ class ActivityTransformerTest {
 
     @Test
     fun `omitted feedback comment stays distinct from an explicit empty comment`() {
-        assertNull(transformer.toDomain(ActivityFeedbackUpdate(ActivityFeedbackRating.BAD)).comment)
-        assertEquals("", transformer.toDomain(ActivityFeedbackUpdate(ActivityFeedbackRating.GOOD, "")).comment)
+        assertNull(ActivityFeedbackUpdate(ActivityFeedbackRating.BAD).toDomain().comment)
+        assertEquals("", ActivityFeedbackUpdate(ActivityFeedbackRating.GOOD, "").toDomain().comment)
     }
 }

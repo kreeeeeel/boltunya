@@ -4,13 +4,11 @@ import org.junit.jupiter.api.Test
 import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.MessageEntity
 import ru.aigram.domain.media.MediaAttachment
-import ru.aigram.transformer.media.MediaTransformer
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class MessageTransformerTest {
-    private val transformer = MessageTransformer(MediaTransformer())
 
     @Test
     fun `preserves opaque identifiers long timestamps formatting and retained deletion metadata`() {
@@ -40,7 +38,7 @@ class MessageTransformerTest {
             mediaAlbumId = "9007199254740995",
         )
 
-        val result = transformer.toContract(source)
+        val result = source.toContract()
 
         assertEquals(source.id, result.id)
         assertEquals(source.chatId, result.chatId)
@@ -64,6 +62,6 @@ class MessageTransformerTest {
 
     @Test
     fun `leaves absent media absent`() {
-        assertNull(transformer.toContract(ChatMessage("1", "42", "Text", false, 0)).media)
+        assertNull(ChatMessage("1", "42", "Text", false, 0).toContract().media)
     }
 }

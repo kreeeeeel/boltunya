@@ -35,6 +35,7 @@ import java.net.ServerSocket
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.Arrays
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -107,6 +108,13 @@ class SpringApplicationContextTest {
                 assertEquals(directory, application.getBean(Path::class.java))
                 assertSame(settings, application.getBean(SettingsStore::class.java))
                 assertSame(runtime, application.getBean(ApplicationRuntime::class.java))
+                val mappingBeans = Arrays.stream(application.beanDefinitionNames)
+                    .map { application.getType(it) }
+                    .filter { it?.packageName?.startsWith("ru.aigram.transformer.") == true }
+                    .map { it?.name.orEmpty() }
+                    .toList()
+                assertTrue(mappingBeans.isEmpty(), mappingBeans.joinToString())
+
                 assertSame(
                     application.getBean(EngineManager::class.java),
                     application.getBean(EngineManager::class.java),

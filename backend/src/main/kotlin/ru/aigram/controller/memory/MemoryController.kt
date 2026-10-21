@@ -8,17 +8,17 @@ import ru.aigram.contract.dto.MemoryDocument
 import ru.aigram.contract.dto.MemoryNotesUpdate
 import ru.aigram.contract.dto.MemoryRefreshRequest
 import ru.aigram.contract.dto.Ok
-import ru.aigram.transformer.memory.MemoryTransformer
+import ru.aigram.transformer.memory.toContract
 
 @RestController
-class MemoryController(private val memory: MemoryComponent, private val transformer: MemoryTransformer) : MemoryApi {
+class MemoryController(private val memory: MemoryComponent) : MemoryApi {
     override fun getChatMemory(chatId: String): ResponseEntity<MemoryDocument> =
-        ResponseEntity.ok(transformer.toContract(memory.get(chatId)))
+        ResponseEntity.ok(memory.get(chatId).toContract())
 
     override fun getGlobalMemory(): ResponseEntity<MemoryDocument> = getChatMemory("")
 
     override fun cancelChatMemoryCollection(chatId: String): ResponseEntity<MemoryDocument> =
-        ResponseEntity.ok(transformer.toContract(memory.cancel(chatId)))
+        ResponseEntity.ok(memory.cancel(chatId).toContract())
 
     override fun cancelGlobalMemoryCollection(): ResponseEntity<MemoryDocument> = cancelChatMemoryCollection("")
 
@@ -26,7 +26,7 @@ class MemoryController(private val memory: MemoryComponent, private val transfor
         chatId: String,
         memoryNotesUpdate: MemoryNotesUpdate,
     ): ResponseEntity<MemoryDocument> = ResponseEntity.ok(
-        transformer.toContract(memory.edit(chatId, memoryNotesUpdate.notes, memoryNotesUpdate.revision)),
+        memory.edit(chatId, memoryNotesUpdate.notes, memoryNotesUpdate.revision).toContract(),
     )
 
     override fun updateGlobalMemory(memoryNotesUpdate: MemoryNotesUpdate): ResponseEntity<MemoryDocument> =
@@ -36,9 +36,7 @@ class MemoryController(private val memory: MemoryComponent, private val transfor
         chatId: String,
         memoryRefreshRequest: MemoryRefreshRequest,
     ): ResponseEntity<MemoryDocument> = ResponseEntity.ok(
-        transformer.toContract(
-            memory.refresh(chatId, memoryRefreshRequest.rebuild, memoryRefreshRequest.immediate),
-        ),
+        memory.refresh(chatId, memoryRefreshRequest.rebuild, memoryRefreshRequest.immediate).toContract(),
     )
 
     override fun refreshChangedMemory(memoryRefreshRequest: MemoryRefreshRequest?): ResponseEntity<Ok> {

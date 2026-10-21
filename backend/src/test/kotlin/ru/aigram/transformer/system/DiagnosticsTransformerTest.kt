@@ -17,7 +17,7 @@ class DiagnosticsTransformerTest {
             "error-1", 4_000_000_000L, 3_900_000_000L, "update", "UPDATE_DOWNLOAD_FAILED",
             "Synthetic update failure", "Try again", "SyntheticException", 3, mapOf("stage" to "download"),
         )
-        val mapped = DiagnosticsTransformer().toContract(DiagnosticReport(listOf(value))).errors.single()
+        val mapped = DiagnosticReport(listOf(value)).toContract().errors.single()
 
         assertEquals(DiagnosticSource.UPDATE, mapped.source)
         assertEquals(value.date, mapped.date)
@@ -37,7 +37,7 @@ class DiagnosticsTransformerTest {
             kind = "external",
             note = "Managed externally",
         )
-        val mapped = StorageTransformer().toContract(StorageLocationReport(listOf(value))).locations.single()
+        val mapped = StorageLocationReport(listOf(value)).toContract().locations.single()
 
         assertEquals(StorageLocationKind.EXTERNAL, mapped.kind)
         assertEquals("", mapped.path)

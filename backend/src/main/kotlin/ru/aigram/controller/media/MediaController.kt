@@ -12,14 +12,13 @@ import ru.aigram.contract.dto.Ok
 import ru.aigram.contract.dto.StickerCatalog
 import ru.aigram.contract.dto.StickerItem
 import ru.aigram.contract.dto.UploadedFile
-import ru.aigram.transformer.media.MediaTransformer
+import ru.aigram.transformer.media.toContract
 
 @RestController
 class MediaController(
     private val content: MediaContentService,
     private val sending: MediaSendingComponent,
     private val uploads: UploadComponent,
-    private val transformer: MediaTransformer,
     private val request: HttpServletRequest,
 ) : MediaApi {
     override fun deleteUpload(id: String): ResponseEntity<Ok> {
@@ -35,14 +34,11 @@ class MediaController(
     override fun media(fileId: Int): ResponseEntity<Resource> = content.respond(fileId, request)
 
     override fun stickerSet(id: String): ResponseEntity<List<StickerItem>> =
-        ResponseEntity.ok(sending.stickerSet(id).stream().map(transformer::toContract).toList())
+        ResponseEntity.ok(sending.stickerSet(id).stream().map { it.toContract() }.toList())
 
-    override fun stickers(): ResponseEntity<StickerCatalog> =
-        ResponseEntity.ok(transformer.toContract(sending.catalog()))
+    override fun stickers(): ResponseEntity<StickerCatalog> = ResponseEntity.ok(sending.catalog().toContract())
 
     override fun uploadFile(xFileName: String, body: ByteArray): ResponseEntity<UploadedFile> = ResponseEntity.ok(
-        transformer.toContract(
-            uploads.create(xFileName, request.contentType.orEmpty(), body, request.contentLengthLong),
-        ),
+        uploads.create(xFileName, request.contentType.orEmpty(), body, request.contentLengthLong).toContract(),
     )
 }

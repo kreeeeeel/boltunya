@@ -26,11 +26,9 @@ import ru.aigram.contract.dto.PreviewJobRequest
 import ru.aigram.contract.dto.PromptBudgetReport
 import ru.aigram.contract.dto.PromptBudgetRequest
 import ru.aigram.contract.dto.Reply
-import ru.aigram.transformer.chat.ChatRuleTransformer
-import ru.aigram.transformer.models.EngineTransformer
-import ru.aigram.transformer.models.ModelProfileTransformer
-import ru.aigram.transformer.models.ModelPromptTransformer
-import ru.aigram.transformer.models.PreviewTransformer
+import ru.aigram.transformer.chat.toDomain
+import ru.aigram.transformer.models.toContract
+import ru.aigram.transformer.models.toDomain
 import java.util.UUID
 
 @RestController
@@ -40,25 +38,17 @@ class ModelsController(
     private val prompts: ModelPromptsComponent,
     private val previews: PreviewComponent,
     private val drafts: DraftComponent,
-    private val engineTransformer: EngineTransformer,
-    private val profileTransformer: ModelProfileTransformer,
-    private val promptTransformer: ModelPromptTransformer,
-    private val previewTransformer: PreviewTransformer,
-    private val rules: ChatRuleTransformer,
 ) : ModelsApi {
-    override fun modelProfiles(): ResponseEntity<ModelProfileReport> =
-        ResponseEntity.ok(profileTransformer.toContract(profiles.list()))
+    override fun modelProfiles(): ResponseEntity<ModelProfileReport> = ResponseEntity.ok(profiles.list().toContract())
 
     override fun createModelProfile(modelProfileUpdate: ModelProfileUpdate): ResponseEntity<ModelProfile> =
         ResponseEntity.ok(
-            profileTransformer.toContract(profiles.save(null, profileTransformer.toDomain(modelProfileUpdate))),
+            profiles.save(null, modelProfileUpdate.toDomain()).toContract(),
         )
 
     override fun updateModelProfile(id: UUID, modelProfileUpdate: ModelProfileUpdate): ResponseEntity<ModelProfile> =
         ResponseEntity.ok(
-            profileTransformer.toContract(
-                profiles.save(id.toString(), profileTransformer.toDomain(modelProfileUpdate)),
-            ),
+            profiles.save(id.toString(), modelProfileUpdate.toDomain()).toContract(),
         )
 
     override fun deleteModelProfile(id: UUID): ResponseEntity<Ok> {
@@ -70,50 +60,40 @@ class ModelsController(
         id: UUID,
         modelProfileTestRequest: ModelProfileTestRequest,
     ): ResponseEntity<ModelProfileTestResult> = ResponseEntity.ok(
-        profileTransformer.toContract(
-            profiles.test(id.toString(), modelProfileTestRequest.confirmGeneration == true),
-        ),
+        profiles.test(id.toString(), modelProfileTestRequest.confirmGeneration == true).toContract(),
     )
 
-    override fun modelRouting(): ResponseEntity<ModelTaskRouting> =
-        ResponseEntity.ok(profileTransformer.toContract(profiles.routing()))
+    override fun modelRouting(): ResponseEntity<ModelTaskRouting> = ResponseEntity.ok(profiles.routing().toContract())
 
     override fun saveModelRouting(modelTaskRouting: ModelTaskRouting): ResponseEntity<ModelTaskRouting> =
         ResponseEntity.ok(
-            profileTransformer.toContract(profiles.routing(profileTransformer.toDomain(modelTaskRouting))),
+            profiles.routing(modelTaskRouting.toDomain()).toContract(),
         )
 
-    override fun getModelPrompts(): ResponseEntity<ModelPromptReport> =
-        ResponseEntity.ok(promptTransformer.toContract(prompts.list()))
+    override fun getModelPrompts(): ResponseEntity<ModelPromptReport> = ResponseEntity.ok(prompts.list().toContract())
 
     override fun saveModelPrompts(modelPromptSettings: ModelPromptSettingsInput): ResponseEntity<ModelPromptSettings> =
-        ResponseEntity.ok(promptTransformer.toContract(prompts.save(promptTransformer.toDomain(modelPromptSettings))))
+        ResponseEntity.ok(prompts.save(modelPromptSettings.toDomain()).toContract())
 
     override fun estimatePromptBudget(promptBudgetRequest: PromptBudgetRequest): ResponseEntity<PromptBudgetReport> =
-        ResponseEntity.ok(promptTransformer.toContract(prompts.budget(promptTransformer.toDomain(promptBudgetRequest))))
+        ResponseEntity.ok(prompts.budget(promptBudgetRequest.toDomain()).toContract())
 
-    override fun engineDevices(): ResponseEntity<ComputeDeviceStatus> =
-        ResponseEntity.ok(engineTransformer.toContract(engine.devices()))
+    override fun engineDevices(): ResponseEntity<ComputeDeviceStatus> = ResponseEntity.ok(engine.devices().toContract())
 
     override fun preview(preview: Preview): ResponseEntity<Reply> = ResponseEntity.ok(
-        previewTransformer.toContract(
-            previews.reply(rules.toDomain(preview.rule), preview.chatId.orEmpty(), preview.text),
-        ),
+        previews.reply(preview.rule.toDomain(), preview.chatId.orEmpty(), preview.text).toContract(),
     )
 
     override fun enqueuePreviewJob(previewJobRequest: PreviewJobRequest): ResponseEntity<PreviewJob> =
         ResponseEntity.ok(
-            previewTransformer.toContract(
-                drafts.enqueue(
-                    previewJobRequest.chatId,
-                    previewJobRequest.rule?.let(rules::toDomain),
-                    previewJobRequest.messageId.orEmpty(),
-                ),
-            ),
+            drafts.enqueue(
+                previewJobRequest.chatId,
+                previewJobRequest.rule?.toDomain(),
+                previewJobRequest.messageId.orEmpty(),
+            ).toContract(),
         )
 
-    override fun previewJob(id: String): ResponseEntity<PreviewJob> =
-        ResponseEntity.ok(previewTransformer.toContract(drafts.job(id)))
+    override fun previewJob(id: String): ResponseEntity<PreviewJob> = ResponseEntity.ok(drafts.job(id).toContract())
 
     override fun install(): ResponseEntity<Ok> {
         engine.install()

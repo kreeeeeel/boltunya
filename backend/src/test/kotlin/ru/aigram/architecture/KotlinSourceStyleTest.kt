@@ -17,7 +17,9 @@ import org.jetbrains.kotlin.psi.KtEnumEntry
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtIfExpression
 import org.jetbrains.kotlin.psi.KtLoopExpression
+import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtPostfixExpression
+import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.psi.KtThrowExpression
 import org.junit.jupiter.api.Test
@@ -44,7 +46,8 @@ class KotlinSourceStyleTest {
             }.use { files ->
                 files.flatMap { path ->
                     val source = factory.createFile(path.fileName.toString(), normalize(Files.readString(path)))
-                    violations(source).stream().map { "$path: $it" }
+                    violations(source, production = path.startsWith(Path.of("src/main/kotlin")))
+                        .stream().map { "$path: $it" }
                 }.toList()
             }
 
@@ -140,7 +143,61 @@ class KotlinSourceStyleTest {
         }
     }
 
-    private fun violations(file: KtFile): List<String> {
+    @Test
+    fun `production transformers contain stateless extension functions instead of injectable mapping classes`() {
+        withParser { factory ->
+            val injectable = factory.createFile(
+                "LegacyTransformer.kt",
+                """
+                package ru.aigram.transformer.chat
+                import org.springframework.stereotype.Component
+                @Component
+                class LegacyTransformer
+                """.trimIndent(),
+            )
+            val legacy = violations(injectable, production = true)
+
+            assertTrue(legacy.any { it.contains("class or object") })
+            assertTrue(legacy.any { it.contains("Spring") })
+
+            val ordinary = factory.createFile(
+                "OrdinaryTransformer.kt",
+                """
+                package ru.aigram.transformer.chat
+                fun toContract(value: String): String = value
+                """.trimIndent(),
+            )
+            assertTrue(violations(ordinary, production = true).any { it.contains("extension") })
+
+            val stateful = factory.createFile(
+                "StatefulTransformer.kt",
+                """
+                package ru.aigram.transformer.chat
+                val cached = mutableMapOf<String, String>()
+                fun String.toContract(): String = this
+                """.trimIndent(),
+            )
+            assertTrue(violations(stateful, production = true).any { it.contains("state") })
+
+            val current = factory.createFile(
+                "CurrentTransformer.kt",
+                """
+                package ru.aigram.transformer.chat
+                fun String.toContract(): String = this
+                private fun Int.toDomain(): Int = this
+                """.trimIndent(),
+            )
+            assertTrue(violations(current, production = true).isEmpty())
+
+            val test = factory.createFile(
+                "CurrentTransformerTest.kt",
+                "package ru.aigram.transformer.chat\nclass CurrentTransformerTest",
+            )
+            assertTrue(violations(test).isEmpty())
+        }
+    }
+
+    private fun violations(file: KtFile, production: Boolean = false): List<String> {
         val syntax = PsiTreeUtil.collectElementsOfType(file, PsiErrorElement::class.java).stream()
             .map { "Syntax error: ${it.errorDescription}" }
         val branches = PsiTreeUtil.collectElementsOfType(file, KtIfExpression::class.java).stream()
@@ -182,7 +239,31 @@ class KotlinSourceStyleTest {
             Stream.empty()
         }
 
-        return Stream.of(syntax, branches, prohibited, packages, imports, declarations).flatMap { it }.toList()
+        val transformations = if (production && file.packageFqName.asString().startsWith("ru.aigram.transformer.")) {
+            transformerViolations(file)
+        } else {
+            Stream.empty()
+        }
+
+        return Stream.of(syntax, branches, prohibited, packages, imports, declarations, transformations)
+            .flatMap { it }.toList()
+    }
+
+    private fun transformerViolations(file: KtFile): Stream<String> {
+        val classes = PsiTreeUtil.collectElementsOfType(file, KtClassOrObject::class.java).stream()
+            .map { "Transformer files cannot declare a class or object at offset ${it.textOffset}" }
+        val functions = file.declarations.stream().filter { it is KtNamedFunction }
+            .map { it as KtNamedFunction }
+            .filter { it.receiverTypeReference == null }
+            .map { "Transformer functions require an extension receiver at offset ${it.textOffset}" }
+        val state = file.declarations.stream().filter { it is KtProperty }
+            .filter { !it.hasModifier(KtTokens.CONST_KEYWORD) }
+            .map { "Transformer files cannot retain state at offset ${it.textOffset}" }
+        val spring = file.importDirectives.stream().map { it.importedFqName?.asString().orEmpty() }
+            .filter { it.startsWith("org.springframework.") }
+            .map { "Transformer files cannot depend on Spring: $it" }
+
+        return Stream.of(classes, functions, state, spring).flatMap { it }
     }
 
     private fun normalize(source: String): String = StringUtil.convertLineSeparators(source.removePrefix("\uFEFF"))

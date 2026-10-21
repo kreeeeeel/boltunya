@@ -12,39 +12,33 @@ import ru.aigram.contract.dto.SearchConnection
 import ru.aigram.contract.dto.SearchConnectionRequest
 import ru.aigram.contract.dto.Settings
 import ru.aigram.contract.dto.SettingsUpdate
-import ru.aigram.transformer.settings.AppearanceTransformer
-import ru.aigram.transformer.settings.SearchTransformer
-import ru.aigram.transformer.settings.SettingsTransformer
+import ru.aigram.transformer.settings.toContract
+import ru.aigram.transformer.settings.toDomain
 
 @RestController
 class SettingsController(
     private val settings: SettingsComponent,
     private val appearance: AppearanceComponent,
     private val search: SearchComponent,
-    private val settingsTransformer: SettingsTransformer,
-    private val appearanceTransformer: AppearanceTransformer,
-    private val searchTransformer: SearchTransformer,
 ) : SettingsApi {
     override fun settings(settingsUpdate: SettingsUpdate): ResponseEntity<Settings> =
-        ResponseEntity.ok(settingsTransformer.toContract(settings.update(settingsTransformer.toDomain(settingsUpdate))))
+        ResponseEntity.ok(settings.update(settingsUpdate.toDomain()).toContract())
 
-    override fun appearance(): ResponseEntity<AppearanceSettings> =
-        ResponseEntity.ok(appearanceTransformer.toContract(appearance.get()))
+    override fun appearance(): ResponseEntity<AppearanceSettings> = ResponseEntity.ok(appearance.get().toContract())
 
     override fun saveAppearance(appearanceSettings: AppearanceSettingsInput): ResponseEntity<AppearanceSettings> =
         ResponseEntity.ok(
-            appearanceTransformer.toContract(appearance.save(appearanceTransformer.toDomain(appearanceSettings))),
+            appearance.save(appearanceSettings.toDomain()).toContract(),
         )
 
     override fun searchConnection(): ResponseEntity<SearchConnection> =
-        ResponseEntity.ok(searchTransformer.toContract(search.connection()))
+        ResponseEntity.ok(search.connection().toContract())
 
     override fun saveSearchKey(searchConnectionRequest: SearchConnectionRequest): ResponseEntity<SearchConnection> =
-        ResponseEntity.ok(searchTransformer.toContract(search.save(searchConnectionRequest.apiKey)))
+        ResponseEntity.ok(search.save(searchConnectionRequest.apiKey).toContract())
 
-    override fun deleteSearchKey(): ResponseEntity<SearchConnection> =
-        ResponseEntity.ok(searchTransformer.toContract(search.delete()))
+    override fun deleteSearchKey(): ResponseEntity<SearchConnection> = ResponseEntity.ok(search.delete().toContract())
 
     override fun checkSearchConnection(): ResponseEntity<SearchConnection> =
-        ResponseEntity.ok(searchTransformer.toContract(search.check()))
+        ResponseEntity.ok(search.check().toContract())
 }

@@ -1,6 +1,5 @@
 package ru.aigram.transformer.models
 
-import org.springframework.stereotype.Component
 import ru.aigram.contract.dto.ModelCapabilities
 import ru.aigram.contract.dto.ModelCapabilitiesInput
 import ru.aigram.contract.dto.ModelPreset
@@ -23,135 +22,133 @@ import ru.aigram.domain.ai.profile.ModelProfileReport as DomainModelProfileRepor
 import ru.aigram.domain.ai.profile.ModelProfileTestResult as DomainModelProfileTestResult
 import ru.aigram.domain.ai.profile.ModelProfileUpdate as DomainModelProfileUpdate
 import ru.aigram.domain.ai.profile.ModelProvider as DomainModelProvider
+import ru.aigram.domain.ai.profile.ModelProviderPreset as DomainModelProviderPreset
 import ru.aigram.domain.ai.profile.ModelTaskRouting as DomainModelTaskRouting
 import ru.aigram.domain.ai.profile.ModelThinking as DomainModelThinking
 import ru.aigram.domain.ai.profile.ModelTokenLimit as DomainModelTokenLimit
 
-@Component
-class ModelProfileTransformer {
-    fun toContract(value: DomainModelProfile): ModelProfile = ModelProfile(
-        UUID.fromString(value.id), value.name, ModelProvider.valueOf(value.provider.name),
-        ModelPreset.forValue(value.preset), value.baseUrl, value.model, value.enabled,
-        toContract(value.options), toContract(value.capabilities), value.apiKeyConfigured,
-    )
+fun DomainModelProfile.toContract(): ModelProfile = ModelProfile(
+    UUID.fromString(id), name, ModelProvider.valueOf(provider.name),
+    ModelPreset.forValue(preset), baseUrl, model, enabled,
+    options.toContract(), capabilities.toContract(), apiKeyConfigured,
+)
 
-    fun toContract(value: DomainModelProfileReport): ModelProfileReport = ModelProfileReport(
-        value.profiles.stream().map(::toContract).toList(),
-        value.presets.stream().map {
-            ModelProviderPreset(
-                it.id,
-                it.name,
-                ModelProvider.valueOf(it.provider.name),
-                it.baseUrl,
-                it.model,
-                it.apiKeyRequired,
-                toContract(it.defaultsOptions),
-                toContract(it.defaultCapabilities),
-            )
-        }.toList(),
-    )
+fun DomainModelProfileReport.toContract(): ModelProfileReport = ModelProfileReport(
+    profiles.stream().map { it.toContract() }.toList(),
+    presets.stream().map { it.toContract() }.toList(),
+)
 
-    fun toContract(value: DomainModelProfileOptions): ModelProfileOptions = ModelProfileOptions(
-        stop = value.stop,
-        maxOutputTokens = value.maxOutputTokens,
-        contextWindow = value.contextWindow,
-        reasoningTokens = value.reasoningTokens,
-        reasoningEffort = value.reasoningEffort,
-        thinking = ThinkingMode.valueOf(value.thinking.name),
-        connectTimeoutSeconds = value.connectTimeoutSeconds,
-        idleTimeoutSeconds = value.idleTimeoutSeconds,
-        totalTimeoutSeconds = value.totalTimeoutSeconds,
-        keepAliveMinutes = value.keepAliveMinutes,
-        temperature = value.temperature?.toBigDecimal(),
-        topP = value.topP?.toBigDecimal(),
-        topK = value.topK,
-        presencePenalty = value.presencePenalty?.toBigDecimal(),
-        frequencyPenalty = value.frequencyPenalty?.toBigDecimal(),
-        repeatPenalty = value.repeatPenalty?.toBigDecimal(),
-        seed = value.seed,
-    )
+fun DomainModelProviderPreset.toContract(): ModelProviderPreset = ModelProviderPreset(
+    id,
+    name,
+    ModelProvider.valueOf(provider.name),
+    baseUrl,
+    model,
+    apiKeyRequired,
+    defaultsOptions.toContract(),
+    defaultCapabilities.toContract(),
+)
 
-    fun toDomain(value: ModelProfileOptions): DomainModelProfileOptions = DomainModelProfileOptions(
-        temperature = value.temperature?.toDouble(),
-        topP = value.topP?.toDouble(),
-        topK = value.topK,
-        presencePenalty = value.presencePenalty?.toDouble(),
-        frequencyPenalty = value.frequencyPenalty?.toDouble(),
-        repeatPenalty = value.repeatPenalty?.toDouble(),
-        seed = value.seed,
-        stop = value.stop,
-        maxOutputTokens = value.maxOutputTokens,
-        contextWindow = value.contextWindow,
-        reasoningTokens = value.reasoningTokens,
-        reasoningEffort = value.reasoningEffort,
-        thinking = DomainModelThinking.valueOf(value.thinking.name),
-        connectTimeoutSeconds = value.connectTimeoutSeconds,
-        idleTimeoutSeconds = value.idleTimeoutSeconds,
-        totalTimeoutSeconds = value.totalTimeoutSeconds,
-        keepAliveMinutes = value.keepAliveMinutes,
-    )
+fun DomainModelProfileOptions.toContract(): ModelProfileOptions = ModelProfileOptions(
+    stop = stop,
+    maxOutputTokens = maxOutputTokens,
+    contextWindow = contextWindow,
+    reasoningTokens = reasoningTokens,
+    reasoningEffort = reasoningEffort,
+    thinking = ThinkingMode.valueOf(thinking.name),
+    connectTimeoutSeconds = connectTimeoutSeconds,
+    idleTimeoutSeconds = idleTimeoutSeconds,
+    totalTimeoutSeconds = totalTimeoutSeconds,
+    keepAliveMinutes = keepAliveMinutes,
+    temperature = temperature?.toBigDecimal(),
+    topP = topP?.toBigDecimal(),
+    topK = topK,
+    presencePenalty = presencePenalty?.toBigDecimal(),
+    frequencyPenalty = frequencyPenalty?.toBigDecimal(),
+    repeatPenalty = repeatPenalty?.toBigDecimal(),
+    seed = seed,
+)
 
-    fun toDomain(value: ModelProfileOptionsInput): DomainModelProfileOptions = DomainModelProfileOptions(
-        temperature = value.temperature?.toDouble(),
-        topP = value.topP?.toDouble(),
-        topK = value.topK,
-        presencePenalty = value.presencePenalty?.toDouble(),
-        frequencyPenalty = value.frequencyPenalty?.toDouble(),
-        repeatPenalty = value.repeatPenalty?.toDouble(),
-        seed = value.seed,
-        stop = value.stop,
-        maxOutputTokens = value.maxOutputTokens,
-        contextWindow = value.contextWindow,
-        reasoningTokens = value.reasoningTokens,
-        reasoningEffort = value.reasoningEffort,
-        thinking = DomainModelThinking.valueOf(value.thinking.name),
-        connectTimeoutSeconds = value.connectTimeoutSeconds,
-        idleTimeoutSeconds = value.idleTimeoutSeconds,
-        totalTimeoutSeconds = value.totalTimeoutSeconds,
-        keepAliveMinutes = value.keepAliveMinutes,
-    )
+fun ModelProfileOptions.toDomain(): DomainModelProfileOptions = DomainModelProfileOptions(
+    temperature = temperature?.toDouble(),
+    topP = topP?.toDouble(),
+    topK = topK,
+    presencePenalty = presencePenalty?.toDouble(),
+    frequencyPenalty = frequencyPenalty?.toDouble(),
+    repeatPenalty = repeatPenalty?.toDouble(),
+    seed = seed,
+    stop = stop,
+    maxOutputTokens = maxOutputTokens,
+    contextWindow = contextWindow,
+    reasoningTokens = reasoningTokens,
+    reasoningEffort = reasoningEffort,
+    thinking = DomainModelThinking.valueOf(thinking.name),
+    connectTimeoutSeconds = connectTimeoutSeconds,
+    idleTimeoutSeconds = idleTimeoutSeconds,
+    totalTimeoutSeconds = totalTimeoutSeconds,
+    keepAliveMinutes = keepAliveMinutes,
+)
 
-    fun toContract(value: DomainModelCapabilities): ModelCapabilities = ModelCapabilities(
-        value.streaming, value.vision, value.structuredOutput, value.reasoning, value.temperature, value.topP,
-        value.topK, value.penalties, TokenLimitParameter.valueOf(value.tokenLimit.name),
-    )
+fun ModelProfileOptionsInput.toDomain(): DomainModelProfileOptions = DomainModelProfileOptions(
+    temperature = temperature?.toDouble(),
+    topP = topP?.toDouble(),
+    topK = topK,
+    presencePenalty = presencePenalty?.toDouble(),
+    frequencyPenalty = frequencyPenalty?.toDouble(),
+    repeatPenalty = repeatPenalty?.toDouble(),
+    seed = seed,
+    stop = stop,
+    maxOutputTokens = maxOutputTokens,
+    contextWindow = contextWindow,
+    reasoningTokens = reasoningTokens,
+    reasoningEffort = reasoningEffort,
+    thinking = DomainModelThinking.valueOf(thinking.name),
+    connectTimeoutSeconds = connectTimeoutSeconds,
+    idleTimeoutSeconds = idleTimeoutSeconds,
+    totalTimeoutSeconds = totalTimeoutSeconds,
+    keepAliveMinutes = keepAliveMinutes,
+)
 
-    fun toDomain(value: ModelCapabilities): DomainModelCapabilities = DomainModelCapabilities(
-        value.streaming, value.vision, value.structuredOutput, value.reasoning, value.temperature, value.topP,
-        value.topK, value.penalties, DomainModelTokenLimit.valueOf(value.tokenLimit.name),
-    )
+fun DomainModelCapabilities.toContract(): ModelCapabilities = ModelCapabilities(
+    streaming, vision, structuredOutput, reasoning, temperature, topP,
+    topK, penalties, TokenLimitParameter.valueOf(tokenLimit.name),
+)
 
-    fun toDomain(value: ModelCapabilitiesInput): DomainModelCapabilities = DomainModelCapabilities(
-        value.streaming, value.vision, value.structuredOutput, value.reasoning, value.temperature, value.topP,
-        value.topK, value.penalties, DomainModelTokenLimit.valueOf(value.tokenLimit.name),
-    )
+fun ModelCapabilities.toDomain(): DomainModelCapabilities = DomainModelCapabilities(
+    streaming, vision, structuredOutput, reasoning, temperature, topP,
+    topK, penalties, DomainModelTokenLimit.valueOf(tokenLimit.name),
+)
 
-    fun toDomain(value: ContractModelProfileUpdate): DomainModelProfileUpdate = DomainModelProfileUpdate(
-        value.name, DomainModelProvider.valueOf(value.provider.name), value.preset.value,
-        value.baseUrl, value.model, value.enabled, toDomain(value.options), toDomain(value.capabilities),
-        value.apiKey, value.clearApiKey,
-    )
+fun ModelCapabilitiesInput.toDomain(): DomainModelCapabilities = DomainModelCapabilities(
+    streaming, vision, structuredOutput, reasoning, temperature, topP,
+    topK, penalties, DomainModelTokenLimit.valueOf(tokenLimit.name),
+)
 
-    fun toContract(value: DomainModelTaskRouting): ModelTaskRouting = ModelTaskRouting(
-        value.enabled, value.parallelIndependentTasks, value.replyProfileId, value.memoryProfileId,
-        value.researchProfileId, value.visionProfileId, value.replyModel, value.memoryModel, value.researchModel,
-        value.visionModel,
-    )
+fun ContractModelProfileUpdate.toDomain(): DomainModelProfileUpdate = DomainModelProfileUpdate(
+    name, DomainModelProvider.valueOf(provider.name), preset.value,
+    baseUrl, model, enabled, options.toDomain(), capabilities.toDomain(),
+    apiKey, clearApiKey,
+)
 
-    fun toDomain(value: ModelTaskRouting): DomainModelTaskRouting = DomainModelTaskRouting(
-        value.enabled, value.parallelIndependentTasks, value.replyProfileId, value.memoryProfileId,
-        value.researchProfileId, value.visionProfileId, value.replyModel.orEmpty(), value.memoryModel.orEmpty(),
-        value.researchModel.orEmpty(), value.visionModel.orEmpty(),
-    )
+fun DomainModelTaskRouting.toContract(): ModelTaskRouting = ModelTaskRouting(
+    enabled, parallelIndependentTasks, replyProfileId, memoryProfileId,
+    researchProfileId, visionProfileId, replyModel, memoryModel, researchModel,
+    visionModel,
+)
 
-    fun toContract(value: DomainModelProfileTestResult): ModelProfileTestResult = ModelProfileTestResult(
-        value.ok,
-        value.code,
-        value.message,
-        value.durationMs,
-        value.inputTokens,
-        value.outputTokens,
-        value.finishReason,
-        value.preview,
-    )
-}
+fun ModelTaskRouting.toDomain(): DomainModelTaskRouting = DomainModelTaskRouting(
+    enabled, parallelIndependentTasks, replyProfileId, memoryProfileId,
+    researchProfileId, visionProfileId, replyModel.orEmpty(), memoryModel.orEmpty(),
+    researchModel.orEmpty(), visionModel.orEmpty(),
+)
+
+fun DomainModelProfileTestResult.toContract(): ModelProfileTestResult = ModelProfileTestResult(
+    ok,
+    code,
+    message,
+    durationMs,
+    inputTokens,
+    outputTokens,
+    finishReason,
+    preview,
+)

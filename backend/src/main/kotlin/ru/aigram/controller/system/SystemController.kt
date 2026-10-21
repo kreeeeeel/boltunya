@@ -13,10 +13,7 @@ import ru.aigram.contract.dto.MetricSample
 import ru.aigram.contract.dto.Ok
 import ru.aigram.contract.dto.State
 import ru.aigram.contract.dto.StorageLocationReport
-import ru.aigram.transformer.system.DiagnosticsTransformer
-import ru.aigram.transformer.system.ResourcesTransformer
-import ru.aigram.transformer.system.StateTransformer
-import ru.aigram.transformer.system.StorageTransformer
+import ru.aigram.transformer.system.toContract
 
 @RestController
 class SystemController(
@@ -24,15 +21,11 @@ class SystemController(
     private val diagnostics: DiagnosticsComponent,
     private val resources: ResourcesComponent,
     private val application: ApplicationComponent,
-    private val states: StateTransformer,
-    private val errors: DiagnosticsTransformer,
-    private val locations: StorageTransformer,
-    private val resourceValues: ResourcesTransformer,
 ) : SystemApi {
-    override fun state(): ResponseEntity<State> = ResponseEntity.ok(states.toContract(state.get()))
+    override fun state(): ResponseEntity<State> = ResponseEntity.ok(state.get().toContract())
 
     override fun diagnosticErrors(): ResponseEntity<DiagnosticReport> =
-        ResponseEntity.ok(errors.toContract(diagnostics.errors()))
+        ResponseEntity.ok(diagnostics.errors().toContract())
 
     override fun clearDiagnosticErrors(): ResponseEntity<Ok> {
         diagnostics.clear()
@@ -40,16 +33,16 @@ class SystemController(
     }
 
     override fun storageLocations(): ResponseEntity<StorageLocationReport> =
-        ResponseEntity.ok(locations.toContract(diagnostics.locations()))
+        ResponseEntity.ok(diagnostics.locations().toContract())
 
     override fun getMetrics(): ResponseEntity<List<MetricSample>> =
-        ResponseEntity.ok(resources.metrics().stream().map(resourceValues::toContract).toList())
+        ResponseEntity.ok(resources.metrics().stream().map { it.toContract() }.toList())
 
     override fun getCacheStatistics(): ResponseEntity<CacheStatistics> =
-        ResponseEntity.ok(resourceValues.toContract(resources.cache()))
+        ResponseEntity.ok(resources.cache().toContract())
 
     override fun clearMediaCache(): ResponseEntity<CacheStatistics> =
-        ResponseEntity.ok(resourceValues.toContract(resources.clearCache()))
+        ResponseEntity.ok(resources.clearCache().toContract())
 
     override fun quit(): ResponseEntity<Ok> {
         application.quit()

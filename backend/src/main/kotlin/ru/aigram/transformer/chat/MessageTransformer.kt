@@ -1,45 +1,41 @@
 package ru.aigram.transformer.chat
 
-import org.springframework.stereotype.Component
 import ru.aigram.contract.dto.Message
 import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.MessageEntity
-import ru.aigram.transformer.media.MediaTransformer
 import ru.aigram.contract.dto.MessageEntity as ContractMessageEntity
+import ru.aigram.transformer.media.toContract as toMediaContract
 
-@Component
-class MessageTransformer(private val media: MediaTransformer) {
-    fun toContract(value: ChatMessage): Message = Message(
-        id = value.id,
-        chatId = value.chatId,
-        text = value.text,
-        outgoing = value.outgoing,
-        date = value.date,
-        kind = value.kind,
-        media = value.media?.let(media::toContract),
-        entities = value.entities.stream().map(::toContract).toList(),
-        read = value.read,
-        automated = value.automated,
-        group = value.group,
-        mentionsMe = value.mentionsMe,
-        topicId = value.topicId,
-        senderName = value.senderName,
-        senderAvatarUrl = value.senderAvatarUrl,
-        replyToId = value.replyToId,
-        replyText = value.replyText,
-        senderId = value.senderId,
-        deleted = value.deleted,
-        deletedAt = value.deletedAt,
-        contextExcluded = value.contextExcluded,
-        senderUsername = value.senderUsername,
-        mediaAlbumId = value.mediaAlbumId,
-    )
+fun ChatMessage.toContract(): Message = Message(
+    id = id,
+    chatId = chatId,
+    text = text,
+    outgoing = outgoing,
+    date = date,
+    kind = kind,
+    media = media?.toMediaContract(),
+    entities = entities.stream().map { it.toContract() }.toList(),
+    read = read,
+    automated = automated,
+    group = group,
+    mentionsMe = mentionsMe,
+    topicId = topicId,
+    senderName = senderName,
+    senderAvatarUrl = senderAvatarUrl,
+    replyToId = replyToId,
+    replyText = replyText,
+    senderId = senderId,
+    deleted = deleted,
+    deletedAt = deletedAt,
+    contextExcluded = contextExcluded,
+    senderUsername = senderUsername,
+    mediaAlbumId = mediaAlbumId,
+)
 
-    private fun toContract(value: MessageEntity): ContractMessageEntity = ContractMessageEntity(
-        offset = value.offset,
-        length = value.length,
-        type = value.type,
-        url = value.url,
-        language = value.language,
-    )
-}
+private fun MessageEntity.toContract(): ContractMessageEntity = ContractMessageEntity(
+    offset = offset,
+    length = length,
+    type = type,
+    url = url,
+    language = language,
+)

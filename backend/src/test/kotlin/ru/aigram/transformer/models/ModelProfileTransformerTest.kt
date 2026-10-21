@@ -20,8 +20,6 @@ import kotlin.test.assertTrue
 import ru.aigram.domain.ai.profile.ModelProvider as DomainModelProvider
 
 class ModelProfileTransformerTest {
-    private val transformer = ModelProfileTransformer()
-
     @Test
     fun `sampling capabilities and independent local task routes survive typed round trips`() {
         val options = ModelProfileOptions(
@@ -47,9 +45,9 @@ class ModelProfileTransformerTest {
             visionModel = "qwen3-vl:4b",
         )
 
-        assertEquals(options, transformer.toDomain(transformer.toContract(options)))
-        assertEquals(capabilities, transformer.toDomain(transformer.toContract(capabilities)))
-        assertEquals(routing, transformer.toDomain(transformer.toContract(routing)))
+        assertEquals(options, options.toContract().toDomain())
+        assertEquals(capabilities, capabilities.toContract().toDomain())
+        assertEquals(routing, routing.toContract().toDomain())
     }
 
     @Test
@@ -64,18 +62,16 @@ class ModelProfileTransformerTest {
             "synthetic-model",
             apiKeyConfigured = true,
         )
-        val public = transformer.toContract(native)
-        val update = transformer.toDomain(
-            ModelProfileUpdate(
-                name = public.name,
-                provider = ModelProvider.OPENAI_COMPATIBLE,
-                preset = ModelPreset.CUSTOM,
-                baseUrl = public.baseUrl,
-                model = public.model,
-                apiKey = "synthetic-key",
-                clearApiKey = false,
-            ),
-        )
+        val public = native.toContract()
+        val update = ModelProfileUpdate(
+            name = public.name,
+            provider = ModelProvider.OPENAI_COMPATIBLE,
+            preset = ModelPreset.CUSTOM,
+            baseUrl = public.baseUrl,
+            model = public.model,
+            apiKey = "synthetic-key",
+            clearApiKey = false,
+        ).toDomain()
 
         assertEquals(id, public.id.toString())
         assertTrue(public.apiKeyConfigured)
@@ -93,7 +89,7 @@ class ModelProfileTransformerTest {
             model = "synthetic-model",
         )
 
-        val result = transformer.toDomain(input)
+        val result = input.toDomain()
 
         assertEquals("custom", result.preset)
         assertTrue(result.enabled)
@@ -105,8 +101,8 @@ class ModelProfileTransformerTest {
 
     @Test
     fun `partial nested input retains nullable sampling and complete capability defaults`() {
-        val options = transformer.toDomain(ModelProfileOptionsInput(contextWindow = 32768, temperature = null))
-        val capabilities = transformer.toDomain(ModelCapabilitiesInput(vision = true))
+        val options = ModelProfileOptionsInput(contextWindow = 32768, temperature = null).toDomain()
+        val capabilities = ModelCapabilitiesInput(vision = true).toDomain()
 
         assertEquals(ModelProfileOptions(contextWindow = 32768), options)
         assertEquals(ModelCapabilities(vision = true), capabilities)

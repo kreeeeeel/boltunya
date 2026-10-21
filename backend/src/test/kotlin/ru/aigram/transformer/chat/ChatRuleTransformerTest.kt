@@ -15,7 +15,6 @@ import kotlin.test.assertFalse
 import ru.aigram.contract.dto.ProactiveMode as ContractProactiveMode
 
 class ChatRuleTransformerTest {
-    private val transformer = ChatRuleTransformer()
 
     @Test
     fun `retains every editable chat rule field across the generated contract`() {
@@ -44,7 +43,7 @@ class ChatRuleTransformerTest {
             useMemory = false,
         )
 
-        val response = transformer.toContract(rule)
+        val response = rule.toContract()
         val input = ChatRuleInput(
             enabled = response.enabled,
             style = response.style,
@@ -70,19 +69,19 @@ class ChatRuleTransformerTest {
             proactiveIntervalMinutes = 123,
         )
 
-        assertEquals(rule, transformer.toDomain(input))
+        assertEquals(rule, input.toDomain())
     }
 
     @Test
     fun `omitted optional contract fields retain existing chat defaults`() {
-        assertEquals(ChatRule(), transformer.toDomain(ChatRuleInput()))
+        assertEquals(ChatRule(), ChatRuleInput().toDomain())
     }
 
     @Test
     fun `does not expose resolved internal style instructions`() {
         val rule = ChatRule(resolvedStyleInstructions = "Internal resolved preset")
 
-        val response = transformer.toContract(rule)
+        val response = rule.toContract()
 
         assertFalse(
             Arrays.stream(response.javaClass.declaredFields).anyMatch {

@@ -1,34 +1,24 @@
 package ru.aigram.transformer.system
 
-import org.springframework.stereotype.Component
 import ru.aigram.contract.dto.ReplyQueue
 import ru.aigram.contract.dto.State
 import ru.aigram.domain.system.ApiState
-import ru.aigram.transformer.activity.ActivityTransformer
-import ru.aigram.transformer.chat.ChatTransformer
-import ru.aigram.transformer.settings.SettingsTransformer
-import ru.aigram.transformer.telegram.TelegramTransformer
+import ru.aigram.transformer.activity.toContract
+import ru.aigram.transformer.chat.toContract
+import ru.aigram.transformer.settings.toContract
+import ru.aigram.transformer.telegram.toContract
 
-@Component
-class StateTransformer(
-    private val telegram: TelegramTransformer,
-    private val engine: EngineStateTransformer,
-    private val settings: SettingsTransformer,
-    private val chats: ChatTransformer,
-    private val activity: ActivityTransformer,
-) {
-    fun toContract(value: ApiState): State = State(
-        telegram.toContract(value.telegram),
-        engine.toContract(value.engine),
-        settings.toContract(value.settings),
-        value.chats.stream().map(chats::toContract).toList(),
-        value.activity.stream().map(activity::toContract).toList(),
-        ReplyQueue(
-            value.replyQueue.paused,
-            value.replyQueue.queued.toLong(),
-            value.replyQueue.running.toLong(),
-            value.replyQueue.maxParallelTasks,
-            value.replyQueue.activeTasks,
-        ),
-    )
-}
+fun ApiState.toContract(): State = State(
+    telegram.toContract(),
+    engine.toContract(),
+    settings.toContract(),
+    chats.stream().map { it.toContract() }.toList(),
+    activity.stream().map { it.toContract() }.toList(),
+    ReplyQueue(
+        replyQueue.paused,
+        replyQueue.queued.toLong(),
+        replyQueue.running.toLong(),
+        replyQueue.maxParallelTasks,
+        replyQueue.activeTasks,
+    ),
+)

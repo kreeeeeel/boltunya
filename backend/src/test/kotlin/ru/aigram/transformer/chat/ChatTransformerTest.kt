@@ -7,13 +7,11 @@ import ru.aigram.domain.chat.ChatSummary
 import ru.aigram.domain.chat.ChatTypingUser
 import ru.aigram.domain.chat.ChatWallpaper
 import ru.aigram.domain.chat.TypingAction
-import ru.aigram.transformer.media.MediaTransformer
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import ru.aigram.contract.dto.TypingAction as ContractTypingAction
 
 class ChatTransformerTest {
-    private val transformer = ChatTransformer(ChatRuleTransformer(), MessageTransformer(MediaTransformer()))
 
     @Test
     fun `preserves group identity typing wallpaper and nullable membership information`() {
@@ -36,7 +34,7 @@ class ChatTransformerTest {
             typingUsers = listOf(ChatTypingUser("9007199254740994", "Bob", TypingAction.RECORD_VOICE)),
         )
 
-        val result = transformer.toContract(chat)
+        val result = chat.toContract()
 
         assertEquals(chat.id, result.id)
         assertEquals(chat.date, result.date)

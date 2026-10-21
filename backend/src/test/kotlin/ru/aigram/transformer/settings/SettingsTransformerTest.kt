@@ -6,18 +6,15 @@ import ru.aigram.contract.dto.WritingStyle
 import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.memory.MemoryCollectionScope
 import ru.aigram.domain.settings.AppSettings
-import ru.aigram.transformer.chat.ChatRuleTransformer
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class SettingsTransformerTest {
-    private val transformer = SettingsTransformer(ChatRuleTransformer())
-
     @Test
     fun `partial updates preserve absent values instead of replacing saved settings with defaults`() {
-        val mapped = transformer.toDomain(SettingsUpdate(globalPrompt = "Synthetic owner instruction"))
+        val mapped = SettingsUpdate(globalPrompt = "Synthetic owner instruction").toDomain()
 
         assertEquals("Synthetic owner instruction", mapped.globalPrompt)
         assertNull(mapped.paused)
@@ -37,7 +34,7 @@ class SettingsTransformerTest {
             rules = mapOf("-1009007199254740993" to ChatRule(enabled = true, model = "qwen3:1.7b")),
         )
 
-        val mapped = transformer.toContract(value)
+        val mapped = value.toContract()
 
         assertFalse(mapped.paused)
         assertEquals(3, mapped.maxParallelTasks)
@@ -49,7 +46,7 @@ class SettingsTransformerTest {
     @Test
     fun `custom writing style inputs retain names emoji and instructions`() {
         val style = WritingStyle("custom-kind", "Kind", "🙂", "Be warm and brief")
-        val mapped = transformer.toDomain(SettingsUpdate(customStyles = listOf(style)))
+        val mapped = SettingsUpdate(customStyles = listOf(style)).toDomain()
 
         assertEquals("custom-kind", mapped.customStyles?.single()?.id)
         assertEquals("Kind", mapped.customStyles?.single()?.name)

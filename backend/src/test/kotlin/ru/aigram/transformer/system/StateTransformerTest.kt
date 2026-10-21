@@ -11,13 +11,6 @@ import ru.aigram.domain.events.ReplyQueueState
 import ru.aigram.domain.settings.AppSettings
 import ru.aigram.domain.system.ApiState
 import ru.aigram.domain.telegram.TelegramStatus
-import ru.aigram.transformer.activity.ActivityTransformer
-import ru.aigram.transformer.chat.ChatRuleTransformer
-import ru.aigram.transformer.chat.ChatTransformer
-import ru.aigram.transformer.chat.MessageTransformer
-import ru.aigram.transformer.media.MediaTransformer
-import ru.aigram.transformer.settings.SettingsTransformer
-import ru.aigram.transformer.telegram.TelegramTransformer
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -25,14 +18,6 @@ import kotlin.test.assertTrue
 class StateTransformerTest {
     @Test
     fun `state composes real feature DTOs and preserves active queue engine progress and large identifiers`() {
-        val rules = ChatRuleTransformer()
-        val transformer = StateTransformer(
-            TelegramTransformer(),
-            EngineStateTransformer(),
-            SettingsTransformer(rules),
-            ChatTransformer(rules, MessageTransformer(MediaTransformer())),
-            ActivityTransformer(),
-        )
         val chatId = "-1009007199254740993"
         val model = ModelInfo(
             "qwen3-vl:4b",
@@ -61,7 +46,7 @@ class StateTransformerTest {
             ReplyQueueState(paused = true, queued = 3, running = 2, maxParallelTasks = 4),
         )
 
-        val mapped = transformer.toContract(value)
+        val mapped = value.toContract()
 
         assertEquals(value.telegram.userId, mapped.telegram.userId)
         assertEquals(chatId, mapped.chats.single().id)

@@ -12,30 +12,30 @@ import ru.aigram.contract.dto.ActivityHistorySettingsInput
 import ru.aigram.contract.dto.ActivityHistoryStorage
 import ru.aigram.contract.dto.Ok
 import ru.aigram.contract.dto.QueuePauseRequest
-import ru.aigram.transformer.activity.ActivityTransformer
+import ru.aigram.transformer.activity.toContract
+import ru.aigram.transformer.activity.toDomain
 
 @RestController
-class ActivityController(private val activity: ActivityComponent, private val transformer: ActivityTransformer) :
-    ActivityApi {
+class ActivityController(private val activity: ActivityComponent) : ActivityApi {
     override fun activityDetails(id: String): ResponseEntity<ActivityDetails> =
-        ResponseEntity.ok(transformer.toContract(activity.details(id)))
+        ResponseEntity.ok(activity.details(id).toContract())
 
     override fun activityHistory(cursor: String?, limit: Int): ResponseEntity<ActivityHistoryPage> =
-        ResponseEntity.ok(transformer.toContract(activity.page(cursor, limit)))
+        ResponseEntity.ok(activity.page(cursor, limit).toContract())
 
     override fun activityHistorySettings(): ResponseEntity<ActivityHistoryStorage> =
-        ResponseEntity.ok(transformer.toContract(activity.storage()))
+        ResponseEntity.ok(activity.storage().toContract())
 
     override fun configureActivityHistory(
         activityHistorySettings: ActivityHistorySettingsInput,
     ): ResponseEntity<ActivityHistoryStorage> =
-        ResponseEntity.ok(transformer.toContract(activity.configure(transformer.toDomain(activityHistorySettings))))
+        ResponseEntity.ok(activity.configure(activityHistorySettings.toDomain()).toContract())
 
     override fun saveActivityFeedback(
         id: String,
         activityFeedbackUpdate: ActivityFeedbackUpdate,
     ): ResponseEntity<ActivityFeedback> =
-        ResponseEntity.ok(transformer.toContract(activity.feedback(id, transformer.toDomain(activityFeedbackUpdate))))
+        ResponseEntity.ok(activity.feedback(id, activityFeedbackUpdate.toDomain()).toContract())
 
     override fun pauseReplyQueue(queuePauseRequest: QueuePauseRequest): ResponseEntity<Ok> {
         activity.pause(queuePauseRequest.paused)

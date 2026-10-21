@@ -8,8 +8,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class ResourcesTransformerTest {
-    private val transformer = ResourcesTransformer()
-
     @Test
     fun `monitoring preserves memory above two gibibytes and optional gpu metrics`() {
         val value = MetricSample(
@@ -20,7 +18,7 @@ class ResourcesTransformerTest {
             networkSendBytesPerSecond = 9_000_000_000L, gpuPercent = 72.5,
             gpuMemoryUsedBytes = 6_000_000_000L, gpuMemoryTotalBytes = 8_000_000_000L,
         )
-        val mapped = transformer.toContract(value)
+        val mapped = value.toContract()
 
         assertEquals(value.timestamp, mapped.timestamp)
         assertEquals(value.memoryTotalBytes, mapped.memoryTotalBytes)
@@ -30,9 +28,8 @@ class ResourcesTransformerTest {
         assertEquals(value.gpuMemoryTotalBytes, mapped.gpuMemoryTotalBytes)
         assertEquals(BigDecimal("37.5"), mapped.cpuPercent)
         assertEquals(BigDecimal("72.5"), mapped.gpuPercent)
-        val unavailable = transformer.toContract(
-            value.copy(gpuPercent = null, gpuMemoryUsedBytes = null, gpuMemoryTotalBytes = null),
-        )
+        val unavailable = value.copy(gpuPercent = null, gpuMemoryUsedBytes = null, gpuMemoryTotalBytes = null)
+            .toContract()
         assertNull(unavailable.gpuPercent)
         assertNull(unavailable.gpuMemoryUsedBytes)
     }
@@ -40,7 +37,7 @@ class ResourcesTransformerTest {
     @Test
     fun `cache response retains byte categories without truncation`() {
         val value = CacheStatistics(9_000_000_000L, 100, 4_000_000_000L, 3_000_000_000L, 1_000_000_000L, 1_000_000_000L)
-        val mapped = transformer.toContract(value)
+        val mapped = value.toContract()
 
         assertEquals(value.totalBytes, mapped.totalBytes)
         assertEquals(value.photoBytes, mapped.photoBytes)
