@@ -2,7 +2,7 @@ const {test} = require('node:test');
 const assert = require('node:assert/strict');
 const {createServer} = require('node:http');
 const {spawn} = require('node:child_process');
-const {mkdtemp, readFile, writeFile, unlink, rmdir} = require('node:fs/promises');
+const {mkdtemp, mkdir, readFile, writeFile, rm, access} = require('node:fs/promises');
 const {tmpdir} = require('node:os');
 const {join, resolve} = require('node:path');
 
@@ -24,7 +24,9 @@ function state() {
 async function collect(t, options = {}) {
     const directory = await mkdtemp(join(tmpdir(), 'boltunya-diagnostic-test-'));
     const output = join(directory, 'report.json');
-    const descriptor = join(directory, 'launch.url');
+    const profileDirectory = options.defaultProfile ? join(directory, options.defaultProfile) : directory;
+    await mkdir(profileDirectory, {recursive: true});
+    const descriptor = join(profileDirectory, 'launch.url');
     const requests = [];
     const server = createServer((request, response) => {
         let body = '';
@@ -49,16 +51,20 @@ async function collect(t, options = {}) {
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
     t.after(async () => {
         await new Promise(resolve => server.close(resolve));
-        await unlink(descriptor);
-        await unlink(output).catch(error => {if (error.code !== 'ENOENT') throw error;});
-        await rmdir(directory);
+        await rm(directory, {recursive: true, force: true});
     });
     const base = `http://127.0.0.1:${server.address().port}`;
-    await writeFile(descriptor, options.descriptor ?? `${base}/?key=${secret}`);
-    const args = ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script, '-DataDirectory', directory, '-OutputPath', output];
+    const originalDescriptor = options.descriptor ?? `${base}/?key=${secret}`;
+    await writeFile(descriptor, originalDescriptor);
+    if (options.decoyLegacy) {
+        await mkdir(join(directory, 'Tiho'), {recursive: true});
+        await writeFile(join(directory, 'Tiho/launch.url'), options.decoyLegacy === 'valid' ? `${base}/?key=${secret}` : 'https://example.invalid/?key=not-selected');
+    }
+    const args = ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script, '-OutputPath', output];
+    if (options.directoryArgument !== false) args.push('-DataDirectory', profileDirectory);
     if (options.testModel) args.push('-TestModel');
     await new Promise((resolve, reject) => {
-        const child = spawn(powershell, args, {windowsHide: true, env: {...process.env, BOLTUNYA_OLLAMA_URL: base}});
+        const child = spawn(powershell, args, {windowsHide: true, env: {...process.env, AIGRAM_DATA_DIR: undefined, BOLTUNYA_DATA_DIR: undefined, TIHO_DATA_DIR: undefined, LOCALAPPDATA: directory, BOLTUNYA_OLLAMA_URL: base, ...options.environment?.({directory, profileDirectory})}});
         let errors = '';
         child.stderr.on('data', chunk => {errors += chunk;});
         child.once('error', reject);
@@ -66,7 +72,8 @@ async function collect(t, options = {}) {
     });
     const raw = await readFile(output, 'utf8');
     assert.ok(!raw.includes(secret), 'Report must exclude credentials, identifiers, prompts, messages and generated text');
-    return {report: JSON.parse(raw), requests};
+    assert.equal(await readFile(descriptor, 'utf8'), originalDescriptor, 'Diagnostics must never change the descriptor or migrate data');
+    return {report: JSON.parse(raw), requests, directory};
 }
 
 test('collects allowlisted runtime metadata and runs only an explicit synthetic generation', async t => {
@@ -112,4 +119,40 @@ test('rejects a nonlocal application descriptor before sending its cookie', asyn
     assert.equal(report.application.status, 'INVALID_DESCRIPTOR');
     assert.equal(report.generation.status, 'APPLICATION_UNREACHABLE');
     assert.ok(requests.every(request => ['/api/version', '/api/tags'].includes(request.path)));
+});
+
+test('reads the deferred Tiho profile only when the default Aigram launch descriptor is absent', async t => {
+    const {report, directory} = await collect(t, {defaultProfile: 'Tiho', directoryArgument: false});
+    assert.equal(report.application.reachable, true);
+    await assert.rejects(access(join(directory, 'Aigram')));
+});
+
+test('prefers the canonical Aigram descriptor when both default profiles exist', async t => {
+    const {report} = await collect(t, {defaultProfile: 'Aigram', directoryArgument: false, decoyLegacy: true});
+    assert.equal(report.application.reachable, true);
+});
+
+test('does not switch profiles when the canonical descriptor exists but is invalid', async t => {
+    const {report} = await collect(t, {defaultProfile: 'Aigram', directoryArgument: false, decoyLegacy: 'valid', descriptor: 'https://example.invalid/?key=not-local'});
+    assert.equal(report.application.reachable, false);
+    assert.equal(report.application.status, 'INVALID_DESCRIPTOR');
+});
+
+test('an explicit directory takes precedence over environment overrides and the legacy fallback', async t => {
+    const {report} = await collect(t, {decoyLegacy: true, environment: ({directory}) => ({AIGRAM_DATA_DIR: join(directory, 'missing-explicit-environment')})});
+    assert.equal(report.application.reachable, true);
+});
+
+test('explicit environment overrides retain their priority without falling back to Tiho', async t => {
+    for (const selected of ['AIGRAM_DATA_DIR', 'BOLTUNYA_DATA_DIR', 'TIHO_DATA_DIR']) {
+        const {report} = await collect(t, {
+            directoryArgument: false,
+            decoyLegacy: true,
+            environment: ({directory, profileDirectory}) => ({
+                [selected]: profileDirectory,
+                ...(selected === 'AIGRAM_DATA_DIR' ? {BOLTUNYA_DATA_DIR: join(directory, 'wrong-boltunya'), TIHO_DATA_DIR: join(directory, 'wrong-tiho')} : selected === 'BOLTUNYA_DATA_DIR' ? {TIHO_DATA_DIR: join(directory, 'wrong-tiho')} : {}),
+            }),
+        });
+        assert.equal(report.application.reachable, true, selected);
+    }
 });

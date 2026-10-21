@@ -4,6 +4,12 @@ param(
     [switch]$TestModel
 )
 $ErrorActionPreference = 'Stop'
+if (-not $PSBoundParameters.ContainsKey('DataDirectory') -and -not $env:AIGRAM_DATA_DIR -and -not $env:BOLTUNYA_DATA_DIR -and -not $env:TIHO_DATA_DIR) {
+    $legacyDirectory = Join-Path $env:LOCALAPPDATA 'Tiho'
+    if (-not (Test-Path -LiteralPath (Join-Path $DataDirectory 'launch.url')) -and (Test-Path -LiteralPath (Join-Path $legacyDirectory 'launch.url'))) {
+        $DataDirectory = $legacyDirectory
+    }
+}
 
 function Test-AllowedCharacters {
     param([string]$Value, [string]$Allowed, [int]$Minimum = 1, [int]$Maximum = 256)
