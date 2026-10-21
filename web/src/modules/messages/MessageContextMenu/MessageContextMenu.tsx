@@ -1,11 +1,13 @@
 import {Box, Dialog, DropdownMenu, Icon, Portal, Text} from '@gravity-ui/uikit';
-import {Copy, Link, EyeSlash, ArrowRotateLeft, Sparkles} from '@gravity-ui/icons';
+import {Copy, Link, EyeSlash, ArrowRotateLeft, Sparkles, TrashBin} from '@gravity-ui/icons';
 import {useState} from 'react';
 import {useTranslations} from 'next-intl';
 import {api, dataOrThrow, errorMessage} from '@/shared/api/client';
 import type {Message} from '@/shared/api/client';
 import styles from '@/modules/messages/MessageContextMenu/MessageContextMenu.module.css';
 import type {ContextExclusionChange} from '@/modules/messages/model/ContextExclusionChange';
+import {MessageDeletionDialog} from '@/modules/messages/MessageDeletionDialog/MessageDeletionDialog';
+import type {MessageDeletionResult} from '@/modules/messages/MessageDeletionDialog/MessageDeletionDialog.types';
 export interface MessageContextMenuProps {
     readonly message: Message;
     readonly position: {x: number; y: number} | null;
@@ -13,6 +15,8 @@ export interface MessageContextMenuProps {
     readonly onExcludedChanged: (change: ContextExclusionChange) => Promise<void>;
     readonly onDraftRequest?: () => Promise<void>;
     readonly messageLink?: string;
+    readonly onDeleted?: (result: MessageDeletionResult) => Promise<void>;
+    readonly onDialogOpenChange?: (open: boolean) => void;
 }
 export function MessageContextMenu({
     message,
@@ -21,11 +25,14 @@ export function MessageContextMenu({
     onExcludedChanged,
     onDraftRequest,
     messageLink,
+    onDeleted,
+    onDialogOpenChange,
 }: MessageContextMenuProps) {
     const t = useTranslations('messageMenu');
     const common = useTranslations();
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
+    const [deleting, setDeleting] = useState(false);
     async function action(callback: () => Promise<void>, change?: ContextExclusionChange) {
         if (busy) {
             return;
@@ -75,7 +82,7 @@ export function MessageContextMenu({
             {messageId: message.id, scope, excluded},
         );
     }
-    if (!position && !error) {
+    if (!position && !error && !deleting) {
         return null;
     }
     return (
@@ -86,7 +93,7 @@ export function MessageContextMenu({
                         open={position !== null}
                         hideOnScroll={false}
                         onOpenToggle={(open: boolean) => {
-                            if (!open) {
+                            if (!open && !deleting) {
                                 onClose();
                             }
                         }}
@@ -169,11 +176,39 @@ export function MessageContextMenu({
                                     ],
                                 },
                             ],
+                            ...(!message.deleted
+                                ? [
+                                      [
+                                          {
+                                              text: t('delete'),
+                                              theme: 'danger' as const,
+                                              iconStart: <Icon data={TrashBin} size={17} />,
+                                              disabled: busy,
+                                              action: () => {
+                                                  onClose();
+                                                  setDeleting(true);
+                                                  onDialogOpenChange?.(true);
+                                              },
+                                          },
+                                      ],
+                                  ]
+                                : []),
                             ...(busy ? [[{text: t('saving'), disabled: true, action: () => {}}]] : []),
                         ]}
                     />
                 </Box>
             </Portal>
+            {deleting && (
+                <MessageDeletionDialog
+                    chatId={message.chatId}
+                    messageId={message.id}
+                    onDeleted={onDeleted}
+                    onClose={() => {
+                        setDeleting(false);
+                        onDialogOpenChange?.(false);
+                    }}
+                />
+            )}
             {error && (
                 <Dialog open onClose={() => setError('')} maxWidth="s" aria-label={t('failed')}>
                     <Dialog.Header caption={t('failed')} />

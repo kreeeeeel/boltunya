@@ -45,7 +45,24 @@ it('opens actions from the message row and reports menu lifetime without mutatin
     await waitFor(() => expect(copy).toHaveBeenCalledWith(message.text));
     await waitFor(() => expect(changed).toHaveBeenCalledWith('123', false));
     expect(screen.getByText(message.text)).toBeVisible();
-    expect(screen.getByText(ru.messageMenu.excluded).closest('.g-label')).not.toBeNull();
+    expect(screen.getByLabelText(ru.messageMenu.excluded)).toBeVisible();
+});
+
+it('places the compact excluded marker immediately before the AI badge in message metadata', () => {
+    render(
+        <NextIntlClientProvider locale="ru" messages={ru}>
+            <ThemeProvider>
+                <MessageBubble message={{...message, automated: true}} />
+            </ThemeProvider>
+        </NextIntlClientProvider>,
+    );
+    const excluded = screen.getByLabelText(ru.messageMenu.excluded);
+    const ai = screen.getByLabelText(ru.aiMessage);
+    expect(excluded.parentElement).toBe(ai.parentElement);
+    expect(excluded.nextElementSibling).toBe(ai);
+    expect(excluded.className.split(' ').some((name) => ai.classList.contains(name))).toBe(true);
+    expect(excluded).toHaveTextContent(ru.messageMenu.excludedShort);
+    expect(excluded.querySelector('svg')).toHaveAttribute('height', '12');
 });
 
 it('supports opening message actions with the keyboard context-menu shortcut', async () => {

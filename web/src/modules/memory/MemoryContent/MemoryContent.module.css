@@ -28,7 +28,49 @@
 }
 
 .actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
+    gap: 8px;
+    width: 100%;
     padding: 8px;
     border-radius: 14px;
     background: var(--g-color-base-generic);
+}
+
+.action {
+    width: 100%;
+    min-height: 36px;
+    height: auto;
+    padding-block: 8px;
+    align-items: center;
+    justify-content: flex-start;
+    line-height: 20px;
+    text-align: start;
+}
+
+.action,
+.action:active {
+    transform: none;
+}
+
+.action :global(.g-button__icon) {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+}
+
+.action :global(.g-button__text) {
+    white-space: normal;
+    line-height: inherit;
+}
+
+.action:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+}
+
+@media (width <= 600px) {
+    .actions {
+        grid-template-columns: 1fr;
+    }
 }

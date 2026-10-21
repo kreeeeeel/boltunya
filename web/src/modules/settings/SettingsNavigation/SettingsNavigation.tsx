@@ -2,6 +2,7 @@ import {
     BookOpen,
     Books,
     Comments,
+    Comment,
     Cpu,
     Folder,
     Gear,
@@ -27,6 +28,7 @@ import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
 const sectionIcons = {
     application: Gear,
     replies: Comments,
+    proactive: Comment,
     prompt: Pencil,
     styles: Sparkles,
     providers: Sliders,

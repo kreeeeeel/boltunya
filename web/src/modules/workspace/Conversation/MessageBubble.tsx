@@ -1,4 +1,4 @@
-import {Box, Flex, Icon, Label, Text, Tooltip} from '@gravity-ui/uikit';
+import {Box, Flex, Icon, Text, Tooltip} from '@gravity-ui/uikit';
 import {Check, CheckDouble, Sparkles, TrashBin, EyeSlash} from '@gravity-ui/icons';
 import {useEffect, useRef, useState} from 'react';
 import {useLocale, useTranslations} from 'next-intl';
@@ -11,6 +11,7 @@ import {TelegramAvatar} from '@/shared/ui/TelegramAvatar/TelegramAvatar';
 import {messagesGrouped} from '@/modules/workspace/model/messagesGrouped';
 import {MessageContextMenu} from '@/modules/messages/MessageContextMenu/MessageContextMenu';
 import type {ContextExclusionChange} from '@/modules/messages/model/ContextExclusionChange';
+import type {MessageDeletionResult} from '@/modules/messages/MessageDeletionDialog/MessageDeletionDialog.types';
 export function MessageBubble({
     message,
     nextMessage,
@@ -20,6 +21,7 @@ export function MessageBubble({
     onContextChanged,
     onDraftRequest,
     onMenuOpenChange,
+    onDeleted,
 }: {
     readonly message: Message;
     readonly nextMessage?: Message;
@@ -29,6 +31,7 @@ export function MessageBubble({
     readonly onContextChanged?: (change: ContextExclusionChange) => Promise<void>;
     readonly onDraftRequest?: () => Promise<void>;
     readonly onMenuOpenChange?: (messageId: string, open: boolean) => void;
+    readonly onDeleted?: (result: MessageDeletionResult) => Promise<void>;
 }) {
     const t = useTranslations();
     const chatUi = useTranslations('chatUi');
@@ -79,19 +82,6 @@ export function MessageBubble({
                     className={styles.messageText}
                 />
             )}
-            {message.contextExcluded && (
-                <Label
-                    className={styles.contextExcluded}
-                    qa="message-context-excluded"
-                    icon={<Icon data={EyeSlash} size={14} />}
-                    size="s"
-                    theme="normal"
-                    width="auto"
-                    title={t('messageMenu.excluded')}
-                >
-                    {t('messageMenu.excluded')}
-                </Label>
-            )}
             <Flex justifyContent="flex-end" alignItems="center" gap={1} className={styles.messageMeta}>
                 {message.deleted && (
                     <Tooltip
@@ -102,6 +92,18 @@ export function MessageBubble({
                         <Text className={styles.deletedBadge} qa="message-deleted">
                             <Icon data={TrashBin} size={12} />
                             {t('deleted.badge')}
+                        </Text>
+                    </Tooltip>
+                )}
+                {message.contextExcluded && (
+                    <Tooltip content={t('messageMenu.excluded')}>
+                        <Text
+                            className={`${styles.aiBadge} ${styles.contextExcluded}`}
+                            qa="message-context-excluded"
+                            aria-label={t('messageMenu.excluded')}
+                        >
+                            <Icon data={EyeSlash} size={12} />
+                            {t('messageMenu.excludedShort')}
                         </Text>
                     </Tooltip>
                 )}
@@ -179,6 +181,8 @@ export function MessageBubble({
                     onClose={closeMenu}
                     onExcludedChanged={onContextChanged ?? (async () => {})}
                     onDraftRequest={onDraftRequest}
+                    onDeleted={onDeleted}
+                    onDialogOpenChange={(open) => onMenuOpenChange?.(message.id, open)}
                 />
             )}
         </>

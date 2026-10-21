@@ -2,7 +2,16 @@ import type {Message} from '@/shared/api/client';
 
 export function mergeMessages(previous: Message[], current: Message[]): Message[] {
     const merged = new Map(previous.map((message) => [`${message.chatId}:${message.id}`, message]));
-    current.forEach((message) => merged.set(`${message.chatId}:${message.id}`, message));
+    current.forEach((message) => {
+        const key = `${message.chatId}:${message.id}`;
+        const previousMessage = merged.get(key);
+        merged.set(
+            key,
+            previousMessage?.deleted && !message.deleted
+                ? {...message, deleted: true, deletedAt: previousMessage.deletedAt}
+                : message,
+        );
+    });
     return [...merged.values()].sort(
         (a, b) => a.date - b.date || a.id.length - b.id.length || a.id.localeCompare(b.id),
     );
@@ -18,7 +27,9 @@ export function mergeRecentMessages(previous: Message[], current: Message[]): Me
     );
     return mergeMessages(
         previous.filter(
-            (message) => message.chatId === oldest.chatId && compareIdentifiers(message.id, oldest.id) < 0,
+            (message) =>
+                message.chatId === oldest.chatId &&
+                (message.deleted || compareIdentifiers(message.id, oldest.id) < 0),
         ),
         current,
     );

@@ -20,6 +20,7 @@ export function Conversation({
     modelLabel,
     onMediaSent,
     onContextChanged,
+    onMessageDeleted,
     messages,
     activeReply,
     onRefresh,
@@ -276,6 +277,7 @@ export function Conversation({
                                     <MessageBubble
                                         message={message}
                                         onContextChanged={onContextChanged}
+                                        onDeleted={onMessageDeleted}
                                         onMenuOpenChange={menuOpenChanged}
                                         onDraftRequest={
                                             !message.outgoing ? () => draft(message.id) : undefined

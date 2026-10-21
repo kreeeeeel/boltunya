@@ -68,8 +68,11 @@ textarea,
 }
 
 @supports selector(::-webkit-scrollbar) {
-    * {
+    *,
+    *:hover,
+    *:has(:focus-visible) {
         scrollbar-width: auto;
+        scrollbar-color: auto;
     }
 }
 

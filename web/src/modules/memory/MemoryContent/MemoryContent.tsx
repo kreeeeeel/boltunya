@@ -1,4 +1,4 @@
-import {Box, Button, Flex, Icon, Label, Skeleton, Text, TextArea, Tooltip} from '@gravity-ui/uikit';
+import {Box, Button, Flex, Icon, Label, Skeleton, Text, TextArea} from '@gravity-ui/uikit';
 import {ArrowRotateRight, ArrowsRotateRight, FolderOpen, FileArrowUp} from '@gravity-ui/icons';
 import {useState} from 'react';
 import {useLocale, useTranslations} from 'next-intl';
@@ -7,6 +7,7 @@ import styles from '@/modules/memory/MemoryContent/MemoryContent.module.css';
 import {MarkdownContent} from '@/shared/ui/MarkdownContent/MarkdownContent';
 import {desktopBridge} from '@/shared/desktop/bridge';
 import {errorMessage} from '@/shared/api/client';
+
 export function MemoryContent({
     memory,
     chatId = '',
@@ -18,14 +19,20 @@ export function MemoryContent({
     const locale = useLocale();
     const document = memory.document;
     const [folderError, setFolderError] = useState('');
+    const [folderBusy, setFolderBusy] = useState(false);
+
     async function openFolder() {
         setFolderError('');
+        setFolderBusy(true);
         try {
             await desktopBridge()?.openStorageLocation('memory');
         } catch (cause) {
             setFolderError(errorMessage(cause));
+        } finally {
+            setFolderBusy(false);
         }
     }
+
     return (
         <>
             {!document && !memory.error ? (
@@ -100,10 +107,11 @@ export function MemoryContent({
                                 {t(document.backfillComplete ? 'memory.complete' : 'memory.scanning')}
                             </Text>
                         </Box>
-                        <Flex gap={2} wrap alignItems="center" className={styles.actions} qa="memory-actions">
+                        <Box className={styles.actions} qa="memory-actions">
                             <Button
                                 view="flat-secondary"
                                 size="l"
+                                className={styles.action}
                                 disabled={memory.busy || document.status === 'disabled'}
                                 onClick={() => void memory.refresh()}
                             >
@@ -113,6 +121,7 @@ export function MemoryContent({
                             <Button
                                 view="flat-secondary"
                                 size="l"
+                                className={styles.action}
                                 disabled={memory.busy || document.status === 'disabled'}
                                 onClick={() => void memory.refresh(true)}
                             >
@@ -122,6 +131,7 @@ export function MemoryContent({
                             <Button
                                 view="flat-secondary"
                                 size="l"
+                                className={styles.action}
                                 disabled={memory.busy}
                                 onClick={() => void memory.reload()}
                             >
@@ -129,18 +139,19 @@ export function MemoryContent({
                                 {t('memory.reload')}
                             </Button>
                             {desktopBridge() && (
-                                <Tooltip content={t('storageLocations.open')}>
-                                    <Button
-                                        view="flat-secondary"
-                                        size="l"
-                                        aria-label={t('storageLocations.open')}
-                                        onClick={() => void openFolder()}
-                                    >
-                                        <Icon data={FolderOpen} size={20} />
-                                    </Button>
-                                </Tooltip>
+                                <Button
+                                    view="flat-secondary"
+                                    size="l"
+                                    className={styles.action}
+                                    disabled={memory.busy || folderBusy}
+                                    loading={folderBusy}
+                                    onClick={() => void openFolder()}
+                                >
+                                    <Icon data={FolderOpen} size={18} />
+                                    {t('storageLocations.open')}
+                                </Button>
                             )}
-                        </Flex>
+                        </Box>
                         {document.error && <Text color="danger">{document.error}</Text>}
                         <Text color="secondary" className={styles.path}>
                             {document.relativePath}

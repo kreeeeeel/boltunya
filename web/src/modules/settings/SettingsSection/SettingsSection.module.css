@@ -13,13 +13,13 @@
 .content {
     width: 100%;
     max-width: none;
-    padding: 32px 24px;
+    padding: 24px;
     margin-inline: auto;
     line-height: 1.6;
 }
 
 .heading {
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .description {

@@ -131,17 +131,9 @@
     overflow-wrap: anywhere;
 }
 
-.contextExcluded {
-    display: flex;
-    width: fit-content;
-    font-size: 14px;
-    margin: 8px 0 2px;
-    border-radius: 7px;
-    user-select: none;
-}
-
-.contextExcluded :global(.g-label__text) {
-    font-size: 14px;
+.aiBadge.contextExcluded {
+    color: var(--tiho-muted);
+    background: color-mix(in srgb, var(--tiho-muted) 12%, transparent);
 }
 
 .messageMeta {

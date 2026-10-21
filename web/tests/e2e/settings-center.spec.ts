@@ -215,6 +215,43 @@ test('routing offers only vision-capable profiles for image analysis', async ({p
 });
 
 for (const dark of [false, true]) {
+    test(`model connections use one centered illustrated empty state in ${dark ? 'dark' : 'light'} theme`, async ({
+        page,
+    }) => {
+        await page.route('**/api/model-profiles', (route) =>
+            route.fulfill({json: {profiles: [], presets: [providerPreset]}}),
+        );
+        if (dark) {
+            await persistTestTheme(page, true);
+            await page.reload();
+            await page.getByRole('button', {name: ru.profileMenu, exact: true}).click();
+            await page.getByRole('menuitem', {name: ru.settings, exact: true}).click();
+        }
+        await chooseSettingsSection(page, 'providers');
+        const empty = page.locator('[data-qa="model-connections-empty"]');
+        await expect(empty.getByText(ru.modelProfiles.emptyTitle, {exact: true})).toBeVisible();
+        await expect(page.locator('[data-qa="settings-content-providers"]')).toHaveCount(0);
+        await expect
+            .poll(() => empty.locator('img').evaluate((image) => (image as HTMLImageElement).naturalWidth))
+            .toBeGreaterThan(0);
+        const geometry = await empty.evaluate((element) => {
+            const content = element.getBoundingClientRect();
+            const page = element.parentElement!.getBoundingClientRect();
+            return {
+                horizontal: Math.abs(content.x + content.width / 2 - page.x - page.width / 2),
+                vertical: Math.abs(content.y + content.height / 2 - page.y - page.height / 2),
+            };
+        });
+        expect(geometry.horizontal).toBeLessThan(2);
+        expect(geometry.vertical).toBeLessThan(2);
+        await page.screenshot({
+            path: `../docs/resources/model-connections-empty-${dark ? 'dark' : 'light'}.png`,
+            animations: 'disabled',
+        });
+        await empty.getByRole('button', {name: ru.modelProfiles.create, exact: true}).click();
+        await expect(page.getByRole('textbox', {name: ru.modelProfiles.name, exact: true})).toBeVisible();
+    });
+
     test(`settings navigation stays fixed and language cards align in ${dark ? 'dark' : 'light'} theme`, async ({
         page,
     }) => {
@@ -315,9 +352,15 @@ for (const dark of [false, true]) {
         await colorButton.focus();
         await expect(colorButton).toHaveCSS('outline-width', '2px');
         await chooseSettingsSection(page, 'replies');
-        await expect(page.getByRole('switch', {name: ru.proactive.title, exact: true})).not.toBeChecked();
+        await expect(page.getByRole('switch', {name: ru.proactive.title, exact: true})).toHaveCount(0);
         await page.screenshot({
             path: `../docs/resources/settings-replies-${dark ? 'dark' : 'light'}.png`,
+            animations: 'disabled',
+        });
+        await chooseSettingsSection(page, 'proactive');
+        await expect(page.getByRole('switch', {name: ru.proactive.title, exact: true})).not.toBeChecked();
+        await page.screenshot({
+            path: `../docs/resources/settings-proactive-${dark ? 'dark' : 'light'}.png`,
             animations: 'disabled',
         });
         await page.route('**/api/memory', (route) =>
@@ -337,18 +380,63 @@ for (const dark of [false, true]) {
                 },
             }),
         );
+        await page.evaluate(() => {
+            window.aigramDesktop = {
+                state: async () => ({available: true, maximized: false, visible: true, minimized: false}),
+                sync: async () => {},
+                quit: async () => {},
+                action: async () => {},
+                onState: () => () => {},
+                openStorageLocation: async (id) => {
+                    document.documentElement.dataset.openedStorage = id;
+                },
+            };
+        });
         await chooseSettingsSection(page, 'memory');
         const memoryActions = page.locator('[data-qa="memory-actions"]');
-        await expect(memoryActions.getByRole('button')).toHaveCount(3);
+        await expect(memoryActions.getByRole('button')).toHaveCount(4);
+        const explorer = memoryActions.getByRole('button', {name: ru.storageLocations.open, exact: true});
+        await expect(explorer).toHaveCSS('border-width', '0px');
+        await explorer.click();
+        await expect(page.locator('html')).toHaveAttribute('data-opened-storage', 'memory');
         await expect(memoryActions).toHaveCSS('border-radius', '14px');
         const actionSizes = await memoryActions
             .getByRole('button')
             .evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().height));
         expect(new Set(actionSizes).size).toBe(1);
+        const memoryGeometry = await memoryActions.evaluate((toolbar) => ({
+            width: toolbar.getBoundingClientRect().width,
+            parentWidth: toolbar.parentElement!.getBoundingClientRect().width,
+            columns: getComputedStyle(toolbar).gridTemplateColumns.split(' ').length,
+        }));
+        expect(memoryGeometry.width).toBe(memoryGeometry.parentWidth);
+        expect(memoryGeometry.columns).toBe(2);
         await page.screenshot({
             path: `../docs/resources/settings-memory-${dark ? 'dark' : 'light'}.png`,
             animations: 'disabled',
         });
+        const notes = page.getByRole('textbox', {name: ru.memory.notes, exact: true});
+        await notes.fill(Array.from({length: 35}, (_, index) => `Заметка ${index + 1}`).join('\n'));
+        await notes.blur();
+        await page.mouse.move(100, 40);
+        const nativeScrollbar = await notes.evaluate((element) => ({
+            color: getComputedStyle(element).scrollbarColor,
+            width: getComputedStyle(element, '::-webkit-scrollbar').width,
+            arrow: getComputedStyle(element, '::-webkit-scrollbar-button').display,
+            thumb: getComputedStyle(element, '::-webkit-scrollbar-thumb').backgroundColor,
+        }));
+        expect(nativeScrollbar).toEqual({
+            color: 'auto',
+            width: '6px',
+            arrow: 'none',
+            thumb: 'rgba(0, 0, 0, 0)',
+        });
+        await notes.hover();
+        expect(
+            await notes.evaluate(
+                (element) => getComputedStyle(element, '::-webkit-scrollbar-thumb').backgroundColor,
+            ),
+        ).not.toBe('rgba(0, 0, 0, 0)');
     });
 }
 

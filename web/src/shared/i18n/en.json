@@ -654,7 +654,7 @@
         "model": "Model to configure",
         "instructions": "Additional instructions",
         "contextWindow": "Working context, tokens",
-        "contextHint": "Leave empty for the default working window. A larger context requires more memory.",
+        "contextHint": "Leave empty to size the context automatically. Larger windows use more memory.",
         "apiContextHint": "The limit is configured in this model connection.",
         "encoding": "Token counting",
         "auto": "Automatic",
@@ -669,7 +669,8 @@
         "reservedOutputTokens": "Reply and thinking",
         "remainingTokens": "For history and memory",
         "hint": "An estimate without history or memory. Their messages will use the remaining space.",
-        "tooLong": "Instructions and the reply reserve do not fit. Shorten the instructions or increase the working context."
+        "tooLong": "Instructions and the reply reserve do not fit. Shorten the instructions or increase the working context.",
+        "automatic": "The local context window adapts to the request size. Set an explicit limit in the model settings if needed."
     },
     "settingsCenter": {
         "groups": {
@@ -705,7 +706,8 @@
             "language": "Language",
             "media": "Media downloads",
             "cache": "Telegram cache",
-            "storage": "File locations"
+            "storage": "File locations",
+            "proactive": "Conversation support"
         },
         "descriptions": {
             "application": "Window behavior, tray and Windows startup.",
@@ -722,7 +724,8 @@
             "language": "Choose your interface language.",
             "media": "Choose which Telegram files download automatically.",
             "cache": "Review local media usage and free up space.",
-            "storage": "Open application data, memory and models in Explorer."
+            "storage": "Open application data, memory and models in Explorer.",
+            "proactive": "Conversation initiative and the pause before a new message."
         }
     },
     "appearance": {
@@ -823,7 +826,9 @@
             "idleTimeoutSeconds": "Idle timeout · s",
             "totalTimeoutSeconds": "Total timeout · s (0 = unlimited)",
             "keepAliveMinutes": "Keep alive · min"
-        }
+        },
+        "emptyTitle": "Connect your model",
+        "emptyDescription": "Add Ollama, OpenAI, or a compatible service. Choose separate connections for replies and memory."
     },
     "modelRouting": {
         "enabled": "Use task routing",
@@ -864,7 +869,9 @@
         "failed": "Action could not be completed",
         "linkUnavailable": "Telegram did not provide a link for this message.",
         "refreshFailed": "Changes were saved, but history could not refresh. Reopen the conversation.",
-        "excluded": "Excluded from AI context"
+        "excluded": "Excluded from AI context",
+        "delete": "Delete message",
+        "excludedShort": "Excluded"
     },
     "typing": {
         "group": "{names} {action}",
@@ -931,5 +938,19 @@
     },
     "modelMetadataUnknown": "Unknown",
     "imagesSupported": "Supported",
-    "imagesUnsupported": "Not supported"
+    "imagesUnsupported": "Not supported",
+    "messageDelete": {
+        "title": "Delete this message?",
+        "description": "The message will be deleted from Telegram. A copy will remain in local history, marked as deleted and excluded from AI context.",
+        "scope": "Where to delete the message",
+        "self": "Only for me",
+        "everyone": "For everyone",
+        "confirmSelf": "Delete for me",
+        "confirmEveryone": "Delete for everyone",
+        "loading": "Checking available options…",
+        "unavailable": "Telegram does not allow this message to be deleted.",
+        "failed": "Could not delete the message",
+        "refreshFailed": "The message was deleted, but the chat could not be refreshed. Close this window and refresh the chat.",
+        "completed": "Message deleted"
+    }
 }

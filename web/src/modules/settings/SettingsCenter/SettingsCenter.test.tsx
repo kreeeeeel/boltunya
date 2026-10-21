@@ -77,3 +77,30 @@ it('shows a save failure once in the active section while preserving visited dra
     fireEvent.click(screen.getByRole('menuitem', {name: ru.settingsCenter.sections.prompt}));
     expect(screen.getAllByText('Cannot save')).toHaveLength(1);
 });
+
+it('keeps conversation support in a separate section and saves its draft after navigation', async () => {
+    mocks.PATCH.mockResolvedValue({data: {ok: true}, response: new Response()});
+    render(
+        <NextIntlClientProvider locale="ru" messages={ru}>
+            <ThemeProvider>
+                <SettingsCenter settings={workspaceState.settings} onClose={vi.fn()} onRefresh={vi.fn()} />
+            </ThemeProvider>
+        </NextIntlClientProvider>,
+    );
+    fireEvent.click(screen.getByRole('menuitem', {name: ru.settingsCenter.sections.replies}));
+    expect(screen.queryByRole('switch', {name: ru.proactive.title})).toBeNull();
+    fireEvent.click(screen.getByRole('menuitem', {name: ru.settingsCenter.sections.proactive}));
+    fireEvent.click(screen.getByRole('switch', {name: ru.proactive.title}));
+    fireEvent.change(screen.getByRole('spinbutton', {name: ru.proactive.interval}), {target: {value: '2'}});
+    fireEvent.click(screen.getByRole('menuitem', {name: ru.settingsCenter.sections.replies}));
+    const region = screen.getByRole('region', {name: ru.settingsCenter.sections.replies});
+    fireEvent.click(within(region).getByRole('button', {name: ru.save}));
+    await waitFor(() =>
+        expect(mocks.PATCH).toHaveBeenCalledWith(
+            '/api/settings',
+            expect.objectContaining({
+                body: expect.objectContaining({proactiveEnabled: true, proactiveIntervalMinutes: 120}),
+            }),
+        ),
+    );
+});

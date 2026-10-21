@@ -75,3 +75,21 @@ it('keeps context flags unchanged when persistence fails and explains the error'
     expect(await screen.findByRole('alert')).toHaveTextContent('Сохранение недоступно');
     expect(refreshed).not.toHaveBeenCalled();
 });
+
+it('opens a separate deletion confirmation while keeping the context menu closed', async () => {
+    mocks.GET.mockResolvedValue({
+        data: {canDeleteForSelf: true, canDeleteForEveryone: false},
+        response: new Response(),
+    });
+    mocks.DELETE.mockClear();
+    mount();
+    fireEvent.click(await screen.findByRole('menuitem', {name: ru.messageMenu.delete}));
+    expect(await screen.findByRole('dialog', {name: ru.messageDelete.title})).toBeVisible();
+    expect(await screen.findByRole('button', {name: ru.messageDelete.confirmSelf})).toBeEnabled();
+    await waitFor(() =>
+        expect(screen.queryByRole('menuitem', {name: ru.messageMenu.copyText})).not.toBeInTheDocument(),
+    );
+    expect(mocks.DELETE).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', {name: ru.cancel}));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+});

@@ -269,7 +269,13 @@ for (const dark of [false, true]) {
         const previousOlder = olderRequests;
         await expect(row).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
         await expect(row).toHaveCSS('cursor', 'context-menu');
-        await expect(row.locator('[data-qa="message-context-excluded"]')).toHaveText(ru.messageMenu.excluded);
+        await expect(row.locator('[data-qa="message-context-excluded"]')).toHaveText(
+            ru.messageMenu.excludedShort,
+        );
+        await expect(row.locator('[data-qa="message-context-excluded"]')).toHaveAttribute(
+            'aria-label',
+            ru.messageMenu.excluded,
+        );
         const rowWidth = (await row.boundingBox())!.width;
         const innerWidth = await row.evaluate((element) => {
             const parent = element.parentElement!;

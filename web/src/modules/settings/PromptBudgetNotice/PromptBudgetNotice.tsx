@@ -30,6 +30,7 @@ export function PromptBudgetNotice({
             </Flex>
             {budget.report ? (
                 <>
+                    {budget.report.automaticContext && <Text color="secondary">{t('automatic')}</Text>}
                     <Flex className={styles.metrics} gap={3} wrap>
                         {(
                             [

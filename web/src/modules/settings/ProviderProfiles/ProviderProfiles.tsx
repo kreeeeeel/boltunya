@@ -107,6 +107,42 @@ export function ProviderProfiles({onRefresh}: {readonly onRefresh: () => Promise
         }
     }
     const savedProfile = report.profiles.find((profile) => profile.id === selected);
+    const empty = !value && !report.loading && !report.profiles.length && !report.error && !error;
+
+    if (empty) {
+        return (
+            <Flex direction="column" className={styles.emptyPage}>
+                <Flex
+                    direction="column"
+                    alignItems="center"
+                    gap={4}
+                    className={styles.empty}
+                    qa="model-connections-empty"
+                >
+                    <Box
+                        as="img"
+                        src="/assets/illustrations/model-connections.png"
+                        alt=""
+                        className={styles.illustration}
+                    />
+                    <Text variant="header-2">{t('emptyTitle')}</Text>
+                    <Text color="secondary" className={styles.description}>
+                        {t('emptyDescription')}
+                    </Text>
+                    <Button
+                        size="l"
+                        view="action"
+                        disabled={!report.presets.length}
+                        onClick={() => edit('new')}
+                    >
+                        <Icon data={Plus} size={18} />
+                        {t('create')}
+                    </Button>
+                </Flex>
+            </Flex>
+        );
+    }
+
     return (
         <SettingsSection
             id="providers"
@@ -172,7 +208,6 @@ export function ProviderProfiles({onRefresh}: {readonly onRefresh: () => Promise
             )}
             {!value && !report.loading && (
                 <Flex direction="column" gap={3}>
-                    {report.profiles.length === 0 && <Text color="secondary">{t('empty')}</Text>}
                     {report.profiles.map((profile) => (
                         <Button
                             key={profile.id}

@@ -71,4 +71,23 @@ describe('History pagination', () => {
             {...message, chatId: '2'},
         ]);
     });
+
+    it('keeps confirmed deletion metadata when an older in-flight snapshot arrives', () => {
+        const message: Message = {
+            id: '123',
+            chatId: '1',
+            text: 'Retained text',
+            date: 1,
+            outgoing: true,
+            kind: 'text',
+        };
+        const deleted = {...message, deleted: true, deletedAt: 100, contextExcluded: true};
+        const result = mergeRecentMessages([deleted], [{...message, contextExcluded: false}]);
+        expect(result).toEqual([{...message, deleted: true, deletedAt: 100, contextExcluded: false}]);
+        expect(mergeMessages([deleted], [message])[0].deletedAt).toBe(100);
+        expect(mergeRecentMessages([deleted], [{...message, id: '124'}]).map((item) => item.id)).toEqual([
+            '123',
+            '124',
+        ]);
+    });
 });

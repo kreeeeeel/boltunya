@@ -35,6 +35,7 @@ import {useModelProfiles} from '@/modules/settings/model/useModelProfiles';
 import {useQueuedDraft} from '@/modules/workspace/hooks/useQueuedDraft';
 import {applyContextExclusion} from '@/modules/messages/model/applyContextExclusion';
 import type {ContextExclusionChange} from '@/modules/messages/model/ContextExclusionChange';
+import type {MessageDeletionResult} from '@/modules/messages/MessageDeletionDialog/MessageDeletionDialog.types';
 
 export function Workspace() {
     const t = useTranslations();
@@ -148,6 +149,17 @@ export function Workspace() {
         if (chat && selectedChat.current === chat.id) {
             setMessages((previous) => applyContextExclusion(previous, chat.id, change));
         }
+        await refresh();
+    }
+
+    async function messageDeleted(result: MessageDeletionResult) {
+        setMessages((previous) =>
+            previous.map((message) =>
+                message.chatId === result.chatId && message.id === result.messageId
+                    ? {...message, deleted: true, deletedAt: result.deletedAt}
+                    : message,
+            ),
+        );
         await refresh();
     }
 
@@ -337,6 +349,7 @@ export function Workspace() {
                                     modelLabel={modelLabel}
                                     onMediaSent={refreshConversation}
                                     onContextChanged={updateContextFlags}
+                                    onMessageDeleted={messageDeleted}
                                     messages={messages}
                                     activeReply={visibleChatActivity(state.activity, selected)}
                                     onRefresh={refresh}

@@ -13,6 +13,7 @@ import type {SettingsSectionId} from '@/modules/settings/model/settingsSections'
 import {createSettingsDraft} from '@/modules/settings/model/settingsDraft';
 import {ApplicationSettings} from '@/modules/settings/ApplicationSettings/ApplicationSettings';
 import {ReplySettings} from '@/modules/settings/ReplySettings/ReplySettings';
+import {ProactiveSettings} from '@/modules/settings/ProactiveSettings/ProactiveSettings';
 import {MediaSettings} from '@/modules/settings/MediaSettings/MediaSettings';
 import {PromptSettings} from '@/modules/settings/PromptSettings/PromptSettings';
 import {LanguageSettings} from '@/modules/settings/LanguageSettings/LanguageSettings';
@@ -122,15 +123,23 @@ export function SettingsCenter({
             <SettingsSection
                 id={id}
                 actions={
-                    ['application', 'replies', 'prompt', 'styles', 'compute', 'media', 'collection'].includes(
-                        id,
-                    )
+                    [
+                        'application',
+                        'replies',
+                        'proactive',
+                        'prompt',
+                        'styles',
+                        'compute',
+                        'media',
+                        'collection',
+                    ].includes(id)
                         ? actions
                         : undefined
                 }
             >
                 {id === 'application' && <ApplicationSettings {...common} />}
                 {id === 'replies' && <ReplySettings {...common} />}
+                {id === 'proactive' && <ProactiveSettings {...common} />}
                 {id === 'prompt' && (
                     <PromptSettings
                         {...common}
