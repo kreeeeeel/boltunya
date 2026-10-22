@@ -2,6 +2,28 @@
 
 Release versions are assigned by Windows CI. Each GitHub release includes the first dated entry below, the tested source commit and its verification run.
 
+## 2026-10-22 — Selectable GPU processing for RVC voices
+
+### Added
+
+- Select CPU or NVIDIA CUDA for the RVC conversion stage in Compute settings, independently of Ollama. Existing installations keep CPU by default; Piper synthesis and speech recognition retain their current execution paths.
+- Inspect the installed Applio runtime on demand and show actual CUDA availability, GPU identity and a clear unavailable/error state. Opening the application does not load voice weights, run synthesis or start hardware polling.
+
+### Changed
+
+- Apply the saved conversion device to owned, isolated Applio processes. An explicit CUDA request must pass the runtime and Applio device checks; unavailable CUDA or inference failure cannot silently retry on CPU. The process ends after each conversion, releasing its own resources.
+- Require saving a changed device before testing a voice. A preview from the previous saved device becomes obsolete without discarding the text to be spoken.
+
+### Fixed
+
+- Send Python bootstraps through UTF-8 standard input instead of Windows command-line code, preserving quotation marks and keeping spoken text out of process arguments. Rebuild and reopen the changed application before final checks.
+
+### Verification and limitations
+
+- Real Alice conversion on the installed RTX 4060 passed in a signed-out isolated application profile, using cached Applio, Piper and Whisper assets. The owned RVC worker appeared in NVIDIA compute-process observations, Opus playback advanced and recognition preserved the synthetic sentence's meaning. The queued preview reached ready in 88.852 s during concurrent checks; the complete proof took 173.986 s. These are end-to-end observations, not a paired CPU/GPU benchmark or a speedup claim. Python 3.12.15, PyTorch 2.11.0+cu128 and CUDA 12.8 were verified; no model download, Telegram send or conversation-model call occurred.
+- Final local gates passed 672 Kotlin cases (18 optional/platform skips), 12 SDK cases, 371 UI cases, 40 Electron cases, the icon script and all 147 browser scenarios. Native window/tray/startup and four updater smokes passed. English/Russian Compute controls were reviewed in both themes and at 390 px. Seventeen new backend regressions cover settings, strict device selection, process cleanup, metadata coalescing and queued-device snapshots. Final tests include corrections to an effective-rule fixture and a hidden-panel textarea locator; assertions were retained. The application was opened before checks, with Telegram authorization, settings and manual notes preserved and AI paused. Exact downloaded-payload verification follows successful Windows CI in the release notes.
+- This setting targets Applio/RVC on NVIDIA CUDA. It does not add AMD/DirectML support, move every voice operation onto the GPU, change Ollama settings or enable AI. GPU memory and latency depend on the installed models and other applications. No new engine or model download is required on the verified machine.
+
 ## 2026-10-22 — Consistent memory editors and owner-bound note saves
 
 ### Fixed

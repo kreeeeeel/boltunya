@@ -18,12 +18,13 @@ Aigram is a Windows desktop assistant for Telegram. Read conversations, prepare 
 
 ![English conversation view in the light theme](docs/resources/en/chats-light.png)
 
-*These six screenshots use the English interface and synthetic conversations. The [Russian guide](docs/ru.md) has its own Russian screenshots. No private Telegram history is included.*
+*These screenshots use the English interface and synthetic conversations or hardware fixtures. The [Russian guide](docs/ru.md) has its own Russian screenshots. No private Telegram history is included.*
 
 <table>
   <tr><td><img src="docs/resources/en/chats-dark.png" alt="English conversation view in the dark theme"></td><td><img src="docs/resources/en/models.png" alt="English AI model catalog"></td></tr>
   <tr><td><img src="docs/resources/en/speech-library.png" alt="English speech model catalog"></td><td><img src="docs/resources/en/chat-voice.png" alt="English per-chat voice settings"></td></tr>
   <tr><td colspan="2"><img src="docs/resources/en/manual-voice.png" alt="English voice message composition"></td></tr>
+  <tr><td colspan="2"><img src="docs/resources/en/voice-rvc-device.png" alt="English Compute settings with independent Ollama and RVC device controls"></td></tr>
 </table>
 
 ## What it does
@@ -32,7 +33,7 @@ Aigram is a Windows desktop assistant for Telegram. Read conversations, prepare 
 - **Prepare and control replies.** The conversation assistant offers AI text drafts and voice drafts. Edit a generated text draft before sending, or write exact text in the voice composition dialog.
 - **Choose a tone per chat.** Built-in and named custom styles remain separate from factual memory. Optional writing-style adaptation uses real outgoing messages and excludes known AI replies. Edit your own Telegram text and photo/video captions while preserving their existing formatting.
 - **Choose local or connected models.** Browse Ollama models, compare context and memory estimates, install missing models with visible progress and cancellation, and benchmark installed models. Saved API connections can serve replies, memory or image analysis. App-managed Ollama has explicit CPU/GPU controls; external services retain their own configuration.
-- **Use local speech.** The dedicated catalog offers Russian/English voices, recognition models and optional engines. Cards show format, dependencies, total download size and source. Test a voice in a separate dialog. Sherpa/Piper handles local synthesis; compatible character packs use the optional Applio/RVC dependency. Per-chat voice settings inherit global preferences or override them. [Speech setup](docs/speech/en.md) · [Catalog and provenance](docs/speech/catalog-en.md).
+- **Use local speech.** The dedicated catalog offers Russian/English voices, recognition models and optional engines. Cards show format, dependencies, total download size and source. Test a voice in a separate dialog. Sherpa/Piper handles local synthesis; compatible character packs use the optional Applio/RVC dependency. **Settings → Compute** selects CPU or compatible NVIDIA CUDA for RVC; voice testing remains in **Assistant → Voice**. Per-chat voice settings inherit global preferences or override them. [Speech setup](docs/speech/en.md) · [Catalog and provenance](docs/speech/catalog-en.md).
 - **Keep factual memory.** Shared owner facts, per-chat summaries and editable notes stay in local files. Automatic collection follows the configured interval; explicit collection and deep rebuild remain available. Source batches adapt to the model's token budget, with visible progress and cancellation. [Memory details](docs/memory/en.md).
 - **Support a conversation when asked.** Opt in to an AI-written or exact predefined message after a chosen idle period. The assistant waits for a real response before another initiative. New incoming messages can replace an active reply, follow it as a combined task, or receive separate sequential replies. [Conversation support](docs/ai/conversation-support-en.md).
 - **Inspect the shared queue.** Replies, drafts, speech and memory share a controllable queue. Pause, prioritize or cancel work; inspect model input, available thinking, final output and timing/token metrics. Completed replies support local ratings and comments.
