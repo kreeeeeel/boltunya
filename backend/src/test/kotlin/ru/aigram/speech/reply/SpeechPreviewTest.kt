@@ -7,6 +7,7 @@ import org.junit.jupiter.api.io.TempDir
 import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.automation.activity.ReplyTraceScope
 import ru.aigram.component.speech.SpeechPreviewComponent
+import ru.aigram.domain.speech.SpeechComputeDevice
 import ru.aigram.exception.impl.SpeechDraftUnavailableException
 import ru.aigram.exception.impl.SpeechInferenceFailedException
 import ru.aigram.resources.ResourceCatalog
@@ -22,6 +23,7 @@ import ru.aigram.speech.installSpeechFixture
 import ru.aigram.speech.speechCatalog
 import ru.aigram.storage.SettingsStore
 import java.nio.file.Path
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -34,6 +36,35 @@ import kotlin.test.assertTrue
 class SpeechPreviewTest {
     @TempDir
     lateinit var directory: Path
+
+    @Test
+    fun `queued RVC preview retains the saved device captured before a later settings change`() {
+        val requests = CopyOnWriteArrayList<SpeechWorkerRequest>()
+        val process = SpeechProcessExecutor { _, request, _ ->
+            requests.add(request)
+            SyntheticSpeechWave().write(Path.of(request.output))
+            SpeechWorkerResult(sampleRate = 22050, samples = 27562)
+        }
+        val assets = listOf("sherpa-runtime", "piper-ru-irina", "applio-runtime", "rvc-alice")
+        withPreview(process, assets) { preview, queue, _, _, settings ->
+            queue.pauseQueue(true)
+            val cpu = preview.enqueue("Captured CPU sample.", "rvc-alice", 1.0)
+            settings.update { it.copy(voiceConversionDevice = SpeechComputeDevice.CUDA) }
+            assertTrue(requests.isEmpty())
+            queue.pauseQueue(false)
+            awaitSpeech { queue.draft(cpu.id).status == "ready" }
+            assertEquals(SpeechComputeDevice.CPU, requests.last().conversionDevice)
+            assertEquals(SpeechComputeDevice.CUDA, settings.get().voiceConversionDevice)
+
+            val cuda = preview.enqueue("Captured CUDA sample.", "rvc-alice", 1.0)
+            awaitSpeech { queue.draft(cuda.id).status == "ready" }
+            assertEquals(SpeechComputeDevice.CUDA, requests.last().conversionDevice)
+            assertEquals(
+                listOf("synthesis", "conversion", "synthesis", "conversion"),
+                requests.stream().map { it.operation }.toList(),
+            )
+        }
+    }
 
     @Test
     fun `settings sample uses unsaved model and rate through the queue without sending or changing preferences`() {
@@ -109,9 +140,10 @@ class SpeechPreviewTest {
 
     private fun withPreview(
         process: SpeechProcessExecutor,
+        assets: List<String> = listOf("sherpa-runtime", "piper-en-amy"),
         action: (SpeechPreviewComponent, ReplyCoordinator, VoiceDraftStore, VoiceTestGateway, SettingsStore) -> Unit,
     ) {
-        listOf("sherpa-runtime", "piper-en-amy").stream().forEach { installSpeechFixture(directory, it) }
+        assets.stream().forEach { installSpeechFixture(directory, it) }
         val settings = SettingsStore(directory)
         val gateway = VoiceTestGateway()
         val tracing = ReplyTraceScope()
@@ -131,7 +163,7 @@ class SpeechPreviewTest {
                 throw SpeechInferenceFailedException()
             }.use { queue ->
                 action(
-                    SpeechPreviewComponent(queue, gateway, catalog, service, ResourceCatalog()),
+                    SpeechPreviewComponent(queue, gateway, catalog, service, ResourceCatalog(), settings),
                     queue,
                     drafts,
                     gateway,

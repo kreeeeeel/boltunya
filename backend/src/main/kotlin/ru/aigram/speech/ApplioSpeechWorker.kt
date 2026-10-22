@@ -1,6 +1,8 @@
 package ru.aigram.speech
 
 import org.springframework.stereotype.Component
+import ru.aigram.domain.speech.SpeechComputeDevice
+import ru.aigram.exception.impl.SpeechGpuUnavailableException
 import ru.aigram.exception.impl.SpeechInferenceFailedException
 import java.io.File
 import java.nio.file.Files
@@ -12,6 +14,36 @@ import javax.sound.sampled.AudioSystem
 private const val MAX_CONVERTED_WAVE_BYTES = 64L * 1024 * 1024
 private const val MAX_CONVERTED_AUDIO_SECONDS = 600
 private const val CONVERSION_THREADS = "2"
+private const val DEVICE_RESULT = "applio-device.txt"
+internal const val GPU_UNAVAILABLE_EXIT = 73
+private val CONVERSION_BOOTSTRAP = """
+    import os, runpy, sys, torch
+    from pathlib import Path
+    expected = os.environ["AIGRAM_SPEECH_COMPUTE_DEVICE"]
+    if expected == "cuda:0" and not torch.cuda.is_available():
+        sys.exit(73)
+    from rvc.configs.config import Config
+    if str(Config().device) != expected:
+        sys.exit(73)
+    command = runpy.run_path(sys.argv[1], run_name="aigram_applio_cli")
+    command["cli"].main(args=sys.argv[2:], standalone_mode=False)
+    if str(Config().device) != expected:
+        sys.exit(73)
+    Path(os.environ["AIGRAM_SPEECH_DEVICE_RESULT"]).write_text(expected, encoding="utf-8")
+""".trimIndent()
+private val COMPUTE_BOOTSTRAP = """
+    import json, sys, torch
+    from pathlib import Path
+    available = torch.cuda.is_available()
+    device = torch.cuda.get_device_properties(0) if available else None
+    Path(sys.argv[1]).write_text(json.dumps({
+        "cudaAvailable": available,
+        "gpuName": device.name if device else "",
+        "gpuMemoryBytes": device.total_memory if device else 0,
+        "torchVersion": torch.__version__,
+        "cudaVersion": torch.version.cuda or ""
+    }), encoding="utf-8")
+""".trimIndent()
 
 @Component
 class ApplioSpeechWorker {
@@ -33,12 +65,38 @@ class ApplioSpeechWorker {
             throw SpeechInferenceFailedException()
         }
         val builder = ProcessBuilder(
-            python.toString(), "-s", script.toString(), "infer",
+            python.toString(), "-s", "-B", "-", script.toString(), "infer",
             "--input-path", input.toString(), "--output-path", output.toString(),
             "--pth-path", checkpoint.toString(), "--index-path", index.toString(),
             "--f0-method", "rmvpe", "--index-rate", "0.5", "--protect", "0.33",
             "--export-format", "WAV", "--embedder-model", "contentvec",
         ).directory(runtime.toFile())
+        return environment(builder, runtime, working, request.conversionDevice)
+    }
+
+    internal fun computeBuilder(runtime: Path, working: Path, result: Path): ProcessBuilder {
+        val root = runtime.toRealPath()
+        val python = owned(root, "env/python.exe")
+        val builder = ProcessBuilder(
+            python.toString(),
+            "-s",
+            "-B",
+            "-",
+            result.toAbsolutePath().toString(),
+        ).directory(root.toFile())
+        return environment(builder, root, working, SpeechComputeDevice.CUDA)
+    }
+
+    internal fun conversionInput(): ByteArray = CONVERSION_BOOTSTRAP.toByteArray(Charsets.UTF_8)
+
+    internal fun computeInput(): ByteArray = COMPUTE_BOOTSTRAP.toByteArray(Charsets.UTF_8)
+
+    private fun environment(
+        builder: ProcessBuilder,
+        runtime: Path,
+        working: Path,
+        device: SpeechComputeDevice,
+    ): ProcessBuilder {
         val environment = builder.environment()
         val pythonHome = runtime.resolve("env").toString()
         environment["PYTHONHOME"] = pythonHome
@@ -48,7 +106,13 @@ class ApplioSpeechWorker {
         environment["PYTHONDONTWRITEBYTECODE"] = "1"
         environment["HF_HUB_OFFLINE"] = "1"
         environment["TRANSFORMERS_OFFLINE"] = "1"
-        environment["CUDA_VISIBLE_DEVICES"] = "-1"
+        environment["CUDA_VISIBLE_DEVICES"] = if (device == SpeechComputeDevice.CUDA) {
+            "0"
+        } else {
+            "-1"
+        }
+        environment["AIGRAM_SPEECH_COMPUTE_DEVICE"] = deviceName(device)
+        environment["AIGRAM_SPEECH_DEVICE_RESULT"] = working.resolve(DEVICE_RESULT).toAbsolutePath().toString()
         environment.remove("APPLIO_EXPERIMENTAL_ONNX_INFERENCE")
         environment["OMP_NUM_THREADS"] = CONVERSION_THREADS
         environment["MKL_NUM_THREADS"] = CONVERSION_THREADS
@@ -73,6 +137,26 @@ class ApplioSpeechWorker {
         ).stream().map(Path::toString).toList()
         environment["PATH"] = (paths + environment["PATH"].orEmpty()).joinToString(File.pathSeparator)
         return builder.redirectOutput(ProcessBuilder.Redirect.DISCARD).redirectError(ProcessBuilder.Redirect.DISCARD)
+    }
+
+    internal fun verifiedDevice(device: SpeechComputeDevice, working: Path): String {
+        val result = working.resolve(DEVICE_RESULT)
+        val expected = deviceName(device)
+        if (!Files.isRegularFile(result, LinkOption.NOFOLLOW_LINKS) || Files.size(result) !in 1..16 ||
+            Files.readString(result) != expected
+        ) {
+            if (device == SpeechComputeDevice.CUDA) {
+                throw SpeechGpuUnavailableException()
+            }
+            throw SpeechInferenceFailedException()
+        }
+        return expected
+    }
+
+    private fun deviceName(device: SpeechComputeDevice): String = if (device == SpeechComputeDevice.CUDA) {
+        "cuda:0"
+    } else {
+        "cpu"
     }
 
     fun result(output: Path): SpeechWorkerResult {

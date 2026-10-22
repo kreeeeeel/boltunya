@@ -26,6 +26,7 @@ class SettingsTransformerTest {
         assertNull(mapped.customStyles)
         assertNull(mapped.formatReplies)
         assertNull(mapped.replyProcessingMode)
+        assertNull(mapped.voiceConversionDevice)
     }
 
     @Test

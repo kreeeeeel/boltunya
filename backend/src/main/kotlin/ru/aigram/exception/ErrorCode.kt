@@ -1,6 +1,7 @@
 package ru.aigram.exception
 
 enum class ErrorCode(val status: Int) {
+    SPEECH_GPU_UNAVAILABLE(409),
     INVALID_SPEECH_MODEL_IMPORT(400),
     SPEECH_IMPORTED_MODEL_UNAVAILABLE(409),
     SPEECH_INPUT_DISABLED(409),

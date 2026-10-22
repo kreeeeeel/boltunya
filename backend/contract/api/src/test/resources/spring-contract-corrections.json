@@ -527,18 +527,22 @@
     {
       "feature": "application-error-journal",
       "reason": "Explicit user-requested retirement of the separate application error journal and its GET/DELETE routes. Retain current API failure responses, task status failures and storage/explorer location metadata. Legacy journal files remain untouched."
+    },
+    {
+      "feature": "rvc-compute-device",
+      "reason": "Explicit global CPU or CUDA device for only RVC conversion, preserving CPU default and PATCH omission. Add authenticated on-demand runtime CUDA metadata; strict CUDA never falls back to CPU. Existing settings/state schemas gain only voiceConversionDevice; all other restored fingerprints match the prior contract."
     }
   ],
   "paths": {},
   "operations": {
-    "GET /api/state": "2625c01619ee4a80f5be51090bd3cb409b6a189e799c8d484266866b1f305dab",
+    "GET /api/state": "272402f75cc7e32e1600e19c8c9c3cd823e831165eac6dd3524241893af10d43",
     "POST /api/telegram/connect": "f54221a800fa7bcafa0cd05aca431371d62513d5a6fe87582050cfa966f9291f",
     "POST /api/telegram/submit": "5a41a66b7dea0a0ba7a11b9bb7d56f0e3dccbed36850139d49ba9df862d3b5d4",
     "POST /api/telegram/logout": "ffed244966b19049d612013ff5a8942c164fb2c829d077c3d2866ab11149f27d",
     "GET /api/chats/{chatId}/messages": "8ac2c3ef7b7a49649741b8223e311e5ac69be1cc1ae263245d713cd71d6af9c6",
     "POST /api/chats/{chatId}/messages": "2dc4f1a125871324a444c889c13991da11cc12b0de94bec7b96e9611c7eee736",
     "PUT /api/chats/{chatId}/rule": "15e6d997f20eab8ee7234a3d7733565ae7a5475814023864501c9c3deba1fd5e",
-    "PATCH /api/settings": "74268518164562c08099297b3af64b45d629d6317b1469c10a60b1885b0a784b",
+    "PATCH /api/settings": "b41ad6b03a5f4fd8ed24b253045ee2f8d54c2b3d8777354e49ca24bae1cec602",
     "POST /api/preview": "4aed3a4711c0c7f4ad06be3a8a79797822b7b181bb007bfe641eba1aeb877da9",
     "POST /api/engine/install": "761825042fc769c8c984a78254ab99fe929149685db5c920ed09317ce72fdf5d",
     "POST /api/engine/start": "d0faa73bd93ed02312e65c38010a9b1dca189cf52b5f73c58c83b36f0286264d",
@@ -599,7 +603,7 @@
     "Activity": "d563cf3739360ccaa756911d48b5d079159672a4a66260f3d5b4ed0823807d85",
     "Error": "bbce6ad737e6cc0b480393f6d89e967c6a66fb154106d1918130454a7310f5a7",
     "Reply": "d192e25bd8143b3117e9d7ade1d47cc871fc6bd67e3d828b9bef0f84fa89c107",
-    "State": "c721d87e546963d1fcdfc514582f97f45b1edf59027a2bc863a8382d7bd90084",
+    "State": "fde3f0ebff5da407a8746191ab7e607f0bc98bcae8334b4469f5aa2458fe68ca",
     "MetricSample": "daff2a68bfd28783eea2e9cc95b7b00fb3e98496ef1e1347f259e53f9e6723b5",
     "ActivityDetails": "5129ad36a0dd989af590ad2b16d19da4572a94046dc4f7230486b76fd01d44ed",
     "PreviewJob": "dda403988daab922cb5e640d72f99566d6102dce6880e9f3a2a6b5e62e850969",
@@ -608,7 +612,7 @@
     "ActivityHistoryPage": "50df819509facfbdf0cb207d39330bf88481d5819261728223e8d175f3dc3765",
     "Engine": "9f2021c8ca0d0fe4c4306131ef98722b80c9b4fa0bd1cb4d5b58310f36178493",
     "ChatRule": "9b1ca4d59ea99d29ffec98e641435cd4e265216a357453ca228d619adf6218ac",
-    "Settings": "ce2ee41113dce26c538ee29c79e42aeb53ee02ea7db37d65c9e4f810136413b3",
+    "Settings": "c496fbab9fba2795849ee761c21b1c7dc89f2ba1fdaada9639d5c73075abec73",
     "Preview": "a55d258171342da2d996bd56fe51c5ff2a4a45fa6557c4fe149cb5ef566fdd00",
     "ModelProfile": "1f853294ca55c82a21cf1f90b4287b6d55874261ed2c3f117c36f425e2ec8849",
     "ModelProfileUpdate": "87aac3215b82676440802443f6c2900898944fad518ddcb0d65606c4fdb7c397",
@@ -621,7 +625,7 @@
     "PromptBudgetReport": "6395c5fc1f0264f274059e52eceb08e8f1189a66a137db759985639018d66d84",
     "ProactiveMode": "541035f11125ef1456ecc7966a86de038252f08b7ec2ddadaeaeed57ff6291e3",
     "SendMediaRequest": "a4cacdc71e93edc2711e0b4665704e9e3b1f0fbe87bd0b6ad97c015bc2dc9dfd",
-    "SettingsUpdate": "5d3d2c03c324f6327eef16a3af01c3960b8057375f9d12863f106d4d5f21bd87",
+    "SettingsUpdate": "97eef7a655d74e9c28ba408f492baf29dbeb0c97f4e2c97f5514303bd5598dd3",
     "Text": "bbbfc081fd856615ca09fecb297e0d0556e0dc7f62c0ca25227360d79fa6778e",
     "ModelTaskRouting": "57010528a833ce18515fe49f02a3d4e7b08e70afce7579235521970d21a7303c"
   },
@@ -635,7 +639,8 @@
       "/api/speech/audio/{voiceId}": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
       "/api/chats/{chatId}/voice": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
       "/api/speech/preview": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
-      "/api/speech/models/import": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      "/api/speech/models/import": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "/api/speech/compute": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
     },
     "operations": {
       "POST /api/engine/restart": "32fbefbdd9a356a2043a287cb814386864865556f13bd939ff270b2cd055a56a",
@@ -648,7 +653,8 @@
       "GET /api/speech/audio/{voiceId}": "9d7ae803708ba7258d3c82d4bb08f167f4ac63eb1029853ecf7a313bcb5eef89",
       "POST /api/chats/{chatId}/voice": "2fd894499dcea06807a1716cf8643c4f6cbe690026c51dd32b974fbedba02f1f",
       "POST /api/speech/preview": "43dfc014682cc5b41e891f981251e63cbac52bda7face910353d999b3d7757d8",
-      "POST /api/speech/models/import": "c9865562b1fc3fa587f2dc650c244b0f2d8bd78b850d19ca354c7a94185bc8e1"
+      "POST /api/speech/models/import": "c9865562b1fc3fa587f2dc650c244b0f2d8bd78b850d19ca354c7a94185bc8e1",
+      "GET /api/speech/compute": "953230120706d0a0ad64dcfa839268f316c2f875459c393ac5eb4e49b822e6f8"
     },
     "schemas": {
       "ChatRuleInput": "34278583789fcf7f4f5d64a5d89c3359eea7b4c99bb96d7bd382af9ad228ae68",
@@ -678,7 +684,10 @@
       "SpeechPreviewRequest": "c4159ee7614bb05ae3d0aede4ec8722c4ab0ec21ee664b5ad33ce5fab59fbbd4",
       "SpeechModelImportRequest": "52709af0a97b4ffaa246c0121b3ceae1236bac34f34f59b9d3c93e4a3557b209",
       "VoiceSettingsMode": "e0acc29cda7282fd083ff35ebbaf7cb2203c22b59a8efb01f157a46825e0a270",
-      "SpeechEngineKind": "12b960d12617489740e297b62be4d39e4b749aeda8823283bd22f4f7eaabac61"
+      "SpeechEngineKind": "12b960d12617489740e297b62be4d39e4b749aeda8823283bd22f4f7eaabac61",
+      "SpeechComputeDevice": "990ad8c30527ad7f3af1377cbb054f12e6690f8f942ae8202f88375897192e39",
+      "SpeechComputeReason": "43bc8b8f41f8e36279d68bfa243c7a122da860343d5a4cd019a0ce68e244704d",
+      "SpeechComputeStatus": "8af47ff26f79584a5ee7a335c0909e1e6f480e2e59ae0fbba680ce8546d33246"
     }
   },
   "retired": {

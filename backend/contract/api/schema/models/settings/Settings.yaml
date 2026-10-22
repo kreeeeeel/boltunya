@@ -7,6 +7,10 @@ Settings:
         - defaultModelProfileId
         - deliveryMode
     properties:
+        voiceConversionDevice:
+            allOf:
+                - $ref: ../speech/SpeechComputeDevice.yaml#/SpeechComputeDevice
+            default: cpu
         voiceReplyMode:
             $ref: ../speech/VoiceReplyMode.yaml#/VoiceReplyMode
         voiceInputEnabled:

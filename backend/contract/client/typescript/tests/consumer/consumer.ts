@@ -12,6 +12,7 @@ import {
     type SpeechState,
     type GeneratedVoice,
     type Reply,
+    type SpeechComputeStatus,
 } from "@aigram/api-client";
 
 const settings: ConfigurationParameters = {
@@ -24,6 +25,11 @@ const chats = new ChatsApi(configuration);
 const system = new SystemApi(configuration);
 const models = new ModelsApi(configuration);
 const speech = new SpeechApi(configuration);
+
+export async function voiceCompute(): Promise<SpeechComputeStatus> {
+    await new SettingsApi(configuration).settings({settingsUpdate: {voiceConversionDevice: "cuda"}});
+    return speech.getSpeechComputeStatus();
+}
 
 export async function voiceState(): Promise<SpeechState> {
     return speech.speechState();

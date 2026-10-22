@@ -26,9 +26,11 @@ private val SPEECH_MODELS = setOf(
     "SpeechDownload", "SpeechDownloadPhase", "SpeechState", "VoiceDraftRequest", "VoiceSendRequest",
     "SpeechPreviewRequest", "SpeechModelImportRequest",
     "VoiceSettingsMode", "SpeechEngineKind",
+    "SpeechComputeDevice", "SpeechComputeReason", "SpeechComputeStatus",
 )
 private val SPEECH_PATHS = setOf(
     "/api/speech",
+    "/api/speech/compute",
     "/api/speech/preview",
     "/api/speech/models/import",
     "/api/speech/assets/{assetId}/install",
@@ -38,6 +40,7 @@ private val SPEECH_PATHS = setOf(
 )
 private val SPEECH_OPERATIONS = setOf(
     "GET /api/speech",
+    "GET /api/speech/compute",
     "POST /api/speech/preview",
     "POST /api/speech/models/import",
     "POST /api/speech/assets/{assetId}/install",
@@ -155,8 +158,8 @@ class ContractSourceTest {
                 assertEquals(corrected, hash, "Wire semantics changed for $group: $name")
             }
         }
-        assertEquals(60, document.getValue("paths").jsonObject.size)
-        assertEquals(72, audit.operations().size)
+        assertEquals(61, document.getValue("paths").jsonObject.size)
+        assertEquals(73, audit.operations().size)
         assertEquals(
             (
                 expected.getValue("schemas").jsonObject.keys + extras.keys + REQUEST_MODELS + MESSAGE_EDIT_MODELS +
@@ -164,10 +167,10 @@ class ContractSourceTest {
                 ) - RETIRED_MODELS,
             document.getValue("components").jsonObject.getValue("schemas").jsonObject.keys,
         )
-        assertEquals(121, document.getValue("components").jsonObject.getValue("schemas").jsonObject.size)
+        assertEquals(124, document.getValue("components").jsonObject.getValue("schemas").jsonObject.size)
         assertFalse(Files.exists(Path.of("../api.yaml")), "The old duplicate contract must not remain")
         Files.walk(Path.of("schema")).use { files ->
-            assertEquals(131L, files.filter { Files.isRegularFile(it) && it.toString().endsWith(".yaml") }.count())
+            assertEquals(134L, files.filter { Files.isRegularFile(it) && it.toString().endsWith(".yaml") }.count())
         }
     }
 

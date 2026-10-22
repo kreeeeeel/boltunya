@@ -2,6 +2,8 @@ package ru.aigram.speech
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import ru.aigram.domain.speech.SpeechComputeDevice
+import ru.aigram.exception.impl.SpeechGpuUnavailableException
 import ru.aigram.exception.impl.SpeechInferenceFailedException
 import java.io.ByteArrayInputStream
 import java.nio.file.Files
@@ -27,8 +29,10 @@ class ApplioSpeechWorkerTest {
 
         assertEquals(Path.of(request.runtimeDirectory).resolve("env/python.exe").toRealPath().toString(), command[0])
         assertEquals("-s", command[1])
-        assertEquals(Path.of(request.runtimeDirectory).resolve("core.py").toRealPath().toString(), command[2])
-        assertEquals("infer", command[3])
+        assertEquals("-B", command[2])
+        assertEquals("-", command[3])
+        assertEquals(Path.of(request.runtimeDirectory).resolve("core.py").toRealPath().toString(), command[4])
+        assertEquals("infer", command[5])
         assertTrue(command.containsAll(listOf("--pth-path", "--index-path", "--f0-method", "rmvpe")))
         assertFalse(command.any { it.contains("private synthetic transcript") || it.endsWith(".bat") })
         assertEquals("-1", worker.environment()["CUDA_VISIBLE_DEVICES"])
@@ -48,6 +52,66 @@ class ApplioSpeechWorkerTest {
         assertEquals(directory.resolve("torch").toString(), worker.environment()["TORCH_HOME"])
         assertEquals(ProcessBuilder.Redirect.DISCARD, worker.redirectError())
         assertEquals(ProcessBuilder.Redirect.DISCARD, worker.redirectOutput())
+    }
+
+    @Test
+    fun `explicit CUDA selects device zero and requires actual Applio config before and after inference`() {
+        val worker = ApplioSpeechWorker().builder(
+            request().copy(conversionDevice = SpeechComputeDevice.CUDA),
+            directory,
+        )
+        val bootstrap = ApplioSpeechWorker().conversionInput().toString(Charsets.UTF_8)
+
+        assertEquals("0", worker.environment()["CUDA_VISIBLE_DEVICES"])
+        assertEquals("cuda:0", worker.environment()["AIGRAM_SPEECH_COMPUTE_DEVICE"])
+        assertTrue(bootstrap.contains("not torch.cuda.is_available()"))
+        assertTrue(bootstrap.indexOf("str(Config().device) != expected") < bootstrap.indexOf("command[\"cli\"].main"))
+        assertTrue(
+            bootstrap.lastIndexOf("str(Config().device) != expected") > bootstrap.indexOf("command[\"cli\"].main"),
+        )
+        assertFalse(worker.command().contains("--device"))
+        assertFalse(worker.command().contains("-c"))
+        assertFalse(worker.command().contains(bootstrap))
+        assertFalse(bootstrap.contains(".to(\"cpu\")"))
+    }
+
+    @Test
+    fun `successful process requires an exact bounded device receipt and never accepts CPU as CUDA`() {
+        val worker = ApplioSpeechWorker()
+        assertFailsWith<SpeechGpuUnavailableException> { worker.verifiedDevice(SpeechComputeDevice.CUDA, directory) }
+        val receipt = Files.writeString(directory.resolve("applio-device.txt"), "cpu")
+        assertEquals("cpu", worker.verifiedDevice(SpeechComputeDevice.CPU, directory))
+        assertFailsWith<SpeechGpuUnavailableException> { worker.verifiedDevice(SpeechComputeDevice.CUDA, directory) }
+        Files.writeString(receipt, "cuda:0")
+        assertEquals("cuda:0", worker.verifiedDevice(SpeechComputeDevice.CUDA, directory))
+        assertFailsWith<SpeechInferenceFailedException> { worker.verifiedDevice(SpeechComputeDevice.CPU, directory) }
+        Files.writeString(receipt, "cuda:0".repeat(100))
+        assertFailsWith<SpeechGpuUnavailableException> { worker.verifiedDevice(SpeechComputeDevice.CUDA, directory) }
+    }
+
+    @Test
+    fun `capability command only reads torch metadata without tensors weights or inference`() {
+        val request = request()
+        val builder = ApplioSpeechWorker().computeBuilder(
+            Path.of(request.runtimeDirectory),
+            directory,
+            directory.resolve("status.json"),
+        )
+        val code = ApplioSpeechWorker().computeInput().toString(Charsets.UTF_8)
+
+        assertTrue(code.contains("torch.cuda.is_available()"))
+        assertTrue(code.contains("torch.cuda.get_device_properties(0)"))
+        assertFalse(code.contains("torch.load"))
+        assertFalse(code.contains("runpy"))
+        assertFalse(code.contains("Config"))
+        assertFalse(code.contains("torch.tensor"))
+        assertEquals("-", builder.command()[3])
+        assertEquals(directory.resolve("status.json").toAbsolutePath().toString(), builder.command()[4])
+        assertFalse(builder.command().contains("-c"))
+        assertFalse(builder.command().contains(code))
+        assertEquals("0", builder.environment()["CUDA_VISIBLE_DEVICES"])
+        assertEquals(directory.toString(), builder.environment()["TEMP"])
+        assertEquals(ProcessBuilder.Redirect.DISCARD, builder.redirectOutput())
     }
 
     @Test

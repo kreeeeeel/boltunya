@@ -8,4 +8,5 @@ data class SpeechWorkerResult(
     val sampleRate: Int = 0,
     val samples: Long = 0,
     val error: String = "",
+    val computeDevice: String = "",
 )

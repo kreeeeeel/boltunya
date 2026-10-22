@@ -3,6 +3,8 @@ info:
     title: Aigram local API
     version: 2.4.0
 paths:
+    /api/speech/compute:
+        $ref: ./operations/speech.yaml#/speechCompute
     /api/speech/preview:
         $ref: ./operations/speech.yaml#/speechPreview
     /api/speech/models/import:
@@ -125,6 +127,12 @@ paths:
         $ref: ./operations/chats.yaml#/chatsByChatIdMessagesByMessageIdEdit
 components:
     schemas:
+        SpeechComputeDevice:
+            $ref: ./models/speech/SpeechComputeDevice.yaml#/SpeechComputeDevice
+        SpeechComputeReason:
+            $ref: ./models/speech/SpeechComputeReason.yaml#/SpeechComputeReason
+        SpeechComputeStatus:
+            $ref: ./models/speech/SpeechComputeStatus.yaml#/SpeechComputeStatus
         VoiceReplyMode:
             $ref: ./models/speech/VoiceReplyMode.yaml#/VoiceReplyMode
         DraftOutput:

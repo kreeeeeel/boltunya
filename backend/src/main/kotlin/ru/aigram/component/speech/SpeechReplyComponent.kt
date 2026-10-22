@@ -45,7 +45,7 @@ class SpeechReplyComponent(
         }
         catalog.model(selectedModel, SpeechAssetKind.SYNTHESIS)
         return replies.enqueueDraft(chatId, selectedModel) {
-            voices.draft(text, chatId, ownerId, selectedModel, selectedSpeed)
+            voices.draft(text, chatId, ownerId, selectedModel, selectedSpeed, preferences.conversionDevice)
         }
     }
 

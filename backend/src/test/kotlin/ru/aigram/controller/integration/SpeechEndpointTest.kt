@@ -1,5 +1,8 @@
 package ru.aigram.controller.integration
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.aigram.ai.AiTestServices
@@ -9,6 +12,7 @@ import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.domain.ai.ReplyResult
 import ru.aigram.domain.settings.VoiceReplyMode
 import ru.aigram.domain.speech.OutgoingVoiceNote
+import ru.aigram.domain.speech.SpeechComputeDevice
 import ru.aigram.speech.reply.VoiceDraftStore
 import ru.aigram.storage.SettingsStore
 import java.net.URI
@@ -25,6 +29,36 @@ import kotlin.test.assertTrue
 class SpeechEndpointTest {
     @TempDir
     lateinit var directory: Path
+
+    @Test
+    fun `RVC device is optional strict persistent and compute metadata remains authenticated and lazy`() =
+        withServer { settings, gateway, _, base ->
+            assertEquals(SpeechComputeDevice.CPU, settings.get().voiceConversionDevice)
+            assertEquals(401, request(base, "/api/speech/compute", cookie = false).statusCode())
+            val before = request(base, "/api/speech/compute")
+            assertEquals(200, before.statusCode())
+            val capability = Json.parseToJsonElement(before.body()).jsonObject
+            assertEquals("not-installed", capability.getValue("reason").jsonPrimitive.content)
+            assertEquals("false", capability.getValue("runtimeInstalled").jsonPrimitive.content)
+            assertFalse(Files.exists(directory.resolve("speech/work")))
+            assertEquals(
+                200,
+                request(base, "/api/settings", "PATCH", """{"voiceConversionDevice":"cuda"}""").statusCode(),
+            )
+            assertEquals(200, request(base, "/api/settings", "PATCH", """{"showTyping":false}""").statusCode())
+            assertEquals(SpeechComputeDevice.CUDA, SettingsStore(directory).get().voiceConversionDevice)
+            val saved = settings.get()
+            Stream.of(
+                """{"voiceConversionDevice":null}""",
+                """{"voiceConversionDevice":"auto"}""",
+                """{"voiceConversionDevice":0}""",
+            ).forEach { body ->
+                assertEquals(400, request(base, "/api/settings", "PATCH", body).statusCode())
+                assertEquals(saved, settings.get())
+            }
+            assertTrue(gateway.sentVoices.isEmpty())
+            assertTrue(settings.get().paused)
+        }
 
     @Test
     fun `voice settings persist independently and reject invalid partial updates atomically`() =

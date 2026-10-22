@@ -5,11 +5,13 @@ import org.springframework.core.io.Resource
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
 import ru.aigram.component.media.MediaContentService
+import ru.aigram.component.speech.SpeechComputeComponent
 import ru.aigram.component.speech.SpeechPreviewComponent
 import ru.aigram.component.speech.SpeechReplyComponent
 import ru.aigram.contract.api.SpeechApi
 import ru.aigram.contract.dto.Ok
 import ru.aigram.contract.dto.PreviewJob
+import ru.aigram.contract.dto.SpeechComputeStatus
 import ru.aigram.contract.dto.SpeechModelImportRequest
 import ru.aigram.contract.dto.SpeechPreviewRequest
 import ru.aigram.contract.dto.SpeechState
@@ -30,7 +32,11 @@ class SpeechController(
     private val telegram: TelegramGateway,
     private val media: MediaContentService,
     private val request: HttpServletRequest,
+    private val compute: SpeechComputeComponent,
 ) : SpeechApi {
+    override fun getSpeechComputeStatus(): ResponseEntity<SpeechComputeStatus> =
+        ResponseEntity.ok(compute.status().toContract())
+
     override fun previewSpeech(speechPreviewRequest: SpeechPreviewRequest): ResponseEntity<PreviewJob> =
         ResponseEntity.ok(
             previews.enqueue(

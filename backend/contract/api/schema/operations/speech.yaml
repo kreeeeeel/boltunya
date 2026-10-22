@@ -1,3 +1,17 @@
+speechCompute:
+    get:
+        operationId: getSpeechComputeStatus
+        tags: [speech]
+        description: Probe installed Applio PyTorch CUDA metadata on demand without inference or downloads.
+        responses:
+            '200':
+                description: Current selected device and installed runtime capability
+                content:
+                    application/json:
+                        schema:
+                            $ref: ../models/speech/SpeechComputeStatus.yaml#/SpeechComputeStatus
+            '401':
+                description: Local authentication required
 speechPreview:
     post:
         operationId: previewSpeech

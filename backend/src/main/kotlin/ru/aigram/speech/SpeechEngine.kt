@@ -2,6 +2,7 @@ package ru.aigram.speech
 
 import org.springframework.stereotype.Component
 import ru.aigram.domain.speech.SpeechAssetKind
+import ru.aigram.domain.speech.SpeechComputeDevice
 import ru.aigram.domain.speech.SpeechEngineKind
 import ru.aigram.domain.speech.SpeechWave
 import ru.aigram.exception.impl.InvalidSpeechRequestException
@@ -44,7 +45,12 @@ class SpeechEngine(
         ).text
     }
 
-    fun synthesize(text: String, modelId: String, speed: Double = 1.0): SpeechWave {
+    fun synthesize(
+        text: String,
+        modelId: String,
+        speed: Double = 1.0,
+        conversionDevice: SpeechComputeDevice = SpeechComputeDevice.CPU,
+    ): SpeechWave {
         val model = catalog.model(modelId, SpeechAssetKind.SYNTHESIS)
         if (text.isBlank() || text.length > MAX_TEXT_LENGTH || !speed.isFinite() || speed !in 0.5..2.0) {
             throw InvalidSpeechRequestException()
@@ -53,7 +59,7 @@ class SpeechEngine(
         val wave = Files.createTempFile(workingDirectory, "voice-", ".wav")
         try {
             val response = if (model.asset.engine == SpeechEngineKind.APPLIO_RVC) {
-                convert(text, speed, model, wave)
+                convert(text, speed, model, wave, conversionDevice)
             } else {
                 execute(
                     SpeechWorkerRequest(
@@ -83,7 +89,13 @@ class SpeechEngine(
         }
     }
 
-    private fun convert(text: String, speed: Double, model: SpeechAssetDefinition, output: Path): SpeechWorkerResult {
+    private fun convert(
+        text: String,
+        speed: Double,
+        model: SpeechAssetDefinition,
+        output: Path,
+        conversionDevice: SpeechComputeDevice,
+    ): SpeechWorkerResult {
         if (model.baseModelId.isEmpty() ||
             catalog.model(model.baseModelId, SpeechAssetKind.SYNTHESIS).asset.engine != SpeechEngineKind.SHERPA
         ) {
@@ -100,6 +112,7 @@ class SpeechEngine(
                     output = output.toString(),
                     runtimeDirectory = catalog.location(CONVERSION_RUNTIME_ID).toString(),
                     indexFile = model.indexFile,
+                    conversionDevice = conversionDevice,
                 ),
             )
         } finally {

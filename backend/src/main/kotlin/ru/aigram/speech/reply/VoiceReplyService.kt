@@ -6,6 +6,7 @@ import ru.aigram.domain.ai.ReplyResult
 import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.events.ActivityPhase
 import ru.aigram.domain.speech.SpeechAssetKind
+import ru.aigram.domain.speech.SpeechComputeDevice
 import ru.aigram.domain.speech.VoicePreferences
 import ru.aigram.exception.impl.InvalidSpeechRequestException
 import ru.aigram.exception.impl.ReplyCancelledException
@@ -58,16 +59,44 @@ class VoiceReplyService(
             preferences.synthesisModel,
             preferences.speechRate,
             false,
+            preferences.conversionDevice,
         ) {
             settings.rule(chatId) == storedRule && settings.get().voicePreferences(rule) == preferences
         }
     }
 
-    fun sample(text: String, modelId: String, speed: Double, ownerId: String): ReplyResult =
-        synthesize(ReplyResult(text, 0, 0.0, modelId), "", ownerId, modelId, speed, true) { true }
+    fun sample(
+        text: String,
+        modelId: String,
+        speed: Double,
+        ownerId: String,
+        conversionDevice: SpeechComputeDevice = settings.get().voiceConversionDevice,
+    ): ReplyResult = synthesize(
+        ReplyResult(text, 0, 0.0, modelId),
+        "",
+        ownerId,
+        modelId,
+        speed,
+        true,
+        conversionDevice,
+    ) { true }
 
-    fun draft(text: String, chatId: String, ownerId: String, modelId: String, speed: Double): ReplyResult =
-        synthesize(ReplyResult(text, 0, 0.0, modelId), chatId, ownerId, modelId, speed, false) { true }
+    fun draft(
+        text: String,
+        chatId: String,
+        ownerId: String,
+        modelId: String,
+        speed: Double,
+        conversionDevice: SpeechComputeDevice = settings.get().voiceConversionDevice,
+    ): ReplyResult = synthesize(
+        ReplyResult(text, 0, 0.0, modelId),
+        chatId,
+        ownerId,
+        modelId,
+        speed,
+        false,
+        conversionDevice,
+    ) { true }
 
     private fun synthesize(
         result: ReplyResult,
@@ -76,6 +105,7 @@ class VoiceReplyService(
         modelId: String,
         speed: Double,
         previewOnly: Boolean,
+        conversionDevice: SpeechComputeDevice,
         current: () -> Boolean,
     ): ReplyResult {
         if (result.text.isBlank() || result.text.length > MAX_SPOKEN_CHARACTERS) {
@@ -84,7 +114,7 @@ class VoiceReplyService(
         tracing.phase(ActivityPhase.SYNTHESIZING)
         val output = drafts.output()
         val started = System.nanoTime()
-        val wave = engine.synthesize(result.text, modelId, speed)
+        val wave = engine.synthesize(result.text, modelId, speed, conversionDevice)
         try {
             val note = codec.toVoiceNote(wave.path, output)
             if (Thread.currentThread().isInterrupted || telegram.status().userId != ownerId ||

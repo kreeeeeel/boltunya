@@ -15,6 +15,7 @@ fun AppSettings.voicePreferences(rule: ChatRule): VoicePreferences = if (
         rule.voiceRecognitionModel,
         rule.voiceSynthesisModel,
         rule.voiceSpeechRate,
+        voiceConversionDevice,
     )
 } else {
     VoicePreferences(
@@ -24,5 +25,6 @@ fun AppSettings.voicePreferences(rule: ChatRule): VoicePreferences = if (
         voiceRecognitionModel,
         voiceSynthesisModel,
         voiceSpeechRate,
+        voiceConversionDevice,
     )
 }

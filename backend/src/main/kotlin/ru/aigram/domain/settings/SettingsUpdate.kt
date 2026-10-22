@@ -11,6 +11,7 @@ import ru.aigram.domain.chat.DeliveryMode
 import ru.aigram.domain.chat.GroupReplyMode
 import ru.aigram.domain.chat.WritingStyle
 import ru.aigram.domain.memory.MemoryCollectionScope
+import ru.aigram.domain.speech.SpeechComputeDevice
 
 @Serializable
 data class SettingsUpdate(
@@ -30,6 +31,7 @@ data class SettingsUpdate(
     val showTyping: Boolean? = null,
     val formatReplies: Boolean? = null,
     val voiceInputEnabled: Boolean? = null,
+    val voiceConversionDevice: SpeechComputeDevice? = null,
     val voiceReplyMode: VoiceReplyMode? = null,
     @field:Min(0) @field:Max(100) val voiceReplyProbability: Int? = null,
     @field:Size(max = 80) val voiceRecognitionModel: String? = null,

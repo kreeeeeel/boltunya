@@ -8,6 +8,7 @@ import ru.aigram.exception.impl.InvalidSpeechRequestException
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.speech.SpeechAssetCatalog
 import ru.aigram.speech.reply.VoiceReplyService
+import ru.aigram.storage.SettingsStore
 import ru.aigram.telegram.TelegramGateway
 
 private const val MAX_PREVIEW_CHARACTERS = 4096
@@ -19,15 +20,17 @@ class SpeechPreviewComponent(
     private val catalog: SpeechAssetCatalog,
     private val voices: VoiceReplyService,
     private val resources: ResourceCatalog,
+    private val settings: SettingsStore,
 ) {
     fun enqueue(text: String, modelId: String, speed: Double): PreviewJob {
         if (text.isBlank() || text.length > MAX_PREVIEW_CHARACTERS || !speed.isFinite() || speed !in 0.5..2.0) {
             throw InvalidSpeechRequestException()
         }
         val status = telegram.status()
+        val device = settings.get().voiceConversionDevice
         catalog.model(modelId, SpeechAssetKind.SYNTHESIS)
         return replies.enqueueToolDraft(resources.text("speech/preview-title.txt"), modelId, text) {
-            voices.sample(text, modelId, speed, status.userId)
+            voices.sample(text, modelId, speed, status.userId, device)
         }
     }
 }

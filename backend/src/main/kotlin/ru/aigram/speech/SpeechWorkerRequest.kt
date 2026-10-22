@@ -1,6 +1,7 @@
 package ru.aigram.speech
 
 import kotlinx.serialization.Serializable
+import ru.aigram.domain.speech.SpeechComputeDevice
 
 @Serializable
 data class SpeechWorkerRequest(
@@ -14,4 +15,5 @@ data class SpeechWorkerRequest(
     val speed: Float = 1f,
     val runtimeDirectory: String = "",
     val indexFile: String = "",
+    val conversionDevice: SpeechComputeDevice = SpeechComputeDevice.CPU,
 )

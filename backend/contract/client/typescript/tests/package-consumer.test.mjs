@@ -69,7 +69,7 @@ after(() => {
     rmSync(consumer, { recursive: true, force: true });
 });
 
-test("the installed tarball exposes all 72 operations in nine API groups and compiles typed imports", () => {
+test("the installed tarball exposes all 73 operations in nine API groups and compiles typed imports", () => {
     const apis = Object.values(sdk).filter(
         (value) =>
             typeof value === "function" &&
@@ -84,7 +84,8 @@ test("the installed tarball exposes all 72 operations in nine API groups and com
             ).length,
         0,
     );
-    assert.equal(operationCount, 72);
+    assert.equal(operationCount, 73);
+    assert.equal(typeof sdk.SpeechApi.prototype.getSpeechComputeStatus, "function");
     assert.equal(typeof sdk.ModelsApi.prototype.restartEngine, "function");
     assert.equal(typeof sdk.ChatsApi.prototype.send, "function");
     assert.equal(typeof sdk.ChatsApi.prototype.editMessage, "function");

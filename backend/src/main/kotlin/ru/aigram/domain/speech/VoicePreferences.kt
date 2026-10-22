@@ -9,4 +9,5 @@ data class VoicePreferences(
     val recognitionModel: String,
     val synthesisModel: String,
     val speechRate: Double,
+    val conversionDevice: SpeechComputeDevice = SpeechComputeDevice.CPU,
 )

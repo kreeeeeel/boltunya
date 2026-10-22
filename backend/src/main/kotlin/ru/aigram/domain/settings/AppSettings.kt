@@ -12,6 +12,7 @@ import ru.aigram.domain.chat.DeliveryMode
 import ru.aigram.domain.chat.GroupReplyMode
 import ru.aigram.domain.chat.WritingStyle
 import ru.aigram.domain.memory.MemoryCollectionScope
+import ru.aigram.domain.speech.SpeechComputeDevice
 
 @Serializable
 data class AppSettings(
@@ -32,6 +33,7 @@ data class AppSettings(
     val showTyping: Boolean = true,
     val formatReplies: Boolean = false,
     val voiceInputEnabled: Boolean = false,
+    val voiceConversionDevice: SpeechComputeDevice = SpeechComputeDevice.CPU,
     val voiceReplyMode: VoiceReplyMode = VoiceReplyMode.TEXT,
     @field:Min(0) @field:Max(100) val voiceReplyProbability: Int = 50,
     @field:Size(max = 80) val voiceRecognitionModel: String = "whisper-tiny",

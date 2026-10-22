@@ -1,0 +1,3 @@
+SpeechComputeReason:
+    type: string
+    enum: [ready, not-installed, cuda-unavailable, probe-failed]

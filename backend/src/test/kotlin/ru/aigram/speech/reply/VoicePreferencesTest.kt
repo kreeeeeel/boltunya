@@ -6,6 +6,7 @@ import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.chat.VoiceSettingsMode
 import ru.aigram.domain.settings.AppSettings
 import ru.aigram.domain.settings.VoiceReplyMode
+import ru.aigram.domain.speech.SpeechComputeDevice
 import ru.aigram.storage.SettingsStore
 import java.nio.file.Files
 import java.nio.file.Path
@@ -35,6 +36,31 @@ class VoicePreferencesTest {
         assertEquals("whisper-tiny", voice.recognitionModel)
         assertEquals("piper-en-amy", voice.synthesisModel)
         assertEquals(1.4, voice.speechRate)
+        assertEquals(SpeechComputeDevice.CPU, voice.conversionDevice)
+    }
+
+    @Test
+    fun `RVC device stays global even for chat overrides and persists without changing speech preferences`() {
+        val settings = SettingsStore(directory)
+        val rule = ChatRule(voiceSettingsMode = VoiceSettingsMode.OVERRIDE, voiceSpeechRate = 1.3)
+        settings.saveRule("42", rule)
+        val effectiveRule = settings.rule("42")
+        val voice = settings.get().voicePreferences(effectiveRule)
+
+        settings.update { it.copy(voiceConversionDevice = SpeechComputeDevice.CUDA) }
+        settings.update { it.copy(showTyping = false) }
+        val restored = SettingsStore(directory)
+        val restoredRule = restored.rule("42")
+
+        assertEquals(effectiveRule, settings.rule("42"))
+        assertEquals(effectiveRule, restoredRule)
+        assertEquals(
+            voice.copy(conversionDevice = SpeechComputeDevice.CUDA),
+            restored.get().voicePreferences(restoredRule),
+        )
+        assertEquals(SpeechComputeDevice.CUDA, restored.get().voicePreferences(restoredRule).conversionDevice)
+        assertEquals(SpeechComputeDevice.CUDA, restored.get().voicePreferences(ChatRule()).conversionDevice)
+        assertEquals(1.3, restored.get().voicePreferences(restoredRule).speechRate)
     }
 
     @Test

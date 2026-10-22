@@ -1,6 +1,8 @@
 SettingsUpdate:
     type: object
     properties:
+        voiceConversionDevice:
+            $ref: ../speech/SpeechComputeDevice.yaml#/SpeechComputeDevice
         voiceReplyMode:
             $ref: ../speech/VoiceReplyMode.yaml#/VoiceReplyMode
         voiceInputEnabled:

@@ -2,11 +2,14 @@ package ru.aigram.speech
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import ru.aigram.domain.speech.SpeechComputeDevice
 import ru.aigram.exception.impl.InvalidSpeechRequestException
+import ru.aigram.exception.impl.SpeechGpuUnavailableException
 import ru.aigram.exception.impl.SpeechInferenceFailedException
 import ru.aigram.exception.impl.SpeechNotInstalledException
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
@@ -14,6 +17,33 @@ import kotlin.test.assertTrue
 class SpeechEngineTest {
     @TempDir
     lateinit var directory: Path
+
+    @Test
+    fun `CUDA applies only to RVC conversion and unavailable GPU never retries CPU or returns base speech`() {
+        listOf("sherpa-runtime", "piper-ru-irina", "applio-runtime", "rvc-alice").stream()
+            .forEach { installSpeechFixture(directory, it) }
+        val requests = CopyOnWriteArrayList<SpeechWorkerRequest>()
+        val execute = SpeechProcessExecutor { _, request, _ ->
+            requests.add(request)
+            if (request.operation == "conversion") {
+                throw SpeechGpuUnavailableException()
+            }
+            Files.write(Path.of(request.output), byteArrayOf(1))
+            SpeechWorkerResult(sampleRate = 22050, samples = 22050)
+        }
+        val downloader = SpeechDownloadClient { _, _, _ -> throw SpeechInferenceFailedException() }
+        speechCatalog(directory, downloader).use { catalog ->
+            val engine = SpeechEngine(directory, catalog, execute)
+            assertFailsWith<SpeechGpuUnavailableException> {
+                engine.synthesize("Synthetic speech", "rvc-alice", 1.2, SpeechComputeDevice.CUDA)
+            }
+            assertEquals(listOf("synthesis", "conversion"), requests.stream().map { it.operation }.toList())
+            assertEquals(SpeechComputeDevice.CPU, requests.first().conversionDevice)
+            assertEquals(SpeechComputeDevice.CUDA, requests.last().conversionDevice)
+            assertEquals(1.2f, requests.first().speed)
+            Files.list(directory.resolve("speech/work")).use { assertEquals(0L, it.count()) }
+        }
+    }
 
     @Test
     fun `synthesis preserves exact Unicode text and returns a caller owned wave without protocol files`() {

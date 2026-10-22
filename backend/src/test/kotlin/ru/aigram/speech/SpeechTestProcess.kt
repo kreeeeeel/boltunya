@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
 
 class SpeechTestProcess : Process() {
+    val input = ByteArrayOutputStream()
     var terminated = false
     var awaited = false
 
@@ -15,7 +16,7 @@ class SpeechTestProcess : Process() {
 
     override fun getErrorStream(): InputStream = ByteArrayInputStream(byteArrayOf())
 
-    override fun getOutputStream(): OutputStream = ByteArrayOutputStream()
+    override fun getOutputStream(): OutputStream = input
 
     override fun waitFor(): Int {
         awaited = true

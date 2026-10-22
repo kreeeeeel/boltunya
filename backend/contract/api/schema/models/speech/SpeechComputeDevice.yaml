@@ -1,0 +1,4 @@
+SpeechComputeDevice:
+    type: string
+    description: Device used only by Applio RVC conversion. CUDA is explicit and never falls back to CPU.
+    enum: [cpu, cuda]

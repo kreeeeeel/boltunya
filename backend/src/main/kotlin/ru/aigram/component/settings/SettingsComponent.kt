@@ -65,6 +65,7 @@ class SettingsComponent(
                 showTyping = update.showTyping ?: it.showTyping,
                 formatReplies = update.formatReplies ?: it.formatReplies,
                 voiceInputEnabled = update.voiceInputEnabled ?: it.voiceInputEnabled,
+                voiceConversionDevice = update.voiceConversionDevice ?: it.voiceConversionDevice,
                 voiceReplyMode = update.voiceReplyMode ?: it.voiceReplyMode,
                 voiceReplyProbability = update.voiceReplyProbability ?: it.voiceReplyProbability,
                 voiceRecognitionModel = update.voiceRecognitionModel ?: it.voiceRecognitionModel,

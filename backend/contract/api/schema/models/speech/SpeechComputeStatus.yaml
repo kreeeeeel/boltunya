@@ -1,0 +1,24 @@
+SpeechComputeStatus:
+    type: object
+    description: On-demand installed RVC runtime capability, not a report of the last inference.
+    required: [selectedDevice, runtimeInstalled, cudaAvailable, gpuName, gpuMemoryBytes, torchVersion, cudaVersion, reason]
+    properties:
+        selectedDevice:
+            $ref: ./SpeechComputeDevice.yaml#/SpeechComputeDevice
+        runtimeInstalled:
+            type: boolean
+        cudaAvailable:
+            type: boolean
+        gpuName:
+            type: string
+        gpuMemoryBytes:
+            type: integer
+            format: int64
+            minimum: 0
+            description: Total memory of CUDA device 0, not available free memory.
+        torchVersion:
+            type: string
+        cudaVersion:
+            type: string
+        reason:
+            $ref: ./SpeechComputeReason.yaml#/SpeechComputeReason
