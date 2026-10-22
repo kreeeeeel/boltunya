@@ -2,6 +2,20 @@
 
 Release versions are assigned by Windows CI. Each GitHub release includes the first dated entry below, the tested source commit and its verification run.
 
+## 2026-10-22 — Event refresh lifecycle and response ordering
+
+### Fixed
+
+- Suspend event-history and active-detail polling while the window is hidden. Refresh on return, abort obsolete reads and release timers/listeners when the view closes. This only suspends display reads; it does not cancel queued AI work.
+- Prevent older history responses from reverting confirmed ratings, counts, storage metadata or pagination cursors. Combine overlapping reads and require a fresh response after explicit actions; retain loaded older pages during ordinary head refreshes.
+- Protect detail feedback and event changes from late requests. Preserve error reporting and retry on returning to the visible window.
+
+### Verification and limitations
+
+- The same actual React-hook workload with synthetic API responses and real Node 24.11.1 timers recorded hidden history GETs 1 → 0, active-detail GETs 5 → 0 and retained timers 2 → 0 over 5.2 seconds. Concurrent head requests fell from 2 to 1. The obsolete result is ignored and a required fresh follow-up preserves the final rating, total and cursor before explicit refresh resolves. Source hashes and raw evidence are retained; no network or real profile was used. These are request-scheduling/correctness measurements, not a whole-application CPU or rendering benchmark.
+- Opened the changed portable before project checks, preserving Telegram authorization, credentials, settings, installed voices and manual notes with AI paused. Passed 640 Kotlin cases (18 optional/platform skips), 12 SDK cases, 328 UI cases including 15 focused lifecycle/race cases, 40 Electron cases, the icon script and all 143 browser scenarios. Lint, styles, types and formatting passed; native window/tray/startup and all four updater smokes passed. English/Russian, both themes and narrow screenshots were reviewed. One existing late-pagination test now waits until its synthetic GET actually starts before resetting; all late-response assertions remain. Exact published-payload verification follows successful Windows CI in the release notes.
+- This stage does not change backend storage or model inference. A separate Ollama audit identified duplicate simultaneous probes; its implementation is deferred to preserve immediate external model-installation/removal detection. Model-profile request races remain a separate follow-up.
+
 ## 2026-10-22 — Shared speech updates and indexed event pagination
 
 ### Changed

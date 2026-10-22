@@ -1,5 +1,7 @@
 # Local event history
 
+The history list and an open active-event dialog refresh only while the window is visible. Returning reads current data immediately; closing the view releases its display requests and timers. AI jobs continue independently. Explicit refresh after an action supersedes older reads, so late responses cannot restore cleared events or undo saved feedback. Ordinary first-page refresh retains previously loaded older pages and their continuation cursor.
+
 Event cards and details resolve their avatar from the current Telegram chat with the same chat ID. Archived TDLib file URLs are never used as a photo fallback: file identifiers can be reassigned after reconnecting. Missing/deleted photos and global memory tasks show initials instead of an unrelated image.
 
 Events and full requested model traces are stored under `<profile>/activity/<telegram-owner-id>/`. The live state contains active tasks and a small recent window; `/api/activity/history` loads terminal events in cursor pages. Details load one trace by ID. Queued or running tasks found after a restart become `interrupted`; they are never silently resent or resumed.
