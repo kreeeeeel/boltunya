@@ -91,3 +91,13 @@ Dialog rows render in pages of 40 with a Gravity Loader on downward scrolling. S
 Group memory also keeps a small account-specific author index in `memory/<accountId>/<chatId>/PARTICIPANTS.json`: sender ID, display name, Telegram username and source recency. It is assembled from messages actually observed or fetched for that conversation, using cached Telegram users. It does not fetch the complete member list, download extra histories or generate personality descriptions. Older backfill cannot overwrite identity metadata from newer messages.
 
 The file retains at most 1,000 recent participants. The model receives at most 80 identity records within the memory character budget; message text is not stored in this index. Excluded source messages are omitted, and policy changes also hide previously collected records whose last source was excluded. Account and chat directories remain isolated.
+
+## Editor refresh lifecycle
+
+Memory display reads pause while the window is hidden or its settings section is inactive, and refresh when it becomes visible again. This stops only GET requests; it does not cancel queued collection, change the hourly schedule or enable AI. Closing an editor releases its read request and timer.
+
+Each editor keeps one read lane. Reload, background polling and update events cannot apply older responses after a successful save, collection start or cancellation. An unchanged complete document retains its identity; the notes revision alone cannot identify changes to collection progress. Different visible editors still have independent lanes, without a shared private cache.
+
+Background reads preserve draft notes and the revision on which they were based. Save retains text typed while its submitted version is being saved. A real revision conflict remains visible and is not retried automatically. Explicit reload reads a fresh base; switching chats does not reuse another chat's draft or accept its late response.
+
+Chat-note edits retain the account captured during access checks and reject an owner change before writing. Shared global notes keep their existing behavior, including editing before Telegram sign-in. Notes revisions remain hashes of the notes text; they are not secrets or versions of collection progress.

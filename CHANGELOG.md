@@ -2,6 +2,23 @@
 
 Release versions are assigned by Windows CI. Each GitHub release includes the first dated entry below, the tested source commit and its verification run.
 
+## 2026-10-22 — Consistent memory editors and owner-bound note saves
+
+### Fixed
+
+- Suspend memory display polling while the window is hidden or its settings section is inactive; refresh on return and release GET requests, timers and listeners on close. Preserve mounted notes drafts without a shared private cache.
+- Coordinate polling, reload and update events within each editor. Ignore obsolete or aborted responses after save, collection start/cancel or a chat change; retain unchanged complete-document identity. Preserve drafts, optimistic-concurrency conflicts and text typed while a save is pending.
+- Guard duplicate in-flight editor actions. A confirmed global collection POST followed by a failed display GET shows the read error without retrying the POST or pretending the queued job was undone. Different visible editors still have independent read lanes.
+- Capture the chat-note owner before validation and check it inside the synchronized store write. A request interrupted by an account switch cannot write its old payload into the new account's chat notes or return the new account's document. Preserve shared global notes, signed-out global editing, normal validation, real revision conflicts and the existing Markdown format.
+
+### Verification and limitations
+
+- The paired actual React workload used identical synthetic API promises and 5.2 real hidden seconds. Two consumers' extra hidden GETs and timers fell from two to zero; obsolete reads no longer restore cancelled progress or a previous saved revision. Maximum current-generation concurrent GETs fell from two to one, and reload awaits a fresh follow-up. Inactive settings sections retain drafts without polling. Separate visible editors still read independently; ignored abort signals can leave obsolete physical transports unresolved. Initial Consumer invocation attempts rose from four to six, including conditional draft initialization: this is request scheduling and correctness, not a CPU, overall rendering or inference speedup claim. Raw counters and matching source hashes are retained locally under `build/memory-lifecycle-audit-*`.
+- A compiled-production reproduction paused an edit after access, switched synthetic accounts through another real component request and resumed validation. Five of five baseline rounds wrote into the wrong account's chat file; all five corrected rounds reject the request and leave both files unchanged. Six new regressions cover account changes, store-monitor ordering, ordinary validation, revision conflicts, persistence and shared signed-out global notes. Equal notes hashes across resources are valid and are not themselves an authorization defect. No actual profile, Telegram messages, Ollama or model inference was used.
+- The scope-test helper now starts collection once and lets its existing executor advance the queue, matching runtime scheduling. It no longer introduces a concurrent test-thread tick; assertions and timing bounds are unchanged. Its seven initial rules are written in one equivalent setup update. Two separately retained optional stress attempts stopped on Windows `AccessDeniedException` during synthetic atomic file replacements (12 executed / 11 passed, then 16 / 15); neither is a successful 40-case repeat. The historical sharing actor is unknown, and no production storage reliability fix is claimed.
+- Opened the changed portable before checks and reopened final local-2 after correcting a React initialization lint failure, without disabling the rule. Telegram authorization, credentials, settings, installed voices and manual notes were preserved with AI paused. Final gates passed 655 Kotlin cases (18 optional/platform skips), 12 SDK, 362 UI including 25 focused cases, 40 Electron, the icon script and all 143 browser scenarios. Lint/styles/types/format, native window/tray/startup and four updater smokes passed. Memory controls, both themes, English/Russian and a narrow window were reviewed; incidental generated images were restored. Exact downloaded-payload checks follow successful Windows CI in the release notes.
+- Backend collection intervals, queue scheduling, inference and memory storage formats are unchanged. Shared cross-editor reads and other backend archive/feedback storage boundaries remain separate candidates.
+
 ## 2026-10-22 — Responsive queue controls during archive reads
 
 ### Fixed
