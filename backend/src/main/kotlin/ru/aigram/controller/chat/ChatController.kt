@@ -7,9 +7,7 @@ import ru.aigram.component.chat.ChatHistoryComponent
 import ru.aigram.component.chat.ContextExclusionComponent
 import ru.aigram.component.chat.MessageDeletionComponent
 import ru.aigram.component.chat.MessageEditingComponent
-import ru.aigram.component.media.MediaSendingComponent
 import ru.aigram.contract.api.ChatsApi
-import ru.aigram.contract.dto.ChatGallery
 import ru.aigram.contract.dto.ChatRuleInput
 import ru.aigram.contract.dto.ContextExclusionUpdate
 import ru.aigram.contract.dto.Message
@@ -20,13 +18,10 @@ import ru.aigram.contract.dto.MessageEditOptions
 import ru.aigram.contract.dto.MessageEditRequest
 import ru.aigram.contract.dto.MessageLink
 import ru.aigram.contract.dto.Ok
-import ru.aigram.contract.dto.SendMediaRequest
-import ru.aigram.contract.dto.SendStickerRequest
 import ru.aigram.contract.dto.Text
 import ru.aigram.domain.chat.MessageDeletionScope
 import ru.aigram.transformer.chat.toContract
 import ru.aigram.transformer.chat.toDomain
-import ru.aigram.transformer.media.toDomain as toMediaDomain
 
 @RestController
 class ChatController(
@@ -34,7 +29,6 @@ class ChatController(
     private val communication: ChatCommunicationComponent,
     private val exclusions: ContextExclusionComponent,
     private val deletion: MessageDeletionComponent,
-    private val media: MediaSendingComponent,
     private val editing: MessageEditingComponent,
 ) : ChatsApi {
     override fun messageEditOptions(chatId: String, messageId: String): ResponseEntity<MessageEditOptions> =
@@ -47,9 +41,6 @@ class ChatController(
     ): ResponseEntity<Message> = ResponseEntity.ok(
         editing.edit(chatId, messageId, messageEditRequest.toDomain()).toContract(),
     )
-
-    override fun chatGallery(chatId: String, around: String): ResponseEntity<ChatGallery> =
-        ResponseEntity.ok(history.gallery(chatId, around).toContract())
 
     override fun deleteMessage(
         chatId: String,
@@ -96,16 +87,6 @@ class ChatController(
 
     override fun send(chatId: String, text: Text): ResponseEntity<Ok> {
         communication.send(chatId, text.text, text.entities.orEmpty().stream().map { it.toDomain() }.toList())
-        return ResponseEntity.ok(Ok(true))
-    }
-
-    override fun sendAttachments(chatId: String, sendMediaRequest: SendMediaRequest): ResponseEntity<Ok> {
-        media.send(chatId, sendMediaRequest.toMediaDomain())
-        return ResponseEntity.ok(Ok(true))
-    }
-
-    override fun sendSticker(chatId: String, sendStickerRequest: SendStickerRequest): ResponseEntity<Ok> {
-        media.sticker(chatId, sendStickerRequest.stickerId)
         return ResponseEntity.ok(Ok(true))
     }
 }

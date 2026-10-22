@@ -9,7 +9,6 @@ import ru.aigram.component.system.StateComponent
 import ru.aigram.contract.api.SystemApi
 import ru.aigram.contract.dto.CacheStatistics
 import ru.aigram.contract.dto.DiagnosticReport
-import ru.aigram.contract.dto.MetricSample
 import ru.aigram.contract.dto.Ok
 import ru.aigram.contract.dto.State
 import ru.aigram.contract.dto.StorageLocationReport
@@ -34,9 +33,6 @@ class SystemController(
 
     override fun storageLocations(): ResponseEntity<StorageLocationReport> =
         ResponseEntity.ok(diagnostics.locations().toContract())
-
-    override fun getMetrics(): ResponseEntity<List<MetricSample>> =
-        ResponseEntity.ok(resources.metrics().stream().map { it.toContract() }.toList())
 
     override fun getCacheStatistics(): ResponseEntity<CacheStatistics> =
         ResponseEntity.ok(resources.cache().toContract())

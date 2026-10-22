@@ -29,9 +29,7 @@ dependencies {
     implementation("tools.jackson.module:jackson-module-kotlin")
     implementation("org.springframework.ai:spring-ai-ollama:2.0.1")
     implementation("org.springframework.ai:spring-ai-openai:2.0.1")
-    implementation("com.github.oshi:oshi-core:7.7.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
-    implementation("org.jsoup:jsoup:1.23.2")
     implementation("org.commonmark:commonmark:0.30.0")
     implementation("org.commonmark:commonmark-ext-autolink:0.30.0")
     implementation("org.apache.commons:commons-compress:1.28.0")
@@ -43,7 +41,6 @@ dependencies {
     implementation("org.bytedeco:ffmpeg:8.1.2-1.5.14")
     runtimeOnly("org.bytedeco:javacpp:1.5.14:windows-x86_64")
     runtimeOnly("org.bytedeco:ffmpeg:8.1.2-1.5.14:windows-x86_64")
-    implementation("io.modelcontextprotocol.sdk:mcp:2.1.0")
     implementation(platform("it.tdlight:tdlight-java-bom:3.5.7+td.1.8.68"))
     implementation("it.tdlight:tdlight-java")
     runtimeOnly("it.tdlight:tdlight-natives:4.0.594:windows_amd64")
@@ -79,7 +76,7 @@ tasks.test {
         "org.bytedeco.javacpp.cachedir",
         rootProject.layout.buildDirectory.dir("speech-verification/codec/native-cache").get().asFile.absolutePath,
     )
-    val liveFlags = listOf("TIHO_LIVE_AI", "TIHO_LIVE_INTERNET", "TIHO_LIVE_MEMORY", "AIGRAM_LIVE_SPEECH")
+    val liveFlags = listOf("TIHO_LIVE_AI", "TIHO_LIVE_MEMORY", "AIGRAM_LIVE_SPEECH")
     (liveFlags + listOf("TIHO_TEST_MODELS", "TIHO_TEST_CASES", "TIHO_TEST_OLLAMA_URL")).forEach { key ->
         inputs.property(key, providers.environmentVariable(key).orElse(""))
     }

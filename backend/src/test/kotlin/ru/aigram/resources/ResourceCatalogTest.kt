@@ -8,7 +8,7 @@ class ResourceCatalogTest {
     fun `renders resources without evaluating replacement values as templates`() {
         val resources = ResourceCatalog()
         val text = resources.render(
-            "prompts/ru/weather/period.txt",
+            "testing/resource-template.txt",
             mapOf(
                 "value0" to "{{secret}}",
                 "secret" to "hidden",

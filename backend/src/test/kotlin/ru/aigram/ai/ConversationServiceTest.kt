@@ -6,7 +6,6 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
-import ru.aigram.ai.research.ResearchPlanner
 import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.memory.MemoryContext
@@ -41,7 +40,7 @@ class ConversationServiceTest {
         server.start()
         try {
             val reply = AiTestServices("http://127.0.0.1:${server.address.port}").reply(
-                ChatRule(internetAccess = false),
+                ChatRule(),
                 listOf(ChatMessage("1", "synthetic", "hey, how is it going?", false, 0)),
                 memory = MemoryContext(ownerSummary = "Обычно пишет на русском"),
             )
@@ -49,51 +48,6 @@ class ConversationServiceTest {
             assertEquals(1, calls.get())
         } finally {
             server.stop(0)
-        }
-    }
-
-    @Test
-    fun `rounded verified currency values are regenerated and repeated inaccuracies are blocked`() {
-        listOf(false, true).stream().forEach { repeatInaccuracy ->
-            LiveResearchFixtures().use { fixtures ->
-                val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
-                val replies = AtomicInteger()
-                server.createContext("/api/chat") { exchange ->
-                    val body = Json.parseToJsonElement(String(exchange.requestBody.readAllBytes())).jsonObject
-                    val content = if (body.containsKey("format")) {
-                        """{"kind":"search","query":"официальный курс евро к рублю"}"""
-                    } else if (replies.incrementAndGet() == 1 || repeatInaccuracy) {
-                        "евро по ЦБ 93,77 рубля на 16.10.2026"
-                    } else {
-                        "евро по ЦБ 93,7693 рубля на 16.10.2026"
-                    }
-                    val response = "{\"message\":{\"content\":" + Json.encodeToString(content) + "}}"
-                    val bytes = response.toByteArray()
-                    exchange.responseHeaders.set("Content-Type", "application/json")
-                    exchange.sendResponseHeaders(200, bytes.size.toLong())
-                    exchange.responseBody.use { it.write(bytes) }
-                }
-                server.start()
-                try {
-                    val services = AiTestServices(
-                        "http://127.0.0.1:${server.address.port}",
-                        prompts = PromptBuilder(clock = fixtures.clock),
-                        researcher = fixtures.researcher(),
-                        planner = ResearchPlanner(clock = fixtures.clock),
-                    )
-                    val history = listOf(
-                        ChatMessage("1", "synthetic", "Какой официальный курс евро к рублю?", false, 0),
-                    )
-                    if (repeatInaccuracy) {
-                        assertFailsWith<InvalidModelReplyException> { services.reply(ChatRule(), history) }
-                    } else {
-                        assertTrue(services.reply(ChatRule(), history).text.contains("93,7693"))
-                    }
-                    assertEquals(2, replies.get())
-                } finally {
-                    server.stop(0)
-                }
-            }
         }
     }
 
@@ -121,7 +75,7 @@ class ConversationServiceTest {
         server.start()
         try {
             val result = AiTestServices("http://127.0.0.1:${server.address.port}").reply(
-                ChatRule(model = "deepseek-r1:8b", maxTokens = 128, internetAccess = false),
+                ChatRule(model = "deepseek-r1:8b", maxTokens = 128),
                 listOf(ChatMessage("1", "test", "Как дела?", false, 0)),
             )
             assertEquals(listOf(2176, 4608), budgets)
@@ -151,7 +105,7 @@ class ConversationServiceTest {
         try {
             assertFailsWith<EmptyModelReplyException> {
                 AiTestServices("http://127.0.0.1:${server.address.port}").reply(
-                    ChatRule(model = "deepseek-r1:8b", internetAccess = false),
+                    ChatRule(model = "deepseek-r1:8b"),
                     listOf(ChatMessage("1", "test", "Как дела?", false, 0)),
                 )
             }
@@ -177,7 +131,7 @@ class ConversationServiceTest {
         try {
             val client = AiTestServices("http://127.0.0.1:${server.address.port}")
             val result = client.reply(
-                ChatRule(internetAccess = false),
+                ChatRule(),
                 listOf(
                     ChatMessage("1", "42", "Привет", true, 1, senderName = "Owner", senderId = "user:100"),
                     ChatMessage("2", "42", "Как дела?", false, 2, senderName = "Anna", senderId = "user:200"),
@@ -219,7 +173,7 @@ class ConversationServiceTest {
         try {
             val client = AiTestServices("http://127.0.0.1:${server.address.port}")
             val result = client.reply(
-                ChatRule(internetAccess = false),
+                ChatRule(),
                 listOf(
                     ChatMessage("1", "42", "да, договорились", true, 0, automated = true),
                     ChatMessage("2", "42", "Так завтра в то же время?", false, 0),
@@ -259,7 +213,7 @@ class ConversationServiceTest {
         server.start()
         try {
             val result = AiTestServices("http://127.0.0.1:${server.address.port}").reply(
-                ChatRule(model = "qwen3:4b", internetAccess = false),
+                ChatRule(model = "qwen3:4b"),
                 listOf(ChatMessage("1", "synthetic", "напиши рецепт сырников", false, 0)),
             )
             assertTrue(result.text.startsWith("500 г творога"))
@@ -285,7 +239,7 @@ class ConversationServiceTest {
         server.start()
         try {
             val reply = AiTestServices("http://127.0.0.1:${server.address.port}").reply(
-                ChatRule(internetAccess = false),
+                ChatRule(),
                 listOf(ChatMessage("1", "42", "Когда отправишь файл?", false, 0)),
             )
             assertEquals(answer, reply.text)
@@ -315,7 +269,7 @@ class ConversationServiceTest {
         server.start()
         try {
             val result = AiTestServices("http://127.0.0.1:${server.address.port}").reply(
-                ChatRule(maxTokens = 32, internetAccess = false),
+                ChatRule(maxTokens = 32),
                 listOf(ChatMessage("1", "synthetic", "напиши рецепт сырников", false, 0)),
             )
             assertEquals(listOf(32, 512), budgets)

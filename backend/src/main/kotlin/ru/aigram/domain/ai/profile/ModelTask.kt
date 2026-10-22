@@ -1,3 +1,3 @@
 package ru.aigram.domain.ai.profile
 
-enum class ModelTask { REPLY, MEMORY, RESEARCH, VISION }
+enum class ModelTask { REPLY, MEMORY, VISION }

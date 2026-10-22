@@ -2,6 +2,8 @@ package ru.aigram.speech.reply
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.VoiceSettingsMode
 import ru.aigram.domain.memory.MemorySource
 import ru.aigram.memory.MemoryBatchBuilder
 import ru.aigram.memory.MemoryProcessor
@@ -30,6 +32,14 @@ class SpeechMemoryContextTest {
         }
         SpeechHistoryFixture(directory, process).use { fixture ->
             fixture.enable()
+            fixture.settings.update { it.copy(voiceInputEnabled = false) }
+            fixture.settings.saveRule(
+                "42",
+                ChatRule(
+                    voiceSettingsMode = VoiceSettingsMode.OVERRIDE,
+                    voiceInputEnabled = true,
+                ),
+            )
             fixture.telegram.messages = listOf(
                 fixture.voice(1, "Owner speech".padEnd(40, '.'), outgoing = true),
                 fixture.voice(2, "Contact speech".padEnd(40, '.')),

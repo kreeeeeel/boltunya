@@ -22,6 +22,9 @@ class ModelTargetResolver(
     private val catalog: ModelCatalog = ModelCatalog(),
 ) {
     fun startupWarmModel(): String? {
+        if (settings.get().paused) {
+            return null
+        }
         val target = resolve(ModelTask.REPLY, ChatRule())
         return if (target.provider == ModelProvider.OLLAMA &&
             target.baseUrl.trimEnd('/') == configuration.ollamaUrl.trimEnd('/')

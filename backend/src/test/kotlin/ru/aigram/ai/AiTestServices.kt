@@ -4,10 +4,6 @@ import ru.aigram.ai.model.ChatCompletionService
 import ru.aigram.ai.model.ModelPolicies
 import ru.aigram.ai.model.ModelReplyReader
 import ru.aigram.ai.model.SpringAiModelFactory
-import ru.aigram.ai.research.InternetResearcher
-import ru.aigram.ai.research.ResearchFactGuard
-import ru.aigram.ai.research.ResearchLinkPolicy
-import ru.aigram.ai.research.ResearchPlanner
 import ru.aigram.automation.activity.ReplyTraceScope
 import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.ChatRule
@@ -19,8 +15,6 @@ import java.nio.file.Files
 class AiTestServices(
     baseUrl: String = "http://127.0.0.1:11434",
     prompts: PromptBuilder = PromptBuilder(),
-    researcher: InternetResearcher = InternetResearcher(),
-    planner: ResearchPlanner = ResearchPlanner(),
     val tracing: ReplyTraceScope = ReplyTraceScope(),
 ) {
     val runtime = OllamaRuntime(baseUrl)
@@ -38,11 +32,6 @@ class AiTestServices(
     val conversation = ConversationService(
         completion,
         prompts,
-        researcher,
-        planner,
-        ResearchLinkPolicy(),
-        ResearchFactGuard(resources),
-        resources,
         tracing,
     )
 

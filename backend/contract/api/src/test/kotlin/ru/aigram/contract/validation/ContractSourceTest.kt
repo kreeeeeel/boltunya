@@ -25,6 +25,7 @@ private val SPEECH_MODELS = setOf(
     "VoiceReplyMode", "DraftOutput", "GeneratedVoice", "SpeechAsset", "SpeechAssetKind",
     "SpeechDownload", "SpeechDownloadPhase", "SpeechState", "VoiceDraftRequest", "VoiceSendRequest",
     "SpeechPreviewRequest", "SpeechModelImportRequest",
+    "VoiceSettingsMode", "SpeechEngineKind",
 )
 private val SPEECH_PATHS = setOf(
     "/api/speech",
@@ -62,6 +63,34 @@ private val MESSAGE_EDIT_MODELS = setOf(
 )
 private const val MESSAGE_EDIT_PATH = "/api/chats/{chatId}/messages/{messageId}/edit"
 private val IDLE_MESSAGE_MODELS = setOf("ProactiveMessageMode", "ReplyInterruptionMode", "ReplyProcessingMode")
+private val RETIRED_PATHS = setOf(
+    "/api/search/connection",
+    "/api/search/check",
+    "/api/appearance",
+    "/api/chats/{chatId}/gallery",
+    "/api/chats/{chatId}/attachments",
+    "/api/chats/{chatId}/stickers",
+    "/api/metrics",
+)
+private val RETIRED_OPERATIONS = setOf(
+    "GET /api/search/connection", "POST /api/search/connection", "DELETE /api/search/connection",
+    "POST /api/search/check", "GET /api/appearance", "PUT /api/appearance", "GET /api/chats/{chatId}/gallery",
+    "POST /api/chats/{chatId}/attachments", "POST /api/chats/{chatId}/stickers", "GET /api/metrics",
+)
+private val RETIRED_MODELS = setOf(
+    "SearchConnection", "SearchConnectionState", "SearchConnectionRequest", "SourceLinksMode",
+    "AppearanceSettings", "AppearanceSettingsInput", "AppearanceMode", "ChatGallery", "SendMediaRequest",
+    "SendStickerRequest", "MetricSample", "OutgoingMediaKind",
+)
+
+// These extracted schemas predate fingerprinted additions. Pin their reviewed pre-removal definitions as well.
+private val RETIRED_EXTRACTED_HASHES = mapOf(
+    "SearchConnectionState" to "cb7e3d4e9be29e206441f3c6b480885a37f0dc858db044e354f37aec1b64a673",
+    "SearchConnectionRequest" to "833ed5dfd253ca40277bff968d68f8dc8b6038a4b0053730b0e5515374bee902",
+    "SourceLinksMode" to "48cde6b0b3e563419dab8329ab6bf6d77dce8760ca6f856e8cffd29d203bc9c6",
+    "AppearanceMode" to "344530c5366cb8e949efc6d4ca1f29f439af2ed6a70e758e99159fd8b69c32d8",
+    "OutgoingMediaKind" to "b29cc978aa28fc337ed01c0d1dc5dfb6124c5becf36794cac753f0c41d22abbf",
+)
 
 class ContractSourceTest {
     @TempDir
@@ -73,6 +102,7 @@ class ContractSourceTest {
         val expected = fixture("wire-baseline.json")
         val corrections = fixture("spring-contract-corrections.json")
         val additions = corrections.getValue("additions").jsonObject
+        val retirements = corrections.getValue("retired").jsonObject
         val extras = fixture("extracted-models.json")
         val audit = ContractWireAudit(document)
         val actual = audit.snapshot(
@@ -92,32 +122,65 @@ class ContractSourceTest {
             REQUEST_MODELS + MESSAGE_EDIT_MODELS + IDLE_MESSAGE_MODELS + SPEECH_MODELS,
             additions.getValue("schemas").jsonObject.keys,
         )
+        assertEquals(RETIRED_PATHS, retirements.getValue("paths").jsonObject.keys)
+        assertEquals(RETIRED_OPERATIONS, retirements.getValue("operations").jsonObject.keys)
+        assertEquals(RETIRED_MODELS, retirements.getValue("schemas").jsonObject.keys)
         listOf("paths", "operations", "schemas").stream().forEach { group ->
             val old = expected.getValue(group).jsonObject
             val current = actual.getValue(group).jsonObject
             val reviewed = corrections.getValue(group).jsonObject
             val added = additions.getValue(group).jsonObject
+            val retired = retirements.getValue(group).jsonObject
+            val historicalExtras = if (group == "schemas") {
+                RETIRED_EXTRACTED_HASHES
+            } else {
+                emptyMap()
+            }
             assertTrue(old.keys.containsAll(reviewed.keys), "$group corrections must name original baseline entries")
             assertTrue(old.keys.intersect(added.keys).isEmpty(), "$group additions must be new entries")
-            assertTrue(current.keys.containsAll(old.keys), "Original $group names must never disappear")
-            assertEquals(old.keys + added.keys, current.keys, "Unreviewed $group names changed")
+            assertTrue((old.keys + added.keys + historicalExtras.keys).containsAll(retired.keys))
+            retired.entries.stream().forEach { (name, hash) ->
+                val previous = added[name] ?: reviewed[name] ?: old[name]
+                    ?: historicalExtras[name]?.let(::JsonPrimitive)
+                assertEquals(previous, hash, "The retired $group fingerprint must remain the previously reviewed value")
+            }
+            assertTrue(current.keys.containsAll(old.keys - retired.keys), "Unreviewed original $group disappeared")
+            assertEquals((old.keys + added.keys) - retired.keys, current.keys, "Unreviewed $group names changed")
             current.entries.stream().forEach { (name, hash) ->
                 val corrected = added[name] ?: reviewed[name] ?: old.getValue(name)
                 assertEquals(corrected, hash, "Wire semantics changed for $group: $name")
             }
         }
-        assertEquals(68, document.getValue("paths").jsonObject.size)
-        assertEquals(84, audit.operations().size)
+        assertEquals(61, document.getValue("paths").jsonObject.size)
+        assertEquals(74, audit.operations().size)
         assertEquals(
-            expected.getValue("schemas").jsonObject.keys + extras.keys + REQUEST_MODELS + MESSAGE_EDIT_MODELS +
-                IDLE_MESSAGE_MODELS + SPEECH_MODELS,
+            (
+                expected.getValue("schemas").jsonObject.keys + extras.keys + REQUEST_MODELS + MESSAGE_EDIT_MODELS +
+                    IDLE_MESSAGE_MODELS + SPEECH_MODELS
+                ) - RETIRED_MODELS,
             document.getValue("components").jsonObject.getValue("schemas").jsonObject.keys,
         )
-        assertEquals(134, document.getValue("components").jsonObject.getValue("schemas").jsonObject.size)
+        assertEquals(124, document.getValue("components").jsonObject.getValue("schemas").jsonObject.size)
         assertFalse(Files.exists(Path.of("../api.yaml")), "The old duplicate contract must not remain")
         Files.walk(Path.of("schema")).use { files ->
-            assertEquals(144L, files.filter { Files.isRegularFile(it) && it.toString().endsWith(".yaml") }.count())
+            assertEquals(134L, files.filter { Files.isRegularFile(it) && it.toString().endsWith(".yaml") }.count())
         }
+    }
+
+    @Test
+    fun `chat speech preferences inherit by default without changing global patch defaults`() {
+        val schemas = ContractSource(Path.of("schema")).load().getValue("components").jsonObject
+            .getValue("schemas").jsonObject
+        val input = schemas.getValue("ChatRuleInput").jsonObject.getValue("properties").jsonObject
+        assertEquals(JsonPrimitive("inherit"), input.getValue("voiceSettingsMode").jsonObject["default"])
+        assertEquals(JsonPrimitive(false), input.getValue("voiceInputEnabled").jsonObject["default"])
+        assertEquals(JsonPrimitive("text"), input.getValue("voiceReplyMode").jsonObject["default"])
+        assertEquals(JsonPrimitive(50), input.getValue("voiceReplyProbability").jsonObject["default"])
+        assertEquals(JsonPrimitive("whisper-tiny"), input.getValue("voiceRecognitionModel").jsonObject["default"])
+        assertEquals(JsonPrimitive("piper-ru-irina"), input.getValue("voiceSynthesisModel").jsonObject["default"])
+        val update = schemas.getValue("SettingsUpdate").jsonObject.getValue("properties").jsonObject
+        assertFalse(update.getValue("voiceReplyMode").jsonObject.containsKey("default"))
+        assertFalse(update.getValue("voiceSpeechRate").jsonObject.containsKey("default"))
     }
 
     @Test
@@ -129,7 +192,7 @@ class ContractSourceTest {
         assertEquals(JsonPrimitive(false), settings.getValue("formatReplies").jsonObject["default"])
         assertFalse(update.getValue("formatReplies").jsonObject.containsKey("default"))
         assertFalse(update.getValue("replyProcessingMode").jsonObject.containsKey("default"))
-        listOf("Reply" to "entities", "Text" to "entities", "SendMediaRequest" to "captionEntities")
+        listOf("Reply" to "entities", "Text" to "entities")
             .stream().forEach { (name, property) ->
                 val model = schemas.getValue(name).jsonObject
                 val entity = model.getValue("properties").jsonObject.getValue(property).jsonObject
@@ -232,7 +295,6 @@ class ContractSourceTest {
         listOf(
             "ModelProfileOptions",
             "ModelCapabilities",
-            "AppearanceSettings",
             "ActivityHistorySettings",
         ).stream().forEach { name ->
             assertTrue(schemas.getValue(name).jsonObject.getValue("required").jsonArray.isNotEmpty(), name)
@@ -260,7 +322,7 @@ class ContractSourceTest {
         }.collect(Collectors.toMap({ it.first }, { it.second }))
 
         assertEquals(
-            setOf("ModelProfileUpdate.options", "ModelProfileUpdate.capabilities", "AppearanceSettingsInput.tokens"),
+            setOf("ModelProfileUpdate.options", "ModelProfileUpdate.capabilities"),
             markers.keys,
         )
         markers.entries.stream().forEach { (name, property) ->
@@ -343,7 +405,7 @@ class ContractSourceTest {
                 .mapToInt { it.jsonObject.getValue("origins").jsonArray.size }.sum(),
         )
         val enumHashes = extras.entries.stream().filter {
-            it.value.jsonObject.getValue("kind") == JsonPrimitive("enum")
+            it.key !in RETIRED_MODELS && it.value.jsonObject.getValue("kind") == JsonPrimitive("enum")
         }
             .map { WireFingerprint().digest(schemas.getValue(it.key)) }.toList()
         assertEquals(enumHashes.size.toLong(), enumHashes.stream().distinct().count(), "Identical enums must be shared")
@@ -354,7 +416,7 @@ class ContractSourceTest {
                 assertEquals(1, values.size, "Each model belongs in its own file: $file")
                 assertEquals(0, inlineEnums(values.values.single(), topLevel = true), "Inline enum remains: $file")
             }
-        extras.entries.stream().forEach { (name, metadata) ->
+        extras.entries.stream().filter { it.key !in RETIRED_MODELS }.forEach { (name, metadata) ->
             val schema = schemas.getValue(name).jsonObject
             if (metadata.jsonObject.getValue("kind") == JsonPrimitive("enum")) {
                 assertTrue(schema.getValue("enum").jsonArray.isNotEmpty(), name)

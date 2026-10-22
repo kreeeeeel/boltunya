@@ -1,10 +1,14 @@
 package ru.aigram.domain.chat
 
+import jakarta.validation.constraints.DecimalMax
+import jakarta.validation.constraints.DecimalMin
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import ru.aigram.domain.settings.VoiceReplyMode
 import ru.aigram.validation.InputFormat
 import ru.aigram.validation.InputRule
 
@@ -28,6 +32,13 @@ data class ChatRule(
     val deliveryMode: DeliveryMode = DeliveryMode.INHERIT,
     val analyzePhotos: Boolean = false,
     val aiStickers: Boolean = false,
+    val voiceSettingsMode: VoiceSettingsMode = VoiceSettingsMode.INHERIT,
+    val voiceInputEnabled: Boolean = false,
+    val voiceReplyMode: VoiceReplyMode = VoiceReplyMode.TEXT,
+    @field:Min(0) @field:Max(100) val voiceReplyProbability: Int = 50,
+    @field:NotBlank @field:Size(max = 80) val voiceRecognitionModel: String = "whisper-tiny",
+    @field:NotBlank @field:Size(max = 80) val voiceSynthesisModel: String = "piper-ru-irina",
+    @field:DecimalMin("0.5") @field:DecimalMax("2.0") val voiceSpeechRate: Double = 1.0,
     @field:Size(max = 4000)
     val instructions: String = "",
     @field:Min(4)
@@ -43,8 +54,6 @@ data class ChatRule(
     @field:Max(100)
     val creativity: Int = 60,
     val emoji: Boolean = true,
-    val internetAccess: Boolean = true,
-    val sourceLinks: SourceLinks = SourceLinks.REQUESTED,
     val matchMyStyle: Boolean = true,
     val useMemory: Boolean = true,
     @Transient

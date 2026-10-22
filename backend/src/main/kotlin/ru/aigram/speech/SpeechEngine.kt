@@ -2,6 +2,7 @@ package ru.aigram.speech
 
 import org.springframework.stereotype.Component
 import ru.aigram.domain.speech.SpeechAssetKind
+import ru.aigram.domain.speech.SpeechEngineKind
 import ru.aigram.domain.speech.SpeechWave
 import ru.aigram.exception.impl.InvalidSpeechRequestException
 import ru.aigram.exception.impl.SpeechInferenceFailedException
@@ -15,6 +16,7 @@ private const val MAX_TEXT_LENGTH = 4096
 private const val MAX_OUTPUT_BYTES = 64L * 1024 * 1024
 private const val MAX_AUDIO_MILLIS = 600000L
 private const val RUNTIME_ID = "sherpa-runtime"
+private const val CONVERSION_RUNTIME_ID = "applio-runtime"
 
 @Component
 class SpeechEngine(
@@ -50,16 +52,20 @@ class SpeechEngine(
         Files.createDirectories(workingDirectory)
         val wave = Files.createTempFile(workingDirectory, "voice-", ".wav")
         try {
-            val response = execute(
-                SpeechWorkerRequest(
-                    "synthesis",
-                    catalog.location(modelId).toString(),
-                    model.modelFile,
-                    output = wave.toString(),
-                    text = text,
-                    speed = speed.toFloat(),
-                ),
-            )
+            val response = if (model.asset.engine == SpeechEngineKind.APPLIO_RVC) {
+                convert(text, speed, model, wave)
+            } else {
+                execute(
+                    SpeechWorkerRequest(
+                        "synthesis",
+                        catalog.location(modelId).toString(),
+                        model.modelFile,
+                        output = wave.toString(),
+                        text = text,
+                        speed = speed.toFloat(),
+                    ),
+                )
+            }
             val duration = if (response.sampleRate > 0) {
                 response.samples * 1000 / response.sampleRate
             } else {
@@ -74,6 +80,30 @@ class SpeechEngine(
         } catch (exception: Exception) {
             Files.deleteIfExists(wave)
             throw exception
+        }
+    }
+
+    private fun convert(text: String, speed: Double, model: SpeechAssetDefinition, output: Path): SpeechWorkerResult {
+        if (model.baseModelId.isEmpty() ||
+            catalog.model(model.baseModelId, SpeechAssetKind.SYNTHESIS).asset.engine != SpeechEngineKind.SHERPA
+        ) {
+            throw InvalidSpeechRequestException()
+        }
+        val base = synthesize(text, model.baseModelId, speed)
+        try {
+            return execute(
+                SpeechWorkerRequest(
+                    "conversion",
+                    catalog.location(model.asset.id).toString(),
+                    model.modelFile,
+                    input = base.path.toString(),
+                    output = output.toString(),
+                    runtimeDirectory = catalog.location(CONVERSION_RUNTIME_ID).toString(),
+                    indexFile = model.indexFile,
+                ),
+            )
+        } finally {
+            Files.deleteIfExists(base.path)
         }
     }
 

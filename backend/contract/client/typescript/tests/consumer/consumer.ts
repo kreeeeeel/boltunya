@@ -128,3 +128,16 @@ export async function editCaption(): Promise<string> {
     const updated = await chats.editMessage({chatId, messageId, messageEditRequest});
     return updated.text;
 }
+
+export async function editText(): Promise<string> {
+    const chatId = "42";
+    const messageId = "100";
+    const original: MessageEditOptions = await chats.messageEditOptions({chatId, messageId});
+    const messageEditRequest: MessageEditRequest = {
+        text: "😀 hello",
+        entities: [{offset: 3, length: 5, kind: "spoiler"}],
+        revision: original.revision,
+    };
+    const updated = await chats.editMessage({chatId, messageId, messageEditRequest});
+    return updated.text;
+}

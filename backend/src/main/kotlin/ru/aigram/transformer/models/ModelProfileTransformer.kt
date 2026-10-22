@@ -131,15 +131,25 @@ fun ContractModelProfileUpdate.toDomain(): DomainModelProfileUpdate = DomainMode
 )
 
 fun DomainModelTaskRouting.toContract(): ModelTaskRouting = ModelTaskRouting(
-    enabled, parallelIndependentTasks, replyProfileId, memoryProfileId,
-    researchProfileId, visionProfileId, replyModel, memoryModel, researchModel,
+    enabled,
+    parallelIndependentTasks,
+    replyProfileId,
+    memoryProfileId,
+    visionProfileId,
+    replyModel,
+    memoryModel,
     visionModel,
 )
 
 fun ModelTaskRouting.toDomain(): DomainModelTaskRouting = DomainModelTaskRouting(
-    enabled, parallelIndependentTasks, replyProfileId, memoryProfileId,
-    researchProfileId, visionProfileId, replyModel.orEmpty(), memoryModel.orEmpty(),
-    researchModel.orEmpty(), visionModel.orEmpty(),
+    enabled,
+    parallelIndependentTasks,
+    replyProfileId,
+    memoryProfileId,
+    visionProfileId,
+    replyModel.orEmpty(),
+    memoryModel.orEmpty(),
+    visionModel.orEmpty(),
 )
 
 fun DomainModelProfileTestResult.toContract(): ModelProfileTestResult = ModelProfileTestResult(

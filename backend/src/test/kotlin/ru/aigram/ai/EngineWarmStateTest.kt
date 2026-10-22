@@ -4,12 +4,48 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.stream.IntStream
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class EngineWarmStateTest {
     @TempDir lateinit var directory: Path
+
+    @Test
+    fun `paused automation rejects warmup and cancels an owned warmup before resuming`() {
+        val enabled = AtomicBoolean()
+        ControlledWarmServer().start().use { server ->
+            EngineManager(directory, server.runtime, automaticEnabled = enabled::get).use { engine ->
+                try {
+                    engine.warm("qwen3:1.7b")
+                    assertEquals("", engine.status().warming)
+                    assertEquals(0, server.count("qwen3:1.7b"))
+
+                    enabled.set(true)
+                    engine.warm("qwen3:1.7b")
+                    assertTrue(server.awaitWarm("qwen3:1.7b"))
+                    enabled.set(false)
+                    engine.pauseInference()
+                    assertEquals("", engine.status().warming)
+                    engine.warm("gemma3:4b")
+                    assertEquals(0, server.count("gemma3:4b"))
+                    server.release("qwen3:1.7b")
+
+                    enabled.set(true)
+                    engine.warm("gemma3:4b")
+                    assertTrue(server.awaitWarm("gemma3:4b"))
+                    server.release("gemma3:4b")
+                    assertTrue(await { engine.status().warming.isEmpty() })
+                    assertEquals(1, server.count("qwen3:1.7b"))
+                    assertEquals(1, server.count("gemma3:4b"))
+                } finally {
+                    server.release("qwen3:1.7b")
+                    server.release("gemma3:4b")
+                }
+            }
+        }
+    }
 
     @Test
     fun `warmup is visible immediately and duplicate calls for the active model do not queue another request`() {

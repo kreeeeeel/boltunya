@@ -29,4 +29,6 @@ fun ChatMessage.toContract(): Message = Message(
     senderUsername = senderUsername,
     mediaAlbumId = mediaAlbumId,
     editedAt = editedAt,
+    forwardedFrom = forwardedFrom,
+    forwarded = forwarded,
 )

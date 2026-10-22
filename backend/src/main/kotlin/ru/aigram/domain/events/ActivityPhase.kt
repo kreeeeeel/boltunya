@@ -7,8 +7,6 @@ enum class ActivityPhase(val value: String) {
     SYNTHESIZING("synthesizing"),
     MEMORY("memory"),
     WAITING_RESOURCE("waiting-resource"),
-    RESEARCH("research"),
-    SEARCH("search"),
     REPLY("reply"),
     RETRY("retry"),
     VALIDATING("validating"),

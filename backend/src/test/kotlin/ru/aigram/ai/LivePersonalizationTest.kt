@@ -20,7 +20,6 @@ class LivePersonalizationTest {
         val client = AiTestServices()
         val rule = ChatRule(
             model = System.getenv("TIHO_TEST_MODELS")?.substringBefore(',') ?: "gemma3:4b",
-            internetAccess = false,
             creativity = 20,
         )
         val examples = listOf(
@@ -77,7 +76,6 @@ class LivePersonalizationTest {
     fun `keeps group authors separate when answering a question about their messages`() {
         val rule = ChatRule(
             model = System.getenv("TIHO_TEST_MODELS")?.substringBefore(',') ?: "gemma3:4b",
-            internetAccess = false,
             creativity = 20,
         )
         val history = listOf(

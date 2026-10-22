@@ -5,6 +5,7 @@ import ru.aigram.contract.dto.SpeechAsset
 import ru.aigram.contract.dto.SpeechAssetKind
 import ru.aigram.contract.dto.SpeechDownload
 import ru.aigram.contract.dto.SpeechDownloadPhase
+import ru.aigram.contract.dto.SpeechEngineKind
 import ru.aigram.contract.dto.SpeechState
 import ru.aigram.domain.speech.SpeechAssetState
 import ru.aigram.domain.speech.GeneratedVoice as DomainGeneratedVoice
@@ -24,6 +25,8 @@ fun SpeechAssetState.toContract(): SpeechState = SpeechState(
             installed = asset.installed,
             dependencies = asset.dependencies,
             userProvided = asset.userProvided,
+            engine = SpeechEngineKind.valueOf(asset.engine.name),
+            format = asset.format,
         )
     }.toList(),
     downloads.stream().map { download ->

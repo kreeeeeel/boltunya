@@ -52,6 +52,9 @@ class TelegramChatDirectory(
             }.orEmpty(),
             memberCount = memberCount(chat.type),
             lastMessageOutgoing = chat.lastMessage?.isOutgoing == true,
+            lastMessageRead = chat.lastMessage?.takeIf { it.isOutgoing }?.let {
+                it.id > 0 && it.sendingState == null && it.id <= chat.lastReadOutboxMessageId
+            },
             lastMessageSender = senderName(chat.lastMessage?.senderId),
             typingUsers = typing.list(chat.id),
         )

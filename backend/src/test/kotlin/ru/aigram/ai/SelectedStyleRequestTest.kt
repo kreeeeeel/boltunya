@@ -39,7 +39,7 @@ class SelectedStyleRequestTest {
             val settings = SettingsStore(directory)
             val style = WritingStyle("russian", "По-русски", "🙂", "Отвечай по-русски. Коротко и без официоза.")
             settings.update { it.copy(customStyles = listOf(style)) }
-            val rule = settings.resolve(ChatRule(style = "custom", styleId = style.id, internetAccess = false))
+            val rule = settings.resolve(ChatRule(style = "custom", styleId = style.id))
             val result = AiTestServices("http://127.0.0.1:${server.address.port}").reply(
                 rule,
                 listOf(ChatMessage("1", "synthetic", "How are you doing today?", false, 0)),

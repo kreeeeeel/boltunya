@@ -12,6 +12,30 @@ class TelegramMessageMapperTest {
     lateinit var directory: Path
 
     @Test
+    fun `chat previews do not register voice media or expand packed waveforms`() {
+        val files = TelegramMediaStore(directory) { error("Preview must not download") }
+        val mapper = TelegramMessageMapper(files)
+        val recording = TdApi.File().apply {
+            id = 99
+            remote = TdApi.RemoteFile().apply { uniqueId = "voice-identity" }
+            local = TdApi.LocalFile().apply { isDownloadingCompleted = true }
+        }
+        val message = TdApi.Message().apply {
+            content = TdApi.MessageVoiceNote().apply {
+                voiceNote = TdApi.VoiceNote().apply {
+                    voice = recording
+                    waveform = ByteArray(1000)
+                }
+                caption = TdApi.FormattedText("Caption", emptyArray())
+            }
+        }
+
+        assertEquals("Голосовое сообщение · Caption", mapper.preview(message))
+        assertEquals("", files.uniqueId(99))
+        assertEquals(false, files.isDownloaded(99))
+    }
+
+    @Test
     fun `preserves video note dimensions and packed voice waveform`() {
         val mapper = mapper()
         val videoMessage = TdApi.Message().apply {

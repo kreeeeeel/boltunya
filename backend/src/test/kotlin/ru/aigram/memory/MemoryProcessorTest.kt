@@ -13,6 +13,8 @@ import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.stream.IntStream
 import java.util.stream.Stream
 import kotlin.test.assertEquals
@@ -20,6 +22,52 @@ import kotlin.test.assertTrue
 
 class MemoryProcessorTest {
     @TempDir lateinit var directory: Path
+
+    @Test
+    fun `cancellation during native history or owner summary prevents starting the next inference`() {
+        listOf("history", "owner").stream().forEach { stage ->
+            val location = directory.resolve(stage)
+            val current = AtomicBoolean(true)
+            val ownerCalls = AtomicInteger()
+            val chatCalls = AtomicInteger()
+            val telegram = MemoryTelegramGateway()
+            telegram.messages = listOf(ChatMessage("1", "42", "Synthetic owner fact", true, 1))
+            if (stage == "history") {
+                telegram.afterRead = { current.set(false) }
+            }
+            val store = MemoryStore(location, ResourceCatalog())
+            store.activate("100")
+            store.observe("42", 1)
+            val state = store.state("42") ?: error("Missing synthetic state")
+            val processor = MemoryProcessor(
+                telegram,
+                store,
+                MemoryBatchBuilder(AutomatedReplyStore(location)),
+                MemorySummarizer { _, _, _ ->
+                    chatCalls.incrementAndGet()
+                    "Unexpected chat facts"
+                },
+                Clock.systemUTC(),
+                OwnerMemorySummarizer { _, _, _ ->
+                    ownerCalls.incrementAndGet()
+                    current.set(false)
+                    "Stale owner facts"
+                },
+            )
+
+            assertEquals(false, processor.process(state, "test", true, current::get))
+            val expectedOwnerCalls = if (stage == "history") {
+                0
+            } else {
+                1
+            }
+            assertEquals(expectedOwnerCalls, ownerCalls.get())
+            assertEquals(0, chatCalls.get())
+            assertEquals(state, store.state("42"))
+            assertEquals("", store.read("42").facts())
+            assertEquals("", store.read("").facts())
+        }
+    }
 
     @Test
     fun `summarizes stable history while new messages keep arriving without skipping unsettled replies`() {

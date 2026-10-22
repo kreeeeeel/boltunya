@@ -9,7 +9,6 @@ import org.springframework.boot.web.server.servlet.context.ServletWebServerAppli
 import ru.aigram.ai.AiTestServices
 import ru.aigram.ai.ComputeDeviceDiscovery
 import ru.aigram.ai.EngineManager
-import ru.aigram.ai.research.ExaMcpSearchClient
 import ru.aigram.application.ExitAction
 import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.configuration.AigramApplication
@@ -33,7 +32,6 @@ class TestWebServerFactory {
         token: String,
         automated: AutomatedReplyStore = AutomatedReplyStore(directory),
         storageClient: StorageClient = StorageClient { TdApi.StorageStatistics(0, 0, emptyArray()) },
-        search: ExaMcpSearchClient? = null,
         diagnostics: DiagnosticLog? = null,
         devices: ComputeDeviceDiscovery? = null,
         onQuit: () -> Unit,
@@ -51,9 +49,6 @@ class TestWebServerFactory {
             "localSession" to LocalSession(token),
             "processExit" to ExitAction(onQuit),
         )
-        if (search != null) {
-            supplied["exaMcpSearchClient"] = search
-        }
         if (diagnostics != null) {
             supplied["diagnosticLog"] = diagnostics
         }

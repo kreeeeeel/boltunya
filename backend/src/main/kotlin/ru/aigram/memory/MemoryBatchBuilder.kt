@@ -1,6 +1,5 @@
 package ru.aigram.memory
 
-import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Component
 import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.memory.MemoryBatch
@@ -8,47 +7,55 @@ import ru.aigram.domain.memory.MemorySource
 import ru.aigram.domain.memory.MemorySpeaker
 import ru.aigram.exception.impl.MemorySourceContextLimitException
 import ru.aigram.storage.AutomatedReplyStore
+import java.util.stream.IntStream
 
-private const val MAX_BATCH_CHARACTERS = 7000
+private const val BUDGET_SEARCH_STEPS = 32
 
 @Component
 class MemoryBatchBuilder(private val automated: AutomatedReplyStore) {
-    fun select(
-        messages: List<ChatMessage>,
-        fits: (List<MemorySource>) -> Boolean = { Json.encodeToString(it).length <= MAX_BATCH_CHARACTERS },
-    ): MemoryBatch {
-        val sources = mutableListOf<MemorySource>()
-        val selected = messages.asReversed().stream().takeWhile { message ->
-            if (message.contextExcluded || message.deleted) {
-                true
-            } else {
-                val source = MemorySource(
-                    message.id,
-                    message.date,
-                    if (!message.outgoing) {
-                        MemorySpeaker.CONTACT
-                    } else if (message.automated || automated.contains(message.chatId, message.id)) {
-                        MemorySpeaker.ASSISTANT
-                    } else {
-                        MemorySpeaker.OWNER
-                    },
-                    message.text,
-                    message.kind,
-                    message.senderName,
-                    message.senderId,
-                    message.senderUsername,
-                )
-                if (sources.isEmpty() && !fits(listOf(source))) {
-                    throw MemorySourceContextLimitException()
-                }
-                if (fits((sources + source).asReversed())) {
-                    sources.add(source)
-                    true
+    fun select(messages: List<ChatMessage>, fits: (List<MemorySource>) -> Boolean = { true }): MemoryBatch {
+        val positions = IntStream.range(0, messages.size).filter {
+            !messages[it].contextExcluded && !messages[it].deleted
+        }.boxed().toList()
+        val sources = positions.stream().map { source(messages[it]) }.toList()
+        if (sources.isEmpty() || fits(sources)) {
+            return MemoryBatch(messages, sources)
+        }
+        if (!fits(sources.takeLast(1))) {
+            throw MemorySourceContextLimitException()
+        }
+
+        var low = 1
+        var high = sources.size - 1
+        IntStream.range(0, BUDGET_SEARCH_STEPS).forEach {
+            if (low < high) {
+                val middle = (low + high + 1) / 2
+                if (fits(sources.subList(sources.size - middle, sources.size))) {
+                    low = middle
                 } else {
-                    false
+                    high = middle - 1
                 }
             }
-        }.toList().asReversed()
-        return MemoryBatch(selected, sources.asReversed())
+        }
+        // Excluded/deleted messages before the first retained source still advance the pagination cursor.
+        val first = positions[positions.size - low - 1] + 1
+        return MemoryBatch(messages.subList(first, messages.size), sources.subList(sources.size - low, sources.size))
     }
+
+    private fun source(message: ChatMessage): MemorySource = MemorySource(
+        message.id,
+        message.date,
+        if (!message.outgoing) {
+            MemorySpeaker.CONTACT
+        } else if (message.automated || automated.contains(message.chatId, message.id)) {
+            MemorySpeaker.ASSISTANT
+        } else {
+            MemorySpeaker.OWNER
+        },
+        message.text,
+        message.kind,
+        message.senderName,
+        message.senderId,
+        message.senderUsername,
+    )
 }

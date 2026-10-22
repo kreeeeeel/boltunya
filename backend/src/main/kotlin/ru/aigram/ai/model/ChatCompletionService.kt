@@ -29,6 +29,7 @@ import ru.aigram.domain.ai.model.ModelCompletion
 import ru.aigram.domain.ai.model.ModelMeasurement
 import ru.aigram.domain.ai.model.ModelPolicy
 import ru.aigram.domain.ai.model.ThinkingMode
+import ru.aigram.domain.ai.profile.ModelProvider
 import ru.aigram.domain.ai.profile.ModelTask
 import ru.aigram.domain.ai.profile.ResolvedModelTarget
 import ru.aigram.domain.chat.ChatRule
@@ -194,6 +195,9 @@ class ChatCompletionService(
         val started = System.nanoTime()
         val response = try {
             val client = factory.model(target)
+            if (target.provider == ModelProvider.OLLAMA) {
+                runtime.trackLocalModel(target.baseUrl, target.model)
+            }
             val chunks = if (target.capabilities.streaming) {
                 client.stream(Prompt(context, options))
             } else {

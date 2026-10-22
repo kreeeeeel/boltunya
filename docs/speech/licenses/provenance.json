@@ -210,5 +210,23 @@
     "url": "https://raw.githubusercontent.com/dnhkng/GLaDOS/main/LICENSE.txt",
     "sha256": "62050a19a4fd287ea5daef68002dbc89025940fe584ad431db821eb0f8d46e15",
     "sizeBytes": 1065
+  },
+  {
+    "url": "https://raw.githubusercontent.com/IAHispano/Applio/3.7.0/LICENSE",
+    "sizeBytes": 1067,
+    "sha256": "7823c04ca7103c5e6f20b497ed1f4fcfd08356e7a6766c30121cdafb0823fe44",
+    "file": "Applio-LICENSE.txt"
+  },
+  {
+    "url": "https://huggingface.co/Joxi/RVCv2_models/raw/743af4e5b43dd6afad3f0966a83d806428f768d0/README.md",
+    "sizeBytes": 190,
+    "sha256": "c5f794b9ccf7638f89b6876c95c97e087bc79ee3504ac76a5daad0974e83be50",
+    "file": "RVC-Joxi-MODEL_CARD.md"
+  },
+  {
+    "url": "https://huggingface.co/mbsoft/YandexAliceRVC/raw/666ddc3386db4280648cf7de8c0a9ecccccd029e/README.md",
+    "sizeBytes": 26,
+    "sha256": "aed9f9e83693625c634010ca797d3c1a00b19643cc394b234433381f2c9ca7ed",
+    "file": "RVC-Alice-MODEL_CARD.md"
   }
 ]

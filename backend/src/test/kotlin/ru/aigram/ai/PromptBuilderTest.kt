@@ -6,7 +6,6 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
 import org.springframework.ai.chat.messages.Message
-import ru.aigram.domain.ai.research.ResearchContext
 import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.chat.CommunicationStyle
@@ -24,33 +23,30 @@ class PromptBuilderTest {
     private val builder = PromptBuilder()
 
     @Test
-    fun `participant relevance policy is mandatory in chat research and both formatting modes`() {
+    fun `participant relevance policy is mandatory in chat and both formatting modes`() {
         val resources = ResourceCatalog()
         val policy = resources.prompt("ru/conversation/mentions")
         listOf(false, true).stream().forEach { formatted ->
-            listOf(ResearchContext(), ResearchContext("search", "Verified facts")).stream().forEach { research ->
-                val system = builder.build(
-                    ChatRule(style = "rough"),
-                    listOf(ChatMessage("1", "42", "Как встреча?", false, 1)),
-                    research = research,
-                    formatReplies = formatted,
-                ).first().text.orEmpty()
-                assertTrue(system.contains(policy))
-                assertTrue(system.indexOf("Выбранный стиль диалога:") > system.indexOf(policy))
-                assertTrue(
-                    system.contains(
-                        resources.prompt(
-                            if (formatted) {
-                                "ru/conversation/formatting-on"
-                            } else {
-                                "ru/conversation/formatting-off"
-                            },
-                        ),
+            val system = builder.build(
+                ChatRule(style = "rough"),
+                listOf(ChatMessage("1", "42", "Как встреча?", false, 1)),
+                formatReplies = formatted,
+            ).first().text.orEmpty()
+            assertTrue(system.contains(policy))
+            assertTrue(system.indexOf("Выбранный стиль диалога:") > system.indexOf(policy))
+            assertTrue(
+                system.contains(
+                    resources.prompt(
+                        if (formatted) {
+                            "ru/conversation/formatting-on"
+                        } else {
+                            "ru/conversation/formatting-off"
+                        },
                     ),
-                )
-                assertTrue(policy.contains("явная просьба назвать или упомянуть"))
-                assertTrue(policy.contains("Неизвестное имя, адресата или связь между людьми не выдумывай"))
-            }
+                ),
+            )
+            assertTrue(policy.contains("явная просьба назвать или упомянуть"))
+            assertTrue(policy.contains("Неизвестное имя, адресата или связь между людьми не выдумывай"))
         }
     }
 
@@ -87,20 +83,17 @@ class PromptBuilderTest {
         val resources = ResourceCatalog()
         val memory = MemoryContext(summary = "Дружат со школы. Встреча в Казани 25 октября.")
         CommunicationStyle.entries.stream().filter { it != CommunicationStyle.CUSTOM }.forEach { style ->
-            listOf(ResearchContext(), ResearchContext("search", "Verified facts")).stream().forEach { research ->
-                val system = builder.build(
-                    ChatRule(style = style.key),
-                    emptyList(),
-                    research = research,
-                    memory = memory,
-                )
-                    .first().text.orEmpty()
-                val boundary = system.indexOf("Правила оформления текущего ответа")
-                assertTrue(boundary > system.indexOf("Дружат со школы"))
-                assertTrue(system.substring(boundary).contains(resources.prompt("ru/style/" + style.key)))
-                assertFalse(system.contains("{{tone}}"))
-                assertFalse(system.contains("{{voice}}"))
-            }
+            val system = builder.build(
+                ChatRule(style = style.key),
+                emptyList(),
+                memory = memory,
+            )
+                .first().text.orEmpty()
+            val boundary = system.indexOf("Правила оформления текущего ответа")
+            assertTrue(boundary > system.indexOf("Дружат со школы"))
+            assertTrue(system.substring(boundary).contains(resources.prompt("ru/style/" + style.key)))
+            assertFalse(system.contains("{{tone}}"))
+            assertFalse(system.contains("{{voice}}"))
         }
     }
 
@@ -125,25 +118,22 @@ class PromptBuilderTest {
     }
 
     @Test
-    fun `selected tone takes priority over learned voice in chat and search replies`() {
+    fun `selected tone takes priority over learned voice in replies`() {
         val owner = listOf("да норм))", "ща гляну", "ну давай").mapIndexed { index, text ->
             ChatMessage(index.toString(), "42", text, true, 0)
         }
-        listOf(ResearchContext(), ResearchContext("search", "Verified facts")).stream().forEach { research ->
-            val system = builder.build(
-                ChatRule(style = "business"),
-                owner,
-                research = research,
-                memory = MemoryContext(ownerSummary = "Пишет разговорно со строчной буквы"),
-            ).first().text.orEmpty()
-            assertTrue(system.contains("конкретные законченные предложения с заглавной буквы"))
-            assertTrue(system.contains("Этот тон важнее манеры из истории"))
-            assertTrue(system.contains("совместимы с выбранным стилем диалога"))
-            assertTrue(
-                system.indexOf("Выбранный стиль диалога:") > system.indexOf("Пишет разговорно со строчной буквы"),
-            )
-            assertFalse(system.contains("Сохрани разговорность"))
-        }
+        val system = builder.build(
+            ChatRule(style = "business"),
+            owner,
+            memory = MemoryContext(ownerSummary = "Пишет разговорно со строчной буквы"),
+        ).first().text.orEmpty()
+        assertTrue(system.contains("конкретные законченные предложения с заглавной буквы"))
+        assertTrue(system.contains("Этот тон важнее манеры из истории"))
+        assertTrue(system.contains("совместимы с выбранным стилем диалога"))
+        assertTrue(
+            system.indexOf("Выбранный стиль диалога:") > system.indexOf("Пишет разговорно со строчной буквы"),
+        )
+        assertFalse(system.contains("Сохрани разговорность"))
     }
 
     @Test
@@ -205,22 +195,19 @@ class PromptBuilderTest {
     }
 
     @Test
-    fun `conversation and research prompts do not impose a scripted disagreement or override a sharp style`() {
-        listOf(ResearchContext(), ResearchContext("search", "Verified facts")).stream().forEach { research ->
-            val prompt = builder.build(
-                ChatRule(style = "aggressive"),
-                listOf(ChatMessage("1", "42", "Как убить время в дороге?", false, 1)),
-                research = research,
-            )
-            val system = prompt.first().text.orEmpty()
-            assertFalse(system.contains("Границы разговора"))
-            assertFalse(system.contains("против такого поступка"))
-            assertFalse(system.contains("травл"))
-            assertFalse(system.contains("не оскорбляй"))
-            assertTrue(system.contains("колкий сарказм"))
-            assertFalse(system.contains("{{boundaries}}"))
-            assertEquals("Как убить время в дороге?", messageText(prompt.last()))
-        }
+    fun `conversation prompts do not impose a scripted disagreement or override a sharp style`() {
+        val prompt = builder.build(
+            ChatRule(style = "aggressive"),
+            listOf(ChatMessage("1", "42", "Как убить время в дороге?", false, 1)),
+        )
+        val system = prompt.first().text.orEmpty()
+        assertFalse(system.contains("Границы разговора"))
+        assertFalse(system.contains("против такого поступка"))
+        assertFalse(system.contains("травл"))
+        assertFalse(system.contains("не оскорбляй"))
+        assertTrue(system.contains("колкий сарказм"))
+        assertFalse(system.contains("{{boundaries}}"))
+        assertEquals("Как убить время в дороге?", messageText(prompt.last()))
     }
 
     @Test

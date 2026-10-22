@@ -1,9 +1,0 @@
-{
-  "USD": ["usd", "доллар", "долар", "dollar"],
-  "EUR": ["eur", "евро", "євро", "euro"],
-  "RUB": ["rub", "рубл", "руб", "ruble", "rouble"],
-  "KZT": ["kzt", "тенге", "теңге", "tenge"],
-  "UAH": ["uah", "грив", "hryvnia"],
-  "CNY": ["cny", "юан", "yuan"],
-  "GBP": ["gbp", "фунт", "pound"]
-}

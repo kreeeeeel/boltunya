@@ -24,9 +24,10 @@ class ProfileAiTestServices(directory: Path, baseUrl: String = "http://127.0.0.1
     private val factory = SpringAiModelFactory()
     private val clients = ProfileModelFactory(profiles, factory)
     val tracing = ReplyTraceScope()
+    val runtime = OllamaRuntime(baseUrl)
     val completion = ChatCompletionService(
         factory.create(baseUrl), ModelPolicies(resources), ModelReplyReader(),
-        OllamaRuntime(baseUrl), ModelInference(), ModelMeasurementStore(directory), tracing,
+        runtime, ModelInference(), ModelMeasurementStore(directory), tracing,
         targets = targets, clients = clients, promptSettings = prompts,
     )
 

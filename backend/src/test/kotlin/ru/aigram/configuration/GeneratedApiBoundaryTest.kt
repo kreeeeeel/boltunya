@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.core.io.Resource
 import org.springframework.web.bind.annotation.RequestMapping
 import ru.aigram.contract.api.MediaApi
-import ru.aigram.contract.dto.AppearanceSettingsInput
 import ru.aigram.contract.dto.ModelProfileUpdate
 import java.lang.reflect.ParameterizedType
 import java.util.Arrays
@@ -30,7 +29,6 @@ class GeneratedApiBoundaryTest {
     fun `defaulted objects and maps reject explicit null at constructor parameters`() {
         assertNullFails(ModelProfileUpdate::class.java, "options")
         assertNullFails(ModelProfileUpdate::class.java, "capabilities")
-        assertNullFails(AppearanceSettingsInput::class.java, "tokens")
     }
 
     private fun assertNullFails(type: Class<*>, property: String) {

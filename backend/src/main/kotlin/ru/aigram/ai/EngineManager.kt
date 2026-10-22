@@ -27,6 +27,8 @@ import java.net.http.HttpResponse
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
@@ -50,10 +52,13 @@ class EngineManager(
     private val diagnostics: DiagnosticLog? = null,
     private val devices: OllamaDeviceSelector? = null,
     private val startProcess: (ProcessBuilder) -> ProcessHandle = { it.start().toHandle() },
+    private val automaticEnabled: () -> Boolean = { true },
 ) : AutoCloseable {
     private val closed = AtomicBoolean()
     private val executor = Executors.newSingleThreadExecutor()
+    private val warmups = ScheduledThreadPoolExecutor(1).apply { removeOnCancelPolicy = true }
     private val warmupVersion = AtomicLong()
+    private var warmup: Future<*>? = null
 
     @Volatile
     private var downloading = ""
@@ -122,6 +127,9 @@ class EngineManager(
 
     @Synchronized
     fun start() {
+        if (closed.get()) {
+            return
+        }
         if (status().online) {
             if (ollama.isDefaultLocalServer && managedServer?.isAlive != true) {
                 managedServer = processes.find(directory.resolve("engine/ollama.exe").toAbsolutePath().normalize())
@@ -186,21 +194,26 @@ class EngineManager(
 
     @Synchronized
     fun warm(model: String) {
-        if (warming == model) {
+        if (closed.get() || !automaticEnabled() || warming == model) {
             return
         }
+        warmup?.cancel(true)
         val version = warmupVersion.incrementAndGet()
         warming = model
         failure = ""
-        executor.submit {
+        warmup = warmups.submit {
             try {
-                if (version != warmupVersion.get()) {
+                if (version != warmupVersion.get() || !automaticEnabled()) {
                     return@submit
                 }
                 if (model !in ollama.installed()) {
                     return@submit
                 }
-                inference.foreground { ollama.warm(model) }
+                inference.foreground {
+                    if (version == warmupVersion.get() && automaticEnabled()) {
+                        ollama.warm(model)
+                    }
+                }
             } catch (exception: IntegrationException) {
                 diagnostics?.record(DiagnosticSource.ENGINE, exception)
                 synchronized(this@EngineManager) {
@@ -216,6 +229,17 @@ class EngineManager(
                     }
                 }
             }
+        }
+    }
+
+    @Synchronized
+    fun pauseInference() {
+        warmupVersion.incrementAndGet()
+        warmup?.cancel(true)
+        warmup = null
+        warming = ""
+        if (!closed.get()) {
+            warmups.submit { ollama.releaseModels() }
         }
     }
 
@@ -284,7 +308,9 @@ class EngineManager(
                     Files.delete(archive)
                 }
                 progress = 100
-                start()
+                if (automaticEnabled()) {
+                    start()
+                }
             } catch (exception: Exception) {
                 if (!task.isCancelled()) {
                     diagnostics?.record(DiagnosticSource.ENGINE, exception)
@@ -365,6 +391,7 @@ class EngineManager(
         }
         cancelDownload()
         executor.shutdownNow()
+        warmups.shutdownNow()
         ollama.releaseModels()
         val active = managedServer
 

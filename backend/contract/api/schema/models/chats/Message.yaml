@@ -68,3 +68,11 @@ Message:
             default: 0
             minimum: 0
             description: Telegram edit date in Unix seconds; zero means the message has not been edited.
+        forwardedFrom:
+            type: string
+            default: ''
+            description: Known display name of the original Telegram sender or source chat.
+        forwarded:
+            type: boolean
+            default: false
+            description: Telegram marks the message as forwarded, including an unknown or hidden origin.

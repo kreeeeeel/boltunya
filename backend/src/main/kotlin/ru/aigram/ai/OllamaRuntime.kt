@@ -38,6 +38,12 @@ class OllamaRuntime(private val baseUrl: String) {
         activeModels.add(model)
     }
 
+    fun trackLocalModel(serverUrl: String, model: String) {
+        if (isLocalServer && URI.create(baseUrl.trimEnd('/')) == URI.create(serverUrl.trimEnd('/'))) {
+            track(model)
+        }
+    }
+
     fun warm(model: String) {
         track(model)
         request(

@@ -20,6 +20,11 @@ private val DOWNLOAD_HOSTS = setOf(
     "github.com",
     "release-assets.githubusercontent.com",
     "objects.githubusercontent.com",
+    "huggingface.co",
+    "cas-bridge.xethub.hf.co",
+    "us.aws.cdn.hf.co",
+    "cdn-lfs.huggingface.co",
+    "cdn-lfs-us-1.hf.co",
 )
 
 @Component

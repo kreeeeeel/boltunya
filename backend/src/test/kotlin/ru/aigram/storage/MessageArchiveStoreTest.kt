@@ -5,7 +5,9 @@ import org.junit.jupiter.api.io.TempDir
 import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.MessageEntity
 import ru.aigram.exception.impl.InvalidHistoryIdentifierException
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 import java.time.Clock
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -169,5 +171,46 @@ class MessageArchiveStoreTest {
         assertEquals(original, store().find("200", "42", original.id))
         assertEquals(otherChat, store().find("100", "43", original.id))
         assertEquals("Edited", store().find("100", "42", original.id)?.text)
+    }
+
+    @Test
+    fun `cached buckets observe edits from another store and file replacement or removal`() {
+        val first = store()
+        val other = store()
+        val original = message(1)
+        first.record("100", listOf(original))
+        assertEquals(original, first.find("100", "42", original.id))
+
+        val edited = original.copy(text = "Changed outside the cached store", editedAt = 200)
+        other.recordEdited("100", listOf(edited))
+        assertEquals(edited, first.find("100", "42", original.id))
+
+        other.delete("100", "42", listOf(original.id.toLong()), permanent = true, fromCache = false)
+        assertTrue(first.find("100", "42", original.id)?.deleted == true)
+        assertTrue(first.deleted("100", "42").single().deleted)
+
+        val bucket = directory.resolve("history/100/42/0.json")
+        val saved = directory.resolve("saved-bucket.json")
+        Files.move(bucket, saved, StandardCopyOption.REPLACE_EXISTING)
+        assertNull(first.find("100", "42", original.id))
+        Files.move(saved, bucket, StandardCopyOption.REPLACE_EXISTING)
+        assertEquals(edited.text, first.find("100", "42", original.id)?.text)
+    }
+
+    @Test
+    fun `bounded bucket caching retains paginated account scoped data without rewriting unchanged pages`() {
+        val archive = store()
+        val messages = (1..70).map { message(it * 128) }
+        archive.record("100", messages)
+        archive.record("200", listOf(messages.first().copy(text = "Other owner")))
+        val bucket = directory.resolve("history/100/42/1.json")
+        val modifiedAt = Files.getLastModifiedTime(bucket)
+
+        messages.stream().forEach { assertEquals(it, archive.find("100", "42", it.id)) }
+        archive.recordPage("100", "42", messages, archive.version("100", "42"))
+
+        assertEquals(modifiedAt, Files.getLastModifiedTime(bucket))
+        assertEquals(messages.first(), archive.find("100", "42", messages.first().id))
+        assertEquals("Other owner", archive.find("200", "42", messages.first().id)?.text)
     }
 }

@@ -42,7 +42,6 @@ class ModelTargetResolverTest {
         routing.save(ModelTaskRouting(true, true, reply.id, memory.id))
         val targets = ModelTargetResolver(profiles, routing, settings, ApplicationConfiguration(directory, false))
         assertEquals(reply.id, targets.resolve(ModelTask.REPLY, ChatRule()).profileId)
-        assertEquals(reply.id, targets.resolve(ModelTask.RESEARCH, ChatRule()).profileId)
         assertEquals(
             chat.id,
             targets.resolve(ModelTask.REPLY, ChatRule(modelProfileId = chat.id, useDefaultModel = false)).profileId,
@@ -50,10 +49,6 @@ class ModelTargetResolverTest {
         assertEquals(
             memory.id,
             targets.resolve(ModelTask.MEMORY, ChatRule(modelProfileId = chat.id, useDefaultModel = false)).profileId,
-        )
-        assertEquals(
-            chat.id,
-            targets.resolve(ModelTask.RESEARCH, ChatRule(modelProfileId = chat.id, useDefaultModel = false)).profileId,
         )
         assertTrue(targets.resolve(ModelTask.REPLY, ChatRule()).remote)
     }
@@ -88,6 +83,8 @@ class ModelTargetResolverTest {
         val routing = ModelRoutingStore(directory)
         val configuration = ApplicationConfiguration(directory, false)
         val targets = ModelTargetResolver(profiles, routing, settings, configuration)
+        assertNull(targets.startupWarmModel())
+        settings.update { it.copy(paused = false) }
         assertEquals(settings.get().defaultModel, targets.startupWarmModel())
         val api = profiles.save(
             null,
@@ -112,6 +109,9 @@ class ModelTargetResolverTest {
         )
         routing.save(ModelTaskRouting(enabled = true, replyProfileId = local.id))
         assertEquals("local:selected", targets.startupWarmModel())
+        settings.update { it.copy(paused = true) }
+        assertNull(targets.startupWarmModel())
+        settings.update { it.copy(paused = false) }
         val elsewhere = profiles.save(
             null,
             ModelProfileUpdate(
@@ -163,7 +163,6 @@ class ModelTargetResolverTest {
                 parallelIndependentTasks = true,
                 replyModel = "qwen3:1.7b",
                 memoryModel = "gemma3:4b",
-                researchModel = "qwen2.5:7b",
                 visionModel = "qwen3-vl:2b",
             )
             services.routing.save(assigned)
@@ -179,7 +178,6 @@ class ModelTargetResolverTest {
             assertEquals("gemma3:12b", services.targets.resolve(ModelTask.REPLY, explicit).model)
             assertEquals("gemma3:4b", services.targets.resolve(ModelTask.MEMORY, explicit).model)
             services.routing.save(ModelTaskRouting(enabled = true, replyModel = "qwen3:1.7b"))
-            assertEquals("qwen3:1.7b", services.targets.resolve(ModelTask.RESEARCH, ChatRule()).model)
             assertEquals(api.id, services.targets.resolve(ModelTask.MEMORY, ChatRule()).profileId)
             services.routing.save(assigned.copy(enabled = false))
             assertEquals(api.id, services.targets.resolve(ModelTask.REPLY, ChatRule()).profileId)

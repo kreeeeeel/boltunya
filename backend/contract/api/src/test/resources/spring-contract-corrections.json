@@ -468,19 +468,74 @@
       "model": "VoiceDraftRequest",
       "property": "speed",
       "reason": "Allow an optional per-request finite synthesis rate from 0.5 to 2.0; omission captures the global rate, without changing global settings."
+    },
+    {
+      "model": "ChatRule / ChatRuleInput",
+      "property": "voiceSettingsMode",
+      "reason": "Optional chat-specific speech preferences inherit global settings by default; override resolves one complete validated speech configuration, while explicit manual draft model and rate take precedence."
+    },
+    {
+      "model": "ChatRule / ChatRuleInput",
+      "property": "voiceInputEnabled",
+      "reason": "Optional chat-specific speech preferences inherit global settings by default; override resolves one complete validated speech configuration, while explicit manual draft model and rate take precedence."
+    },
+    {
+      "model": "ChatRule / ChatRuleInput",
+      "property": "voiceReplyMode",
+      "reason": "Optional chat-specific speech preferences inherit global settings by default; override resolves one complete validated speech configuration, while explicit manual draft model and rate take precedence."
+    },
+    {
+      "model": "ChatRule / ChatRuleInput",
+      "property": "voiceReplyProbability",
+      "reason": "Optional chat-specific speech preferences inherit global settings by default; override resolves one complete validated speech configuration, while explicit manual draft model and rate take precedence."
+    },
+    {
+      "model": "ChatRule / ChatRuleInput",
+      "property": "voiceRecognitionModel",
+      "reason": "Optional chat-specific speech preferences inherit global settings by default; override resolves one complete validated speech configuration, while explicit manual draft model and rate take precedence."
+    },
+    {
+      "model": "ChatRule / ChatRuleInput",
+      "property": "voiceSynthesisModel",
+      "reason": "Optional chat-specific speech preferences inherit global settings by default; override resolves one complete validated speech configuration, while explicit manual draft model and rate take precedence."
+    },
+    {
+      "model": "ChatRule / ChatRuleInput",
+      "property": "voiceSpeechRate",
+      "reason": "Optional chat-specific speech preferences inherit global settings by default; override resolves one complete validated speech configuration, while explicit manual draft model and rate take precedence."
+    },
+    {
+      "feature": "internet-search",
+      "reason": "Explicit user-requested retirement of Internet search, search credentials, source-link preferences and the research routing assignment. Retired paths, operations and models retain their last reviewed fingerprints; all surviving wire changes are limited to removing these fields."
+    },
+    {
+      "feature": "appearance-and-manual-media",
+      "reason": "Explicit user-requested retirement of custom appearance, media gallery viewing and manual attachment/sticker sends. File uploads remain available for importing speech models; AI text and voice drafts remain supported."
+    },
+    {
+      "model": "Chat / Message",
+      "reason": "Expose the actual last outgoing read state and original Telegram forwarding provenance. All fields are optional and do not alter existing message bodies or defaults."
+    },
+    {
+      "feature": "monitoring",
+      "reason": "Explicit user-requested removal of resource charts and automatic OSHI/NVIDIA sampling. Retire only GET /api/metrics and MetricSample; cache statistics, device selection and queue controls remain available."
+    },
+    {
+      "model": "OutgoingMediaKind",
+      "reason": "Retire the unreferenced transport-only enum after explicit removal of manual media sends. The internal domain kind remains for safe speech model upload/import leases."
     }
   ],
   "paths": {},
   "operations": {
-    "GET /api/state": "9277b19249bf31d0981751b5e2d376d0c67733db2126481b304a7ca99af67fe1",
+    "GET /api/state": "2625c01619ee4a80f5be51090bd3cb409b6a189e799c8d484266866b1f305dab",
     "POST /api/telegram/connect": "f54221a800fa7bcafa0cd05aca431371d62513d5a6fe87582050cfa966f9291f",
     "POST /api/telegram/submit": "5a41a66b7dea0a0ba7a11b9bb7d56f0e3dccbed36850139d49ba9df862d3b5d4",
     "POST /api/telegram/logout": "ffed244966b19049d612013ff5a8942c164fb2c829d077c3d2866ab11149f27d",
-    "GET /api/chats/{chatId}/messages": "616e327bf6d644aaab077c5e55666fc0e571416e543cb1962860df50002cadcc",
+    "GET /api/chats/{chatId}/messages": "8ac2c3ef7b7a49649741b8223e311e5ac69be1cc1ae263245d713cd71d6af9c6",
     "POST /api/chats/{chatId}/messages": "2dc4f1a125871324a444c889c13991da11cc12b0de94bec7b96e9611c7eee736",
-    "PUT /api/chats/{chatId}/rule": "a4e9c265e8bcb00290ce2b05b3ef82bccfa75c9bac072d0326528dbff7c15854",
-    "PATCH /api/settings": "bd05daef530175aa396c20cb8fc05b4dccc509bd54bdf8ac036421cb50b415d8",
-    "POST /api/preview": "9c927618e2a4e55dee788263e8dac23c5d5912b7e5020d9348328956c90df2b5",
+    "PUT /api/chats/{chatId}/rule": "15e6d997f20eab8ee7234a3d7733565ae7a5475814023864501c9c3deba1fd5e",
+    "PATCH /api/settings": "74268518164562c08099297b3af64b45d629d6317b1469c10a60b1885b0a784b",
+    "POST /api/preview": "4aed3a4711c0c7f4ad06be3a8a79797822b7b181bb007bfe641eba1aeb877da9",
     "POST /api/engine/install": "761825042fc769c8c984a78254ab99fe929149685db5c920ed09317ce72fdf5d",
     "POST /api/engine/start": "d0faa73bd93ed02312e65c38010a9b1dca189cf52b5f73c58c83b36f0286264d",
     "POST /api/models/pull": "f16311eccbadca85d9d70994073bb2ffffedb530d48f08f963b0bf130f4b44f6",
@@ -488,7 +543,7 @@
     "GET /api/media/{fileId}": "ccc4114ed4734e1bfc6607b09892a215d3a21484cb58b75495a8a75bc9a26f8e",
     "POST /api/telegram/restore": "55f37fc92e3c6801a0e4609a6f9ac153613e559caf06b47f197966b328d580b9",
     "GET /api/metrics": "d76e5bda433886e328a08ace2e270d42673a92355b037c73aa5fb2bf7a202bdc",
-    "GET /api/chats/{chatId}/deleted": "09b5dc30265ea51cbf49397ebe3b1c88a70a2555fdcb067c20efb4b21bd69836",
+    "GET /api/chats/{chatId}/deleted": "01f614d7617460251f0dd77ca92e457e7ba6bcd8d3ee1cea09a67ef6b59e72a8",
     "GET /api/search/connection": "124aa773fa6bbe7c18253198bd54cecc0669203011745e03aa3a8336e309f903",
     "POST /api/search/connection": "d393161d6eec987eba36d9085bd20d8de4045ff2f8d3de8f0ace7b7486ebdba8",
     "DELETE /api/search/connection": "194251b5a1f16ec5106144da69ffd5f66340cc110b92d5b463aec25c35e70699",
@@ -510,15 +565,15 @@
     "PUT /api/model-profiles/{id}": "05a7ad9e1bbf16e4a099ba10ed29dd6ee3dbc6e75c2656b211284c7cdc56dcf4",
     "DELETE /api/model-profiles/{id}": "233b9afc0edd43724a378de29f52e67cdf20bf3b7b4a01413c1cb6f487631f6c",
     "POST /api/model-profiles/{id}/test": "69aa769f0c66160c0574bb928253591649c5df871d2f20a9ce8186580b1124a2",
-    "GET /api/model-routing": "fac88650159f870e21ac90f66f1cdc0e6afe8a577cc54459b3011995af4ca1b0",
-    "PUT /api/model-routing": "fe8663f12e11af95e3844a5e7329756e2fba8514b7759f34c1ce5b6d0485abf1",
+    "GET /api/model-routing": "6bc99b8999360eafc48d9b561f7776a4f048d099f704767278be4a3b1ade37ff",
+    "PUT /api/model-routing": "49d9acca50c7d22984e18b1993355183ad3d87e6e7e542c21ad2d08a95d2bad4",
     "GET /api/appearance": "60957cb76b855714095ed7b167b03dcee7083f599007f6fc38f2d24d5b9af766",
     "PUT /api/appearance": "8a49574cb638329ca0e4346ee0ded35ca5bc6188df6b919acc8289f89165134c",
     "POST /api/uploads": "c0e0aedbd068ff3a64e0d97fb4be40425451aa5c11d4ceb7d6a53d834cc1fef7",
     "DELETE /api/uploads/{id}": "8f191984843058bd20bff5d77e4eb6e19362a10aec83be8fbabba6d0627b9af8",
     "GET /api/stickers": "a1b0fc9be9864b10145e7d0f98ec984c82fc0d94c5d7238b85d010c9fd9ac6ef",
     "GET /api/stickers/sets/{id}": "c53fccbaeace9aef2949ee855bc625847f2ea5bd8496cd8ef9d6b7142f0dc2ff",
-    "POST /api/preview/jobs": "245529e83caf8d6f5e94f26ae89fdfef06f50240e9236349e3a5c5030b90bfa0",
+    "POST /api/preview/jobs": "4dd619c04c8f3e401ca5ecec4e6dd43454d2e7cced539caf86110ed0f6a36334",
     "GET /api/preview/jobs/{id}": "4e147f94e20b3fdcf8066e452280c2bc3ec149709cdfbccf0c55de1777eec312",
     "GET /api/chats/{chatId}/messages/{messageId}/link": "3edde7bce314a80919cd0485901aa24cf3bcfbcfe3d132d24b4ea80b98957878",
     "PUT /api/chats/{chatId}/messages/{messageId}/context": "1dc9bc2414e1facc2dde34f8db1df137e872f1e5c26598e057621de1d5b60716",
@@ -531,16 +586,16 @@
     "DELETE /api/chats/{chatId}/messages/{messageId}": "de12b30ca147c44fd7f9b2e736578a26831e39a43d644798faf14d9a86a23028",
     "GET /api/model-prompts": "edd50e856269f05e103eba84096318fc965a9f406a6f94fdd18fd3395ded899e",
     "PUT /api/model-prompts": "7f10d0e708523dd82ca59a9ce5f6b53c821b1e65acc1fd0d91a2888af53c053b",
-    "POST /api/prompts/budget": "969ead412616cb846cc2aa885a70f39193b454429d96eeb2d69f5b349ae04baa",
+    "POST /api/prompts/budget": "e634f2278e5538a86fee50f400ab248670fa22e9bd44f7bc6ef8189286e071ec",
     "PUT /api/activity/history/settings": "279abcef8015ff8e4497a71e43eed8849165cbd8d55be44563db40f86a824aa6"
   },
   "schemas": {
-    "Chat": "6c2e319c46c323712f33b3a3d440c5d0de01100d857626ef2ed7807a80da4d7c",
-    "Message": "f1337eb151ac3d7f1374bd6c34f0fc63d17e13eed1d69bea588076f0a23c8f50",
+    "Chat": "8b3b872929f840c7b1bc0db4981a213c6e11e8c987cc6dec04f241aca3d89f7b",
+    "Message": "45bd73427942f217f51ef31dda6b50333ef67b27edc406e33e5abd2c4519bc48",
     "Activity": "d563cf3739360ccaa756911d48b5d079159672a4a66260f3d5b4ed0823807d85",
     "Error": "bbce6ad737e6cc0b480393f6d89e967c6a66fb154106d1918130454a7310f5a7",
     "Reply": "d192e25bd8143b3117e9d7ade1d47cc871fc6bd67e3d828b9bef0f84fa89c107",
-    "State": "413dede0a6dbb1d15ec565bacb20916c67c1d76dd1003d38b0256ff2ba6a3bb1",
+    "State": "c721d87e546963d1fcdfc514582f97f45b1edf59027a2bc863a8382d7bd90084",
     "MetricSample": "daff2a68bfd28783eea2e9cc95b7b00fb3e98496ef1e1347f259e53f9e6723b5",
     "ActivityDetails": "5129ad36a0dd989af590ad2b16d19da4572a94046dc4f7230486b76fd01d44ed",
     "PreviewJob": "dda403988daab922cb5e640d72f99566d6102dce6880e9f3a2a6b5e62e850969",
@@ -548,22 +603,23 @@
     "ContextExclusionUpdate": "bd2bdbb99ada98eaa39b7db75fab8abd32fe62678c2c3a03184caa143f13e6ce",
     "ActivityHistoryPage": "50df819509facfbdf0cb207d39330bf88481d5819261728223e8d175f3dc3765",
     "Engine": "9f2021c8ca0d0fe4c4306131ef98722b80c9b4fa0bd1cb4d5b58310f36178493",
-    "ChatRule": "4d6d76ec76d2c42efe529664e7ec76d46e97331930d5b986c3b616f7a9691d7e",
-    "Settings": "72cba936f983efe2813fbc8d511a7310cba7755ac2ebc09e2b41a57bea5986fc",
-    "Preview": "ae3da04f5d98ece9b378cacea31520d21a50e47ec045f7eb2c8c0dec0d28c194",
+    "ChatRule": "9b1ca4d59ea99d29ffec98e641435cd4e265216a357453ca228d619adf6218ac",
+    "Settings": "ce2ee41113dce26c538ee29c79e42aeb53ee02ea7db37d65c9e4f810136413b3",
+    "Preview": "a55d258171342da2d996bd56fe51c5ff2a4a45fa6557c4fe149cb5ef566fdd00",
     "ModelProfile": "1f853294ca55c82a21cf1f90b4287b6d55874261ed2c3f117c36f425e2ec8849",
     "ModelProfileUpdate": "87aac3215b82676440802443f6c2900898944fad518ddcb0d65606c4fdb7c397",
     "ModelProfileReport": "63b19de723856617a4ceaa436ce6a48d33cfecafdc48a70d9428efc6b0b81c2a",
     "DeliveryMode": "39ef10084fe427bdfc4bd4061a1914c1a7da7c5dd1bebac0b2c6142f13e46b1a",
-    "PreviewJobRequest": "5500959d2255d8207689d4c0555acb2bbddff232e7c7a1d160b576c6e70443aa",
+    "PreviewJobRequest": "cad059996343c9ae77a2bceb5adf3c10969ab7a7de1ada7ed2ea492d35785274",
     "ModelPromptSettings": "481950c771b9cb107fe90cfa674104e6036b9f56cc514f0a9f26b8c019750c6c",
     "ModelPromptReport": "dd405531086aa2b7b2027954919557aee79e898171f3bb25c31d2cfcdb79cab0",
-    "PromptBudgetRequest": "e66ee8b66f8e2896d9062bf71ec85a948a72faa5684145a828c4207245a06243",
+    "PromptBudgetRequest": "4b75c77d79d1ce69c32d16c670088b3dad234ab0d1e67588a4f0f10993cac6f9",
     "PromptBudgetReport": "6395c5fc1f0264f274059e52eceb08e8f1189a66a137db759985639018d66d84",
     "ProactiveMode": "541035f11125ef1456ecc7966a86de038252f08b7ec2ddadaeaeed57ff6291e3",
     "SendMediaRequest": "a4cacdc71e93edc2711e0b4665704e9e3b1f0fbe87bd0b6ad97c015bc2dc9dfd",
     "SettingsUpdate": "5d3d2c03c324f6327eef16a3af01c3960b8057375f9d12863f106d4d5f21bd87",
-    "Text": "bbbfc081fd856615ca09fecb297e0d0556e0dc7f62c0ca25227360d79fa6778e"
+    "Text": "bbbfc081fd856615ca09fecb297e0d0556e0dc7f62c0ca25227360d79fa6778e",
+    "ModelTaskRouting": "57010528a833ce18515fe49f02a3d4e7b08e70afce7579235521970d21a7303c"
   },
   "additions": {
     "paths": {
@@ -580,18 +636,18 @@
     "operations": {
       "POST /api/engine/restart": "32fbefbdd9a356a2043a287cb814386864865556f13bd939ff270b2cd055a56a",
       "GET /api/chats/{chatId}/messages/{messageId}/edit": "5e9d193cb0267038341910a4f4e375fe16e0d0974c991b51fc536759664291c5",
-      "PUT /api/chats/{chatId}/messages/{messageId}/edit": "3b189403bf5bcf848ba3ca3da587bc6cf2ecd25840c588b30eb67e41abd001da",
-      "GET /api/speech": "0be11e5f16ae20a28db2068527a731e2692ffe9d72b8586eb598b92152725b0f",
+      "PUT /api/chats/{chatId}/messages/{messageId}/edit": "602f6064049f9b8407fcaaaf39a66760151d691b6498808ae57769cb2c387f70",
+      "GET /api/speech": "6acf5567cf64c8c770df03346bcbc279a5d48b8b831d6ac5f8f9736c99775028",
       "POST /api/speech/assets/{assetId}/install": "4c8699e71c71b3e6f9d21e11acd6d149018d8535858e6c0364ededc68f96061f",
       "DELETE /api/speech/assets/{assetId}/install": "fc5adf0d7c5d556e68a153136515b76b9f46e82a344586378a59e6cec130fc7d",
       "POST /api/speech/drafts": "e6e684f6d5271aed86e93638517c546ee023e89e797c90100d5c5d0d425557af",
       "GET /api/speech/audio/{voiceId}": "9d7ae803708ba7258d3c82d4bb08f167f4ac63eb1029853ecf7a313bcb5eef89",
       "POST /api/chats/{chatId}/voice": "2fd894499dcea06807a1716cf8643c4f6cbe690026c51dd32b974fbedba02f1f",
       "POST /api/speech/preview": "43dfc014682cc5b41e891f981251e63cbac52bda7face910353d999b3d7757d8",
-      "POST /api/speech/models/import": "5a2c0b0d69edaabb19465a25047452a3f4c035bfe5b3a19c9b2f7059a71c3447"
+      "POST /api/speech/models/import": "c9865562b1fc3fa587f2dc650c244b0f2d8bd78b850d19ca354c7a94185bc8e1"
     },
     "schemas": {
-      "ChatRuleInput": "f392061b4fd076c0bc06ec14edc3e9e00e371c2e1a09081552578439fb8ca409",
+      "ChatRuleInput": "34278583789fcf7f4f5d64a5d89c3359eea7b4c99bb96d7bd382af9ad228ae68",
       "ModelProfileOptionsInput": "c67edd41e6c61380580b9826e822d21c3c87ed538f5ff25615a1dfdfa68dc23c",
       "ModelCapabilitiesInput": "e7b326ba312e8f9b3a6a6adcd14380722da78d08d6db5a3c6c0766cf96759e86",
       "ModelPromptSettingsInput": "481950c771b9cb107fe90cfa674104e6036b9f56cc514f0a9f26b8c019750c6c",
@@ -608,15 +664,54 @@
       "VoiceReplyMode": "79bc38df2eedf35cab8482cf40d4d6737b612c92fd318b53701af060492fdd64",
       "DraftOutput": "444ef45ad026ea1cae0fc20f3a3fd0c25aaf4ee8e5b15b2f6ff98a2bfc8b4550",
       "GeneratedVoice": "901b955d2f236277367f28c303e7646d44af6343c58348548338de357d0ffa28",
-      "SpeechAsset": "ba8950e5e38731abbd416f3cfd8975d4c3d4a644448608540d84ccf7a7dbf28d",
+      "SpeechAsset": "f7d75d7874dd02c509a8a731fe24ca5adb37437acf7a9aae32b3214299ad19c7",
       "SpeechAssetKind": "4c869742174376dc5a51c4b779c72cd24bfeb14880809204d1a64bf011651eb6",
       "SpeechDownload": "a4b0617e74cd0d2cec560666344f35e73813fd1348cb1c46f1966852ccf530e2",
       "SpeechDownloadPhase": "efec4f2ac43b9d1448a67cf937bd4cbe8ffbd4ac8d8df147c9b4a672a7b85620",
-      "SpeechState": "f0b9b7db7fef849f5ac962c6b32a66edf70d57e9f25542186b0382ca44a57d64",
+      "SpeechState": "c5ff54f883bbb59e53fae03ea023d46cce9de82012754b5c54856c3d4aacc9d1",
       "VoiceDraftRequest": "b50bfadcdcf658050a8b80871a0b430fc688e506a2256e2baf2983cbc81155e8",
       "VoiceSendRequest": "4f5ce02b987a746d4688fd43ae61ddf44b54df243d650d18c97fe09328e24e9c",
       "SpeechPreviewRequest": "c4159ee7614bb05ae3d0aede4ec8722c4ab0ec21ee664b5ad33ce5fab59fbbd4",
-      "SpeechModelImportRequest": "52709af0a97b4ffaa246c0121b3ceae1236bac34f34f59b9d3c93e4a3557b209"
+      "SpeechModelImportRequest": "52709af0a97b4ffaa246c0121b3ceae1236bac34f34f59b9d3c93e4a3557b209",
+      "VoiceSettingsMode": "e0acc29cda7282fd083ff35ebbaf7cb2203c22b59a8efb01f157a46825e0a270",
+      "SpeechEngineKind": "12b960d12617489740e297b62be4d39e4b749aeda8823283bd22f4f7eaabac61"
+    }
+  },
+  "retired": {
+    "paths": {
+      "/api/search/connection": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "/api/search/check": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "/api/appearance": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "/api/chats/{chatId}/gallery": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "/api/chats/{chatId}/attachments": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "/api/chats/{chatId}/stickers": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "/api/metrics": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    "operations": {
+      "GET /api/search/connection": "124aa773fa6bbe7c18253198bd54cecc0669203011745e03aa3a8336e309f903",
+      "POST /api/search/connection": "d393161d6eec987eba36d9085bd20d8de4045ff2f8d3de8f0ace7b7486ebdba8",
+      "DELETE /api/search/connection": "194251b5a1f16ec5106144da69ffd5f66340cc110b92d5b463aec25c35e70699",
+      "POST /api/search/check": "9bb42653fbf4c9ee09557369baf495b8da6a98f97146b36f9ca709b63a2aff6d",
+      "GET /api/appearance": "60957cb76b855714095ed7b167b03dcee7083f599007f6fc38f2d24d5b9af766",
+      "PUT /api/appearance": "8a49574cb638329ca0e4346ee0ded35ca5bc6188df6b919acc8289f89165134c",
+      "GET /api/chats/{chatId}/gallery": "38891a558c5e38911cf379ede80d6d9c7d900dfa798afea64ebcc67f96435760",
+      "POST /api/chats/{chatId}/attachments": "b42425590c507216368618c743c912f9162740b82d8481cb158a412567d3b2eb",
+      "POST /api/chats/{chatId}/stickers": "c17ed81de7c4b678c9ed850ee14b1c303a263936677a73d086c692e5a560ad7d",
+      "GET /api/metrics": "d76e5bda433886e328a08ace2e270d42673a92355b037c73aa5fb2bf7a202bdc"
+    },
+    "schemas": {
+      "SearchConnection": "833c2dc08b1ffecab88ae4654ac1253090a09f1143ca4e5f8bc3e090a0c2440d",
+      "SearchConnectionState": "cb7e3d4e9be29e206441f3c6b480885a37f0dc858db044e354f37aec1b64a673",
+      "SearchConnectionRequest": "833ed5dfd253ca40277bff968d68f8dc8b6038a4b0053730b0e5515374bee902",
+      "SourceLinksMode": "48cde6b0b3e563419dab8329ab6bf6d77dce8760ca6f856e8cffd29d203bc9c6",
+      "AppearanceSettings": "dbeab56cd7f4db6fb2ab6ccd7dcbc2d6733872024f0a0c01b98fa8aa18feaddc",
+      "AppearanceSettingsInput": "be735b50d13438a65021323a908baf9cc78332ef702d639eff6804c96c0d97af",
+      "AppearanceMode": "344530c5366cb8e949efc6d4ca1f29f439af2ed6a70e758e99159fd8b69c32d8",
+      "ChatGallery": "cbb2257437da309f338601e0021b985875fea497cd30f140d2e062224abcadf1",
+      "SendMediaRequest": "a4cacdc71e93edc2711e0b4665704e9e3b1f0fbe87bd0b6ad97c015bc2dc9dfd",
+      "SendStickerRequest": "0544566b8364983578716a5c724f9698dcf249c1eef74d2c912c8b221e0f9ee8",
+      "MetricSample": "daff2a68bfd28783eea2e9cc95b7b00fb3e98496ef1e1347f259e53f9e6723b5",
+      "OutgoingMediaKind": "b29cc978aa28fc337ed01c0d1dc5dfb6124c5becf36794cac753f0c41d22abbf"
     }
   }
 }

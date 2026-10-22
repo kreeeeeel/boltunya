@@ -8,7 +8,12 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicReference
 
-fun verifiedSpeechCatalog(directory: Path, verified: Path, assets: List<String>): SpeechAssetCatalog {
+fun verifiedSpeechCatalog(
+    directory: Path,
+    verified: Path,
+    assets: List<String>,
+    timeoutSeconds: Long = 120,
+): SpeechAssetCatalog {
     val downloader = SpeechArtifactDownloader()
     val failure = AtomicReference<Exception>()
     val local = SpeechDownloadClient { definition, target, progress ->
@@ -33,7 +38,7 @@ fun verifiedSpeechCatalog(directory: Path, verified: Path, assets: List<String>)
     try {
         assets.stream().forEach { id ->
             catalog.install(id)
-            awaitSpeech(120) {
+            awaitSpeech(timeoutSeconds) {
                 val download = catalog.state().downloads.stream().filter { it.assetId == id }.findFirst().orElse(null)
                 if (download != null &&
                     (download.phase == SpeechDownloadPhase.ERROR || download.phase == SpeechDownloadPhase.CANCELLED)

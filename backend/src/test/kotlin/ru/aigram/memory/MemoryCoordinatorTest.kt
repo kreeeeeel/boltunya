@@ -24,6 +24,7 @@ class MemoryCoordinatorTest {
     @Test
     fun `cancels queued collection per chat and globally without losing notes or accepting stale summaries`() {
         val settings = SettingsStore(directory)
+        settings.update { it.copy(paused = false) }
         settings.saveRule("42", ChatRule(enabled = true))
         settings.saveRule("43", ChatRule(enabled = true))
         val telegram = MemoryTelegramGateway()
@@ -88,6 +89,7 @@ class MemoryCoordinatorTest {
     @Test
     fun `global rebuild resets eligible summaries and owner profile while preserving all manual notes`() {
         val settings = SettingsStore(directory)
+        settings.update { it.copy(paused = false) }
         settings.saveRule("42", ChatRule(enabled = true))
         settings.saveRule("43", ChatRule(enabled = true, useMemory = false))
         val telegram = MemoryTelegramGateway()
@@ -147,6 +149,7 @@ class MemoryCoordinatorTest {
     @Test
     fun `forced collection wakes the worker and prioritizes the requested chat without waiting for the interval`() {
         val settings = SettingsStore(directory)
+        settings.update { it.copy(paused = false) }
         settings.saveRule("42", ChatRule(enabled = true))
         settings.saveRule("43", ChatRule(enabled = true))
         val telegram = MemoryTelegramGateway()
@@ -211,6 +214,7 @@ class MemoryCoordinatorTest {
     @Test
     fun `automatically collects only AI enabled chats and never subscribes from owner messages`() {
         val settings = SettingsStore(directory)
+        settings.update { it.copy(paused = false) }
         settings.saveRule("149", ChatRule(enabled = true))
         val telegram = MemoryTelegramGateway()
         telegram.chatIds = (1..150).map(Int::toString)
@@ -263,6 +267,7 @@ class MemoryCoordinatorTest {
     @Test
     fun `disabled groups are not automatically scanned but allow an explicit memory request`() {
         val settings = SettingsStore(directory)
+        settings.update { it.copy(paused = false) }
         settings.saveRule("42", ChatRule(enabled = true))
         val telegram = MemoryTelegramGateway()
         telegram.groupChats = setOf("42")
@@ -312,6 +317,7 @@ class MemoryCoordinatorTest {
     @Test
     fun `backfill does not postpone scheduled updates of fresh messages`() {
         val settings = SettingsStore(directory)
+        settings.update { it.copy(paused = false) }
         settings.saveRule("42", ChatRule(enabled = true))
         val telegram = MemoryTelegramGateway()
         telegram.messages =
@@ -323,13 +329,7 @@ class MemoryCoordinatorTest {
                 telegram,
                 store,
                 MemoryBatchBuilder(AutomatedReplyStore(directory)),
-                MemorySummarizer {
-                        _,
-                        _,
-                        _,
-                    ->
-                    "Сводка"
-                },
+                BudgetMemorySummarizer(4),
                 clock,
                 OwnerMemorySummarizer { _, existing, _ -> existing },
             )
@@ -368,6 +368,7 @@ class MemoryCoordinatorTest {
     @Test
     fun `startup processes selected chats only and skips unchanged completed chats after restart`() {
         val settings = SettingsStore(directory)
+        settings.update { it.copy(paused = false) }
         settings.saveRule("42", ChatRule(enabled = true))
         val telegram = MemoryTelegramGateway()
         telegram.chatIds = (1..150).map(Int::toString)
@@ -431,6 +432,7 @@ class MemoryCoordinatorTest {
     @Test
     fun `dirty history waits for the configured interval and never rereads the entire dialog`() {
         val settings = SettingsStore(directory)
+        settings.update { it.copy(paused = false) }
         settings.saveRule("42", ChatRule(enabled = true))
         val telegram = MemoryTelegramGateway()
         telegram.messages = listOf(ChatMessage("1", "42", "Первая реплика", false, 1))
@@ -488,6 +490,7 @@ class MemoryCoordinatorTest {
     @Test
     fun `disabling memory skips background reads and removes memory from the response context`() {
         val settings = SettingsStore(directory)
+        settings.update { it.copy(paused = false) }
         settings.saveRule("42", ChatRule(enabled = true))
         settings.update { it.copy(memoryEnabled = false) }
         val telegram = MemoryTelegramGateway()

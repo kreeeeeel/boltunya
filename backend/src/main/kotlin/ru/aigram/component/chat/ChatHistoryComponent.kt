@@ -3,7 +3,6 @@ package ru.aigram.component.chat
 import org.springframework.stereotype.Component
 import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.MessageLink
-import ru.aigram.domain.media.ChatGallery
 import ru.aigram.exception.impl.ChatNotFoundException
 import ru.aigram.exception.impl.ChatUnavailableException
 import ru.aigram.storage.AutomatedReplyStore
@@ -46,17 +45,6 @@ class ChatHistoryComponent(
         val messages = archive.deleted(owner, chatId, before?.toLongOrNull() ?: 0, HISTORY_PAGE_SIZE)
             .stream().map(::decorate).toList()
         return exclusions.decorate(owner, messages)
-    }
-
-    fun gallery(chatId: String, around: String): ChatGallery {
-        val owner = telegram.status().userId
-        val version = archive.version(owner, chatId)
-        val page = telegram.gallery(chatId, around)
-        if (telegram.status().userId != owner) {
-            throw ChatUnavailableException()
-        }
-        val retained = archive.recordPage(owner, chatId, page.messages, version)
-        return page.copy(messages = exclusions.decorate(owner, retained.stream().map(::decorate).toList()))
     }
 
     fun link(chatId: String, messageId: String): MessageLink = MessageLink(telegram.messageLink(chatId, messageId))

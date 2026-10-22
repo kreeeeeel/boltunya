@@ -33,7 +33,7 @@ class ReplyGenerationTest {
         server.start()
         try {
             val reply = AiTestServices("http://127.0.0.1:${server.address.port}").reply(
-                ChatRule(style = "rough", internetAccess = false, matchMyStyle = false),
+                ChatRule(style = "rough", matchMyStyle = false),
                 listOf(ChatMessage("1", "synthetic", "Опять откладываю отправку файла.", false, 0)),
             )
             val messages = Json.parseToJsonElement(requestText).jsonObject.getValue("messages").jsonArray
@@ -69,7 +69,7 @@ class ReplyGenerationTest {
         try {
             val client = AiTestServices("http://127.0.0.1:${server.address.port}")
             val reply = client.reply(
-                ChatRule(internetAccess = false),
+                ChatRule(),
                 listOf(ChatMessage("1", "42", "Привет! Как дела?", false, 0)),
             )
             assertEquals("Привет! Всё хорошо, а у тебя?", reply.text)

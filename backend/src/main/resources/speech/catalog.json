@@ -8,7 +8,9 @@
       "sizeBytes": 8277046,
       "license": "sherpa-onnx Apache-2.0; ONNX Runtime MIT; bundled eSpeak NG GPL-3.0-or-later (upstream sources linked in docs)",
       "sourceUrl": "https://github.com/k2-fsa/sherpa-onnx/tree/v1.13.8",
-      "dependencies": []
+      "dependencies": [],
+      "engine": "sherpa",
+      "format": "JVM/JNI"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.8/sherpa-onnx-native-lib-win-x64-1.13.8.jar",
     "sha256": "33fbdbd5410e9ba9bdda94aa164ec8f7825bb49246420d8ce9bdd88219d97039",
@@ -34,7 +36,9 @@
       "sourceUrl": "https://github.com/openai/whisper",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Whisper ONNX int8"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.tar.bz2",
     "sha256": "c46116994e539aa165266d96b325252728429c12535eb9d8b6a2b10f129e66b1",
@@ -59,7 +63,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/main/ru/ru_RU/irina/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ru_RU-irina-medium-int8.tar.bz2",
     "sha256": "b0000a509f7551a80742eed5c43b8eb03f469cb9f0a42f6feee96ce0da0ebab8",
@@ -84,7 +90,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/main/ru/ru_RU/ruslan/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ru_RU-ruslan-medium-int8.tar.bz2",
     "sha256": "93b9f8c7b34c1420bdc253a0ce5ab1cb6b6be2e8fa26c1f3b36c6189233c3e7e",
@@ -109,7 +117,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/amy/low/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low-int8.tar.bz2",
     "sha256": "93070ac9fadf512e56c46bdd0c5d2ce96b424fdc4e683d560167410bd2c4df7d",
@@ -134,7 +144,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/ru/ru_RU/denis/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ru_RU-denis-medium-int8.tar.bz2",
     "sha256": "d710e29eb7854c42461d16d65d3cef753cc559639ca75806edc75ba71f23af66",
@@ -159,7 +171,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/ru/ru_RU/dmitri/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ru_RU-dmitri-medium-int8.tar.bz2",
     "sha256": "7636793307f634ce54c6e65528a91a61683114f1a6635a08caf64ba6c54e6a63",
@@ -184,7 +198,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/uk/uk_UA/lada/x_low/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-uk_UA-lada-x_low-int8.tar.bz2",
     "sha256": "5ba331ec01c811d605951c30ad7f9f57dfe87aaaefb9295c83012867db14a91a",
@@ -209,7 +225,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/kk/kk_KZ/iseke/x_low/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-kk_KZ-iseke-x_low-int8.tar.bz2",
     "sha256": "d9df34e49fbcc05fb76476da8be030a1db908ce7886cf05960615cd30b6d142d",
@@ -234,7 +252,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/kk/kk_KZ/raya/x_low/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-kk_KZ-raya-x_low-int8.tar.bz2",
     "sha256": "8c0b252415b039a27cb38d75977fa069a63dc1de90f99d155e5c89628bd4dad2",
@@ -259,7 +279,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_US/lessac/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-lessac-medium-int8.tar.bz2",
     "sha256": "f1c6d0295cf16087b05f80fdca5b44daca5cd78e2c425d419a42ba34929805f9",
@@ -284,7 +306,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_US/ryan/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-ryan-medium-int8.tar.bz2",
     "sha256": "376eb489d42e98cb49f0e13a633e8d88580bd247ed8aacc298a733210404f771",
@@ -309,7 +333,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_GB/alan/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_GB-alan-medium-int8.tar.bz2",
     "sha256": "f0b2526c9600657141ccbbe412f6159dceedab5bab4ba4e8857d9443acb50de4",
@@ -334,7 +360,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_GB/alba/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_GB-alba-medium-int8.tar.bz2",
     "sha256": "f7581d123ae977f64f3032bb247d4deeac8440e881d918d36fdd36d8f1030fb7",
@@ -359,7 +387,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_GB/cori/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_GB-cori-medium-int8.tar.bz2",
     "sha256": "169ca8aff3adb271f009a4924c99928a811dbf2b52eaca2dbb460e8c34478c93",
@@ -384,7 +414,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_GB/jenny_dioco/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_GB-jenny_dioco-medium-int8.tar.bz2",
     "sha256": "db7ed4edd3c1e28b1afdecd9a77f5cb44db326f687632ffd364be513ec6a11e6",
@@ -409,7 +441,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/de/de_DE/thorsten/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-de_DE-thorsten-medium-int8.tar.bz2",
     "sha256": "07e240b7b9c1fc9211d5a69512f8cbe11b3286c2ed79c15c076ac6ed427fdf13",
@@ -434,7 +468,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/fr/fr_FR/siwis/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fr_FR-siwis-medium-int8.tar.bz2",
     "sha256": "3909cff9b3cfd4820c66aa13bf554315c82e34899c161f0b446ece372bc4b5ec",
@@ -459,7 +495,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/ar/ar_JO/kareem/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ar_JO-kareem-medium-int8.tar.bz2",
     "sha256": "215910431bbe8236b77242b19d869a4eda6073e9cd424bec45b6d4a59a790d82",
@@ -484,7 +522,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/ca/ca_ES/upc_ona/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ca_ES-upc_ona-medium-int8.tar.bz2",
     "sha256": "3df5cd549d74c9d38267dfbb68b7f919f63d4351d778733b99d4a21be5567cb4",
@@ -509,7 +549,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/cs/cs_CZ/jirka/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-cs_CZ-jirka-medium-int8.tar.bz2",
     "sha256": "45377b35ce823eaac5d76a5530b48fb5ad386a4e07db6ff36aa7c417d6bd0a6d",
@@ -534,7 +576,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/cy/cy_GB/gwryw_gogleddol/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-cy_GB-gwryw_gogleddol-medium-int8.tar.bz2",
     "sha256": "ed2b9efc02a033c9be56572ee6cf4559ed752e6a608b98766f1b4ba0702ec8a0",
@@ -559,7 +603,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/da/da_DK/talesyntese/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-da_DK-talesyntese-medium-int8.tar.bz2",
     "sha256": "83c5b433e97c86109d659d7adcfc865bdf5bc570baa1e1ce8357f4fbf7346a7e",
@@ -584,7 +630,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/el/el_GR/rapunzelina/low/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-el_GR-rapunzelina-low-int8.tar.bz2",
     "sha256": "1fbab58d6380dda2a392ef531de89e8d1202d2dca804db7ebcff5be2b30c823a",
@@ -609,7 +657,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/es/es_AR/daniela/high/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-es_AR-daniela-high-int8.tar.bz2",
     "sha256": "7218f0a119e4c16533ac187f71ab3019f2092f1594e43fef8392ae1f5b64abab",
@@ -634,7 +684,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/eu/eu_ES/antton/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-eu_ES-antton-medium-int8.tar.bz2",
     "sha256": "42def23d4a0c94180e02df9d2183595e8875d1b8ebd678aedd0b909a74e2c011",
@@ -659,7 +711,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/fa/fa_IR/amir/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fa_IR-amir-medium-int8.tar.bz2",
     "sha256": "b79dbf0b6b9629a36fd541bfda83817ec12e2697557d87b918638445971eac46",
@@ -684,7 +738,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/fi/fi_FI/harri/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fi_FI-harri-medium-int8.tar.bz2",
     "sha256": "b69b4c4465787dd4b9778d16b812ed7577a4051551cd87b88e0762309499c3c5",
@@ -709,7 +765,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/hi/hi_IN/pratham/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-hi_IN-pratham-medium-int8.tar.bz2",
     "sha256": "20f568c56207c13b9a0d9478aec8b7d1449122e618aeebc7211f6abc942b58b7",
@@ -734,7 +792,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/hu/hu_HU/anna/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-hu_HU-anna-medium-int8.tar.bz2",
     "sha256": "23f9e9fd59ae28fe04796c84079ed1bcf474e1bd35b97c55447fcc3c4e5e42e1",
@@ -759,7 +819,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/id/id_ID/news_tts/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-id_ID-news_tts-medium-int8.tar.bz2",
     "sha256": "d7315f6bf6b61e75cc4397a934b3372fd7a8223bccb96ed817f7283649eebd89",
@@ -784,7 +846,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/is/is_IS/bui/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-is_IS-bui-medium-int8.tar.bz2",
     "sha256": "3310457efaf9efd8ddda97dee686614481cc2d84015f993289eae7b799f49eb3",
@@ -809,7 +873,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/it/it_IT/paola/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-it_IT-paola-medium-int8.tar.bz2",
     "sha256": "2b975ed305391c056944a4dde67ee754dd824099503a860295bb4c1d724662d8",
@@ -834,7 +900,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/ka/ka_GE/natia/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ka_GE-natia-medium-int8.tar.bz2",
     "sha256": "b76f14656f2ced75c14bed6567665a789bac224bbdf4cf5564d1faf31667d7a1",
@@ -859,7 +927,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/lb/lb_LU/marylux/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-lb_LU-marylux-medium-int8.tar.bz2",
     "sha256": "1fcdaf57a35a00c6db3f60f16a9baf70873f50a628ddf527b45b1d95d480ce93",
@@ -884,7 +954,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/lv/lv_LV/aivars/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-lv_LV-aivars-medium-int8.tar.bz2",
     "sha256": "33d6906f054406856d6ef0f89b01fdc2648f273322129a989b10ea7a04523f42",
@@ -909,7 +981,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/ml/ml_IN/arjun/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ml_IN-arjun-medium-int8.tar.bz2",
     "sha256": "4d0b2a58157604b589cddc54884ffd2618b097d15155b254c34bd21830659832",
@@ -934,7 +1008,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/ne/ne_NP/chitwan/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ne_NP-chitwan-medium-int8.tar.bz2",
     "sha256": "deb1592efb99c02d38ba34443215ae94bf67ed77ecafd2e3320acffb27ae3204",
@@ -959,7 +1035,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/nl/nl_BE/nathalie/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-nl_BE-nathalie-medium-int8.tar.bz2",
     "sha256": "f2cdeb555eacbdd053e5d63c4d0120464161a962f9fe3bf9aac47ecc57ac90ac",
@@ -984,7 +1062,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/no/no_NO/talesyntese/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-no_NO-talesyntese-medium-int8.tar.bz2",
     "sha256": "de0fc89178fabf0636554af8ae131b4dfe034866458bb7daa7026ee0d0d8d2f7",
@@ -1009,7 +1089,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/pl/pl_PL/bass/high/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-pl_PL-bass-high-int8.tar.bz2",
     "sha256": "e6667ea284c15b90e5fd6350b8005a0a4d7c1ce1cc1ce647ee64d2650a57a12f",
@@ -1034,7 +1116,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/pt/pt_BR/cadu/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-pt_BR-cadu-medium-int8.tar.bz2",
     "sha256": "78f1caf0a74cc6cb8dedaff87affd232ee653d5b0394d4cf4d2e97ecbfa5ff3d",
@@ -1059,7 +1143,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/ro/ro_RO/mihai/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ro_RO-mihai-medium-int8.tar.bz2",
     "sha256": "1f41b684fb4640d1b79f750f1581647f8737b24ff5daf8d7c5fd5ad6d1761499",
@@ -1084,7 +1170,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/sk/sk_SK/lili/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-sk_SK-lili-medium-int8.tar.bz2",
     "sha256": "5adc2ac5af88630cf305da68ba9cfd656e4b72e7f8c7d2deb2f641ef1d740096",
@@ -1109,7 +1197,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/sl/sl_SI/artur/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-sl_SI-artur-medium-int8.tar.bz2",
     "sha256": "073e747f6d23db2c67b62230b2fe6fd5e72ca9f89651d5329a4bdd0b43c2bd05",
@@ -1134,7 +1224,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/sq/sq_AL/edon/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-sq_AL-edon-medium-int8.tar.bz2",
     "sha256": "b951fc1866256dc0258abf9844fb0a3a8263615056e65ddbd6b766676816dd26",
@@ -1159,7 +1251,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/sv/sv_SE/alma/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-sv_SE-alma-medium-int8.tar.bz2",
     "sha256": "a1d0b72ffba2f49a5b02396ebf818cbccc7bb23a16d9978ff37dfb9a6321deaa",
@@ -1184,7 +1278,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/sw/sw_CD/lanfrica/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-sw_CD-lanfrica-medium-int8.tar.bz2",
     "sha256": "eee0eda5a850e21169ebd79105a914d95d4aa34cccc49b417f071f05a0e2fa45",
@@ -1209,7 +1305,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/tr/tr_TR/dfki/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-tr_TR-dfki-medium-int8.tar.bz2",
     "sha256": "6cda7bc029b7d5549a80439c51beb4c40c42df4b4614f01a8c61deb2fc859aa2",
@@ -1234,7 +1332,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/ur/ur_PK/fasih/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-ur_PK-fasih-medium-int8.tar.bz2",
     "sha256": "5b4481d8fd03b849f9c9b7b484a51b34014ca7308c2aabd7f0f2688ed8721234",
@@ -1259,7 +1359,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/vi/vi_VN/25hours_single/low/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-vi_VN-25hours_single-low-int8.tar.bz2",
     "sha256": "88df4b7fdff4bd441f1f1fa9f4b4d0f03b8777d69fd0d423912e3f78bba57312",
@@ -1284,7 +1386,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_US/ljspeech/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-ljspeech-medium-int8.tar.bz2",
     "sha256": "24dc3bd77dd48c291e52c297878d3437c9492f245d823d7f6a06c4bbb67f4b6b",
@@ -1309,7 +1413,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_US/danny/low/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-danny-low-int8.tar.bz2",
     "sha256": "002a0079a1059a97b067927c4d79ad2ad14c33d7260eeb6d78fb5b7b32986a95",
@@ -1334,7 +1440,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_US/joe/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-joe-medium-int8.tar.bz2",
     "sha256": "644527f29eca0ada5595d7b6e4daf6388f5ac0c4870b4d42996a6687fcefeb37",
@@ -1359,7 +1467,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_US/hfc_female/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-hfc_female-medium-int8.tar.bz2",
     "sha256": "7c467d19054ddf84056a4887a8be75f5f3b2a5d426637b526953a5e488fec5ce",
@@ -1384,7 +1494,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_US/hfc_male/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-hfc_male-medium-int8.tar.bz2",
     "sha256": "a12daed3ba978ffb403dec4afa245d6f114668b370157a022fcc47fa6ca073d8",
@@ -1409,7 +1521,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/es/es_ES/davefx/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-es_ES-davefx-medium-int8.tar.bz2",
     "sha256": "8bb8ac1cefb727caec9bd9c6c3185c673c8b42c53bd29bb25d5a7715dac37125",
@@ -1434,7 +1548,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/es/es_MX/ald/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-es_MX-ald-medium-int8.tar.bz2",
     "sha256": "447e82d080719409db08e54a4b6eec2e4b6ba850b98dcaf09d3fc67bf30ff692",
@@ -1459,7 +1575,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/fr/fr_FR/gilles/low/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fr_FR-gilles-low-int8.tar.bz2",
     "sha256": "92d2bfd9b6b32b9787557c466b15620e453aecc10ec521762660e034941b3c43",
@@ -1484,7 +1602,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/fr/fr_FR/tom/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fr_FR-tom-medium-int8.tar.bz2",
     "sha256": "b158f884eb4231b8dddd372c3dc506949630c992a8e48ca692a90323e8bb4e09",
@@ -1509,7 +1629,9 @@
       "sourceUrl": "https://huggingface.co/rhasspy/piper-voices/blob/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/de/de_DE/eva_k/x_low/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-de_DE-eva_k-x_low-int8.tar.bz2",
     "sha256": "0501123c7e184571a40690e79943f4111a57b988632f7f60a9d2344fd061e2a2",
@@ -1534,7 +1656,9 @@
       "sourceUrl": "https://github.com/dnhkng/GLaDOS",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-glados.tar.bz2",
     "sha256": "fa2b82a4984468081db8cebbaa7c0b1e008492ac2b4276d7f628d6141b6a2d1c",
@@ -1559,7 +1683,9 @@
       "sourceUrl": "https://huggingface.co/systemofapwne/piper-de-glados/blob/f0ee29dfa468cbc69bac1408dd3887611fcb76c1/de/de_DE/glados/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-de_DE-glados-medium-int8.tar.bz2",
     "sha256": "9f38740cc743a68fb2f756f06cd4813892abc9b293ec7589e3d4d0d394ed6bc0",
@@ -1584,7 +1710,9 @@
       "sourceUrl": "https://huggingface.co/systemofapwne/piper-de-glados/blob/f0ee29dfa468cbc69bac1408dd3887611fcb76c1/de/de_DE/glados-turret/medium/MODEL_CARD",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-de_DE-glados_turret-medium-int8.tar.bz2",
     "sha256": "2ffb416f2f09602889656d7733121fe88456c67b5a6b00ef2a15c6a59f255cd4",
@@ -1609,7 +1737,9 @@
       "sourceUrl": "https://huggingface.co/csukuangfj/vits-piper-es_ES-glados-medium/blob/006383ecc39a0e1254fdd25e2bdfaf50f8d066d1/README.md",
       "dependencies": [
         "sherpa-runtime"
-      ]
+      ],
+      "engine": "sherpa",
+      "format": "Piper/VITS ONNX"
     },
     "downloadUrl": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-es_ES-glados-medium-int8.tar.bz2",
     "sha256": "e53ca3bcce7ed004428fd14dc5b5ff17b83d2da4ffa191e2b279435ba728f740",
@@ -1620,5 +1750,486 @@
       "espeak-ng-data"
     ],
     "modelFile": "es_ES-glados-medium.onnx"
+  },
+  {
+    "asset": {
+      "id": "applio-runtime",
+      "title": "Applio 3.7.0 · Windows x64 · CPU",
+      "kind": "runtime",
+      "languages": [],
+      "sizeBytes": 6775972339,
+      "license": "Applio MIT; bundled Python/PyTorch/FAISS and dependencies retain their upstream licences; installed archive includes notices",
+      "sourceUrl": "https://github.com/IAHispano/Applio/releases/tag/3.7.0",
+      "dependencies": [],
+      "engine": "applio-rvc",
+      "format": "Portable Python + PyTorch · 10.4 GB expanded"
+    },
+    "downloadUrl": "https://huggingface.co/IAHispano/Applio/resolve/e908bdd5bf9f18cede26bbbec724b1a4bc7c2f14/Compiled/Windows/ApplioV3.7.0.zip",
+    "sha256": "7eeb07c8fedfde752f83b8a7716cc14645e01d1770f12fd0b392482d3532aeb2",
+    "archiveRoot": "",
+    "requiredFiles": [
+      "env",
+      "rvc",
+      "env/python.exe",
+      "env/python312.dll",
+      "rvc/infer/infer.py",
+      "rvc/models/embedders/contentvec/config.json",
+      "rvc/models/embedders/contentvec/pytorch_model.bin",
+      "rvc/models/predictors/rmvpe.pt",
+      "core.py",
+      "assets/config_template.json",
+      "TERMS_OF_USE.md"
+    ],
+    "modelFile": ""
+  },
+  {
+    "asset": {
+      "id": "rvc-alice",
+      "title": "Алиса · YandexAliceRVC · community",
+      "kind": "synthesis",
+      "languages": [
+        "ru"
+      ],
+      "sizeBytes": 64237755,
+      "license": "Community model uploaded by mbsoft; OpenRAIL declared without specific text/dataset permission; not an official Yandex or DonationAlerts model",
+      "sourceUrl": "https://huggingface.co/mbsoft/YandexAliceRVC/tree/666ddc3386db4280648cf7de8c0a9ecccccd029e",
+      "dependencies": [
+        "sherpa-runtime",
+        "applio-runtime",
+        "piper-ru-irina"
+      ],
+      "engine": "applio-rvc",
+      "format": "RVC v2 · PyTorch PTH + FAISS index"
+    },
+    "downloadUrl": "https://huggingface.co/mbsoft/YandexAliceRVC/resolve/666ddc3386db4280648cf7de8c0a9ecccccd029e/YandexAlice.zip",
+    "sha256": "c31600a7a42543fc4a67cca3c0ffa8d92255692d0ac75045fe174b3959b1207a",
+    "archiveRoot": "",
+    "requiredFiles": [
+      "YandexAlice.pth",
+      "added_IVF130_Flat_nprobe_1_YandexAlice_v2.index"
+    ],
+    "modelFile": "YandexAlice.pth",
+    "baseModelId": "piper-ru-irina",
+    "indexFile": "added_IVF130_Flat_nprobe_1_YandexAlice_v2.index"
+  },
+  {
+    "asset": {
+      "id": "rvc-bratishkinoff",
+      "title": "Братишкин · Snowie V3",
+      "kind": "synthesis",
+      "languages": [
+        "ru"
+      ],
+      "sizeBytes": 118459420,
+      "license": "Community RVC model; uploader Joxi declares OpenRAIL (no specific licence text/dataset permission supplied); original voice and character rights are not granted",
+      "sourceUrl": "https://huggingface.co/Joxi/RVCv2_models/blob/743af4e5b43dd6afad3f0966a83d806428f768d0/bratishkinoff%20(Twitch%20Streamer)%20(Snowie%20V3).zip",
+      "dependencies": [
+        "sherpa-runtime",
+        "applio-runtime",
+        "piper-ru-ruslan"
+      ],
+      "engine": "applio-rvc",
+      "format": "RVC v2 · PyTorch PTH + FAISS index"
+    },
+    "downloadUrl": "https://huggingface.co/Joxi/RVCv2_models/resolve/743af4e5b43dd6afad3f0966a83d806428f768d0/bratishkinoff%20(Twitch%20Streamer)%20(Snowie%20V3).zip",
+    "sha256": "47e704502f22bc51dfdcbfa9e760a69843966efaab4b4678aaab956be6aae8bf",
+    "archiveRoot": "",
+    "requiredFiles": [
+      "bratishkinoff.pth",
+      "added_IVF874_Flat_nprobe_1_bratishkinoff_v2.index"
+    ],
+    "modelFile": "bratishkinoff.pth",
+    "baseModelId": "piper-ru-ruslan",
+    "indexFile": "added_IVF874_Flat_nprobe_1_bratishkinoff_v2.index"
+  },
+  {
+    "asset": {
+      "id": "rvc-igorlink",
+      "title": "Igor Link",
+      "kind": "synthesis",
+      "languages": [
+        "ru"
+      ],
+      "sizeBytes": 103828821,
+      "license": "Community RVC model; uploader Joxi declares OpenRAIL (no specific licence text/dataset permission supplied); original voice and character rights are not granted",
+      "sourceUrl": "https://huggingface.co/Joxi/RVCv2_models/blob/743af4e5b43dd6afad3f0966a83d806428f768d0/IgorLink.zip",
+      "dependencies": [
+        "sherpa-runtime",
+        "applio-runtime",
+        "piper-ru-ruslan"
+      ],
+      "engine": "applio-rvc",
+      "format": "RVC v2 · PyTorch PTH + FAISS index"
+    },
+    "downloadUrl": "https://huggingface.co/Joxi/RVCv2_models/resolve/743af4e5b43dd6afad3f0966a83d806428f768d0/IgorLink.zip",
+    "sha256": "581783d4e6329e5558f097014774cd2f9c046aa25d5a9c372292e28f80cb9600",
+    "archiveRoot": "",
+    "requiredFiles": [
+      "IgorLink.pth",
+      "added_IVF683_Flat_nprobe_1_IgorLink_v2.index"
+    ],
+    "modelFile": "IgorLink.pth",
+    "baseModelId": "piper-ru-ruslan",
+    "indexFile": "added_IVF683_Flat_nprobe_1_IgorLink_v2.index"
+  },
+  {
+    "asset": {
+      "id": "rvc-jesusavgn",
+      "title": "JesusAVGN · TITAN",
+      "kind": "synthesis",
+      "languages": [
+        "ru"
+      ],
+      "sizeBytes": 96844447,
+      "license": "Community RVC model; uploader Joxi declares OpenRAIL (no specific licence text/dataset permission supplied); original voice and character rights are not granted",
+      "sourceUrl": "https://huggingface.co/Joxi/RVCv2_models/blob/743af4e5b43dd6afad3f0966a83d806428f768d0/JesusAVGN%20(TITAN-Medium).zip",
+      "dependencies": [
+        "sherpa-runtime",
+        "applio-runtime",
+        "piper-ru-ruslan"
+      ],
+      "engine": "applio-rvc",
+      "format": "RVC v2 · PyTorch PTH + FAISS index"
+    },
+    "downloadUrl": "https://huggingface.co/Joxi/RVCv2_models/resolve/743af4e5b43dd6afad3f0966a83d806428f768d0/JesusAVGN%20(TITAN-Medium).zip",
+    "sha256": "469d954a8491de483fb2edd4223894592be3ee210c6ede7cdb6a463ad28aaddd",
+    "archiveRoot": "",
+    "requiredFiles": [
+      "HesusAVGN.pth",
+      "added_IVF329_Flat_nprobe_1_HesusAVGN_v2.index"
+    ],
+    "modelFile": "HesusAVGN.pth",
+    "baseModelId": "piper-ru-ruslan",
+    "indexFile": "added_IVF329_Flat_nprobe_1_HesusAVGN_v2.index"
+  },
+  {
+    "asset": {
+      "id": "rvc-joe-bartolozzi",
+      "title": "Joe Bartolozzi · Ov2",
+      "kind": "synthesis",
+      "languages": [
+        "en"
+      ],
+      "sizeBytes": 193074185,
+      "license": "Community RVC model; uploader Joxi declares OpenRAIL (no specific licence text/dataset permission supplied); original voice and character rights are not granted",
+      "sourceUrl": "https://huggingface.co/Joxi/RVCv2_models/blob/743af4e5b43dd6afad3f0966a83d806428f768d0/Joe%20Bartolozzi%20(Ov2).zip",
+      "dependencies": [
+        "sherpa-runtime",
+        "applio-runtime",
+        "piper-en-ryan"
+      ],
+      "engine": "applio-rvc",
+      "format": "RVC v2 · PyTorch PTH + FAISS index"
+    },
+    "downloadUrl": "https://huggingface.co/Joxi/RVCv2_models/resolve/743af4e5b43dd6afad3f0966a83d806428f768d0/Joe%20Bartolozzi%20(Ov2).zip",
+    "sha256": "20055b69a7ec3210995cc408acf3d4032424f3d646c8743185dcf5b2855f7055",
+    "archiveRoot": "",
+    "requiredFiles": [
+      "JoeBartolozzi_Ov2.pth",
+      "added_IVF1118_Flat_nprobe_1_JoeBartolozzi_Ov2_v2.index"
+    ],
+    "modelFile": "JoeBartolozzi_Ov2.pth",
+    "baseModelId": "piper-en-ryan",
+    "indexFile": "added_IVF1118_Flat_nprobe_1_JoeBartolozzi_Ov2_v2.index"
+  },
+  {
+    "asset": {
+      "id": "rvc-johnny-silverhand-ru",
+      "title": "Джонни Сильверхенд · Cyberpunk 2077 · RUS",
+      "kind": "synthesis",
+      "languages": [
+        "ru"
+      ],
+      "sizeBytes": 160391186,
+      "license": "Community RVC model; uploader Joxi declares OpenRAIL (no specific licence text/dataset permission supplied); original voice and character rights are not granted",
+      "sourceUrl": "https://huggingface.co/Joxi/RVCv2_models/blob/743af4e5b43dd6afad3f0966a83d806428f768d0/Johnny%20Silverhand%20RUS%20(Cyberpunk%202077)%20(Ov2).zip",
+      "dependencies": [
+        "sherpa-runtime",
+        "applio-runtime",
+        "piper-ru-ruslan"
+      ],
+      "engine": "applio-rvc",
+      "format": "RVC v2 · PyTorch PTH + FAISS index"
+    },
+    "downloadUrl": "https://huggingface.co/Joxi/RVCv2_models/resolve/743af4e5b43dd6afad3f0966a83d806428f768d0/Johnny%20Silverhand%20RUS%20(Cyberpunk%202077)%20(Ov2).zip",
+    "sha256": "c335caeed619642224210703fb9dd309534058e9bd5c563c8acd4ec2b62ee58a",
+    "archiveRoot": "",
+    "requiredFiles": [
+      "Johnny_Silverhend_RUS_Ov2_e80_s4880.pth",
+      "added_IVF1464_Flat_nprobe_1_Johnny_Silverhend_RUS_Ov2_v2.index"
+    ],
+    "modelFile": "Johnny_Silverhend_RUS_Ov2_e80_s4880.pth",
+    "baseModelId": "piper-ru-ruslan",
+    "indexFile": "added_IVF1464_Flat_nprobe_1_Johnny_Silverhend_RUS_Ov2_v2.index"
+  },
+  {
+    "asset": {
+      "id": "rvc-siri-ru",
+      "title": "Siri RU 2 · Snowie V3",
+      "kind": "synthesis",
+      "languages": [
+        "ru"
+      ],
+      "sizeBytes": 93135563,
+      "license": "Community RVC model; uploader Joxi declares OpenRAIL (no specific licence text/dataset permission supplied); original voice and character rights are not granted",
+      "sourceUrl": "https://huggingface.co/Joxi/RVCv2_models/blob/743af4e5b43dd6afad3f0966a83d806428f768d0/Siri%20RU%202%20(SnowieV3).zip",
+      "dependencies": [
+        "sherpa-runtime",
+        "applio-runtime",
+        "piper-ru-ruslan"
+      ],
+      "engine": "applio-rvc",
+      "format": "RVC v2 · PyTorch PTH + FAISS index"
+    },
+    "downloadUrl": "https://huggingface.co/Joxi/RVCv2_models/resolve/743af4e5b43dd6afad3f0966a83d806428f768d0/Siri%20RU%202%20(SnowieV3).zip",
+    "sha256": "0777c55c50e1a59fda4e28bbb56030749b853089a042344f26d3b9681e4713fb",
+    "archiveRoot": "",
+    "requiredFiles": [
+      "Siri_RUvoice2.pth",
+      "added_IVF307_Flat_nprobe_1_Siri_RUvoice2_v2.index"
+    ],
+    "modelFile": "Siri_RUvoice2.pth",
+    "baseModelId": "piper-ru-ruslan",
+    "indexFile": "added_IVF307_Flat_nprobe_1_Siri_RUvoice2_v2.index"
+  },
+  {
+    "asset": {
+      "id": "rvc-stas-ai-kak-prosto",
+      "title": "Стас Ай Как Просто",
+      "kind": "synthesis",
+      "languages": [
+        "ru"
+      ],
+      "sizeBytes": 122716349,
+      "license": "Community RVC model; uploader Joxi declares OpenRAIL (no specific licence text/dataset permission supplied); original voice and character rights are not granted",
+      "sourceUrl": "https://huggingface.co/Joxi/RVCv2_models/blob/743af4e5b43dd6afad3f0966a83d806428f768d0/StasAiKakProsto.zip",
+      "dependencies": [
+        "sherpa-runtime",
+        "applio-runtime",
+        "piper-ru-ruslan"
+      ],
+      "engine": "applio-rvc",
+      "format": "RVC v2 · PyTorch PTH + FAISS index"
+    },
+    "downloadUrl": "https://huggingface.co/Joxi/RVCv2_models/resolve/743af4e5b43dd6afad3f0966a83d806428f768d0/StasAiKakProsto.zip",
+    "sha256": "48b73be77c540b9489d2f9782c4b168dec8e75d7c30273037039150ac9f83065",
+    "archiveRoot": "",
+    "requiredFiles": [
+      "StasAiKakProsto.pth",
+      "added_IVF969_Flat_nprobe_1_StasAiKakProsto_v2.index"
+    ],
+    "modelFile": "StasAiKakProsto.pth",
+    "baseModelId": "piper-ru-ruslan",
+    "indexFile": "added_IVF969_Flat_nprobe_1_StasAiKakProsto_v2.index"
+  },
+  {
+    "asset": {
+      "id": "rvc-stint",
+      "title": "Стинт",
+      "kind": "synthesis",
+      "languages": [
+        "ru"
+      ],
+      "sizeBytes": 138952516,
+      "license": "Community RVC model; uploader Joxi declares OpenRAIL (no specific licence text/dataset permission supplied); original voice and character rights are not granted",
+      "sourceUrl": "https://huggingface.co/Joxi/RVCv2_models/blob/743af4e5b43dd6afad3f0966a83d806428f768d0/Stintik.zip",
+      "dependencies": [
+        "sherpa-runtime",
+        "applio-runtime",
+        "piper-ru-ruslan"
+      ],
+      "engine": "applio-rvc",
+      "format": "RVC v2 · PyTorch PTH + FAISS index"
+    },
+    "downloadUrl": "https://huggingface.co/Joxi/RVCv2_models/resolve/743af4e5b43dd6afad3f0966a83d806428f768d0/Stintik.zip",
+    "sha256": "58243daec3467be5807c0eb142cfb8dbaafc3a021c58d1651c7415c55030befb",
+    "archiveRoot": "",
+    "requiredFiles": [
+      "Stint.pth",
+      "added_IVF1216_Flat_nprobe_1_Stint_v2.index"
+    ],
+    "modelFile": "Stint.pth",
+    "baseModelId": "piper-ru-ruslan",
+    "indexFile": "added_IVF1216_Flat_nprobe_1_Stint_v2.index"
+  },
+  {
+    "asset": {
+      "id": "rvc-t2x2",
+      "title": "T2x2",
+      "kind": "synthesis",
+      "languages": [
+        "ru"
+      ],
+      "sizeBytes": 246713983,
+      "license": "Community RVC model; uploader Joxi declares OpenRAIL (no specific licence text/dataset permission supplied); original voice and character rights are not granted",
+      "sourceUrl": "https://huggingface.co/Joxi/RVCv2_models/blob/743af4e5b43dd6afad3f0966a83d806428f768d0/T2x2.zip",
+      "dependencies": [
+        "sherpa-runtime",
+        "applio-runtime",
+        "piper-ru-ruslan"
+      ],
+      "engine": "applio-rvc",
+      "format": "RVC v2 · PyTorch PTH + FAISS index"
+    },
+    "downloadUrl": "https://huggingface.co/Joxi/RVCv2_models/resolve/743af4e5b43dd6afad3f0966a83d806428f768d0/T2x2.zip",
+    "sha256": "29ea2baba5394ba8322cfee726270a6e963e74483aef6200d2d4f9bf92a83d37",
+    "archiveRoot": "",
+    "requiredFiles": [
+      "T2x2.pth",
+      "added_IVF2731_Flat_nprobe_1_T2x2_v2.index"
+    ],
+    "modelFile": "T2x2.pth",
+    "baseModelId": "piper-ru-ruslan",
+    "indexFile": "added_IVF2731_Flat_nprobe_1_T2x2_v2.index"
+  },
+  {
+    "asset": {
+      "id": "rvc-itpedia",
+      "title": "itpedia",
+      "kind": "synthesis",
+      "languages": [
+        "ru"
+      ],
+      "sizeBytes": 147662924,
+      "license": "Community RVC model; uploader Joxi declares OpenRAIL (no specific licence text/dataset permission supplied); original voice and character rights are not granted",
+      "sourceUrl": "https://huggingface.co/Joxi/RVCv2_models/blob/743af4e5b43dd6afad3f0966a83d806428f768d0/itpedia.zip",
+      "dependencies": [
+        "sherpa-runtime",
+        "applio-runtime",
+        "piper-ru-ruslan"
+      ],
+      "engine": "applio-rvc",
+      "format": "RVC v2 · PyTorch PTH + FAISS index"
+    },
+    "downloadUrl": "https://huggingface.co/Joxi/RVCv2_models/resolve/743af4e5b43dd6afad3f0966a83d806428f768d0/itpedia.zip",
+    "sha256": "819e90bb63269ca66ce2f6026c5ad937353a8d2c567ef16f7038000c19e96cd8",
+    "archiveRoot": "",
+    "requiredFiles": [
+      "itpedia.pth",
+      "itpedia.index"
+    ],
+    "modelFile": "itpedia.pth",
+    "baseModelId": "piper-ru-ruslan",
+    "indexFile": "itpedia.index"
+  },
+  {
+    "asset": {
+      "id": "rvc-ivanzolo",
+      "title": "ivanzolo2004",
+      "kind": "synthesis",
+      "languages": [
+        "ru"
+      ],
+      "sizeBytes": 89949679,
+      "license": "Community RVC model; uploader Joxi declares OpenRAIL (no specific licence text/dataset permission supplied); original voice and character rights are not granted",
+      "sourceUrl": "https://huggingface.co/Joxi/RVCv2_models/blob/743af4e5b43dd6afad3f0966a83d806428f768d0/ivanzolo2004.zip",
+      "dependencies": [
+        "sherpa-runtime",
+        "applio-runtime",
+        "piper-ru-ruslan"
+      ],
+      "engine": "applio-rvc",
+      "format": "RVC v2 · PyTorch PTH + FAISS index"
+    },
+    "downloadUrl": "https://huggingface.co/Joxi/RVCv2_models/resolve/743af4e5b43dd6afad3f0966a83d806428f768d0/ivanzolo2004.zip",
+    "sha256": "7a58142faebc28ffe7570de29c362225743b26eb07e808d3f89624c3b0254ec6",
+    "archiveRoot": "",
+    "requiredFiles": [
+      "ivanzolo.pth",
+      "ivanzolo.index"
+    ],
+    "modelFile": "ivanzolo.pth",
+    "baseModelId": "piper-ru-ruslan",
+    "indexFile": "ivanzolo.index"
+  },
+  {
+    "asset": {
+      "id": "rvc-mellsher",
+      "title": "Mellsher",
+      "kind": "synthesis",
+      "languages": [
+        "ru"
+      ],
+      "sizeBytes": 156830799,
+      "license": "Community RVC model; uploader Joxi declares OpenRAIL (no specific licence text/dataset permission supplied); original voice and character rights are not granted",
+      "sourceUrl": "https://huggingface.co/Joxi/RVCv2_models/blob/743af4e5b43dd6afad3f0966a83d806428f768d0/Mellsher.zip",
+      "dependencies": [
+        "sherpa-runtime",
+        "applio-runtime",
+        "piper-ru-ruslan"
+      ],
+      "engine": "applio-rvc",
+      "format": "RVC v2 · PyTorch PTH + FAISS index"
+    },
+    "downloadUrl": "https://huggingface.co/Joxi/RVCv2_models/resolve/743af4e5b43dd6afad3f0966a83d806428f768d0/Mellsher.zip",
+    "sha256": "604811a7fbef883a9b98b0fcf73e947b2537b332d67cdc5e9808bc40864035dd",
+    "archiveRoot": "",
+    "requiredFiles": [
+      "Mellsher.pth",
+      "added_IVF1372_Flat_nprobe_1_Mellsher_v2.index"
+    ],
+    "modelFile": "Mellsher.pth",
+    "baseModelId": "piper-ru-ruslan",
+    "indexFile": "added_IVF1372_Flat_nprobe_1_Mellsher_v2.index"
+  },
+  {
+    "asset": {
+      "id": "rvc-wylsacom",
+      "title": "Wylsacom · Ov2",
+      "kind": "synthesis",
+      "languages": [
+        "ru"
+      ],
+      "sizeBytes": 209221355,
+      "license": "Community RVC model; uploader Joxi declares OpenRAIL (no specific licence text/dataset permission supplied); original voice and character rights are not granted",
+      "sourceUrl": "https://huggingface.co/Joxi/RVCv2_models/blob/743af4e5b43dd6afad3f0966a83d806428f768d0/Wylsacom%20(Ov2).zip",
+      "dependencies": [
+        "sherpa-runtime",
+        "applio-runtime",
+        "piper-ru-ruslan"
+      ],
+      "engine": "applio-rvc",
+      "format": "RVC v2 · PyTorch PTH + FAISS index"
+    },
+    "downloadUrl": "https://huggingface.co/Joxi/RVCv2_models/resolve/743af4e5b43dd6afad3f0966a83d806428f768d0/Wylsacom%20(Ov2).zip",
+    "sha256": "d9518a9f7e843acbf0d580185f2430a1bb9005fc6437a4ca805f2fd6a0eda0e1",
+    "archiveRoot": "",
+    "requiredFiles": [
+      "Wylsacom_Ov2.pth",
+      "added_IVF2118_Flat_nprobe_1_Wylsacom_Ov2_v2.index"
+    ],
+    "modelFile": "Wylsacom_Ov2.pth",
+    "baseModelId": "piper-ru-ruslan",
+    "indexFile": "added_IVF2118_Flat_nprobe_1_Wylsacom_Ov2_v2.index"
+  },
+  {
+    "asset": {
+      "id": "rvc-donk",
+      "title": "donk · Team Spirit · Snowie V3",
+      "kind": "synthesis",
+      "languages": [
+        "ru"
+      ],
+      "sizeBytes": 90062087,
+      "license": "Community RVC model; uploader Joxi declares OpenRAIL (no specific licence text/dataset permission supplied); original voice and character rights are not granted",
+      "sourceUrl": "https://huggingface.co/Joxi/RVCv2_models/blob/743af4e5b43dd6afad3f0966a83d806428f768d0/donk%20(Team%20Spirit)%20(Snowie%20V3).zip",
+      "dependencies": [
+        "sherpa-runtime",
+        "applio-runtime",
+        "piper-ru-ruslan"
+      ],
+      "engine": "applio-rvc",
+      "format": "RVC v2 · PyTorch PTH + FAISS index"
+    },
+    "downloadUrl": "https://huggingface.co/Joxi/RVCv2_models/resolve/743af4e5b43dd6afad3f0966a83d806428f768d0/donk%20(Team%20Spirit)%20(Snowie%20V3).zip",
+    "sha256": "90ef7d175a692fb4863b28b06b58186379d0ae6521194b5980c23a4d0643fbd9",
+    "archiveRoot": "",
+    "requiredFiles": [
+      "donk.pth",
+      "added_IVF543_Flat_nprobe_1_donk_v2.index"
+    ],
+    "modelFile": "donk.pth",
+    "baseModelId": "piper-ru-ruslan",
+    "indexFile": "added_IVF543_Flat_nprobe_1_donk_v2.index"
   }
 ]

@@ -11,7 +11,6 @@ import ru.aigram.storage.ContextExclusionStore
 import ru.aigram.telegram.TelegramGateway
 import java.time.Clock
 
-private const val HISTORY_PAGE_MESSAGES = 100
 private const val MESSAGE_SETTLE_SECONDS = 10
 
 @Component
@@ -25,10 +24,17 @@ class MemoryProcessor(
     private val exclusions: ContextExclusionStore? = null,
     private val roster: ParticipantRosterStore? = null,
     private val speech: SpeechInputContext? = null,
+    private val historyLoader: MemoryHistoryLoader = MemoryHistoryLoader(telegram, batches, exclusions),
 ) {
     fun process(state: ChatMemoryState, model: String, recent: Boolean, canCommit: () -> Boolean = { true }): Boolean {
         val policyRevision = exclusions?.revision(state.accountId, state.chatId)
         val previous = store.read(state.chatId)
+        val owner = store.read("")
+        val fits: (List<MemorySource>) -> Boolean = { sources ->
+            val owned = sources.filter { it.speaker == MemorySpeaker.OWNER && it.text.isNotBlank() }
+            summarizer.fits(model, previous.facts(), sources) &&
+                (owned.isEmpty() || ownerSummarizer.fitsOwner(model, owner.facts(), owned))
+        }
         val before = if (state.headId == 0L) {
             0
         } else if (recent) {
@@ -36,8 +42,17 @@ class MemoryProcessor(
         } else {
             state.backfillBeforeId
         }
-        val history = telegram.history(state.chatId, HISTORY_PAGE_MESSAGES, before).sortedBy { it.id.toLong() }
-        val fetched = exclusions?.decorate(state.accountId, history) ?: history
+        val window = historyLoader.load(
+            state,
+            before,
+            clock.instant().epochSecond - MESSAGE_SETTLE_SECONDS,
+            recent,
+            fits,
+        ) { unchanged(state, policyRevision) && canCommit() }
+        if (!canCommit()) {
+            return false
+        }
+        val fetched = window.messages
         if (unchanged(state, policyRevision)) {
             roster?.record(state.accountId, state.chatId, fetched)
         }
@@ -58,17 +73,12 @@ class MemoryProcessor(
         if (recent && page.size != fetched.size && candidates.isEmpty()) {
             return false
         }
-        val owner = store.read("")
-        val fits: (List<MemorySource>) -> Boolean = { sources ->
-            val owned = sources.filter { it.speaker == MemorySpeaker.OWNER && it.text.isNotBlank() }
-            summarizer.fits(model, previous.facts(), sources) &&
-                (owned.isEmpty() || ownerSummarizer.fitsOwner(model, owner.facts(), owned))
-        }
         val selected = batches.select(candidates, fits)
+        val inputCurrent = speech?.commitGuard(selected.messages, state.accountId) ?: { true }
         val prepared = speech?.prepare(selected.messages, rejectDisabledVoice = false, ownerId = state.accountId)
             ?: selected.messages
         val batch = batches.select(prepared, fits)
-        if (!unchanged(state, policyRevision)) {
+        if (!unchanged(state, policyRevision) || !inputCurrent() || !canCommit()) {
             return false
         }
         val ownerSources = batch.sources.filter { it.speaker == MemorySpeaker.OWNER && it.text.isNotBlank() }
@@ -77,7 +87,7 @@ class MemoryProcessor(
         } else {
             OwnerMemoryUpdate(owner, ownerSummarizer.summarizeOwner(model, owner.facts(), ownerSources))
         }
-        if (!unchanged(state, policyRevision)) {
+        if (!unchanged(state, policyRevision) || !inputCurrent() || !canCommit()) {
             return false
         }
         val summary = if (batch.sources.any {
@@ -94,13 +104,13 @@ class MemoryProcessor(
                 headId = page.lastOrNull()?.id?.toLong() ?: 0,
                 headDate = page.lastOrNull()?.date ?: 0,
                 backfillBeforeId = batch.messages.firstOrNull()?.id?.toLong() ?: 0,
-                backfillComplete = page.isEmpty(),
+                backfillComplete = window.exhausted && batch.messages.size == page.size,
                 dirty = false,
                 requested = false,
             )
             !recent -> state.copy(
                 backfillBeforeId = batch.messages.firstOrNull()?.id?.toLong() ?: state.backfillBeforeId,
-                backfillComplete = page.isEmpty(),
+                backfillComplete = window.exhausted && batch.messages.size == page.size,
             )
             else -> delta(state, page.map { it.id.toLong() }, batch, page.lastOrNull()?.date ?: state.headDate)
         }.copy(
@@ -115,10 +125,10 @@ class MemoryProcessor(
         )
         val policy = exclusions
         return if (policy == null) {
-            canCommit() && store.commit(state, previous.documentRevision, summary, next, ownerUpdate)
+            canCommit() && inputCurrent() && store.commit(state, previous.documentRevision, summary, next, ownerUpdate)
         } else {
             synchronized(policy) {
-                unchanged(state, policyRevision) && canCommit() &&
+                unchanged(state, policyRevision) && canCommit() && inputCurrent() &&
                     store.commit(state, previous.documentRevision, summary, next, ownerUpdate)
             }
         }

@@ -14,4 +14,6 @@ data class SpeechAsset(
     val installed: Boolean = false,
     val dependencies: List<String> = emptyList(),
     val userProvided: Boolean = false,
+    val engine: SpeechEngineKind = SpeechEngineKind.SHERPA,
+    val format: String = "",
 )

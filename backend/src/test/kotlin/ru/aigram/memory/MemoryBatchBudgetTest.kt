@@ -6,11 +6,45 @@ import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.exception.impl.MemorySourceContextLimitException
 import ru.aigram.storage.AutomatedReplyStore
 import java.nio.file.Path
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.stream.IntStream
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 class MemoryBatchBudgetTest {
     @TempDir lateinit var directory: Path
+
+    @Test
+    fun `finds the largest fitting suffix with logarithmic budget evaluations`() {
+        val checks = AtomicInteger()
+        val messages = IntStream.rangeClosed(1, 2048).mapToObj { id ->
+            ChatMessage("$id", "chat", "Fact $id", false, id.toLong())
+        }.toList()
+        val batch = MemoryBatchBuilder(AutomatedReplyStore(directory)).select(messages) { sources ->
+            checks.incrementAndGet()
+            sources.size <= 777
+        }
+
+        assertEquals(777, batch.sources.size)
+        assertEquals("1272", batch.messages.first().id)
+        assertEquals("2048", batch.messages.last().id)
+        assertTrue(checks.get() <= 14, "Budget checks must not grow linearly with dialog size")
+    }
+
+    @Test
+    fun `retains excluded cursor gaps before the first fitting source`() {
+        val messages = listOf(
+            ChatMessage("1", "chat", "Too old", false, 1),
+            ChatMessage("2", "chat", "Deleted", false, 2, deleted = true),
+            ChatMessage("3", "chat", "Excluded", false, 3, contextExcluded = true),
+            ChatMessage("4", "chat", "Fitting", false, 4),
+        )
+        val batch = MemoryBatchBuilder(AutomatedReplyStore(directory)).select(messages) { it.size <= 1 }
+
+        assertEquals(listOf("2", "3", "4"), batch.messages.map { it.id })
+        assertEquals(listOf("4"), batch.sources.map { it.id })
+    }
 
     @Test
     fun `model capacity determines batch size without a fixed message count`() {

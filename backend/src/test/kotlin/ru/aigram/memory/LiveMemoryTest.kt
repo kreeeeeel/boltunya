@@ -45,7 +45,7 @@ class LiveMemoryTest {
         assertTrue(!summary.contains("пишу коротко", ignoreCase = true))
         assertTrue(!summary.contains("официальных фраз", ignoreCase = true))
         val reply = client.reply(
-            ChatRule(model = model, internetAccess = false, matchMyStyle = false, creativity = 20),
+            ChatRule(model = model, matchMyStyle = false, creativity = 20),
             listOf(ChatMessage("3", "43", "В каком городе ты теперь живёшь?", false, 1792073000)),
             memory = MemoryContext(ownerSummary = summary),
         )
@@ -77,7 +77,7 @@ class LiveMemoryTest {
         )
         assertTrue(summary.contains("Казан", ignoreCase = true))
         val reply = client.reply(
-            ChatRule(model = model, internetAccess = false, matchMyStyle = false, creativity = 20),
+            ChatRule(model = model, matchMyStyle = false, creativity = 20),
             listOf(ChatMessage("102", "42", "В каком городе ты теперь живёшь?", false, 1792073000)),
             memory = MemoryContext(summary = summary),
         )

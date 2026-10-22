@@ -102,6 +102,7 @@ class MemoryFactsMigrationTest {
     fun `startup migrates eligible tracked chats only and excludes old owner style from reply context`() {
         val old = legacy("42", "43", "44", "45")
         val settings = SettingsStore(directory)
+        settings.update { it.copy(paused = false) }
         settings.saveRule("42", ChatRule(enabled = true))
         settings.saveRule("44", ChatRule(enabled = true, useMemory = false))
         settings.saveRule("45", ChatRule(enabled = true))

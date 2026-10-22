@@ -32,7 +32,7 @@ class LiveExpandedSpeechCatalogTest {
         try {
             val assets = listOf("sherpa-runtime", "whisper-tiny") + VOICE_SAMPLES.keys
             verifiedSpeechCatalog(directory, verified, assets).use { catalog ->
-                val engine = SpeechEngine(directory, catalog, SpeechWorkerProcess(Json))
+                val engine = SpeechEngine(directory, catalog, SpeechWorkerProcess(Json, ApplioSpeechWorker()))
                 val codec = AudioCodec(directory)
                 val metrics = VOICE_SAMPLES.entries.stream().map { (id, text) ->
                     val synthesisStarted = System.nanoTime()

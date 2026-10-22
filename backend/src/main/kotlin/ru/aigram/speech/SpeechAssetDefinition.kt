@@ -11,4 +11,6 @@ data class SpeechAssetDefinition(
     val archiveRoot: String = "",
     val requiredFiles: List<String>,
     val modelFile: String = "",
+    val baseModelId: String = "",
+    val indexFile: String = "",
 )

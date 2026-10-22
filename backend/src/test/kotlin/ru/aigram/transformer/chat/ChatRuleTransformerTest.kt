@@ -3,20 +3,22 @@ package ru.aigram.transformer.chat
 import org.junit.jupiter.api.Test
 import ru.aigram.contract.dto.ChatGroupReplies
 import ru.aigram.contract.dto.ChatRuleInput
-import ru.aigram.contract.dto.SourceLinksMode
 import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.chat.DeliveryMode
 import ru.aigram.domain.chat.GroupReplyMode
 import ru.aigram.domain.chat.ProactiveMessageMode
 import ru.aigram.domain.chat.ProactiveMode
 import ru.aigram.domain.chat.ReplyInterruptionMode
-import ru.aigram.domain.chat.SourceLinks
+import ru.aigram.domain.chat.VoiceSettingsMode
+import ru.aigram.domain.settings.VoiceReplyMode
 import java.util.Arrays
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import ru.aigram.contract.dto.ProactiveMessageMode as ContractProactiveMessageMode
 import ru.aigram.contract.dto.ProactiveMode as ContractProactiveMode
 import ru.aigram.contract.dto.ReplyInterruptionMode as ContractReplyInterruptionMode
+import ru.aigram.contract.dto.VoiceReplyMode as ContractVoiceReplyMode
+import ru.aigram.contract.dto.VoiceSettingsMode as ContractVoiceSettingsMode
 
 class ChatRuleTransformerTest {
 
@@ -38,14 +40,19 @@ class ChatRuleTransformerTest {
             deliveryMode = DeliveryMode.SEND,
             analyzePhotos = true,
             aiStickers = true,
+            voiceSettingsMode = VoiceSettingsMode.OVERRIDE,
+            voiceInputEnabled = true,
+            voiceReplyMode = VoiceReplyMode.RANDOM,
+            voiceReplyProbability = 34,
+            voiceRecognitionModel = "whisper-tiny",
+            voiceSynthesisModel = "piper-en-amy",
+            voiceSpeechRate = 1.3,
             instructions = "Reply concisely",
             contextMessages = 42,
             maxTokens = 256,
             delaySeconds = 17,
             creativity = 37,
             emoji = false,
-            internetAccess = false,
-            sourceLinks = SourceLinks.NEVER,
             matchMyStyle = false,
             useMemory = false,
         )
@@ -62,17 +69,22 @@ class ChatRuleTransformerTest {
             delaySeconds = response.delaySeconds,
             creativity = response.creativity,
             emoji = response.emoji,
-            internetAccess = false,
             matchMyStyle = false,
             styleId = "preset-1",
             groupReplies = ChatGroupReplies.MENTIONS,
             useMemory = false,
-            sourceLinks = SourceLinksMode.NEVER,
             useDefaultModel = false,
             modelProfileId = response.modelProfileId,
             deliveryMode = response.deliveryMode,
             analyzePhotos = response.analyzePhotos,
             aiStickers = response.aiStickers,
+            voiceSettingsMode = ContractVoiceSettingsMode.OVERRIDE,
+            voiceInputEnabled = true,
+            voiceReplyMode = ContractVoiceReplyMode.RANDOM,
+            voiceReplyProbability = 34,
+            voiceRecognitionModel = "whisper-tiny",
+            voiceSynthesisModel = "piper-en-amy",
+            voiceSpeechRate = 1.3,
             proactiveMode = ContractProactiveMode.ENABLED,
             proactiveIntervalMinutes = 123,
             proactiveMessageMode = ContractProactiveMessageMode.TEXT,

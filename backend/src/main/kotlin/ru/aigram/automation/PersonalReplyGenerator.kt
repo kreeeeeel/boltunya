@@ -10,11 +10,13 @@ import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.speech.DraftOutput
 import ru.aigram.exception.impl.ChatUnavailableException
+import ru.aigram.exception.impl.ReplyCancelledException
 import ru.aigram.memory.MemoryCoordinator
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.speech.reply.SpeechInputContext
 import ru.aigram.speech.reply.VoiceReplyPolicy
 import ru.aigram.speech.reply.VoiceReplyService
+import ru.aigram.speech.reply.voicePreferences
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.ContextExclusionStore
 import ru.aigram.storage.SettingsStore
@@ -40,17 +42,15 @@ class PersonalReplyGenerator(
     private val voicePolicy: VoiceReplyPolicy,
     private val voices: VoiceReplyService,
 ) {
-    fun reply(rule: ChatRule, history: List<ChatMessage>): ReplyResult =
-        render(rule, history, true, voicePolicy.wantsVoice(settings.get(), history.lastOrNull()?.kind.orEmpty()))
+    fun reply(rule: ChatRule, history: List<ChatMessage>): ReplyResult = render(rule, history, true)
 
     fun draft(rule: ChatRule, history: List<ChatMessage>, output: DraftOutput = DraftOutput.TEXT): ReplyResult =
         render(rule.copy(aiStickers = false), history, false, output == DraftOutput.VOICE)
 
     fun initiate(rule: ChatRule, history: List<ChatMessage>): ReplyResult = render(
-        rule.copy(aiStickers = false, internetAccess = false),
+        rule.copy(aiStickers = false),
         history,
         true,
-        voicePolicy.wantsVoice(settings.get(), history.lastOrNull()?.kind.orEmpty()),
         initiative = true,
     )
 
@@ -58,24 +58,32 @@ class PersonalReplyGenerator(
         rule: ChatRule,
         history: List<ChatMessage>,
         forAutomation: Boolean,
-        voiceOutput: Boolean,
+        voiceOutput: Boolean? = null,
         initiative: Boolean = false,
     ): ReplyResult {
-        val preferences = settings.get()
+        val preferences = settings.get().voicePreferences(rule)
         val owner = telegram.status().userId
-        if (voiceOutput) {
+        val chatId = history.lastOrNull()?.chatId.orEmpty()
+        val storedRule = settings.rule(chatId)
+        val spoken = voiceOutput ?: voicePolicy.wantsVoice(preferences, history.lastOrNull()?.kind.orEmpty())
+        if (spoken) {
             voices.ensureReady(preferences)
         }
         val result =
             generate(
-                rule.copy(aiStickers = rule.aiStickers && !voiceOutput),
+                rule.copy(aiStickers = rule.aiStickers && !spoken),
                 history,
                 forAutomation,
                 initiative,
-                voiceOutput,
+                spoken,
             )
-        return if (voiceOutput) {
-            voices.compose(result, history.last().chatId, owner, preferences)
+        if (telegram.status().userId != owner || settings.rule(chatId) != storedRule ||
+            settings.get().voicePreferences(rule) != preferences
+        ) {
+            throw ReplyCancelledException()
+        }
+        return if (spoken) {
+            voices.compose(result, chatId, owner, preferences, rule)
         } else {
             result
         }
@@ -102,6 +110,7 @@ class PersonalReplyGenerator(
                 },
             ),
             ownerId = owner,
+            rule = resolved,
         )
         val attachments = images.build(resolved, context)
         if (attachments.isEmpty()) {

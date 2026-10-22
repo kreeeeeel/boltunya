@@ -7,6 +7,7 @@ import ru.aigram.domain.speech.SpeechAssetKind
 import ru.aigram.domain.speech.SpeechAssetState
 import ru.aigram.domain.speech.SpeechDownload
 import ru.aigram.domain.speech.SpeechDownloadPhase
+import ru.aigram.domain.speech.SpeechEngineKind
 import ru.aigram.exception.impl.InvalidSpeechAssetException
 import ru.aigram.exception.impl.SpeechImportedModelUnavailableException
 import ru.aigram.exception.impl.SpeechInstallFailedException
@@ -54,9 +55,15 @@ class SpeechAssetCatalog(
     private val downloads = ConcurrentHashMap<String, SpeechDownload>()
     private val jobs = ConcurrentHashMap<String, FutureTask<Unit>>()
     private val tokens = ConcurrentHashMap<String, UUID>()
+    private val requests = mutableMapOf<String, Set<String>>()
     private val closed = AtomicBoolean()
 
-    fun list(): List<SpeechAsset> = allDefinitions().stream().map { it.asset.copy(installed = installed(it)) }.toList()
+    fun list(): List<SpeechAsset> = allDefinitions().stream()
+        .map { it.asset.copy(installed = installed(it)) }
+        .filter {
+            it.kind != SpeechAssetKind.SYNTHESIS || it.userProvided || it.installed ||
+                it.languages.stream().anyMatch { language -> language == "ru" || language == "en" }
+        }.toList()
 
     fun state(): SpeechAssetState = SpeechAssetState(
         list(),
@@ -69,12 +76,23 @@ class SpeechAssetCatalog(
             throw SpeechInstallFailedException()
         }
         ensurePlatform()
-        val definition = definition(id)
-        if (definition.asset.userProvided && !installed(definition)) {
-            throw SpeechImportedModelUnavailableException()
-        }
-        if (installed(definition) || jobs.containsKey(id)) {
+        val selected = definition(id)
+        if (selected.asset.userProvided && installed(selected)) {
             return state()
+        }
+        val plan = installationPlan(id, emptySet())
+        if (plan.stream().allMatch(::installed)) {
+            return state()
+        }
+        requests[id] = plan.stream().map { it.asset.id }.toList().toSet()
+        plan.stream().forEach(::enqueue)
+        return state()
+    }
+
+    private fun enqueue(definition: SpeechAssetDefinition) {
+        val id = definition.asset.id
+        if (installed(definition) || jobs.containsKey(id)) {
+            return
         }
         downloads[id] = SpeechDownload(id, SpeechDownloadPhase.QUEUED, totalBytes = definition.asset.sizeBytes)
         val token = UUID.randomUUID()
@@ -82,7 +100,25 @@ class SpeechAssetCatalog(
         val job = FutureTask<Unit> { installAsset(definition, token) }
         jobs[id] = job
         executor.execute(job)
-        return state()
+    }
+
+    private fun installationPlan(id: String, ancestors: Set<String>): List<SpeechAssetDefinition> {
+        if (id in ancestors || ancestors.size >= 8) {
+            throw InvalidSpeechAssetException()
+        }
+        val definition = definition(id)
+        if (definition.asset.userProvided && !installed(definition)) {
+            throw SpeechImportedModelUnavailableException()
+        }
+        if (definition.asset.kind == SpeechAssetKind.SYNTHESIS && !definition.asset.userProvided &&
+            !installed(definition) && definition.asset.languages.stream().noneMatch { it == "ru" || it == "en" }
+        ) {
+            throw InvalidSpeechAssetException()
+        }
+        return Stream.concat(
+            definition.asset.dependencies.stream().flatMap { installationPlan(it, ancestors + id).stream() },
+            Stream.of(definition),
+        ).distinct().toList()
     }
 
     @Synchronized
@@ -91,6 +127,17 @@ class SpeechAssetCatalog(
         if (downloads[id]?.phase == SpeechDownloadPhase.READY) {
             return state()
         }
+        val roots = requests.entries.stream().filter { it.key == id || id in it.value }.map { it.key }.toList()
+        val affected = Stream.concat(
+            roots.stream().flatMap { requests.remove(it).orEmpty().stream() },
+            Stream.of(id),
+        ).distinct().toList()
+        affected.stream().filter { dependency -> requests.values.stream().noneMatch { dependency in it } }
+            .forEach(::cancelJob)
+        return state()
+    }
+
+    private fun cancelJob(id: String) {
         val job = jobs[id]
         if (job != null && job.cancel(true)) {
             executor.remove(job)
@@ -98,7 +145,6 @@ class SpeechAssetCatalog(
             jobs.remove(id, job)
             tokens.remove(id)
         }
-        return state()
     }
 
     fun model(id: String, kind: SpeechAssetKind): SpeechAssetDefinition {
@@ -154,7 +200,16 @@ class SpeechAssetCatalog(
         val staging = directory.resolve(".$id.$token.staging")
         val archive = directory.resolve(".$id.$token.partial")
         try {
+            if (definition.asset.dependencies.stream().anyMatch { !installed(definition(it)) }) {
+                throw SpeechNotInstalledException()
+            }
             Files.createDirectories(directory)
+            if (definition.asset.engine == SpeechEngineKind.APPLIO_RVC &&
+                definition.asset.kind == SpeechAssetKind.RUNTIME &&
+                Files.getFileStore(directory).usableSpace < definition.asset.sizeBytes + 12L * 1024 * 1024 * 1024
+            ) {
+                throw SpeechInstallFailedException()
+            }
             delete(staging)
             update(id, token) {
                 SpeechDownload(id, SpeechDownloadPhase.DOWNLOADING, totalBytes = definition.asset.sizeBytes)
@@ -214,7 +269,9 @@ class SpeechAssetCatalog(
                 synchronized(this) {
                     if (tokens.remove(id, token)) {
                         jobs.remove(id)
+                        requests.remove(id)
                     }
+                    requests.entries.removeIf { entry -> entry.value.stream().noneMatch { jobs.containsKey(it) } }
                 }
             }
         }

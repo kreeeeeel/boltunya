@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.chat.ReplyInterruptionMode
+import ru.aigram.domain.chat.WritingStyle
 import ru.aigram.domain.settings.ReplyProcessingMode
 import java.nio.file.Files
 import java.nio.file.Path
@@ -14,6 +15,26 @@ import kotlin.test.assertTrue
 class SettingsStoreTest {
     @TempDir
     lateinit var directory: Path
+
+    @Test
+    fun `retired search preferences do not prevent loading existing chat settings`() {
+        Files.writeString(
+            directory.resolve("settings.json"),
+            """
+            {"rules":{"42":{"enabled":true,"instructions":"Keep owner instruction",
+             "internetAccess":true,"sourceLinks":"visible"}}}
+            """.trimIndent(),
+        )
+        val store = SettingsStore(directory)
+
+        assertTrue(store.rule("42").enabled)
+        assertEquals("Keep owner instruction", store.rule("42").instructions)
+        store.update { it.copy(globalPrompt = "Retained global instruction") }
+        val persisted = Files.readString(directory.resolve("settings.json"))
+        assertFalse(persisted.contains("internetAccess"))
+        assertFalse(persisted.contains("sourceLinks"))
+        assertEquals("Keep owner instruction", SettingsStore(directory).rule("42").instructions)
+    }
 
     @Test
     fun `reply policy defaults remain compatible and both queue modes persist independently per chat`() {
@@ -50,7 +71,7 @@ class SettingsStoreTest {
     @Test
     fun `persists named styles and resolves their instructions without modifying chat rules`() {
         val store = SettingsStore(directory)
-        val preset = ru.aigram.domain.chat.WritingStyle("friends", "Друзья", "🙂", "Коротко и без официоза")
+        val preset = WritingStyle("friends", "Друзья", "🙂", "Коротко и без официоза")
         store.update { it.copy(customStyles = listOf(preset), ignoreAssistantTasks = false) }
         val rule =
             ChatRule(style = "custom", styleId = preset.id, instructions = "Не обещай встреч", useDefaultModel = false)
@@ -70,7 +91,7 @@ class SettingsStoreTest {
     @Test
     fun `a builtin tone does not reuse stale named style instructions`() {
         val store = SettingsStore(directory)
-        val preset = ru.aigram.domain.chat.WritingStyle("friends", "Друзья", "🙂", "Разговорный сленг")
+        val preset = WritingStyle("friends", "Друзья", "🙂", "Разговорный сленг")
         store.update { it.copy(customStyles = listOf(preset)) }
         val resolved = store.resolve(ChatRule(style = "business", styleId = preset.id))
         assertEquals("business", resolved.style)
@@ -90,15 +111,6 @@ class SettingsStoreTest {
         assertEquals("warm", restored.rule("42").style)
         assertTrue(restored.rule("42").enabled)
         assertFalse(restored.rule("unknown").enabled)
-    }
-
-    @Test
-    fun `legacy rules allow internet and per chat opt out survives restart`() {
-        Files.writeString(directory.resolve("settings.json"), """{"rules":{"42":{"enabled":true}}}""")
-        val store = SettingsStore(directory)
-        assertTrue(store.rule("42").internetAccess)
-        store.saveRule("42", store.rule("42").copy(internetAccess = false))
-        assertFalse(SettingsStore(directory).rule("42").internetAccess)
     }
 
     @Test

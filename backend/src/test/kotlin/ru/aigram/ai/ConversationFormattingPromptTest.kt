@@ -5,7 +5,6 @@ import ru.aigram.ai.profile.ProfileContextBudget
 import ru.aigram.ai.prompt.PromptTokenEstimator
 import ru.aigram.domain.ai.profile.ModelProvider
 import ru.aigram.domain.ai.profile.ResolvedModelTarget
-import ru.aigram.domain.ai.research.ResearchContext
 import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.memory.MemoryContext
@@ -18,25 +17,22 @@ class ConversationFormattingPromptTest {
     fun `plain output is default and Markdown is explicit without changing roles or the selected style priority`() {
         val builder = PromptBuilder()
         val history = listOf(ChatMessage("1", "synthetic", "Как дела?", false, 1))
-        listOf(ResearchContext(), ResearchContext("search", "Verified facts")).stream().forEach { research ->
-            val plain = builder.build(ChatRule(style = "business"), history, research = research)
-            val markdown = builder.build(
-                ChatRule(style = "business"),
-                history,
-                research = research,
-                formatReplies = true,
-            )
-            assertTrue(plain.first().text.orEmpty().contains("Форматирование ответа выключено"))
-            assertFalse(plain.first().text.orEmpty().contains("Форматирование ответа включено"))
-            val system = markdown.first().text.orEmpty()
-            assertTrue(system.contains("Форматирование ответа включено"))
-            assertTrue(system.contains("**жирный**"))
-            assertTrue(system.contains("||спойлер||"))
-            assertTrue(system.contains("без обязательной разметки каждой фразы"))
-            assertTrue(system.indexOf("Выбранный стиль диалога:") > system.indexOf("Форматирование ответа включено"))
-            assertEquals("user", markdown.last().messageType.value)
-            assertEquals(plain.last(), markdown.last())
-        }
+        val plain = builder.build(ChatRule(style = "business"), history)
+        val markdown = builder.build(
+            ChatRule(style = "business"),
+            history,
+            formatReplies = true,
+        )
+        assertTrue(plain.first().text.orEmpty().contains("Форматирование ответа выключено"))
+        assertFalse(plain.first().text.orEmpty().contains("Форматирование ответа включено"))
+        val system = markdown.first().text.orEmpty()
+        assertTrue(system.contains("Форматирование ответа включено"))
+        assertTrue(system.contains("**жирный**"))
+        assertTrue(system.contains("||спойлер||"))
+        assertTrue(system.contains("без обязательной разметки каждой фразы"))
+        assertTrue(system.indexOf("Выбранный стиль диалога:") > system.indexOf("Форматирование ответа включено"))
+        assertEquals("user", markdown.last().messageType.value)
+        assertEquals(plain.last(), markdown.last())
     }
 
     @Test

@@ -9,9 +9,9 @@ import ru.aigram.configuration.ApplicationConfiguration
 import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.domain.events.diagnostics.DiagnosticSource
 import ru.aigram.memory.MemoryCoordinator
-import ru.aigram.monitoring.MonitoringService
 import ru.aigram.server.LocalApiServer
 import ru.aigram.storage.CredentialStore
+import ru.aigram.storage.SettingsStore
 import ru.aigram.telegram.MediaPrefetcher
 import ru.aigram.telegram.TelegramGateway
 import java.nio.channels.FileChannel
@@ -28,12 +28,12 @@ class ApplicationRuntime constructor(
     private val engine: EngineManager,
     private val replies: ReplyCoordinator,
     private val credentials: CredentialStore,
-    private val monitor: MonitoringService,
     private val memory: MemoryCoordinator,
     private val prefetch: MediaPrefetcher,
     private val targets: ModelTargetResolver,
     private val diagnostics: DiagnosticLog,
     private val initiatives: ProactiveCoordinator,
+    private val settings: SettingsStore,
 ) : AutoCloseable {
     private val directory = configuration.directory
     private val closed = AtomicBoolean()
@@ -55,8 +55,9 @@ class ApplicationRuntime constructor(
         }
 
         Files.writeString(directory.resolve("launch.url"), server.start())
-        monitor.start()
-        engine.start()
+        if (!settings.get().paused) {
+            engine.start()
+        }
 
         try {
             val warmModel = targets.startupWarmModel()
@@ -89,7 +90,7 @@ class ApplicationRuntime constructor(
             return
         }
 
-        listOf(initiatives, memory, prefetch, replies, server, engine, monitor, telegram).stream().forEach { service ->
+        listOf(initiatives, memory, prefetch, replies, server, engine, telegram).stream().forEach { service ->
             try {
                 service.close()
             } catch (exception: Exception) {

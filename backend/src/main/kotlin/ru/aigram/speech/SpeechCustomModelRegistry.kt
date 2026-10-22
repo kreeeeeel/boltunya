@@ -3,6 +3,7 @@ package ru.aigram.speech
 import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Component
 import ru.aigram.domain.speech.SpeechAssetKind
+import ru.aigram.domain.speech.SpeechEngineKind
 import ru.aigram.exception.impl.InvalidSpeechModelImportException
 import java.nio.file.Files
 import java.nio.file.LinkOption
@@ -91,6 +92,8 @@ class SpeechCustomModelRegistry(directory: Path, private val json: Json) {
             false
         }
         return canonical && definition.asset.userProvided && definition.asset.kind == SpeechAssetKind.SYNTHESIS &&
+            definition.asset.engine == SpeechEngineKind.SHERPA && definition.baseModelId.isEmpty() &&
+            definition.indexFile.isEmpty() &&
             definition.downloadUrl.isEmpty() && definition.archiveRoot.isEmpty() &&
             definition.asset.sourceUrl.isEmpty() && definition.asset.dependencies == listOf("sherpa-runtime") &&
             definition.modelFile.endsWith(".onnx", ignoreCase = true) &&

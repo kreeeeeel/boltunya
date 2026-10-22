@@ -44,7 +44,20 @@ class TelegramMessageView(
             senderUsername = user?.usernames?.activeUsernames?.firstOrNull().orEmpty(),
             replyToId = reply?.messageId?.toString().orEmpty(),
             replyText = (reply?.content as? TdApi.MessageText)?.text?.text.orEmpty(),
-            read = message.isOutgoing && message.id <= (chat?.lastReadOutboxMessageId ?: 0),
+            read = message.isOutgoing && message.id > 0 && message.sendingState == null &&
+                message.id <= (chat?.lastReadOutboxMessageId ?: 0),
+            forwardedFrom = forwardedName(message.forwardInfo?.origin),
+            forwarded = message.forwardInfo != null,
         )
+    }
+
+    private fun forwardedName(origin: TdApi.MessageOrigin?): String = when (origin) {
+        is TdApi.MessageOriginUser -> cache.users[origin.senderUserId]?.let {
+            (it.firstName.orEmpty() + " " + it.lastName.orEmpty()).trim()
+        }.orEmpty()
+        is TdApi.MessageOriginHiddenUser -> origin.senderName.orEmpty()
+        is TdApi.MessageOriginChat -> cache.chats[origin.senderChatId]?.title.orEmpty()
+        is TdApi.MessageOriginChannel -> cache.chats[origin.chatId]?.title.orEmpty()
+        else -> ""
     }
 }

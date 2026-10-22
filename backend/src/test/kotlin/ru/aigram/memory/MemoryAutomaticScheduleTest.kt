@@ -29,6 +29,62 @@ class MemoryAutomaticScheduleTest {
     @TempDir lateinit var directory: Path
 
     @Test
+    fun `AI pause blocks automatic collection while an explicit manual request still works`() {
+        val settings = settings()
+        settings.update { it.copy(paused = true) }
+        val telegram = telegram(1)
+        val store = MemoryStore(directory, ResourceCatalog())
+        val clock = AdvancingClock(Instant.ofEpochSecond(100000))
+        MemoryModelServer().use { server ->
+            coordinator(settings, telegram, store, server.start().runtime, clock).use { memory ->
+                IntStream.range(0, 5).forEach { memory.tick() }
+                assertTrue(telegram.reads.isEmpty())
+                assertTrue(store.states().isEmpty())
+
+                memory.refresh("42", immediate = true)
+                await {
+                    store.state("42")?.processedMessages == 1L && !memory.document("42").collection.active
+                }
+                assertEquals(1L, store.state("42")?.processedMessages)
+                assertTrue(store.state("42")?.backfillComplete == true)
+                assertEquals(0L, store.state("42")?.automaticAttemptAt)
+                assertTrue(settings.get().paused)
+            }
+        }
+    }
+
+    @Test
+    fun `pausing during automatic inference prevents committing the generated summary`() {
+        val settings = settings()
+        val telegram = telegram(1)
+        val store = MemoryStore(directory, ResourceCatalog())
+        val clock = AdvancingClock(Instant.ofEpochSecond(100000))
+        val summaries = AtomicInteger()
+        val summarizer = MemorySummarizer { _, _, _ ->
+            summaries.incrementAndGet()
+            settings.update { it.copy(paused = true) }
+            "Stale generated facts"
+        }
+        MemoryModelServer().use { server ->
+            coordinator(
+                settings,
+                telegram,
+                store,
+                server.start().runtime,
+                clock,
+                summarizer = summarizer,
+            ).use { memory ->
+                memory.tick()
+                assertEquals(1, summaries.get())
+                assertEquals("", store.read("42").facts())
+                assertEquals(0L, store.state("42")?.processedMessages)
+                memory.tick()
+                assertEquals(1, summaries.get())
+            }
+        }
+    }
+
+    @Test
     fun `automatic incomplete backfill creates one event per configured interval`() {
         val settings = settings()
         val telegram = telegram(250)
@@ -44,7 +100,7 @@ class MemoryAutomaticScheduleTest {
                     assertEquals(100000L, store.state("42")?.automaticAttemptAt)
                     clock.advance(Duration.ofMinutes(5))
                     IntStream.range(0, 12).forEach { memory.tick() }
-                    assertEquals(1, telegram.reads.size)
+                    assertEquals(2, telegram.reads.size)
                     assertEquals(1, queue.activities().size)
                     assertEquals(MemoryStatus.READY, memory.document("42").status)
                     assertEquals(MemoryStatus.READY, memory.document("").status)
@@ -171,7 +227,7 @@ class MemoryAutomaticScheduleTest {
                 assertEquals(152L, store.state("42")?.deltaBeforeId)
                 clock.advance(Duration.ofMinutes(5))
                 memory.tick()
-                assertEquals(1, telegram.reads.size)
+                assertEquals(2, telegram.reads.size)
                 clock.advance(Duration.ofMinutes(115))
                 memory.tick()
                 assertEquals(1L, store.state("42")?.headId)
@@ -181,7 +237,7 @@ class MemoryAutomaticScheduleTest {
                 assertEquals(251L, store.state("42")?.headId)
                 assertEquals(0L, store.state("42")?.deltaTargetId)
                 assertEquals(0L, store.state("42")?.deltaBeforeId)
-                assertEquals(listOf("42" to 0L, "42" to 152L, "42" to 52L), telegram.reads)
+                assertEquals(listOf(0L, 152L, 152L, 52L, 52L), telegram.reads.map { it.second })
             }
         }
     }
@@ -337,7 +393,7 @@ class MemoryAutomaticScheduleTest {
 
     private fun settings(): SettingsStore = SettingsStore(directory).also {
         it.saveRule("42", ChatRule(enabled = true))
-        it.update { current -> current.copy(memoryIntervalHours = 2) }
+        it.update { current -> current.copy(memoryIntervalHours = 2, paused = false) }
     }
 
     private fun telegram(messages: Int): MemoryTelegramGateway = MemoryTelegramGateway().also {
@@ -354,7 +410,7 @@ class MemoryAutomaticScheduleTest {
         runtime: OllamaRuntime,
         clock: AdvancingClock,
         queue: MemoryWorkQueue = DirectMemoryWorkQueue(),
-        summarizer: MemorySummarizer = MemorySummarizer { _, _, _ -> "Collected facts" },
+        summarizer: MemorySummarizer = BudgetMemorySummarizer(100),
     ): MemoryCoordinator {
         val automated = AutomatedReplyStore(directory)
         val processor = MemoryProcessor(

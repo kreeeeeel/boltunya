@@ -1,7 +1,0 @@
-SearchConnectionState:
-    type: string
-    enum:
-        - unchecked
-        - ready
-        - limited
-        - unavailable

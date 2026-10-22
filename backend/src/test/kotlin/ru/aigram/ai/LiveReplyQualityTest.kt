@@ -27,7 +27,7 @@ class LiveReplyQualityTest {
             model in client.installed(),
             "Selected live model must be installed explicitly",
         )
-        val rule = ChatRule(model = model, maxTokens = 128, creativity = 40, internetAccess = false)
+        val rule = ChatRule(model = model, maxTokens = 128, creativity = 40)
         val cases = listOf(
             "Кто лучшая сестра на свете?",
             "Сколько сейчас времени?",

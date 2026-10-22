@@ -12,6 +12,7 @@ import ru.aigram.domain.chat.ProactiveMode
 import ru.aigram.exception.impl.ChatNotFoundException
 import ru.aigram.exception.impl.InvalidFieldLengthException
 import ru.aigram.exception.impl.ProactiveTextRequiredException
+import ru.aigram.speech.reply.VoiceSettingsValidator
 import ru.aigram.storage.SettingsStore
 import ru.aigram.telegram.TelegramGateway
 import ru.aigram.telegram.TelegramOutgoingEntities
@@ -29,6 +30,7 @@ class ChatCommunicationComponent(
     private val validation: InputValidation,
     private val delivery: ReplyDeliveryPolicy,
     private val outgoingEntities: TelegramOutgoingEntities,
+    private val voiceSettings: VoiceSettingsValidator,
 ) {
     fun send(chatId: String, value: String, entities: List<MessageEntity> = emptyList()) {
         val text = if (entities.isEmpty()) {
@@ -56,6 +58,7 @@ class ChatCommunicationComponent(
             throw ChatNotFoundException()
         }
         validation.validate(rule)
+        voiceSettings.validate(rule)
         if (rule.proactiveMode != ProactiveMode.DISABLED &&
             rule.proactiveMessageMode == ProactiveMessageMode.TEXT && rule.proactiveText.isBlank()
         ) {
@@ -76,7 +79,9 @@ class ChatCommunicationComponent(
         } else {
             null
         }
-        if (model != null) {
+        if (model != null && !settings.get().paused &&
+            (rule.enabled || rule.proactiveMode == ProactiveMode.ENABLED)
+        ) {
             engine.warm(model)
         }
     }

@@ -65,13 +65,9 @@ class MemoryExclusionTest {
             exclusions,
         )
         assertTrue(processor.process(store.state("42") ?: error("state"), "test", true))
-        assertFalse(store.state("42")?.backfillComplete == true)
-        IntStream.range(0, 3).forEach {
-            assertTrue(processor.process(store.state("42") ?: error("state"), "test", false))
-        }
         assertTrue(store.state("42")?.backfillComplete == true)
         assertEquals(250L, store.state("42")?.processedMessages)
-        assertEquals(listOf(0L, 151L, 51L, 1L), telegram.reads.map { it.second })
+        assertEquals(listOf(0L, 151L, 51L), telegram.reads.map { it.second })
         assertEquals("", store.read("42").facts())
         assertEquals("", store.read("").facts())
     }

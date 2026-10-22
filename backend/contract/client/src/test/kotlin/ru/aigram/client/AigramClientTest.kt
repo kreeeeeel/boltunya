@@ -65,9 +65,12 @@ class AigramClientTest {
     }
 
     @Test
-    fun `all eight typed API groups use supplied origin and resolve fresh authentication on subscription`() {
+    fun `core typed API groups use supplied origin and resolve fresh authentication on subscription`() {
         ClientTestServer().start().use { server ->
-            server.response("/api/appearance", """{"mode":"system","tokens":{},"css":""}""")
+            server.response(
+                "/api/settings",
+                """{"paused":true,"defaultModel":"synthetic:model","rules":{},"globalPrompt":"Typed settings"}""",
+            )
             server.response("/api/stickers", """{"recent":[],"favorites":[],"sets":[]}""")
             server.response("/api/diagnostics/errors", """{"errors":[]}""")
             server.response("/api/chats/42/messages/9007199254740993/link", """{"url":"https://t.me/example/7"}""")
@@ -85,12 +88,22 @@ class AigramClientTest {
                 assertTrue(assertNotNull(client.media.stickers().block(REQUEST_TIMEOUT)).sets.isEmpty())
                 assertTrue(assertNotNull(client.memory.refreshChangedMemory().block(REQUEST_TIMEOUT)).ok)
                 assertTrue(assertNotNull(client.models.cancelModelDownload().block(REQUEST_TIMEOUT)).ok)
-                assertEquals("", client.settings.appearance().block(REQUEST_TIMEOUT)?.css)
+                assertEquals(
+                    "Typed settings",
+                    client.settings.settings(SettingsUpdate(globalPrompt = "Typed settings"))
+                        .block(REQUEST_TIMEOUT)?.globalPrompt,
+                )
                 assertTrue(assertNotNull(client.telegram.logout().block(REQUEST_TIMEOUT)).ok)
             }
             assertEquals(8, server.requests.size)
             assertTrue(server.requests.all { it.cookie == "tiho=rotated-session" })
             assertEquals("/api/chats/42/messages/9007199254740993/link", server.requests[2].path)
+            assertEquals("/api/settings", server.requests[6].path)
+            assertEquals("PATCH", server.requests[6].method)
+            assertEquals(
+                "Typed settings",
+                Serializer.jacksonObjectMapper.readTree(server.requests[6].body)["globalPrompt"].asText(),
+            )
         }
     }
 

@@ -20,6 +20,10 @@ For the FFmpeg libraries, retain both [LGPLv3](FFmpeg-LGPL-3.0.txt) and [GPLv3](
 
 ## Downloaded only when requested
 
+Applio 3.7.0 is an additional optional Windows portable runtime, not part of the EXE. Its application code uses [MIT](Applio-LICENSE.txt); the archive's bundled Python, PyTorch, FAISS and other dependencies retain their own notices under `env/`. Installation preserves that directory and the upstream terms. Aigram runs only the pinned `core.py infer` CLI with the bundled interpreter on CPU; it does not run the installer, updater or web server.
+
+The RVC catalog preserves the complete [Joxi model card](RVC-Joxi-MODEL_CARD.md), including its requested credit, and [mbsoft Alice card](RVC-Alice-MODEL_CARD.md). Both repositories declare only the generic `openrail` tag, without an exact licence text or dataset permission. This declaration does not establish unrestricted model redistribution, voice/character rights, or affiliation with Yandex, streamers or DonationAlerts. Weights are downloaded from their pinned original repositories only when requested; Aigram does not bundle them or substitute a more permissive licence.
+
 The native sherpa runtime and voice/recognition model weights are not included in the EXE. They are downloaded separately from the official releases recorded in Aigram's [versioned catalog](https://github.com/kreeeeeel/boltunya/blob/main/backend/src/main/resources/speech/catalog.json). Optional installation does not remove their licence conditions.
 
 - **sherpa-onnx Windows JNI runtime 1.13.8:** sherpa-onnx code is Apache-2.0; its ONNX Runtime dependency is MIT. The upstream Windows build [pins ONNX Runtime 1.28.2](https://github.com/k2-fsa/sherpa-onnx/blob/v1.13.8/cmake/onnxruntime-win-x64.cmake). Retain [ONNX-Runtime-LICENSE.txt](ONNX-Runtime-LICENSE.txt) and [ONNX-Runtime-ThirdPartyNotices.txt](ONNX-Runtime-ThirdPartyNotices.txt).

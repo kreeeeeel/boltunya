@@ -28,7 +28,7 @@ class LiveSpeechVoicesTest {
         try {
             verifiedSpeechCatalog(directory, verified, listOf("sherpa-runtime") + models).use { catalog ->
                 val installationMillis = elapsedMillis(installationStarted)
-                val engine = SpeechEngine(directory, catalog, SpeechWorkerProcess(Json))
+                val engine = SpeechEngine(directory, catalog, SpeechWorkerProcess(Json, ApplioSpeechWorker()))
                 val codec = AudioCodec(directory)
                 val metrics = models.stream().map { id ->
                     val text = if (id == "piper-en-amy") {

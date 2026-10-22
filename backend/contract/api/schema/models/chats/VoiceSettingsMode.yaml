@@ -1,0 +1,5 @@
+VoiceSettingsMode:
+    type: string
+    enum: [inherit, override]
+    default: inherit
+    description: Inherit all global speech preferences or use the complete chat-specific speech configuration.

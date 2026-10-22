@@ -5,6 +5,8 @@ import org.junit.jupiter.api.io.TempDir
 import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.automation.ReplyDeliveryPolicy
 import ru.aigram.component.speech.SpeechReplyComponent
+import ru.aigram.domain.chat.ChatRule
+import ru.aigram.domain.chat.VoiceSettingsMode
 import ru.aigram.exception.impl.InvalidSpeechAssetException
 import ru.aigram.exception.impl.InvalidSpeechRequestException
 import ru.aigram.exception.impl.SpeechDraftUnavailableException
@@ -36,6 +38,14 @@ class SpeechManualDraftTest {
             listOf("sherpa-runtime", "piper-en-amy", "piper-ru-irina", "piper-ru-dmitri").stream().forEach {
                 installSpeechFixture(directory, it)
             }
+            fixture.settings.saveRule(
+                "42",
+                ChatRule(
+                    voiceSettingsMode = VoiceSettingsMode.OVERRIDE,
+                    voiceSynthesisModel = "piper-ru-irina",
+                    voiceSpeechRate = 1.25,
+                ),
+            )
             val drafts = VoiceDraftStore(directory, fixture.telegram, VoiceTestClock())
             val voices = VoiceReplyService(
                 fixture.engine,
@@ -89,8 +99,18 @@ class SpeechManualDraftTest {
                 assertFailsWith<InvalidSpeechAssetException> {
                     component.enqueue("42", "Text", modelId = "whisper-tiny")
                 }
-                val fallback = component.enqueue("42", "Global captured settings")
+                val fallback = component.enqueue("42", "Chat captured settings")
                 awaitSpeech { queue.draft(fallback.id).status == "ready" }
+                assertTrue(seen.get().modelDirectory.endsWith("piper-ru-irina"))
+                assertEquals(1.25f, seen.get().speed)
+                fixture.settings.saveRule(
+                    "42",
+                    fixture.settings.rule("42").copy(
+                        voiceSettingsMode = VoiceSettingsMode.INHERIT,
+                    ),
+                )
+                val inherited = component.enqueue("42", "Global captured settings")
+                awaitSpeech { queue.draft(inherited.id).status == "ready" }
                 assertTrue(seen.get().modelDirectory.endsWith("piper-ru-dmitri"))
                 assertEquals(0.75f, seen.get().speed)
                 queue.pauseQueue(true)

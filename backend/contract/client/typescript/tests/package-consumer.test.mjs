@@ -69,7 +69,7 @@ after(() => {
     rmSync(consumer, { recursive: true, force: true });
 });
 
-test("the installed tarball exposes all 84 operations in nine API groups and compiles typed imports", () => {
+test("the installed tarball exposes all 74 operations in nine API groups and compiles typed imports", () => {
     const apis = Object.values(sdk).filter(
         (value) =>
             typeof value === "function" &&
@@ -84,8 +84,15 @@ test("the installed tarball exposes all 84 operations in nine API groups and com
             ).length,
         0,
     );
-    assert.equal(operationCount, 84);
+    assert.equal(operationCount, 74);
     assert.equal(typeof sdk.ModelsApi.prototype.restartEngine, "function");
+    assert.equal(typeof sdk.ChatsApi.prototype.send, "function");
+    assert.equal(typeof sdk.ChatsApi.prototype.editMessage, "function");
+    assert.equal(sdk.ChatsApi.prototype.sendAttachments, undefined);
+    assert.equal(sdk.ChatsApi.prototype.sendSticker, undefined);
+    assert.equal(sdk.SystemApi.prototype.getMetrics, undefined);
+    assert.equal(sdk.SettingsApi.prototype.saveAppearance, undefined);
+    assert.equal(Object.hasOwn(sdk, "OutgoingMediaKind"), false);
     copyFileSync(
         join(directory, "tests/consumer/consumer.ts"),
         join(consumer, "consumer.ts"),
@@ -409,7 +416,17 @@ test("formatting and idle follow-up fields survive the installed SDK HTTP transp
     const configuration = new sdk.Configuration({
         basePath: "http://127.0.0.1:9000",
         fetchApi: async (url, init) => {
-            requests.push({ url, body: JSON.parse(init.body) });
+            requests.push({ url, method: init.method, body: JSON.parse(init.body) });
+            if (url.endsWith("/edit")) {
+                return Response.json({
+                    id: url.includes("/101/") ? "101" : "100",
+                    chatId: "42",
+                    text: "😀 hello",
+                    outgoing: true,
+                    date: 1792578000,
+                    kind: url.includes("/101/") ? "photo" : "text",
+                });
+            }
             return Response.json({ ok: true, formatReplies: true });
         },
     });
@@ -430,11 +447,21 @@ test("formatting and idle follow-up fields survive the installed SDK HTTP transp
     });
     const entities = [{ offset: 3, length: 5, type: "spoiler" }];
     await chats.send({ chatId: "42", text: { text: "😀 hello", entities } });
-    await chats.sendAttachments({
+    const editEntities = [{ offset: 3, length: 5, kind: "spoiler" }];
+    const textRevision = "a".repeat(64);
+    const captionRevision = "b".repeat(64);
+    const text = await chats.editMessage({
         chatId: "42",
-        sendMediaRequest: {
-            uploadIds: ["synthetic"], kind: "photo",
-            caption: "😀 hello", captionEntities: entities,
+        messageId: "100",
+        messageEditRequest: {
+            text: "😀 hello", entities: editEntities, revision: textRevision,
+        },
+    });
+    const caption = await chats.editMessage({
+        chatId: "42",
+        messageId: "101",
+        messageEditRequest: {
+            text: "😀 hello", entities: editEntities, revision: captionRevision,
         },
     });
     assert.deepEqual(requests[0].body, { formatReplies: true, replyProcessingMode: "each" });
@@ -442,8 +469,23 @@ test("formatting and idle follow-up fields survive the installed SDK HTTP transp
     assert.equal(requests[1].body.proactiveMessageMode, "text");
     assert.equal(requests[1].body.proactiveText, "  How are you? 😀  ");
     assert.equal(requests[1].body.enabled, false);
-    assert.deepEqual(requests[2].body.entities, entities);
-    assert.deepEqual(requests[3].body.captionEntities, entities);
+    assert.deepEqual(requests[2].body, { text: "😀 hello", entities });
+    assert.equal(requests[2].method, "POST");
+    assert.equal(requests[2].url, "http://127.0.0.1:9000/api/chats/42/messages");
+    assert.deepEqual(requests[3], {
+        url: "http://127.0.0.1:9000/api/chats/42/messages/100/edit",
+        method: "PUT",
+        body: { text: "😀 hello", entities: editEntities, revision: textRevision },
+    });
+    assert.deepEqual(requests[4], {
+        url: "http://127.0.0.1:9000/api/chats/42/messages/101/edit",
+        method: "PUT",
+        body: { text: "😀 hello", entities: editEntities, revision: captionRevision },
+    });
+    assert.equal(text.text, "😀 hello");
+    assert.equal(caption.text, "😀 hello");
+    assert.equal(caption.kind, "photo");
+    assert.equal(requests.length, 5);
 });
 
 test("network failures preserve their cause and do not retry", async () => {

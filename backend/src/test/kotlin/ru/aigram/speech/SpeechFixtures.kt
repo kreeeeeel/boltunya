@@ -37,9 +37,10 @@ fun installSpeechFixture(directory: Path, id: String) {
     val target = directory.resolve("speech").resolve(id)
     Files.createDirectories(target)
     definition.requiredFiles.stream().forEach {
-        if (it == "espeak-ng-data") {
+        if (it in setOf("espeak-ng-data", "env", "rvc")) {
             Files.createDirectories(target.resolve(it))
         } else {
+            Files.createDirectories(target.resolve(it).parent)
             Files.write(target.resolve(it), byteArrayOf(1))
         }
     }

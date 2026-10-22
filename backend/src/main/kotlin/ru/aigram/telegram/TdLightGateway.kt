@@ -18,9 +18,7 @@ import ru.aigram.domain.chat.MessageDeletionScope
 import ru.aigram.domain.chat.MessageEditOptions
 import ru.aigram.domain.chat.MessageEditRequest
 import ru.aigram.domain.chat.MessageEntity
-import ru.aigram.domain.media.ChatGallery
 import ru.aigram.domain.media.MediaFile
-import ru.aigram.domain.media.OutgoingMedia
 import ru.aigram.domain.media.StickerCatalog
 import ru.aigram.domain.media.StickerItem
 import ru.aigram.domain.speech.OutgoingVoiceNote
@@ -69,9 +67,7 @@ class TdLightGateway(
     private val loader: TelegramChatLoader,
     private val sender: TelegramMessageSender,
     private val prefetch: MediaPrefetcher,
-    private val mediaSender: TelegramMediaSender,
     private val stickerService: TelegramStickerService,
-    private val galleries: TelegramGalleryService,
     private val links: TelegramMessageLinks,
     private val deletion: TelegramMessageDeletion,
     private val editing: TelegramMessageEditing,
@@ -111,8 +107,6 @@ class TdLightGateway(
     }
 
     override fun media(fileId: Int): MediaFile = mediaFiles.get(fileId)
-    override fun sendMedia(chatId: String, media: List<OutgoingMedia>, replyToId: String, topicId: Int): List<String> =
-        mediaSender.send(chatId, media, replyToId, topicId)
     override fun stickers(): StickerCatalog = stickerService.catalog()
     override fun sendVoice(
         chatId: String,
@@ -122,7 +116,6 @@ class TdLightGateway(
         automated: Boolean,
     ): String = voiceSender.send(chatId, voice, replyToId, topicId, automated)
     override fun stickerSet(id: String): List<StickerItem> = stickerService.set(id)
-    override fun gallery(chatId: String, around: String): ChatGallery = galleries.gallery(chatId, around)
     override fun messageLink(chatId: String, messageId: String): String = links.link(chatId, messageId)
     override fun messageDeletionOptions(chatId: String, messageId: String): MessageDeletionOptions =
         deletion.options(chatId, messageId)

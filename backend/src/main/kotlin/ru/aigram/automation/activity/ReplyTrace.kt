@@ -141,7 +141,7 @@ class ReplyTrace(private var entry: ActivityEntry, private var trigger: String) 
     fun summary(): ActivityEntry {
         val usage = attempts.stream().map { it.usage() }.toList()
         return entry.copy(
-            thinking = if (entry.phase == ActivityPhase.REPLY.value || entry.phase == ActivityPhase.RESEARCH.value ||
+            thinking = if (entry.phase == ActivityPhase.REPLY.value ||
                 entry.phase == ActivityPhase.RETRY.value
             ) {
                 attempts.lastOrNull()?.thinkingPreview().orEmpty()

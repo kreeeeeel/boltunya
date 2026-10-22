@@ -36,7 +36,6 @@ class LiveConversationOutputTest {
             maxTokens = 256,
             creativity = 10,
             style = "concise",
-            internetAccess = false,
             useMemory = false,
         )
         val decoder = ConversationOutputDecoder()

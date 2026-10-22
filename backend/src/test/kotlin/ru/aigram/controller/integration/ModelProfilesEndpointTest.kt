@@ -121,7 +121,7 @@ class ModelProfilesEndpointTest {
                                 "/api/model-routing",
                                 "PUT",
                                 """{"enabled":true,"replyModel":"qwen3:1.7b","memoryModel":"gemma3:4b",
-                                    |"researchModel":"qwen2.5:7b","visionModel":"qwen3-vl:2b"}
+                                    |"visionModel":"qwen3-vl:2b"}
                                 """.trimMargin(),
                             ).statusCode(),
                         )

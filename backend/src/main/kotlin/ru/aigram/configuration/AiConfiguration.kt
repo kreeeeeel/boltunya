@@ -21,10 +21,10 @@ import ru.aigram.ai.model.ModelResponseStream
 import ru.aigram.ai.model.SpringAiModelFactory
 import ru.aigram.ai.profile.ProfileContextBudget
 import ru.aigram.ai.prompt.PromptTokenEstimator
-import ru.aigram.ai.research.ResearchLinkPolicy
 import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.ModelMeasurementStore
+import ru.aigram.storage.SettingsStore
 import ru.aigram.storage.StorageLocations
 import java.net.http.HttpClient
 import java.nio.file.Path
@@ -66,11 +66,10 @@ class AiConfiguration {
     fun promptBuilder(
         clock: Clock,
         personalStyle: PersonalStyleBuilder,
-        links: ResearchLinkPolicy,
         authors: MessageContextFormatter,
         tokens: PromptTokenEstimator,
         budget: ProfileContextBudget,
-    ): PromptBuilder = PromptBuilder(clock, personalStyle, links, authors, tokens, budget)
+    ): PromptBuilder = PromptBuilder(clock, personalStyle, authors, tokens, budget)
 
     @Bean
     fun engineManager(
@@ -86,8 +85,10 @@ class AiConfiguration {
         inventory: OllamaModelInventory,
         diagnostics: DiagnosticLog,
         devices: OllamaDeviceSelector,
+        settings: SettingsStore,
     ): EngineManager = EngineManager(
         directory, runtime, models, installer, writer, processes, measurements, inference, installation,
         inventory, diagnostics, devices,
+        automaticEnabled = { !settings.get().paused },
     )
 }

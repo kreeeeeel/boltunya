@@ -78,7 +78,7 @@ class DraftEndpointTest {
                                 request(
                                     "/api/preview/jobs",
                                     "POST",
-                                    """{"chatId":"42","messageId":"3","text":"Fabricated preview must not be used","rule":{"internetAccess":false,"matchMyStyle":false,"useMemory":false}}""",
+                                    """{"chatId":"42","messageId":"3","text":"Fabricated preview must not be used","rule":{"matchMyStyle":false,"useMemory":false}}""",
                                 )
                             assertEquals(200, response.statusCode())
                             return Json.parseToJsonElement(

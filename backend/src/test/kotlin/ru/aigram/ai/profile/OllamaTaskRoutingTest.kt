@@ -48,7 +48,6 @@ class OllamaTaskRoutingTest {
                         enabled = true,
                         replyModel = "qwen3:1.7b",
                         memoryModel = "gemma3:4b",
-                        researchModel = "qwen2.5:7b",
                         visionModel = "qwen3-vl:2b",
                     ),
                 )
@@ -66,7 +65,7 @@ class OllamaTaskRoutingTest {
                     )
                 }
                 assertEquals(
-                    listOf("qwen3:1.7b", "gemma3:4b", "qwen2.5:7b", "qwen3-vl:2b"),
+                    listOf("qwen3:1.7b", "gemma3:4b", "qwen3-vl:2b"),
                     requests.stream().map { it["model"]?.jsonPrimitive?.content }.toList(),
                 )
                 val vision = assertNotNull(

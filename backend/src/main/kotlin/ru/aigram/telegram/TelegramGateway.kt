@@ -8,9 +8,7 @@ import ru.aigram.domain.chat.MessageDeletionScope
 import ru.aigram.domain.chat.MessageEditOptions
 import ru.aigram.domain.chat.MessageEditRequest
 import ru.aigram.domain.chat.MessageEntity
-import ru.aigram.domain.media.ChatGallery
 import ru.aigram.domain.media.MediaFile
-import ru.aigram.domain.media.OutgoingMedia
 import ru.aigram.domain.media.StickerCatalog
 import ru.aigram.domain.media.StickerItem
 import ru.aigram.domain.speech.OutgoingVoiceNote
@@ -37,11 +35,8 @@ interface TelegramGateway : AutoCloseable {
     ): String
     fun typing(chatId: String, active: Boolean)
     fun media(fileId: Int): MediaFile = throw MediaUnavailableException()
-    fun sendMedia(chatId: String, media: List<OutgoingMedia>, replyToId: String = "", topicId: Int = 0): List<String> =
-        throw MediaUnavailableException()
     fun stickers(): StickerCatalog = throw MediaUnavailableException()
     fun stickerSet(id: String): List<StickerItem> = throw MediaUnavailableException()
-    fun gallery(chatId: String, around: String): ChatGallery = throw MediaUnavailableException()
     fun messageLink(chatId: String, messageId: String): String = throw MediaUnavailableException()
     fun messageDeletionOptions(chatId: String, messageId: String): MessageDeletionOptions =
         throw MessageDeletionNotAllowedException()

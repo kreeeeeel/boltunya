@@ -12,4 +12,6 @@ data class SpeechWorkerRequest(
     val text: String = "",
     val language: String = "auto",
     val speed: Float = 1f,
+    val runtimeDirectory: String = "",
+    val indexFile: String = "",
 )

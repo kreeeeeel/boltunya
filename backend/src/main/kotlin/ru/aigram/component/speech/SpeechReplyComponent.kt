@@ -12,6 +12,7 @@ import ru.aigram.exception.impl.InvalidSpeechRequestException
 import ru.aigram.speech.SpeechAssetCatalog
 import ru.aigram.speech.reply.VoiceDraftStore
 import ru.aigram.speech.reply.VoiceReplyService
+import ru.aigram.speech.reply.voicePreferences
 import ru.aigram.storage.SettingsStore
 import ru.aigram.telegram.TelegramGateway
 
@@ -33,10 +34,10 @@ class SpeechReplyComponent(
         if (text.isBlank() || text.length > MAX_VOICE_TEXT) {
             throw InvalidSpeechRequestException()
         }
-        val preferences = settings.get()
+        val preferences = settings.get().voicePreferences(settings.rule(chatId))
         val ownerId = telegram.status().userId
-        val selectedModel = modelId ?: preferences.voiceSynthesisModel
-        val selectedSpeed = speed ?: preferences.voiceSpeechRate
+        val selectedModel = modelId ?: preferences.synthesisModel
+        val selectedSpeed = speed ?: preferences.speechRate
         if (!selectedSpeed.isFinite() || selectedSpeed !in 0.5..2.0 ||
             selectedModel.isBlank() || selectedModel.length > 120
         ) {

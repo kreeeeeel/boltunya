@@ -49,6 +49,10 @@ Chat:
             type: boolean
         lastMessageSender:
             type: string
+        lastMessageRead:
+            type: boolean
+            nullable: true
+            description: Read status of the last outgoing message, or null for incoming messages.
         typingUsers:
             type: array
             items:

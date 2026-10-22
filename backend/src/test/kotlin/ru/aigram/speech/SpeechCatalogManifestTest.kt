@@ -7,6 +7,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 import org.junit.jupiter.api.Test
 import ru.aigram.domain.speech.SpeechAssetKind
+import ru.aigram.domain.speech.SpeechEngineKind
 import ru.aigram.resources.ResourceCatalog
 import java.net.URI
 import java.util.stream.Collectors
@@ -17,7 +18,9 @@ import kotlin.test.assertTrue
 class SpeechCatalogManifestTest {
     @Test
     fun `every curated voice matches independently reviewed release and model metadata`() {
-        val definitions = speechDefinitions().stream().filter { it.asset.kind == SpeechAssetKind.SYNTHESIS }
+        val definitions = speechDefinitions().stream().filter {
+            it.asset.kind == SpeechAssetKind.SYNTHESIS && it.asset.engine == SpeechEngineKind.SHERPA
+        }
             .collect(Collectors.toMap({ it.asset.id }, { it }))
         val proof = Json.parseToJsonElement(ResourceCatalog().text("speech/catalog-provenance.json")).jsonObject
         val voices = proof.getValue("voices").jsonArray
@@ -80,5 +83,39 @@ class SpeechCatalogManifestTest {
             synthesis.stream().filter { it.asset.id.contains("glados") }.map { it.asset.id }
                 .collect(Collectors.toSet()),
         )
+    }
+
+    @Test
+    fun `character models retain pinned source names hashes and explicit conversion dependencies`() {
+        val definitions = speechDefinitions()
+        val proof = Json.parseToJsonElement(ResourceCatalog().text("speech/catalog-provenance.json")).jsonObject
+        val voices = proof.getValue("conversionVoices").jsonArray
+        val conversion = definitions.filter {
+            it.asset.kind == SpeechAssetKind.SYNTHESIS && it.asset.engine == SpeechEngineKind.APPLIO_RVC
+        }
+
+        assertEquals(15, conversion.size)
+        assertEquals(15, voices.size)
+        voices.stream().map { it.jsonObject }.forEach { record ->
+            val model = conversion.single { it.asset.id == record.getValue("id").jsonPrimitive.content }
+            assertEquals(record.getValue("sha256").jsonPrimitive.content, model.sha256)
+            assertEquals(record.getValue("sizeBytes").jsonPrimitive.long, model.asset.sizeBytes)
+            assertEquals(record.getValue("modelFile").jsonPrimitive.content, model.modelFile)
+            assertEquals(record.getValue("indexFile").jsonPrimitive.content, model.indexFile)
+            assertTrue(model.downloadUrl.contains(record.getValue("revision").jsonPrimitive.content))
+            assertEquals(listOf(model.modelFile, model.indexFile), model.requiredFiles)
+            assertTrue(
+                model.asset.dependencies.containsAll(listOf("sherpa-runtime", "applio-runtime", model.baseModelId)),
+            )
+            assertTrue(model.asset.license.contains("OpenRAIL"))
+            assertTrue(model.asset.languages.all { it == "ru" || it == "en" })
+        }
+        val runtime = definitions.single { it.asset.id == "applio-runtime" }
+        val runtimeProof = proof.getValue("conversionRuntime").jsonObject
+        assertEquals(6775972339L, runtime.asset.sizeBytes)
+        assertEquals(runtimeProof.getValue("sha256").jsonPrimitive.content, runtime.sha256)
+        assertTrue(runtimeProof.getValue("expandedBytes").jsonPrimitive.long < 12L * 1024 * 1024 * 1024)
+        assertTrue(runtimeProof.getValue("entries").jsonPrimitive.long < 50000)
+        assertTrue(runtime.requiredFiles.containsAll(listOf("env/python.exe", "core.py")))
     }
 }

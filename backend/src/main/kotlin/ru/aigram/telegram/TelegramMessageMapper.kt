@@ -26,16 +26,7 @@ class TelegramMessageMapper(
             is TdApi.MessageDocument -> "document"
             else -> "unsupported"
         }
-        val formatted = when (content) {
-            is TdApi.MessageText -> content.text
-            is TdApi.MessagePhoto -> content.caption
-            is TdApi.MessageVideo -> content.caption
-            is TdApi.MessageAnimation -> content.caption
-            is TdApi.MessageVoiceNote -> content.caption
-            is TdApi.MessageAudio -> content.caption
-            is TdApi.MessageDocument -> content.caption
-            else -> TdApi.FormattedText("", emptyArray())
-        }
+        val formatted = formatted(content)
         val media = when (content) {
             is TdApi.MessagePhoto -> content.photo.sizes.maxByOrNull { it.width * it.height }?.let {
                 attachment(it.photo, "image/jpeg", "photo.jpg", it.width, it.height)
@@ -89,20 +80,32 @@ class TelegramMessageMapper(
     }
 
     fun preview(message: TdApi.Message): String {
-        val mapped = map(message)
-        val label = when (mapped.kind) {
-            "photo" -> "Фото"
-            "sticker" -> "Стикер"
-            "video" -> "Видео"
-            "videoNote" -> "Видеосообщение"
-            "animation" -> "GIF"
-            "voice" -> "Голосовое сообщение"
-            "audio" -> "Аудио"
-            "document" -> mapped.media?.fileName.orEmpty()
-            "text" -> ""
+        val content = message.content
+        val label = when (content) {
+            is TdApi.MessagePhoto -> "Фото"
+            is TdApi.MessageSticker -> "Стикер"
+            is TdApi.MessageVideo -> "Видео"
+            is TdApi.MessageVideoNote -> "Видеосообщение"
+            is TdApi.MessageAnimation -> "GIF"
+            is TdApi.MessageVoiceNote -> "Голосовое сообщение"
+            is TdApi.MessageAudio -> "Аудио"
+            is TdApi.MessageDocument -> content.document.fileName.orEmpty()
+            is TdApi.MessageText -> ""
             else -> "Сообщение"
         }
-        return listOf(label, mapped.text).filter(String::isNotBlank).joinToString(" · ")
+
+        return listOf(label, formatted(content).text).filter(String::isNotBlank).joinToString(" · ")
+    }
+
+    private fun formatted(content: TdApi.MessageContent): TdApi.FormattedText = when (content) {
+        is TdApi.MessageText -> content.text
+        is TdApi.MessagePhoto -> content.caption
+        is TdApi.MessageVideo -> content.caption
+        is TdApi.MessageAnimation -> content.caption
+        is TdApi.MessageVoiceNote -> content.caption
+        is TdApi.MessageAudio -> content.caption
+        is TdApi.MessageDocument -> content.caption
+        else -> TdApi.FormattedText("", emptyArray())
     }
 
     private fun attachment(

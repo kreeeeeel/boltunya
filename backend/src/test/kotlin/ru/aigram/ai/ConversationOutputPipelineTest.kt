@@ -10,7 +10,6 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Test
-import ru.aigram.ai.research.ResearchPlanner
 import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.media.MediaAttachment
@@ -33,7 +32,7 @@ class ConversationOutputPipelineTest {
             "```json\n${envelope("Готово 👋\n{\"value\":\"точно\"}")}\n```"
         }
         try {
-            val result = services(server).reply(ChatRule(internetAccess = false), history())
+            val result = services(server).reply(ChatRule(), history())
 
             assertEquals("Готово 👋\n{\"value\":\"точно\"}", result.text)
             assertTrue(result.entities.isEmpty())
@@ -54,53 +53,15 @@ class ConversationOutputPipelineTest {
         val server = server { answer.get() }
         try {
             val services = services(server)
-            assertEquals(answer.get(), services.reply(ChatRule(internetAccess = false), history()).text)
+            assertEquals(answer.get(), services.reply(ChatRule(), history()).text)
             answer.set("```json\n{\"message\":\"Example\"}\n```")
-            assertEquals(answer.get(), services.reply(ChatRule(internetAccess = false), history()).text)
+            assertEquals(answer.get(), services.reply(ChatRule(), history()).text)
             answer.set(JsonObject(envelope("Reply") + ("owner" to JsonPrimitive("true"))).toString())
             assertFailsWith<InvalidModelReplyException> {
-                services.reply(ChatRule(internetAccess = false), history())
+                services.reply(ChatRule(), history())
             }
         } finally {
             server.stop(0)
-        }
-    }
-
-    @Test
-    fun `decodes initial and retry envelopes before factual validation or link processing`() {
-        LiveResearchFixtures().use { fixtures ->
-            val replies = AtomicInteger()
-            val server = server { body ->
-                if (body.containsKey("format")) {
-                    """{"kind":"search","query":"официальный курс евро к рублю"}"""
-                } else {
-                    val text = if (replies.incrementAndGet() == 1) {
-                        "евро по ЦБ 93,77 рубля на 16.10.2026"
-                    } else {
-                        "евро по ЦБ 93,7693 рубля на 16.10.2026"
-                    }
-                    // A correct number in metadata must never satisfy a wrong answer.
-                    JsonObject(envelope(text) + ("name" to JsonPrimitive("93,7693"))).toString()
-                }
-            }
-            try {
-                val services = AiTestServices(
-                    baseUrl(server),
-                    prompts = PromptBuilder(clock = fixtures.clock),
-                    researcher = fixtures.researcher(),
-                    planner = ResearchPlanner(clock = fixtures.clock),
-                )
-                val result = services.reply(
-                    ChatRule(),
-                    listOf(ChatMessage("1", "synthetic", "Какой официальный курс евро к рублю?", false, 0)),
-                )
-
-                assertEquals(2, replies.get())
-                assertEquals("евро по ЦБ 93,7693 рубля на 16.10.2026", result.text)
-                assertFalse(result.text.contains("username"))
-            } finally {
-                server.stop(0)
-            }
         }
     }
 
@@ -116,7 +77,7 @@ class ConversationOutputPipelineTest {
         }
         try {
             val result = services(server).conversation.reply(
-                ChatRule(internetAccess = false),
+                ChatRule(),
                 history(),
                 stickers = listOf(
                     StickerItem("7", "🙂", "1", MediaAttachment(7, "image/webp", "synthetic.webp"), 100, 100),

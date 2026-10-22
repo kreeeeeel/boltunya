@@ -46,6 +46,7 @@ class TelegramChatDirectoryTest {
         cache.users[10]?.firstName = "Анна"
         cache.chats[10]?.lastMessage =
             TdApi.Message().apply {
+                id = 100
                 isOutgoing = true
                 senderId = TdApi.MessageSenderUser(10)
                 content =
@@ -69,6 +70,16 @@ class TelegramChatDirectoryTest {
         assertEquals(listOf("#123456"), result["10"]?.darkWallpaper?.colors)
         assertEquals("first_handle", result["10"]?.username)
         assertEquals(true, result["10"]?.lastMessageOutgoing)
+        assertEquals(false, result["10"]?.lastMessageRead)
+        assertEquals(null, result["20"]?.lastMessageRead)
+        cache.chats[10]?.lastReadOutboxMessageId = 100
+        assertEquals(true, chats.list().single { it.id == "10" }.lastMessageRead)
+        val outgoing = cache.chats[10]?.lastMessage ?: error("Missing synthetic outgoing message")
+        outgoing.sendingState = TdApi.MessageSendingStatePending()
+        assertEquals(false, chats.list().single { it.id == "10" }.lastMessageRead)
+        outgoing.id = -1
+        outgoing.sendingState = null
+        assertEquals(false, chats.list().single { it.id == "10" }.lastMessageRead)
         assertEquals(false, result["20"]?.lastMessageOutgoing)
         assertEquals("Анна", result["20"]?.lastMessageSender)
         assertEquals(null, result["10"]?.memberCount)

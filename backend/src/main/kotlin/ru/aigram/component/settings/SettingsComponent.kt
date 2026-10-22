@@ -92,6 +92,8 @@ class SettingsComponent(
 
         if (replySettingsChanged(current, saved)) {
             replies.cancelReplies()
+        } else {
+            replies.cancelVoiceReplies(current, saved)
         }
 
         if (!saved.memoryEnabled) {
@@ -99,7 +101,15 @@ class SettingsComponent(
             inference.interruptBackground()
         }
 
+        if (saved.paused && !current.paused) {
+            inference.interruptBackground()
+            engine.pauseInference()
+        }
+
         if (update.defaultModel != null || update.defaultModelProfileId != null || update.paused == false) {
+            if (!saved.paused) {
+                engine.start()
+            }
             targets.startupWarmModel()?.let(engine::warm)
         }
 
@@ -112,9 +122,5 @@ class SettingsComponent(
             before.customStyles != after.customStyles || before.groupReplies != after.groupReplies ||
             before.deliveryMode != after.deliveryMode || before.ignoreAssistantTasks != after.ignoreAssistantTasks ||
             before.formatReplies != after.formatReplies ||
-            before.replyProcessingMode != after.replyProcessingMode ||
-            before.voiceInputEnabled != after.voiceInputEnabled || before.voiceReplyMode != after.voiceReplyMode ||
-            before.voiceReplyProbability != after.voiceReplyProbability ||
-            before.voiceRecognitionModel != after.voiceRecognitionModel ||
-            before.voiceSynthesisModel != after.voiceSynthesisModel || before.voiceSpeechRate != after.voiceSpeechRate
+            before.replyProcessingMode != after.replyProcessingMode
 }

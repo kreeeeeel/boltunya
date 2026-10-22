@@ -24,7 +24,6 @@ import ru.aigram.exception.impl.ReplyCancelledException
 import ru.aigram.memory.MemorySummarizer
 import ru.aigram.memory.OllamaMemorySummarizer
 import ru.aigram.memory.OwnerMemorySummarizer
-import ru.aigram.monitoring.MonitoringService
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.server.LocalApiServer
 import ru.aigram.storage.SettingsStore
@@ -150,7 +149,7 @@ class SpringApplicationContextTest {
     }
 
     @Test
-    fun `creating and repeatedly closing the context does not start runtime Telegram monitoring or inference`() {
+    fun `creating and repeatedly closing the context does not start runtime Telegram or inference`() {
         DiNetworkProbe().start().use { network ->
             val existingThreads = serviceThreads().stream().map { it.threadId() }.collect(Collectors.toSet())
             val application = context(ApplicationConfiguration(directory, true, network.url))
@@ -163,7 +162,6 @@ class SpringApplicationContextTest {
                 assertFalse(Files.exists(directory.resolve("launch.url")))
                 assertFalse(Files.exists(directory.resolve("memory/MEMORY.md")))
                 assertEquals("disconnected", application.getBean(TelegramGateway::class.java).status().state)
-                assertTrue(application.getBean(MonitoringService::class.java).history().isEmpty())
                 assertEquals(0, replies.queue().queued)
                 assertEquals(0, network.requests.get())
             } finally {

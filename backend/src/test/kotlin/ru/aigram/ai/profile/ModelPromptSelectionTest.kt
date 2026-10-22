@@ -10,10 +10,6 @@ import org.springframework.core.io.ByteArrayResource
 import org.springframework.util.MimeTypeUtils
 import ru.aigram.ai.ConversationService
 import ru.aigram.ai.PromptBuilder
-import ru.aigram.ai.research.InternetResearcher
-import ru.aigram.ai.research.ResearchFactGuard
-import ru.aigram.ai.research.ResearchLinkPolicy
-import ru.aigram.ai.research.ResearchPlanner
 import ru.aigram.domain.ai.profile.ModelCapabilities
 import ru.aigram.domain.ai.profile.ModelProfileUpdate
 import ru.aigram.domain.ai.profile.ModelProvider
@@ -120,19 +116,13 @@ class ModelPromptSelectionTest {
                 services.prompts.save(
                     ModelPromptSettings(visionProfile.model, visionProfile.id, "Vision-only preference"),
                 )
-                val resources = ResourceCatalog()
                 val conversation = ConversationService(
                     services.completion,
                     PromptBuilder(),
-                    InternetResearcher(),
-                    ResearchPlanner(),
-                    ResearchLinkPolicy(),
-                    ResearchFactGuard(resources),
-                    resources,
                     services.tracing,
                 )
                 val result = conversation.reply(
-                    ChatRule(style = "business", internetAccess = false),
+                    ChatRule(style = "business"),
                     listOf(ChatMessage("1", "synthetic", "Describe", false, 0, kind = "photo")),
                     globalPrompt = "Shared instructions",
                     images = mapOf(

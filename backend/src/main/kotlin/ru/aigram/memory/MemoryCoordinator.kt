@@ -368,6 +368,9 @@ class MemoryCoordinator(
         if (closed || !settings.get().memoryEnabled || outstanding.get().isNotEmpty()) {
             return
         }
+        if (settings.get().paused && collections.stream().noneMatch(::pending)) {
+            return
+        }
         val now = clock.instant().epochSecond
         try {
             if (!attach()) {
@@ -436,10 +439,14 @@ class MemoryCoordinator(
             var automaticStarted = false
             val request = MemoryQueueTask(
                 id, selected.chatId, selected.accountId, chat?.title ?: "", chat?.avatarUrl.orEmpty(), model, explicit,
-                canStart = { !inference.foregroundBusy(memoryTarget?.executionGroup ?: "shared") },
+                canStart = {
+                    (explicit || !settings.get().paused) &&
+                        !inference.foregroundBusy(memoryTarget?.executionGroup ?: "shared")
+                },
                 action = {
                     processing = selected.chatId
                     if (closed || suspended(selected.chatId) || !settings.get().memoryEnabled ||
+                        !explicit && settings.get().paused ||
                         telegram.status().userId != selected.accountId
                     ) {
                         throw ReplyCancelledException()
@@ -455,6 +462,7 @@ class MemoryCoordinator(
                         val snapshot = current
                         return !closed && !Thread.currentThread().isInterrupted &&
                             !suspended(snapshot.chatId) && settings.get().memoryEnabled && allowed(snapshot) &&
+                            (explicit || !settings.get().paused) &&
                             snapshot.accountId == selected.accountId && telegram.status().userId == selected.accountId
                     }
 
@@ -602,7 +610,7 @@ class MemoryCoordinator(
             return false
         }
         val explicit = collections.stream().anyMatch { it.chatId == state.chatId && pending(it) }
-        return hasWork(state) && (explicit || automaticDue(state, now))
+        return hasWork(state) && (explicit || !settings.get().paused && automaticDue(state, now))
     }
 
     private fun hasWork(state: ChatMemoryState): Boolean =

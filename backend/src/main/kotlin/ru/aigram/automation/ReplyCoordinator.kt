@@ -25,6 +25,7 @@ import ru.aigram.domain.events.ActivityPhase
 import ru.aigram.domain.events.ActivityStatus
 import ru.aigram.domain.events.ReplyQueueState
 import ru.aigram.domain.events.diagnostics.DiagnosticSource
+import ru.aigram.domain.settings.AppSettings
 import ru.aigram.domain.settings.ReplyProcessingMode
 import ru.aigram.exception.AppException
 import ru.aigram.exception.impl.ActivityDeliveryStartedException
@@ -38,6 +39,7 @@ import ru.aigram.exception.impl.ReplyDeliveryFailedException
 import ru.aigram.exception.impl.SpeechDraftUnavailableException
 import ru.aigram.exception.impl.TelegramRateLimitException
 import ru.aigram.speech.reply.VoiceDraftStore
+import ru.aigram.speech.reply.voicePreferences
 import ru.aigram.storage.ActivityFeedbackStore
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.ContextExclusionStore
@@ -366,7 +368,7 @@ class ReplyCoordinator(
         val photo = rule.analyzePhotos && message.kind == "photo" &&
             message.media?.mimeType in setOf("image/jpeg", "image/png", "image/webp")
         val suitable = !message.deleted && !message.outgoing && (message.text.isNotBlank() || photo) &&
-            (message.kind != "voice" || preferences.voiceInputEnabled) &&
+            (message.kind != "voice" || preferences.voicePreferences(rule).inputEnabled) &&
             !preferences.paused && rule.enabled && groupAllowed(message, rule) &&
             exclusions?.forInference(account, listOf(message))?.isEmpty() != true &&
             (!preferences.ignoreAssistantTasks || !tasks.ignores(message.text))
@@ -534,8 +536,10 @@ class ReplyCoordinator(
         val message = job.message
         val rule = settings.rule(message.chatId)
         val resolvedRule = settings.resolve(rule)
+        val voicePreferences = settings.get().voicePreferences(rule)
         val generationEpoch = epoch.get()
         fun canReply(): Boolean = telegram.status().userId == job.accountId &&
+            settings.get().voicePreferences(settings.rule(message.chatId)) == voicePreferences &&
             (!ordinaryReply(job) || job.processingMode == processingMode(rule)) &&
             allowed(
                 message,
@@ -912,6 +916,20 @@ class ReplyCoordinator(
         } else {
             typing.cancel(chatId)
         }
+    }
+
+    fun cancelVoiceReplies(before: AppSettings, after: AppSettings) = synchronized(gate) {
+        val changed: (ReplyJob) -> Boolean = { job ->
+            val chatId = job.message.chatId
+            job.memory == null && job.draft == null &&
+                before.voicePreferences(before.rules[chatId] ?: ChatRule()) !=
+                after.voicePreferences(after.rules[chatId] ?: ChatRule())
+        }
+        ArrayList(pending.values).stream().filter { changed(it) }.forEach { job ->
+            pending.remove(job.id)
+            cancelJob(job)
+        }
+        ArrayList(active.values).stream().filter { changed(it) }.forEach(::cancelJob)
     }
 
     fun cancelPending() = synchronized(gate) {

@@ -5,7 +5,6 @@ ModelTaskRouting:
         - parallelIndependentTasks
         - replyProfileId
         - memoryProfileId
-        - researchProfileId
         - visionProfileId
     properties:
         enabled:
@@ -22,10 +21,6 @@ ModelTaskRouting:
             type: string
             default: ''
             maxLength: 36
-        researchProfileId:
-            type: string
-            default: ''
-            maxLength: 36
         visionProfileId:
             type: string
             default: ''
@@ -35,10 +30,6 @@ ModelTaskRouting:
             maxLength: 120
             description: 'Default: .'
         memoryModel:
-            type: string
-            maxLength: 120
-            description: 'Default: .'
-        researchModel:
             type: string
             maxLength: 120
             description: 'Default: .'

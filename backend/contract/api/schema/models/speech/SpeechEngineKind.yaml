@@ -1,0 +1,4 @@
+SpeechEngineKind:
+    type: string
+    enum: [sherpa, applio-rvc]
+    default: sherpa

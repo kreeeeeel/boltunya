@@ -20,7 +20,7 @@ class LiveSpeechPipelineTest {
         try {
             val assets = listOf("sherpa-runtime", "piper-ru-irina", "whisper-tiny")
             verifiedSpeechCatalog(directory, verified, assets).use { catalog ->
-                val engine = SpeechEngine(directory, catalog, SpeechWorkerProcess(Json))
+                val engine = SpeechEngine(directory, catalog, SpeechWorkerProcess(Json, ApplioSpeechWorker()))
                 val codec = AudioCodec(directory)
                 val text = "Привет! Это проверка голосовых сообщений. Сегодня хорошая погода."
                 val wave = engine.synthesize(text, "piper-ru-irina")

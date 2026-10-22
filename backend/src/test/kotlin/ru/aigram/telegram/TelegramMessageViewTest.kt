@@ -49,6 +49,50 @@ class TelegramMessageViewTest {
         assertEquals("/api/media/22", mapped.senderAvatarUrl)
     }
 
+    @Test
+    fun `keeps real forwarded source names and never invents a name for an unknown origin`() {
+        val cache = TelegramCache()
+        val files = TelegramMediaStore(directory) { error("Mapping must not download") }
+        val view = TelegramMessageView(cache, TelegramMessageMapper(files), files)
+        cache.users[20] = TdApi.User().apply { firstName = "Alice" }
+        cache.chats[30] = TdApi.Chat().apply { title = "Source channel" }
+        val forwarded = message(TdApi.MessageSenderUser(10)).apply {
+            forwardInfo = TdApi.MessageForwardInfo().apply {
+                origin = TdApi.MessageOriginUser().apply { senderUserId = 20 }
+            }
+        }
+
+        assertEquals("Alice", view.map(forwarded).forwardedFrom)
+        assertEquals(true, view.map(forwarded).forwarded)
+        forwarded.forwardInfo.origin = TdApi.MessageOriginChannel().apply { chatId = 30 }
+        assertEquals("Source channel", view.map(forwarded).forwardedFrom)
+        forwarded.forwardInfo.origin = TdApi.MessageOriginHiddenUser().apply { senderName = "Hidden sender" }
+        assertEquals("Hidden sender", view.map(forwarded).forwardedFrom)
+        forwarded.forwardInfo.origin = TdApi.MessageOriginUser().apply { senderUserId = 999 }
+        assertEquals("", view.map(forwarded).forwardedFrom)
+        assertEquals(true, view.map(forwarded).forwarded)
+    }
+
+    @Test
+    fun `only confirmed positive outgoing message ids can have a read receipt`() {
+        val cache = TelegramCache()
+        cache.chats[100] = TdApi.Chat().apply { lastReadOutboxMessageId = 10 }
+        val files = TelegramMediaStore(directory) { error("Mapping must not download") }
+        val view = TelegramMessageView(cache, TelegramMessageMapper(files), files)
+        val outgoing = message(TdApi.MessageSenderUser(10)).apply { isOutgoing = true }
+
+        assertEquals(true, view.map(outgoing).read)
+        outgoing.sendingState = TdApi.MessageSendingStatePending()
+        assertEquals(false, view.map(outgoing).read)
+        outgoing.sendingState = null
+        outgoing.id = -1
+        assertEquals(false, view.map(outgoing).read)
+        outgoing.id = 0
+        assertEquals(false, view.map(outgoing).read)
+        outgoing.id = 11
+        assertEquals(false, view.map(outgoing).read)
+    }
+
     private fun message(sender: TdApi.MessageSender) = TdApi.Message().apply {
         id = 1
         chatId = 100

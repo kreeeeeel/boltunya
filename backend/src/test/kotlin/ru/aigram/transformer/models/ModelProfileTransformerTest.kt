@@ -41,7 +41,6 @@ class ModelProfileTransformerTest {
             parallelIndependentTasks = true,
             replyModel = "qwen3:4b",
             memoryModel = "gemma3:4b",
-            researchModel = "qwen3:1.7b",
             visionModel = "qwen3-vl:4b",
         )
 

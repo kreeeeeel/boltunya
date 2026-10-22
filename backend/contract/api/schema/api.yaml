@@ -47,8 +47,6 @@ paths:
         $ref: ./operations/media.yaml#/mediaByFileId
     /api/telegram/restore:
         $ref: ./operations/telegram.yaml#/telegramRestore
-    /api/metrics:
-        $ref: ./operations/system.yaml#/metrics
     /api/memory:
         $ref: ./operations/memory.yaml#/memory
     /api/memory/refresh:
@@ -63,10 +61,6 @@ paths:
         $ref: ./operations/chats.yaml#/chatsByChatIdDeleted
     /api/media/{fileId}/download:
         $ref: ./operations/media.yaml#/mediaByFileIdDownload
-    /api/search/connection:
-        $ref: ./operations/settings.yaml#/searchConnection
-    /api/search/check:
-        $ref: ./operations/settings.yaml#/searchCheck
     /api/memory/cancel:
         $ref: ./operations/memory.yaml#/memoryCancel
     /api/memory/{chatId}/cancel:
@@ -99,8 +93,6 @@ paths:
         $ref: ./operations/models.yaml#/modelProfilesByIdTest
     /api/model-routing:
         $ref: ./operations/models.yaml#/modelRouting
-    /api/appearance:
-        $ref: ./operations/settings.yaml#/appearance
     /api/uploads:
         $ref: ./operations/media.yaml#/uploads
     /api/uploads/{id}:
@@ -119,12 +111,6 @@ paths:
         $ref: ./operations/chats.yaml#/chatsByChatIdMessagesByMessageIdContext
     /api/chats/{chatId}/context-exclusions:
         $ref: ./operations/chats.yaml#/chatsByChatIdContextExclusions
-    /api/chats/{chatId}/gallery:
-        $ref: ./operations/chats.yaml#/chatsByChatIdGallery
-    /api/chats/{chatId}/attachments:
-        $ref: ./operations/chats.yaml#/chatsByChatIdAttachments
-    /api/chats/{chatId}/stickers:
-        $ref: ./operations/chats.yaml#/chatsByChatIdStickers
     /api/activity/history:
         $ref: ./operations/activity.yaml#/activityHistory
     /api/activity/history/settings:
@@ -147,6 +133,8 @@ components:
             $ref: ./models/speech/DraftOutput.yaml#/DraftOutput
         SpeechAssetKind:
             $ref: ./models/speech/SpeechAssetKind.yaml#/SpeechAssetKind
+        SpeechEngineKind:
+            $ref: ./models/speech/SpeechEngineKind.yaml#/SpeechEngineKind
         SpeechDownloadPhase:
             $ref: ./models/speech/SpeechDownloadPhase.yaml#/SpeechDownloadPhase
         SpeechAsset:
@@ -209,8 +197,6 @@ components:
             $ref: ./models/settings/WritingStyle.yaml#/WritingStyle
         ChatWallpaper:
             $ref: ./models/chats/ChatWallpaper.yaml#/ChatWallpaper
-        MetricSample:
-            $ref: ./models/system/MetricSample.yaml#/MetricSample
         MemoryDocument:
             $ref: ./models/memory/MemoryDocument.yaml#/MemoryDocument
         MemoryNotesUpdate:
@@ -219,8 +205,6 @@ components:
             $ref: ./models/memory/MemoryRefreshRequest.yaml#/MemoryRefreshRequest
         CacheStatistics:
             $ref: ./models/system/CacheStatistics.yaml#/CacheStatistics
-        SearchConnection:
-            $ref: ./models/settings/SearchConnection.yaml#/SearchConnection
         MemoryCollectionProgress:
             $ref: ./models/memory/MemoryCollectionProgress.yaml#/MemoryCollectionProgress
         ReplyQueue:
@@ -271,14 +255,8 @@ components:
             $ref: ./models/common/DeliveryMode.yaml#/DeliveryMode
         ModelProfileTestRequest:
             $ref: ./models/models/ModelProfileTestRequest.yaml#/ModelProfileTestRequest
-        AppearanceSettings:
-            $ref: ./models/settings/AppearanceSettings.yaml#/AppearanceSettings
         UploadedFile:
             $ref: ./models/media/UploadedFile.yaml#/UploadedFile
-        SendMediaRequest:
-            $ref: ./models/media/SendMediaRequest.yaml#/SendMediaRequest
-        SendStickerRequest:
-            $ref: ./models/media/SendStickerRequest.yaml#/SendStickerRequest
         StickerItem:
             $ref: ./models/media/StickerItem.yaml#/StickerItem
         StickerSet:
@@ -289,8 +267,6 @@ components:
             $ref: ./models/models/PreviewJob.yaml#/PreviewJob
         PreviewJobRequest:
             $ref: ./models/models/PreviewJobRequest.yaml#/PreviewJobRequest
-        ChatGallery:
-            $ref: ./models/chats/ChatGallery.yaml#/ChatGallery
         MessageLink:
             $ref: ./models/chats/MessageLink.yaml#/MessageLink
         ChatTypingUser:
@@ -335,8 +311,6 @@ components:
             $ref: ./models/chats/CommunicationStyle.yaml#/CommunicationStyle
         ChatGroupReplies:
             $ref: ./models/chats/ChatGroupReplies.yaml#/ChatGroupReplies
-        SourceLinksMode:
-            $ref: ./models/chats/SourceLinksMode.yaml#/SourceLinksMode
         GroupRepliesMode:
             $ref: ./models/settings/GroupRepliesMode.yaml#/GroupRepliesMode
         DefaultDeliveryMode:
@@ -353,8 +327,6 @@ components:
             $ref: ./models/chats/WallpaperKind.yaml#/WallpaperKind
         MemoryCollectionStatus:
             $ref: ./models/memory/MemoryCollectionStatus.yaml#/MemoryCollectionStatus
-        SearchConnectionState:
-            $ref: ./models/settings/SearchConnectionState.yaml#/SearchConnectionState
         DiagnosticSource:
             $ref: ./models/system/DiagnosticSource.yaml#/DiagnosticSource
         StorageLocationKind:
@@ -373,10 +345,6 @@ components:
             $ref: ./models/models/ModelProvider.yaml#/ModelProvider
         ModelPreset:
             $ref: ./models/models/ModelPreset.yaml#/ModelPreset
-        AppearanceMode:
-            $ref: ./models/settings/AppearanceMode.yaml#/AppearanceMode
-        OutgoingMediaKind:
-            $ref: ./models/media/OutgoingMediaKind.yaml#/OutgoingMediaKind
         PreviewJobStatus:
             $ref: ./models/models/PreviewJobStatus.yaml#/PreviewJobStatus
         TypingAction:
@@ -387,8 +355,6 @@ components:
             $ref: ./models/models/TokenEncoding.yaml#/TokenEncoding
         MessageDeletionScope:
             $ref: ./models/chats/MessageDeletionScope.yaml#/MessageDeletionScope
-        SearchConnectionRequest:
-            $ref: ./models/settings/SearchConnectionRequest.yaml#/SearchConnectionRequest
         QueuePauseRequest:
             $ref: ./models/activity/QueuePauseRequest.yaml#/QueuePauseRequest
         ChatRuleInput:
@@ -397,6 +363,8 @@ components:
             $ref: ./models/chats/ProactiveMessageMode.yaml#/ProactiveMessageMode
         ReplyInterruptionMode:
             $ref: ./models/chats/ReplyInterruptionMode.yaml#/ReplyInterruptionMode
+        VoiceSettingsMode:
+            $ref: ./models/chats/VoiceSettingsMode.yaml#/VoiceSettingsMode
         ReplyProcessingMode:
             $ref: ./models/settings/ReplyProcessingMode.yaml#/ReplyProcessingMode
         ModelProfileOptionsInput:
@@ -405,8 +373,6 @@ components:
             $ref: ./models/models/ModelCapabilitiesInput.yaml#/ModelCapabilitiesInput
         ModelPromptSettingsInput:
             $ref: ./models/models/ModelPromptSettingsInput.yaml#/ModelPromptSettingsInput
-        AppearanceSettingsInput:
-            $ref: ./models/settings/AppearanceSettingsInput.yaml#/AppearanceSettingsInput
         ActivityHistorySettingsInput:
             $ref: ./models/activity/ActivityHistorySettingsInput.yaml#/ActivityHistorySettingsInput
     securitySchemes:

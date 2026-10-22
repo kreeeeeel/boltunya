@@ -8,6 +8,11 @@ SpeechAsset:
             type: string
         kind:
             $ref: ./SpeechAssetKind.yaml#/SpeechAssetKind
+        engine:
+            $ref: ./SpeechEngineKind.yaml#/SpeechEngineKind
+        format:
+            type: string
+            default: ''
         languages:
             type: array
             items:

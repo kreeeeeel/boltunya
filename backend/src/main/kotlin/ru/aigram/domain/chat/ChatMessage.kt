@@ -29,4 +29,6 @@ data class ChatMessage(
     val senderUsername: String = "",
     val mediaAlbumId: String = "",
     val editedAt: Long = 0,
+    val forwardedFrom: String = "",
+    val forwarded: Boolean = false,
 )

@@ -7,7 +7,6 @@ enum class InputRule {
     STYLE_ID,
     CREDENTIALS_HASH,
     CREDENTIALS_PHONE,
-    SEARCH_KEY,
     CHAT_ID,
     GPU_UUID,
     MODEL_DIGEST,
@@ -23,9 +22,6 @@ enum class InputRule {
         CREDENTIALS_HASH -> value.length == 32 && value.chars().allMatch(::hex)
         CREDENTIALS_PHONE -> value.startsWith('+') && value.length in 8..16 &&
             value.substring(1).chars().allMatch(::digit)
-        SEARCH_KEY ->
-            value.length in 8..256 &&
-                value.chars().allMatch { asciiLetter(it) || digit(it) || it == '_'.code || it == '-'.code }
         CHAT_ID -> {
             val digits = value.removePrefix("-")
             digits.isNotEmpty() && digits[0] in '1'..'9' && digits.chars().allMatch(::digit) &&

@@ -30,6 +30,7 @@ class MemoryInvalidationTest {
             ChatMessage("11", "43", "Recent fact", false, 11),
         )
         val settings = SettingsStore(directory)
+        settings.update { it.copy(paused = false) }
         val store = MemoryStore(directory, ResourceCatalog())
         store.activate("100")
         store.observe("43", 11, manual = true, request = true)
@@ -86,6 +87,7 @@ class MemoryInvalidationTest {
     fun `excluding a message clears disabled chat auto facts without deleting notes or starting collection`() {
         val telegram = MemoryTelegramGateway()
         val settings = SettingsStore(directory)
+        settings.update { it.copy(paused = false) }
         val store = MemoryStore(directory, ResourceCatalog())
         val automated = AutomatedReplyStore(directory)
         store.activate("100")

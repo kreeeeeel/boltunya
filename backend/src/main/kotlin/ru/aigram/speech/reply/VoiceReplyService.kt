@@ -3,9 +3,10 @@ package ru.aigram.speech.reply
 import org.springframework.stereotype.Component
 import ru.aigram.automation.activity.ReplyTraceScope
 import ru.aigram.domain.ai.ReplyResult
+import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.events.ActivityPhase
-import ru.aigram.domain.settings.AppSettings
 import ru.aigram.domain.speech.SpeechAssetKind
+import ru.aigram.domain.speech.VoicePreferences
 import ru.aigram.exception.impl.InvalidSpeechRequestException
 import ru.aigram.exception.impl.ReplyCancelledException
 import ru.aigram.exception.impl.SpeechNotInstalledException
@@ -28,10 +29,10 @@ class VoiceReplyService(
     private val telegram: TelegramGateway,
     private val tracing: ReplyTraceScope,
 ) {
-    fun ensureReady(preferences: AppSettings) {
+    fun ensureReady(preferences: VoicePreferences) {
         val assets = catalog.list()
         val model = assets.stream().filter {
-            it.id == preferences.voiceSynthesisModel && it.kind == SpeechAssetKind.SYNTHESIS
+            it.id == preferences.synthesisModel && it.kind == SpeechAssetKind.SYNTHESIS
         }.findFirst().orElse(null)
         if (model == null || !model.installed || model.dependencies.stream().anyMatch { id ->
                 assets.stream().noneMatch { it.id == id && it.installed }
@@ -41,18 +42,24 @@ class VoiceReplyService(
         }
     }
 
-    fun compose(result: ReplyResult, chatId: String, ownerId: String, preferences: AppSettings): ReplyResult {
+    fun compose(
+        result: ReplyResult,
+        chatId: String,
+        ownerId: String,
+        preferences: VoicePreferences,
+        rule: ChatRule = settings.rule(chatId),
+    ): ReplyResult {
         ensureReady(preferences)
+        val storedRule = settings.rule(chatId)
         return synthesize(
             result,
             chatId,
             ownerId,
-            preferences.voiceSynthesisModel,
-            preferences.voiceSpeechRate,
+            preferences.synthesisModel,
+            preferences.speechRate,
             false,
         ) {
-            settings.get().voiceSynthesisModel == preferences.voiceSynthesisModel &&
-                settings.get().voiceSpeechRate == preferences.voiceSpeechRate
+            settings.rule(chatId) == storedRule && settings.get().voicePreferences(rule) == preferences
         }
     }
 

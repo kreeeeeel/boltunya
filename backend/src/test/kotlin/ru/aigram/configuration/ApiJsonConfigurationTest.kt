@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test
 import ru.aigram.contract.dto.Activity
 import ru.aigram.contract.dto.ActivityFeedbackUpdate
 import ru.aigram.contract.dto.ActivityHistorySettingsInput
-import ru.aigram.contract.dto.AppearanceSettingsInput
 import ru.aigram.contract.dto.ChatRuleInput
 import ru.aigram.contract.dto.ContextExclusionScope
 import ru.aigram.contract.dto.ContextExclusionUpdate
@@ -23,10 +22,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import ru.aigram.domain.ai.prompt.ModelPromptSettings as DomainModelPromptSettings
-import ru.aigram.domain.settings.AppearanceSettings as DomainAppearanceSettings
 import ru.aigram.transformer.chat.toDomain as toChatDomain
 import ru.aigram.transformer.models.toDomain as toModelDomain
-import ru.aigram.transformer.settings.toDomain as toSettingsDomain
 
 class ApiJsonConfigurationTest {
     private fun mapper(): JsonMapper {
@@ -107,32 +104,32 @@ class ApiJsonConfigurationTest {
 
         assertEquals(ChatRule(), empty.toChatDomain())
         assertEquals(ChatRule(enabled = true, instructions = "Keep it brief"), partial.toChatDomain())
-        listOf("""{"enabled":null}""", """{"style":null}""", """{"contextMessages":null}""").stream()
+        listOf(
+            """{"enabled":null}""",
+            """{"style":null}""",
+            """{"contextMessages":null}""",
+            """{"voiceReplyMode":null}""",
+            """{"voiceSettingsMode":null}""",
+            """{"voiceInputEnabled":null}""",
+            """{"voiceSpeechRate":null}""",
+        ).stream()
             .forEach { payload ->
                 assertFailsWith<JacksonException> { json.readValue(payload, ChatRuleInput::class.java) }
             }
     }
 
     @Test
-    fun `prompt and appearance inputs retain defaults and explicit nullable context override`() {
+    fun `prompt inputs retain defaults and explicit nullable context override`() {
         val json = mapper()
         val prompts = json.readValue(
             """{"model":"qwen3:1.7b","contextWindow":null}""",
             ModelPromptSettingsInput::class.java,
         )
-        val appearance = json.readValue("{}", AppearanceSettingsInput::class.java)
 
         assertEquals(
             DomainModelPromptSettings("qwen3:1.7b"),
             prompts.toModelDomain(),
         )
-        assertEquals(
-            DomainAppearanceSettings(),
-            appearance.toSettingsDomain(),
-        )
-        assertFailsWith<JacksonException> {
-            json.readValue("""{"tokens":null}""", AppearanceSettingsInput::class.java)
-        }
     }
 
     @Test

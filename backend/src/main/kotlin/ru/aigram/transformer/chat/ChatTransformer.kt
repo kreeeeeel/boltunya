@@ -6,8 +6,6 @@ import ru.aigram.contract.dto.WallpaperKind
 import ru.aigram.domain.chat.ChatSummary
 import ru.aigram.domain.chat.ChatTypingUser
 import ru.aigram.domain.chat.ChatWallpaper
-import ru.aigram.domain.media.ChatGallery
-import ru.aigram.contract.dto.ChatGallery as ContractChatGallery
 import ru.aigram.contract.dto.ChatTypingUser as ContractChatTypingUser
 import ru.aigram.contract.dto.ChatWallpaper as ContractChatWallpaper
 import ru.aigram.contract.dto.TypingAction as ContractTypingAction
@@ -30,12 +28,7 @@ fun ChatSummary.toContract(): Chat = Chat(
     lastMessageOutgoing = lastMessageOutgoing,
     lastMessageSender = lastMessageSender,
     typingUsers = typingUsers.stream().map { it.toContract() }.toList(),
-)
-
-fun ChatGallery.toContract(): ContractChatGallery = ContractChatGallery(
-    messages = messages.stream().map { it.toContract() }.toList(),
-    hasMoreBefore = hasMoreBefore,
-    hasMoreAfter = hasMoreAfter,
+    lastMessageRead = lastMessageRead,
 )
 
 private fun ChatWallpaper.toContract(): ContractChatWallpaper = ContractChatWallpaper(

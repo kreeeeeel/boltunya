@@ -8,9 +8,7 @@ import org.springframework.ai.chat.messages.UserMessage
 import org.springframework.ai.content.Media
 import ru.aigram.ai.profile.ProfileContextBudget
 import ru.aigram.ai.prompt.PromptTokenEstimator
-import ru.aigram.ai.research.ResearchLinkPolicy
 import ru.aigram.domain.ai.profile.ResolvedModelTarget
-import ru.aigram.domain.ai.research.ResearchContext
 import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.chat.CommunicationStyle
@@ -29,8 +27,6 @@ private const val MAX_PROMPT_CHARACTERS = 18000
 private const val MAX_MEMORY_CONTEXT_CHARACTERS = 8000
 private const val MEMORY_CONTEXT_OVERHEAD = 500
 private const val MIN_RECENT_CONTEXT_CHARACTERS = 2400
-private const val MAX_EXTERNAL_CONTEXT_CHARACTERS = 5500
-private const val MIN_RESEARCH_CONTEXT_CHARACTERS = 400
 private const val MEMORY_BUDGET_SEARCH_STEPS = 16
 private const val RECENT_HISTORY_RESERVE_TOKENS = 256
 
@@ -39,7 +35,6 @@ private val resources = ResourceCatalog()
 class PromptBuilder(
     private val clock: Clock = Clock.systemDefaultZone(),
     private val personalStyle: PersonalStyleBuilder = PersonalStyleBuilder(),
-    private val links: ResearchLinkPolicy = ResearchLinkPolicy(),
     private val authors: MessageContextFormatter = MessageContextFormatter(),
     private val tokens: PromptTokenEstimator = PromptTokenEstimator(),
     private val budget: ProfileContextBudget = ProfileContextBudget(),
@@ -48,7 +43,6 @@ class PromptBuilder(
         rule: ChatRule,
         history: List<ChatMessage>,
         globalPrompt: String = "",
-        research: ResearchContext = ResearchContext(),
         styleHistory: List<ChatMessage> = history,
         memory: MemoryContext = MemoryContext(),
         images: Map<String, List<Media>> = emptyMap(),
@@ -86,11 +80,7 @@ class PromptBuilder(
             mapOf("tone" to tone, "emoji" to emoji, "voice" to voice),
         )
         val baseSystem = resources.prompt(
-            if (research.status == "none") {
-                "ru/conversation/system"
-            } else {
-                "ru/research/system"
-            },
+            "ru/conversation/system",
             mapOf(
                 "globalPrompt" to (globalPrompt),
                 "instructions" to rule.instructions,
@@ -106,34 +96,10 @@ class PromptBuilder(
                     "ru/conversation/formatting-off"
                 },
             )
-        fun researchContent(data: String): String = resources.prompt(
-            "ru/research/context",
-            mapOf(
-                "value0" to research.status,
-                "value1" to data,
-                "value2" to
-                    resources.prompt(
-                        if (links.visible(rule, history)) {
-                            "ru/research/links-visible"
-                        } else {
-                            "ru/research/links-hidden"
-                        },
-                    ),
-            ),
-        )
-        val externalOverhead = if (research.status ==
-            "none"
-        ) {
-            resources.prompt("ru/research/no-data")
-        } else {
-            researchContent("")
-        }
         val memoryBudget = minOf(
             MAX_MEMORY_CONTEXT_CHARACTERS,
             (
-                MAX_PROMPT_CHARACTERS - baseSystem.length - selectedStyle.length - externalOverhead.length -
-                    MIN_RECENT_CONTEXT_CHARACTERS -
-                    MIN_RESEARCH_CONTEXT_CHARACTERS
+                MAX_PROMPT_CHARACTERS - baseSystem.length - selectedStyle.length - MIN_RECENT_CONTEXT_CHARACTERS
                 ).coerceAtLeast(0),
         )
         fun memoryContent(characters: Int): String = if (memory.isEmpty() || characters <= MEMORY_CONTEXT_OVERHEAD) {
@@ -148,20 +114,6 @@ class PromptBuilder(
             )
         }
         val longTerm = memoryContent(memoryBudget)
-        val externalBudget =
-            minOf(
-                MAX_EXTERNAL_CONTEXT_CHARACTERS,
-                (
-                    MAX_PROMPT_CHARACTERS - baseSystem.length - selectedStyle.length - longTerm.length -
-                        externalOverhead.length -
-                        MIN_RECENT_CONTEXT_CHARACTERS
-                    ).coerceAtLeast(0),
-            )
-        val external = if (research.status == "none") {
-            externalOverhead
-        } else {
-            researchContent(Json.encodeToString(links.forPrompt(rule, history, research)).take(externalBudget))
-        }
         val latest = history.lastOrNull {
             !it.contextExcluded && !it.deleted && (it.text.isNotBlank() || images[it.id].orEmpty().isNotEmpty())
         }
@@ -195,7 +147,7 @@ class PromptBuilder(
             IntStream.range(0, MEMORY_BUDGET_SEARCH_STEPS).forEach {
                 if (low < high) {
                     val middle = (low + high + 1) / 2
-                    val text = listOf(baseSystem, memoryContent(middle), external, selectedStyle)
+                    val text = listOf(baseSystem, memoryContent(middle), selectedStyle)
                         .filter(String::isNotBlank).joinToString("\n\n")
                     if (tokens.estimate(SystemMessage(text), inputTarget.model, inputTarget.tokenEncoding) <=
                         available
@@ -211,7 +163,6 @@ class PromptBuilder(
         val system = listOf(
             baseSystem,
             fittedMemory,
-            external,
             selectedStyle,
         ).filter(String::isNotBlank).joinToString("\n\n")
         val candidates = history.asReversed().stream()

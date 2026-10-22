@@ -3,8 +3,6 @@ package ru.aigram.configuration
 import kotlinx.serialization.json.Json
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import ru.aigram.monitoring.MonitoringService
-import ru.aigram.monitoring.NvidiaMonitor
 import ru.aigram.server.LocalSession
 import java.net.http.HttpClient
 import java.nio.file.Path
@@ -32,7 +30,4 @@ class InfrastructureConfiguration {
 
     @Bean
     fun localSession(): LocalSession = LocalSession(UUID.randomUUID().toString())
-
-    @Bean
-    fun monitoringService(gpu: NvidiaMonitor): MonitoringService = MonitoringService(gpu)
 }

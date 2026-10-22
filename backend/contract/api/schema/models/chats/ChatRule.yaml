@@ -35,9 +35,6 @@ ChatRule:
             type: integer
         emoji:
             type: boolean
-        internetAccess:
-            type: boolean
-            default: true
         matchMyStyle:
             type: boolean
             default: true
@@ -49,8 +46,6 @@ ChatRule:
         useMemory:
             type: boolean
             default: true
-        sourceLinks:
-            $ref: ./SourceLinksMode.yaml#/SourceLinksMode
         useDefaultModel:
             type: boolean
             default: true
@@ -67,6 +62,36 @@ ChatRule:
         aiStickers:
             type: boolean
             default: false
+        voiceSettingsMode:
+            $ref: ./VoiceSettingsMode.yaml#/VoiceSettingsMode
+        voiceInputEnabled:
+            type: boolean
+            default: false
+        voiceReplyMode:
+            allOf:
+                - $ref: ../speech/VoiceReplyMode.yaml#/VoiceReplyMode
+            default: text
+        voiceReplyProbability:
+            type: integer
+            minimum: 0
+            maximum: 100
+            default: 50
+        voiceRecognitionModel:
+            type: string
+            minLength: 1
+            maxLength: 80
+            default: whisper-tiny
+        voiceSynthesisModel:
+            type: string
+            minLength: 1
+            maxLength: 80
+            default: piper-ru-irina
+        voiceSpeechRate:
+            type: number
+            format: double
+            minimum: 0.5
+            maximum: 2.0
+            default: 1.0
         proactiveMode:
             $ref: ../settings/ProactiveMode.yaml#/ProactiveMode
         proactiveIntervalMinutes:

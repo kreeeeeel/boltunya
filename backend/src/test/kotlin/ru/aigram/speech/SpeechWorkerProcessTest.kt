@@ -10,7 +10,7 @@ import kotlin.test.assertTrue
 class SpeechWorkerProcessTest {
     @Test
     fun `worker launch exposes no text and discards all native output`() {
-        val process = SpeechWorkerProcess(Json).builder(
+        val process = SpeechWorkerProcess(Json, ApplioSpeechWorker()).builder(
             Path.of("C:/synthetic/native.jar"),
             Path.of("C:/synthetic/result.json"),
         )
@@ -26,7 +26,10 @@ class SpeechWorkerProcessTest {
     @Test
     fun `native extraction uses the absolute caller-owned result directory`() {
         val result = Path.of("build", "synthetic", "worker", "result.json")
-        val process = SpeechWorkerProcess(Json).builder(Path.of("build", "synthetic", "native.jar"), result)
+        val process = SpeechWorkerProcess(Json, ApplioSpeechWorker()).builder(
+            Path.of("build", "synthetic", "native.jar"),
+            result,
+        )
         val absoluteResult = result.toAbsolutePath().normalize()
         val temporaryDirectory = process.command().stream()
             .filter { it.startsWith("-Djava.io.tmpdir=") }
@@ -43,7 +46,7 @@ class SpeechWorkerProcessTest {
         val worker = SpeechTestProcess()
         try {
             Thread.currentThread().interrupt()
-            SpeechWorkerProcess(Json).stop(worker)
+            SpeechWorkerProcess(Json, ApplioSpeechWorker()).stop(worker)
 
             assertTrue(worker.terminated)
             assertTrue(worker.awaited)

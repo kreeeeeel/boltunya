@@ -19,15 +19,31 @@ private const val WORKER_STOP_SECONDS = 5L
 private val WORKER_TIMEOUT = Duration.ofMinutes(10)
 
 @Component
-class SpeechWorkerProcess(private val json: Json) : SpeechProcessExecutor {
+class SpeechWorkerProcess(private val json: Json, private val applio: ApplioSpeechWorker) : SpeechProcessExecutor {
     override fun execute(nativeJar: Path, request: SpeechWorkerRequest, result: Path): SpeechWorkerResult {
-        val process = builder(nativeJar, result).start()
+        val conversion = request.operation == "conversion"
+        val builder = if (conversion) {
+            applio.builder(request, result.toAbsolutePath().parent)
+        } else {
+            builder(nativeJar, result)
+        }
+        val process = builder.start()
         try {
-            process.outputStream.use { it.write(json.encodeToString(request).toByteArray(Charsets.UTF_8)) }
+            process.outputStream.use {
+                if (!conversion) {
+                    it.write(json.encodeToString(request).toByteArray(Charsets.UTF_8))
+                }
+            }
             if (!process.waitFor(WORKER_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)) {
                 throw SpeechTimeoutException()
             }
-            if (process.exitValue() != 0 || !Files.isRegularFile(result) ||
+            if (process.exitValue() != 0) {
+                throw SpeechInferenceFailedException()
+            }
+            if (conversion) {
+                return applio.result(Path.of(request.output))
+            }
+            if (!Files.isRegularFile(result) ||
                 Files.size(result) > MAX_WORKER_RESULT_BYTES
             ) {
                 throw SpeechInferenceFailedException()

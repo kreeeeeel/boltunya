@@ -58,32 +58,6 @@ quit:
                             $ref: ../models/common/Error.yaml#/Error
         tags:
             - system
-metrics:
-    get:
-        operationId: getMetrics
-        tags:
-            - system
-        responses:
-            '200':
-                description: Success
-                content:
-                    application/json:
-                        schema:
-                            type: array
-                            items:
-                                $ref: ../models/system/MetricSample.yaml#/MetricSample
-            '400':
-                description: Invalid request
-                content:
-                    application/json:
-                        schema:
-                            $ref: ../models/common/Error.yaml#/Error
-            '401':
-                description: Authentication required
-                content:
-                    application/json:
-                        schema:
-                            $ref: ../models/common/Error.yaml#/Error
 cache:
     get:
         operationId: getCacheStatistics

@@ -3,22 +3,28 @@ package ru.aigram.storage
 import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Component
 import ru.aigram.domain.chat.ChatMessage
+import ru.aigram.domain.chat.history.ArchiveBucketSnapshot
 import ru.aigram.exception.impl.InvalidHistoryIdentifierException
 import ru.aigram.validation.InputRule
 import java.nio.file.Files
+import java.nio.file.NoSuchFileException
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
+import java.nio.file.attribute.BasicFileAttributes
 import java.time.Clock
 import java.util.stream.Collectors
 
 private const val MESSAGE_ID_SHIFT = 20
 private const val MESSAGES_PER_BUCKET = 128
+private const val MAX_CACHED_BUCKETS = 64
+private const val MAX_CACHED_BUCKET_BYTES = 128L * 1024
 
 @Component
 class MessageArchiveStore(directory: Path, private val clock: Clock) {
     private val root = directory.resolve("history")
     private val json = Json { ignoreUnknownKeys = true }
     private val mutationVersions = mutableMapOf<Path, Long>()
+    private val cachedBuckets = linkedMapOf<Path, ArchiveBucketSnapshot>()
 
     @Synchronized
     fun version(account: String, chat: String): Long {
@@ -180,10 +186,35 @@ class MessageArchiveStore(directory: Path, private val clock: Clock) {
     }
 
     private fun read(path: Path): MutableMap<String, ChatMessage> {
-        if (!Files.exists(path)) {
+        val attributes = try {
+            Files.readAttributes(path, BasicFileAttributes::class.java)
+        } catch (exception: NoSuchFileException) {
+            cachedBuckets.remove(path)
             return mutableMapOf()
         }
-        return json.decodeFromString<Map<String, ChatMessage>>(Files.readString(path)).toMutableMap()
+
+        val cached = cachedBuckets.remove(path)
+        if (cached != null && cached.sizeBytes == attributes.size() &&
+            cached.modifiedAt == attributes.lastModifiedTime() && cached.fileKey == attributes.fileKey()
+        ) {
+            cachedBuckets[path] = cached
+            return cached.messages.toMutableMap()
+        }
+
+        val messages = json.decodeFromString<Map<String, ChatMessage>>(Files.readString(path))
+        if (attributes.size() <= MAX_CACHED_BUCKET_BYTES) {
+            cachedBuckets[path] = ArchiveBucketSnapshot(
+                attributes.size(),
+                attributes.lastModifiedTime(),
+                attributes.fileKey(),
+                messages,
+            )
+            if (cachedBuckets.size > MAX_CACHED_BUCKETS) {
+                cachedBuckets.remove(cachedBuckets.keys.first())
+            }
+        }
+
+        return messages.toMutableMap()
     }
 
     private fun write(path: Path, messages: Map<String, ChatMessage>) {
@@ -191,5 +222,6 @@ class MessageArchiveStore(directory: Path, private val clock: Clock) {
         val temporary = path.resolveSibling(path.fileName.toString() + ".tmp")
         Files.writeString(temporary, json.encodeToString(messages))
         Files.move(temporary, path, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
+        cachedBuckets.remove(path)
     }
 }
