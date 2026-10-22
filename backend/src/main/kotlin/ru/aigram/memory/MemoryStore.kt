@@ -145,7 +145,10 @@ class MemoryStore(directory: Path, private val resources: ResourceCatalog) {
     }
 
     @Synchronized
-    fun edit(chatId: String, notes: String, revision: String) {
+    fun edit(chatId: String, notes: String, revision: String, expectedOwnerId: String = "") {
+        if (expectedOwnerId.isNotEmpty() && accountId != expectedOwnerId) {
+            throw MemoryNotReadyException()
+        }
         if (notes.length > MAX_NOTES_CHARACTERS || notes.contains(SUMMARY_START) || notes.contains(SUMMARY_END)) {
             throw MemoryTooLargeException()
         }

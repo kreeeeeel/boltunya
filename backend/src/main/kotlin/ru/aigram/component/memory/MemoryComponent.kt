@@ -23,12 +23,15 @@ class MemoryComponent(
     }
 
     fun edit(chatId: String, notes: String, revision: String): MemoryDocument {
-        access(chatId)
+        val ownerId = access(chatId)
         val update = MemoryNotesUpdate(notes, revision)
         validation.validate(update)
 
-        store.edit(chatId, update.notes, update.revision)
-        return memory.document(chatId)
+        validateOwner(ownerId)
+        store.edit(chatId, update.notes, update.revision, ownerId)
+        val document = memory.document(chatId)
+        validateOwner(ownerId)
+        return document
     }
 
     fun refresh(chatId: String, rebuild: Boolean, immediate: Boolean): MemoryDocument {
@@ -45,9 +48,9 @@ class MemoryComponent(
         return memory.document(chatId)
     }
 
-    private fun access(chatId: String) {
+    private fun access(chatId: String): String {
         if (chatId.isEmpty()) {
-            return
+            return ""
         }
         val account = telegram.status()
         if (account.state != "ready" || account.userId.isEmpty()) {
@@ -57,5 +60,16 @@ class MemoryComponent(
             throw ChatNotFoundException()
         }
         store.activate(account.userId)
+        return account.userId
+    }
+
+    private fun validateOwner(ownerId: String) {
+        if (ownerId.isEmpty()) {
+            return
+        }
+        val account = telegram.status()
+        if (account.state != "ready" || account.userId != ownerId) {
+            throw MemoryNotReadyException()
+        }
     }
 }
