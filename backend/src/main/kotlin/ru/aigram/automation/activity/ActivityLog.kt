@@ -25,16 +25,20 @@ class ActivityLog(private val history: ActivityHistoryStore? = null, private val
     fun summaries(): List<ActivityEntry> = traces.entries.toList().asReversed().stream()
         .filter { owners[it.key] == owner() }.map { it.value.summary() }.toList()
 
-    @Synchronized
-    fun details(id: String): ActivityDetails = if (owners[id] == owner() && traces[id] != null) {
-        traces.getValue(id).details()
-    } else {
-        val details = history?.details(owner(), id)
-        if (details == null) {
-            throw ActivityNotFoundException()
+    fun details(id: String, ownerId: String = owner()): ActivityDetails {
+        val trace = synchronized(this) {
+            if (owners[id] == ownerId) {
+                traces[id]
+            } else {
+                null
+            }
         }
 
-        details
+        val details = trace?.details() ?: history?.details(ownerId, id)
+        if (details == null || owner() != ownerId) {
+            throw ActivityNotFoundException()
+        }
+        return details
     }
 
     @Synchronized

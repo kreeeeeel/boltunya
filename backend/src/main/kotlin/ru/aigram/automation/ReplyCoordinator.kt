@@ -158,25 +158,34 @@ class ReplyCoordinator(
         ReplyQueueState(queuePaused, pending.size, active.size, settings.get().maxParallelTasks, active.size)
     }
 
-    fun details(id: String): ActivityDetails = synchronized(gate) {
-        val details = log.details(id)
+    fun details(id: String): ActivityDetails {
+        val ownerId = telegram.status().userId
+        val details = log.details(id, ownerId)
         val chats = currentChats()
-        val queued = pending[id]
-        val job = queued ?: active[id]
-        val position = if (queued == null) {
-            0
-        } else {
-            pending.values.stream().filter { jobOrder.compare(it, queued) < 0 }.count().toInt() + 1
+
+        return synchronized(gate) {
+            if (telegram.status().userId != ownerId) {
+                throw ActivityNotFoundException()
+            }
+
+            val currentFeedback = feedback?.get(id)
+            val queued = pending[id]
+            val job = queued ?: active[id]
+            val position = if (queued == null) {
+                0
+            } else {
+                pending.values.stream().filter { jobOrder.compare(it, queued) < 0 }.count().toInt() + 1
+            }
+            details.copy(
+                entry = details.entry.copy(
+                    queuePosition = position,
+                    priority = job?.priority == true || details.entry.priority,
+                    waitUntil = job?.waitUntil ?: 0,
+                    feedbackRating = currentFeedback?.rating,
+                ).withCurrentAvatar(chats[details.entry.chatId]),
+                feedback = currentFeedback,
+            )
         }
-        details.copy(
-            entry = details.entry.copy(
-                queuePosition = position,
-                priority = job?.priority == true || details.entry.priority,
-                waitUntil = job?.waitUntil ?: 0,
-                feedbackRating = feedback?.get(id)?.rating,
-            ).withCurrentAvatar(chats[details.entry.chatId]),
-            feedback = feedback?.get(id),
-        )
     }
 
     private fun currentChats(): Map<String, ChatSummary> = telegram.chats().stream()
