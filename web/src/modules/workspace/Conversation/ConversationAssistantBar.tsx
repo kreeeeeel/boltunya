@@ -73,11 +73,7 @@ export function ConversationAssistantBar({
                         </Button>
                     </Tooltip>
                     <DropdownMenu
-                        onOpenToggle={(open) => {
-                            if (open) {
-                                setMenuOpened(true);
-                            }
-                        }}
+                        onOpenToggle={setMenuOpened}
                         items={[
                             {
                                 text: t('voice.generateText'),

@@ -1,5 +1,5 @@
 import {act, renderHook} from '@testing-library/react';
-import {expect, it, vi} from 'vitest';
+import {beforeEach, expect, it, vi} from 'vitest';
 import {useSpeechState} from '@/modules/speech/model/useSpeechState';
 import {speechState} from '@tests/fixtures/speech';
 
@@ -12,6 +12,10 @@ vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
     api: {speech: mocks},
 }));
+
+beforeEach(() => {
+    vi.clearAllMocks();
+});
 
 it('polls only an active download and starts installation only after the explicit action', async () => {
     vi.useFakeTimers();
@@ -54,3 +58,36 @@ it('polls only an active download and starts installation only after the explici
         vi.useRealTimers();
     }
 });
+
+it.each(['install', 'cancel'] as const)(
+    'refreshes remaining consumers after %s succeeds following the initiating hook unmount',
+    async (action) => {
+        const mutation = Promise.withResolvers<{ok: boolean}>();
+        mocks.speechState.mockResolvedValue(speechState);
+        const request = action === 'install' ? mocks.installSpeechAsset : mocks.cancelSpeechAsset;
+        request.mockReturnValueOnce(mutation.promise);
+        const observer = renderHook(() => useSpeechState());
+        const initiating = renderHook(() => useSpeechState());
+        await act(async () => {});
+        expect(mocks.speechState).toHaveBeenCalledTimes(1);
+
+        act(() => {
+            void initiating.result.current[action]('whisper-tiny');
+        });
+        initiating.unmount();
+        const updated = {
+            ...speechState,
+            assets: speechState.assets.map((asset, index) =>
+                index === 0 ? {...asset, title: 'Updated synthetic engine'} : asset,
+            ),
+        };
+        mocks.speechState.mockResolvedValue(updated);
+        await act(async () => {
+            mutation.resolve({ok: true});
+            await mutation.promise;
+        });
+        expect(mocks.speechState).toHaveBeenCalledTimes(2);
+        expect(observer.result.current.state?.assets[0].title).toBe('Updated synthetic engine');
+        observer.unmount();
+    },
+);

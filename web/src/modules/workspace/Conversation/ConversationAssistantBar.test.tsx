@@ -1,12 +1,19 @@
 import {Box, ThemeProvider} from '@gravity-ui/uikit';
 import {NextIntlClientProvider} from 'next-intl';
-import {fireEvent, render, screen} from '@testing-library/react';
+import {fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {expect, it, vi} from 'vitest';
 import {ConversationAssistantBar} from '@/modules/workspace/Conversation/ConversationAssistantBar';
 import {speechState} from '@tests/fixtures/speech';
 import ru from '@/shared/i18n/ru.json';
 
-vi.mock('@/modules/speech/model/useSpeechState', () => ({useSpeechState: () => ({state: speechState})}));
+const mocks = vi.hoisted(() => ({speechEnabled: vi.fn()}));
+
+vi.mock('@/modules/speech/model/useSpeechState', () => ({
+    useSpeechState: (enabled: boolean) => {
+        mocks.speechEnabled(enabled);
+        return {state: speechState};
+    },
+}));
 vi.mock('@/modules/speech/VoiceComposeDialog/VoiceComposeDialog', () => ({
     VoiceComposeDialog: ({defaultModelId, defaultSpeed}: {defaultModelId: string; defaultSpeed: number}) => (
         <Box role="dialog" aria-label="Manual voice">
@@ -69,4 +76,18 @@ it('blocks new generation and manual speech while another send or draft is pendi
     expect(screen.getByRole('button', {name: ru.draft})).toBeDisabled();
     expect(screen.getByRole('button', {name: ru.voice.manualTitle})).toBeDisabled();
     expect(screen.getByRole('button', {name: ru.memory.openChat})).toBeEnabled();
+});
+
+it('releases the speech subscription when the generation menu closes', async () => {
+    mount();
+    expect(mocks.speechEnabled).toHaveBeenLastCalledWith(false);
+    const switcher = screen.getByRole('button', {name: ru.draft});
+    fireEvent.click(switcher);
+    expect(await screen.findByRole('menuitem', {name: ru.voice.generateText})).toBeVisible();
+    expect(mocks.speechEnabled).toHaveBeenLastCalledWith(true);
+    fireEvent.click(switcher);
+    await waitFor(() => expect(mocks.speechEnabled).toHaveBeenLastCalledWith(false));
+    await waitFor(() =>
+        expect(screen.queryByRole('menuitem', {name: ru.voice.generateText})).not.toBeInTheDocument(),
+    );
 });
