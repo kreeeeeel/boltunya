@@ -1,7 +1,6 @@
 package ru.aigram.automation.proactive
 
 import ru.aigram.automation.ReplyCoordinator
-import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.domain.ai.ReplyResult
 import ru.aigram.domain.ai.proactive.ProactiveObservation
 import ru.aigram.domain.chat.ChatMessage
@@ -10,7 +9,6 @@ import ru.aigram.domain.chat.ChatSummary
 import ru.aigram.domain.chat.GroupReplyMode
 import ru.aigram.domain.chat.ProactiveMessageMode
 import ru.aigram.domain.chat.ProactiveMode
-import ru.aigram.domain.events.diagnostics.DiagnosticSource
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.SettingsStore
 import ru.aigram.telegram.TelegramGateway
@@ -29,7 +27,6 @@ class ProactiveCoordinator(
     private val ledger: ProactiveLedger,
     private val clock: Clock,
     private val resources: ResourceCatalog,
-    private val diagnostics: DiagnosticLog,
     private val generate: (ChatRule, List<ChatMessage>) -> ReplyResult,
 ) : AutoCloseable {
     private val closed = AtomicBoolean()
@@ -50,7 +47,6 @@ class ProactiveCoordinator(
                 ledger.observe(account, message)
             }
         } catch (exception: Exception) {
-            diagnostics.record(DiagnosticSource.REPLY, exception)
             System.err.println("Conversation checkpoint unavailable: ${exception.javaClass.simpleName}")
         }
     }
@@ -59,7 +55,6 @@ class ProactiveCoordinator(
         try {
             tick()
         } catch (exception: Exception) {
-            diagnostics.record(DiagnosticSource.REPLY, exception)
             System.err.println("Conversation initiative unavailable: ${exception.javaClass.simpleName}")
         }
     }

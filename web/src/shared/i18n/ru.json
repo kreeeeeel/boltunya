@@ -538,31 +538,6 @@
         "initiative": "Инициатива"
     },
     "modelWarming": "Прогревается",
-    "diagnostics": {
-        "title": "Ошибки",
-        "description": "Сбои приложения и подсказки по их устранению.",
-        "refresh": "Обновить",
-        "clear": "Очистить ошибки",
-        "loading": "Загрузка ошибок",
-        "empty": "Ошибок нет",
-        "emptyDescription": "Если что-то пойдёт не так, подробности появятся здесь.",
-        "occurrences": "Повторений: {count}",
-        "details": "Подробности ошибки",
-        "happened": "Что случилось",
-        "solution": "Что можно сделать",
-        "technical": "Техническая информация",
-        "lastOccurrence": "Последний раз: {date}",
-        "firstOccurrence": "Впервые: {date}",
-        "privacy": "Журнал не содержит переписку, ключи доступа и содержимое памяти.",
-        "close": "Закрыть",
-        "sources": {
-            "reply": "Ответ ИИ",
-            "engine": "Ollama",
-            "memory": "Память",
-            "http": "Приложение",
-            "update": "Обновление"
-        }
-    },
     "storageLocations": {
         "title": "Расположение файлов",
         "description": "Папки приложения, памяти и локальных моделей на этом компьютере.",
@@ -576,8 +551,7 @@
             "telegram-cache": "Кэш Telegram",
             "ollama-runtime": "Ollama",
             "ollama-models": "Модели Ollama",
-            "speech": "Голосовые модели",
-            "diagnostics": "Диагностика"
+            "speech": "Голосовые модели"
         }
     },
     "computeDevice": {

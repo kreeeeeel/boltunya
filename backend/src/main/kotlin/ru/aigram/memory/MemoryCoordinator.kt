@@ -6,14 +6,12 @@ import ru.aigram.ai.OllamaRuntime
 import ru.aigram.ai.profile.ModelTargetResolver
 import ru.aigram.automation.MemoryQueueTask
 import ru.aigram.automation.MemoryWorkQueue
-import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.domain.ai.profile.ModelProvider
 import ru.aigram.domain.ai.profile.ModelTask
 import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.ChatRule
 import ru.aigram.domain.chat.ChatSummary
 import ru.aigram.domain.chat.GroupReplyMode
-import ru.aigram.domain.events.diagnostics.DiagnosticSource
 import ru.aigram.domain.memory.ChatMemoryState
 import ru.aigram.domain.memory.MemoryCollectionProgress
 import ru.aigram.domain.memory.MemoryCollectionRequest
@@ -57,7 +55,6 @@ class MemoryCoordinator(
     private val clock: Clock,
     private val automated: AutomatedReplyStore,
     private val queueProvider: ObjectProvider<MemoryWorkQueue>,
-    private val diagnostics: DiagnosticLog? = null,
     private val targets: ModelTargetResolver? = null,
     private val roster: ParticipantRosterStore? = null,
     private val exclusions: ContextExclusionStore? = null,
@@ -172,7 +169,6 @@ class MemoryCoordinator(
                 },
             )
         } catch (exception: Exception) {
-            diagnostics?.record(DiagnosticSource.MEMORY, exception)
             errors[chatId] = MemoryUpdateFailedException().message
             System.err.println("Memory context unavailable: ${exception.javaClass.simpleName}")
             MemoryContext()
@@ -506,7 +502,6 @@ class MemoryCoordinator(
             // A foreground response takes priority; the checkpoint remains unchanged.
         } catch (exception: Exception) {
             if (!closed) {
-                diagnostics?.record(DiagnosticSource.MEMORY, exception)
                 if (processing.isNotEmpty()) {
                     failures[processing] = now + ERROR_RETRY_SECONDS
                     errors[processing] = MemoryUpdateFailedException().message

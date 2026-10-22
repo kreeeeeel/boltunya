@@ -37,10 +37,10 @@ export class PortableUpdate {
                 try {
                     await rm(executable + '.update-backup', {force: true});
                     await rm(join(this.directory, 'install.json'));
-                } catch (error) { await this.recordFailure(error); }
+                } catch (error) { this.reportFailure(error); }
             }
             return true;
-        } catch (error) { await this.recordFailure(error); return false; }
+        } catch (error) { this.reportFailure(error); return false; }
     }
 
     /** Legacy helpers do not watch startup health. Recover their backup after a failed new startup. */
@@ -60,7 +60,7 @@ export class PortableUpdate {
             if (await this.hash(executable) !== configuration.checksum) throw new Error('Recovery executable differs from the pending update');
             await this.launchHelper({...configuration, processId: process.pid, nonce: randomUUID(), protocol: 2}, 'Recover');
             return true;
-        } catch (error) { await this.recordFailure(error); return false; }
+        } catch (error) { this.reportFailure(error); return false; }
     }
 
     private async launchHelper(configuration: Plan, mode: 'Install' | 'Recover'): Promise<void> {
@@ -116,9 +116,7 @@ export class PortableUpdate {
     private marker(kind: string, nonce: string): string { return join(this.directory, `${kind}-${nonce}.json`); }
     private async hash(path: string): Promise<string> { const hash = createHash('sha256'); for await (const chunk of createReadStream(path)) hash.update(chunk); return hash.digest('hex'); }
     private async atomicJson(path: string, value: unknown): Promise<void> { const temporary = path + '.tmp'; await writeFile(temporary, JSON.stringify(value), 'utf8'); await rename(temporary, path); }
-    private async recordFailure(error: unknown): Promise<void> {
+    private reportFailure(error: unknown): void {
         console.error('Application update recovery failed:', error instanceof Error ? error.name : 'unknown error');
-        try { await writeFile(join(this.directory, 'last-error.json'), JSON.stringify({failedAt: new Date().toISOString(), stage: 'install', code: 'UPDATE_INSTALL_FAILED'}), 'utf8'); }
-        catch (recordingError) { console.error('Could not record application update failure:', recordingError instanceof Error ? recordingError.name : 'unknown error'); }
     }
 }

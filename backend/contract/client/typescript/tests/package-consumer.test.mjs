@@ -69,7 +69,7 @@ after(() => {
     rmSync(consumer, { recursive: true, force: true });
 });
 
-test("the installed tarball exposes all 74 operations in nine API groups and compiles typed imports", () => {
+test("the installed tarball exposes all 72 operations in nine API groups and compiles typed imports", () => {
     const apis = Object.values(sdk).filter(
         (value) =>
             typeof value === "function" &&
@@ -84,13 +84,16 @@ test("the installed tarball exposes all 74 operations in nine API groups and com
             ).length,
         0,
     );
-    assert.equal(operationCount, 74);
+    assert.equal(operationCount, 72);
     assert.equal(typeof sdk.ModelsApi.prototype.restartEngine, "function");
     assert.equal(typeof sdk.ChatsApi.prototype.send, "function");
     assert.equal(typeof sdk.ChatsApi.prototype.editMessage, "function");
     assert.equal(sdk.ChatsApi.prototype.sendAttachments, undefined);
     assert.equal(sdk.ChatsApi.prototype.sendSticker, undefined);
     assert.equal(sdk.SystemApi.prototype.getMetrics, undefined);
+    assert.equal(sdk.SystemApi.prototype.diagnosticErrors, undefined);
+    assert.equal(sdk.SystemApi.prototype.clearDiagnosticErrors, undefined);
+    assert.equal(typeof sdk.SystemApi.prototype.storageLocations, "function");
     assert.equal(sdk.SettingsApi.prototype.saveAppearance, undefined);
     assert.equal(Object.hasOwn(sdk, "OutgoingMediaKind"), false);
     copyFileSync(

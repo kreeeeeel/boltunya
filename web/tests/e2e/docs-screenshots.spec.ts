@@ -161,6 +161,8 @@ for (const locale of ['en', 'ru'] as const) {
         });
         await page.goto(base);
         await expect(page.locator('html')).toHaveAttribute('lang', locale);
+        await expect(page.locator('[data-qa="sidebar-navigation"]').getByRole('button')).toHaveCount(4);
+        await expect(page.locator('[data-qa="nav-errors"]')).toHaveCount(0);
         await page.getByRole('button', {name: names[0], exact: true}).click();
         await expect(page.locator('[data-qa="conversation-assistant-bar"]')).toBeVisible();
         await capture(page, locale, 'chats-light');

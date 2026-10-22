@@ -6,8 +6,6 @@ import ru.aigram.ai.profile.ModelTargetResolver
 import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.automation.proactive.ProactiveCoordinator
 import ru.aigram.configuration.ApplicationConfiguration
-import ru.aigram.diagnostics.DiagnosticLog
-import ru.aigram.domain.events.diagnostics.DiagnosticSource
 import ru.aigram.memory.MemoryCoordinator
 import ru.aigram.server.LocalApiServer
 import ru.aigram.storage.CredentialStore
@@ -31,7 +29,6 @@ class ApplicationRuntime constructor(
     private val memory: MemoryCoordinator,
     private val prefetch: MediaPrefetcher,
     private val targets: ModelTargetResolver,
-    private val diagnostics: DiagnosticLog,
     private val initiatives: ProactiveCoordinator,
     private val settings: SettingsStore,
 ) : AutoCloseable {
@@ -65,7 +62,6 @@ class ApplicationRuntime constructor(
                 engine.warm(warmModel)
             }
         } catch (exception: Exception) {
-            diagnostics.record(DiagnosticSource.ENGINE, exception)
             System.err.println("Startup warmup skipped: ${exception.javaClass.simpleName}")
         }
 

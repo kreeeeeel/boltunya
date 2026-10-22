@@ -77,8 +77,6 @@ paths:
         $ref: ./operations/activity.yaml#/activityByIdCancel
     /api/activity/{id}/priority:
         $ref: ./operations/activity.yaml#/activityByIdPriority
-    /api/diagnostics/errors:
-        $ref: ./operations/system.yaml#/diagnosticsErrors
     /api/storage/locations:
         $ref: ./operations/system.yaml#/storageLocations
     /api/activity/{id}/feedback:
@@ -217,10 +215,6 @@ components:
             $ref: ./models/activity/ActivityAttempt.yaml#/ActivityAttempt
         ActivityDetails:
             $ref: ./models/activity/ActivityDetails.yaml#/ActivityDetails
-        DiagnosticEntry:
-            $ref: ./models/system/DiagnosticEntry.yaml#/DiagnosticEntry
-        DiagnosticReport:
-            $ref: ./models/system/DiagnosticReport.yaml#/DiagnosticReport
         StorageLocation:
             $ref: ./models/system/StorageLocation.yaml#/StorageLocation
         StorageLocationReport:
@@ -327,8 +321,6 @@ components:
             $ref: ./models/chats/WallpaperKind.yaml#/WallpaperKind
         MemoryCollectionStatus:
             $ref: ./models/memory/MemoryCollectionStatus.yaml#/MemoryCollectionStatus
-        DiagnosticSource:
-            $ref: ./models/system/DiagnosticSource.yaml#/DiagnosticSource
         StorageLocationKind:
             $ref: ./models/system/StorageLocationKind.yaml#/StorageLocationKind
         ComputeDeviceKind:

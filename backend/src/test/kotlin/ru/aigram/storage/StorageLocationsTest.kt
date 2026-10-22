@@ -32,6 +32,8 @@ class StorageLocationsTest {
         assertTrue(locations.getValue("ollama-models").openable)
         assertFalse(locations.getValue("telegram-cache").openable)
         assertTrue(locations.getValue("ollama-runtime").available)
+        assertFalse(locations.containsKey("diagnostics"))
+        assertFalse(Files.exists(directory.resolve("diagnostics")))
     }
 
     @Test

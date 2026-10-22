@@ -71,16 +71,19 @@ private val RETIRED_PATHS = setOf(
     "/api/chats/{chatId}/attachments",
     "/api/chats/{chatId}/stickers",
     "/api/metrics",
+    "/api/diagnostics/errors",
 )
 private val RETIRED_OPERATIONS = setOf(
     "GET /api/search/connection", "POST /api/search/connection", "DELETE /api/search/connection",
     "POST /api/search/check", "GET /api/appearance", "PUT /api/appearance", "GET /api/chats/{chatId}/gallery",
     "POST /api/chats/{chatId}/attachments", "POST /api/chats/{chatId}/stickers", "GET /api/metrics",
+    "GET /api/diagnostics/errors", "DELETE /api/diagnostics/errors",
 )
 private val RETIRED_MODELS = setOf(
     "SearchConnection", "SearchConnectionState", "SearchConnectionRequest", "SourceLinksMode",
     "AppearanceSettings", "AppearanceSettingsInput", "AppearanceMode", "ChatGallery", "SendMediaRequest",
     "SendStickerRequest", "MetricSample", "OutgoingMediaKind",
+    "DiagnosticEntry", "DiagnosticReport", "DiagnosticSource",
 )
 
 // These extracted schemas predate fingerprinted additions. Pin their reviewed pre-removal definitions as well.
@@ -90,6 +93,7 @@ private val RETIRED_EXTRACTED_HASHES = mapOf(
     "SourceLinksMode" to "48cde6b0b3e563419dab8329ab6bf6d77dce8760ca6f856e8cffd29d203bc9c6",
     "AppearanceMode" to "344530c5366cb8e949efc6d4ca1f29f439af2ed6a70e758e99159fd8b69c32d8",
     "OutgoingMediaKind" to "b29cc978aa28fc337ed01c0d1dc5dfb6124c5becf36794cac753f0c41d22abbf",
+    "DiagnosticSource" to "bca4224645509bd620d4cd5e9a64ed94d1d349271e218d9b421840d48a2b7dfb",
 )
 
 class ContractSourceTest {
@@ -151,8 +155,8 @@ class ContractSourceTest {
                 assertEquals(corrected, hash, "Wire semantics changed for $group: $name")
             }
         }
-        assertEquals(61, document.getValue("paths").jsonObject.size)
-        assertEquals(74, audit.operations().size)
+        assertEquals(60, document.getValue("paths").jsonObject.size)
+        assertEquals(72, audit.operations().size)
         assertEquals(
             (
                 expected.getValue("schemas").jsonObject.keys + extras.keys + REQUEST_MODELS + MESSAGE_EDIT_MODELS +
@@ -160,10 +164,10 @@ class ContractSourceTest {
                 ) - RETIRED_MODELS,
             document.getValue("components").jsonObject.getValue("schemas").jsonObject.keys,
         )
-        assertEquals(124, document.getValue("components").jsonObject.getValue("schemas").jsonObject.size)
+        assertEquals(121, document.getValue("components").jsonObject.getValue("schemas").jsonObject.size)
         assertFalse(Files.exists(Path.of("../api.yaml")), "The old duplicate contract must not remain")
         Files.walk(Path.of("schema")).use { files ->
-            assertEquals(134L, files.filter { Files.isRegularFile(it) && it.toString().endsWith(".yaml") }.count())
+            assertEquals(131L, files.filter { Files.isRegularFile(it) && it.toString().endsWith(".yaml") }.count())
         }
     }
 

@@ -1,6 +1,6 @@
 const {test} = require('node:test');
 const assert = require('node:assert/strict');
-const {mkdtemp, readFile, rm} = require('node:fs/promises');
+const {mkdtemp, readdir, rm} = require('node:fs/promises');
 const {tmpdir} = require('node:os');
 const {join} = require('node:path');
 const {ApplicationUpdater} = require('../dist/application-updater.js');
@@ -27,18 +27,13 @@ test('hands verified downloads to the installer and preserves startup tray mode'
     assert.equal(statuses.at(-1).progress, 100);
 });
 
-test('records only a safe failure code and keeps the previous app launchable', async () => {
+test('keeps the previous app launchable after a failed update check without creating a diagnostic journal', async () => {
     const directory = await mkdtemp(join(tmpdir(), 'boltunya-updater-'));
     const statuses = [];
     const updater = new ApplicationUpdater({latest: async () => { throw new Error('token=secret and private path'); }}, {}, directory);
     try {
         assert.equal(await updater.run('2.6.17', 'app.exe', false, value => statuses.push(value)), false);
-        const text = await readFile(join(directory, 'last-error.json'), 'utf8');
-        assert.ok(!text.includes('secret') && !text.includes('private path'));
-        const error = JSON.parse(text);
-        assert.equal(error.code, 'UPDATE_CHECK_FAILED');
-        assert.equal(error.stage, 'check');
-        assert.ok(Number.isFinite(Date.parse(error.failedAt)));
+        assert.deepEqual(await readdir(directory), []);
         assert.ok(statuses.at(-1).message.includes('Не удалось проверить'));
     } finally { await rm(directory, {recursive: true, force: true}); }
 });

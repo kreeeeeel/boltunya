@@ -88,44 +88,6 @@ cacheClear:
                     application/json:
                         schema:
                             $ref: ../models/system/CacheStatistics.yaml#/CacheStatistics
-diagnosticsErrors:
-    get:
-        operationId: diagnosticErrors
-        tags:
-            - system
-        description: >-
-            A bounded support log containing only error codes, static explanations and allowlisted technical metadata.
-            No exception messages, chat content, account IDs, credentials or prompts are persisted.
-        responses:
-            '200':
-                description: Success
-                content:
-                    application/json:
-                        schema:
-                            $ref: ../models/system/DiagnosticReport.yaml#/DiagnosticReport
-            '401':
-                description: Local session required
-                content:
-                    application/json:
-                        schema:
-                            $ref: ../models/common/Error.yaml#/Error
-    delete:
-        operationId: clearDiagnosticErrors
-        tags:
-            - system
-        responses:
-            '200':
-                description: Success
-                content:
-                    application/json:
-                        schema:
-                            $ref: ../models/common/Ok.yaml#/Ok
-            '401':
-                description: Local session required
-                content:
-                    application/json:
-                        schema:
-                            $ref: ../models/common/Error.yaml#/Error
 storageLocations:
     get:
         operationId: storageLocations

@@ -13,7 +13,6 @@ import ru.aigram.application.ExitAction
 import ru.aigram.automation.ReplyCoordinator
 import ru.aigram.configuration.AigramApplication
 import ru.aigram.configuration.ApplicationConfiguration
-import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.server.LocalSession
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.SettingsStore
@@ -32,7 +31,6 @@ class TestWebServerFactory {
         token: String,
         automated: AutomatedReplyStore = AutomatedReplyStore(directory),
         storageClient: StorageClient = StorageClient { TdApi.StorageStatistics(0, 0, emptyArray()) },
-        diagnostics: DiagnosticLog? = null,
         devices: ComputeDeviceDiscovery? = null,
         onQuit: () -> Unit,
     ): TestWebServer {
@@ -49,9 +47,6 @@ class TestWebServerFactory {
             "localSession" to LocalSession(token),
             "processExit" to ExitAction(onQuit),
         )
-        if (diagnostics != null) {
-            supplied["diagnosticLog"] = diagnostics
-        }
         if (devices != null) {
             supplied["nvidiaDeviceDiscovery"] = devices
         }

@@ -55,3 +55,8 @@ test('opens the current speech directory by id without accepting a user-supplied
         assert.equal(opened.length, 1);
     } finally { await rm(directory, {recursive: true, force: true}); }
 });
+
+test('rejects the removed diagnostics location before loading or opening a path', async () => {
+    const locations = new StorageLocations(async () => assert.fail('Must not load a removed location'), async () => assert.fail('Must not open a removed location'));
+    await assert.rejects(locations.openLocation('diagnostics'), error => error.message.includes('Unknown storage'));
+});

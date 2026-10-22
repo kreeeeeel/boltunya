@@ -1,6 +1,6 @@
 'use client';
 import {Box, Button, Flex, Icon, Text, Tooltip} from '@gravity-ui/uikit';
-import {Clock, Comments, Moon, Sparkles, CircleExclamation, Volume} from '@gravity-ui/icons';
+import {Clock, Comments, Moon, Sparkles, Volume} from '@gravity-ui/icons';
 import {useTranslations} from 'next-intl';
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {ActivityPanel} from '@/modules/activity/ActivityPanel/ActivityPanel';
@@ -26,7 +26,6 @@ import {desktopBridge} from '@/shared/desktop/bridge';
 import {MemoryDialog} from '@/modules/memory/MemoryDialog/MemoryDialog';
 import {ContextCollectionDialog} from '@/modules/memory/ContextCollectionDialog/ContextCollectionDialog';
 import {DeletedMessagesDialog} from '@/modules/workspace/DeletedMessagesDialog/DeletedMessagesDialog';
-import {ErrorsPanel} from '@/modules/diagnostics/ErrorsPanel/ErrorsPanel';
 import {ProfileMenu} from '@/modules/settings/ProfileMenu/ProfileMenu';
 import type {SettingsSectionId} from '@/modules/settings/model/settingsSections';
 import {useModelProfiles} from '@/modules/settings/model/useModelProfiles';
@@ -297,13 +296,8 @@ export function Workspace() {
                             {id: 'models', icon: Sparkles},
                             {id: 'speech', icon: Volume},
                             {id: 'activity', icon: Clock},
-                            {id: 'errors', icon: CircleExclamation},
                         ].map((item) => (
-                            <Tooltip
-                                key={item.id}
-                                content={t(item.id === 'errors' ? 'diagnostics.title' : item.id)}
-                                placement="right"
-                            >
+                            <Tooltip key={item.id} content={t(item.id)} placement="right">
                                 <Button
                                     view={tab === item.id ? 'flat-info' : 'flat-secondary'}
                                     className={styles.navButton}
@@ -311,7 +305,7 @@ export function Workspace() {
                                     qa={'nav-' + item.id}
                                     aria-current={tab === item.id ? 'page' : undefined}
                                     onClick={() => setTab(item.id)}
-                                    aria-label={t(item.id === 'errors' ? 'diagnostics.title' : item.id)}
+                                    aria-label={t(item.id)}
                                 >
                                     <Icon data={item.icon} size={21} />
                                 </Button>
@@ -419,7 +413,6 @@ export function Workspace() {
                             )}
                         </>
                     )}
-                    {tab === 'errors' && <ErrorsPanel />}
                     {tab === 'models' && !stateLoading && (
                         <Box className={styles.panel}>
                             <ModelsPanel

@@ -39,7 +39,8 @@ const quote = value => `'${value.replaceAll("'", "''")}'`;
         assert.equal(restarted, true);
         assert.deepEqual(await readFile(target), await readFile(previous));
         await assert.rejects(access(unexpectedDialog));
-        assert.equal(JSON.parse(await readFile(join(updates, 'last-error.json'), 'utf8')).code, 'UPDATE_INSTALL_FAILED');
+        await assert.rejects(access(join(updates, 'last-error.json')), {code: 'ENOENT'});
+        await assert.rejects(access(join(updates, 'update-failures.json')), {code: 'ENOENT'});
         console.log(JSON.stringify({legacyStartupFailureRecovered: true, previousVersionRestartedInTray: true, noFatalDialog: true, noDownloads: true, noTelegram: true}));
     } finally {
         await application?.close().catch(error => { if (!error.message.includes('closed')) throw error; });

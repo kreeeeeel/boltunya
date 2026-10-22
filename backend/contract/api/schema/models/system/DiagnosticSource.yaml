@@ -1,8 +1,0 @@
-DiagnosticSource:
-    type: string
-    enum:
-        - reply
-        - engine
-        - memory
-        - http
-        - update

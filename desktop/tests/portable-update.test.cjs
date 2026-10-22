@@ -86,6 +86,10 @@ async function run(fixture) {
     try { await execute('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script, '-Plan', fixture.plan], {windowsHide: true, timeout: 40_000, env: fixture.env}); return 0; }
     catch (error) { if (typeof error.code !== 'number') throw error; return error.code; }
 }
+async function assertNoJournal(fixture) {
+    await assert.rejects(access(join(fixture.updates, 'last-error.json')), {code: 'ENOENT'});
+    await assert.rejects(access(join(fixture.updates, 'update-failures.json')), {code: 'ENOENT'});
+}
 test('portable helper waits for real application readiness before deleting the backup', windows, async () => {
     const fixture = await native('healthy', true);
     try {
@@ -93,6 +97,7 @@ test('portable helper waits for real application readiness before deleting the b
         assert.deepEqual(await readFile(fixture.target), fixture.next);
         assert.ok((await readFile(fixture.launches, 'utf8')).includes('healthy:--updated|--update-session=' + fixture.nonce + '|--startup'));
         await assert.rejects(access(fixture.target + '.update-backup')); await assert.rejects(access(fixture.plan));
+        await assertNoJournal(fixture);
     } finally { await cleanup(fixture); }
 });
 test('a real updated process that starts and then crashes restores and launches the previous version', windows, async () => {
@@ -104,7 +109,7 @@ test('a real updated process that starts and then crashes restores and launches 
         await waitFor(async () => (await readFile(fixture.launches, 'utf8')).includes('old:--update-failed|--startup'));
         assert.deepEqual(await readFile(fixture.target), fixture.old);
         assert.ok((await readFile(fixture.launches, 'utf8')).includes('crash:--updated|--update-session=' + fixture.nonce));
-        assert.equal(JSON.parse(await readFile(join(fixture.updates, 'last-error.json'), 'utf8')).code, 'UPDATE_INSTALL_FAILED');
+        await assertNoJournal(fixture);
         await assert.rejects(access(fixture.target + '.update-backup'));
         const previous = (await launcherProcesses(fixture)).find(process => process.mode === 'old');
         assert.ok(previous);
@@ -150,7 +155,7 @@ test('a healthy legacy update stays confirmed when its locked backup cannot be c
         await new Promise((resolve, reject) => { lock.stdout.once('data', value => value.toString().includes('READY') ? resolve() : reject(new Error('Could not lock the synthetic backup'))); lock.once('error', reject); });
         assert.equal(await new PortableUpdate(script, fixture.updates).confirm(fixture.target), true);
         await access(fixture.plan);
-        assert.equal(JSON.parse(await readFile(join(fixture.updates, 'last-error.json'), 'utf8')).code, 'UPDATE_INSTALL_FAILED');
+        await assertNoJournal(fixture);
     } finally { lock.stdin.end('\n'); await closed; await cleanup(fixture); }
 });
 
@@ -165,7 +170,7 @@ test('a failed startup installed by a legacy helper restores the backup after it
         await execute(process.execPath, [child, resolve(__dirname, '../dist/portable-update.js'), script, fixture.updates, fixture.target], {windowsHide: true, timeout: 15_000, env: fixture.env});
         await waitFor(async () => { try { return (await readFile(fixture.launches, 'utf8')).includes('old:--update-failed|--startup'); } catch (error) { if (error.code === 'ENOENT') return false; throw error; } });
         assert.deepEqual(await readFile(fixture.target), fixture.old);
-        assert.equal(JSON.parse(await readFile(join(fixture.updates, 'last-error.json'), 'utf8')).code, 'UPDATE_INSTALL_FAILED');
+        await assertNoJournal(fixture);
     } finally { await cleanup(fixture); }
 });
 
@@ -176,6 +181,7 @@ test('new protocol confirmation only acknowledges the matching verified startup 
         await writeFile(fixture.plan, JSON.stringify({...configuration, protocol: 2, nonce}));
         const installer = new PortableUpdate(script, fixture.updates);
         assert.equal(await installer.confirm(fixture.target, randomUUID()), false);
+        await assertNoJournal(fixture);
         await assert.rejects(access(join(fixture.updates, `healthy-${nonce}.json`)));
         assert.equal(await installer.confirm(fixture.target, nonce), true);
         assert.equal(JSON.parse(await readFile(join(fixture.updates, `healthy-${nonce}.json`), 'utf8')).nonce, nonce);

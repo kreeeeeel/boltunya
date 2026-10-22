@@ -1,6 +1,5 @@
 import {spawn, type ChildProcess} from 'node:child_process';
 import {readFile, mkdir, stat} from 'node:fs/promises';
-import {createWriteStream} from 'node:fs';
 import {join, resolve} from 'node:path';
 
 const READY_TIMEOUT_MS = 40_000;
@@ -19,17 +18,13 @@ export class Backend {
         await mkdir(this.directory, {recursive: true});
         const runtime = this.packaged ? join(this.resources, 'runtime/bin/java.exe') : process.env.JAVA_HOME ? join(process.env.JAVA_HOME, 'bin/java.exe') : 'java.exe';
         const libs = this.packaged ? join(this.resources, 'backend/lib/*') : resolve('../backend/build/install/backend/lib/*');
-        const log = createWriteStream(join(this.directory, 'backend.log'), {flags: 'a'});
         this.process = spawn(runtime, ['-Dfile.encoding=UTF-8', '-Djdk.net.unixdomain.tmpdir=C:/tiho-no-unix-sockets', '-cp', libs, 'ru.aigram.MainKt', ...(startup ? ['--startup'] : [])], {
             windowsHide: true,
             env: {...process.env, AIGRAM_DATA_DIR: this.directory, BOLTUNYA_DATA_DIR: this.directory},
-            stdio: ['ignore', 'pipe', 'pipe'],
+            stdio: 'ignore',
         });
-        this.process.stdout?.pipe(log, {end: false});
-        this.process.stderr?.pipe(log, {end: false});
         let failure: Error | undefined;
         this.process.once('error', error => { failure = error; });
-        this.process.once('close', () => log.end());
         const started = Date.now();
         const deadline = Date.now() + READY_TIMEOUT_MS;
         while (Date.now() < deadline) {
@@ -44,11 +39,11 @@ export class Backend {
                 await this.request('/api/state');
                 return url.toString();
             } catch {
-                if (this.process.exitCode !== null) throw new Error('Backend exited before startup; see backend.log');
+                if (this.process.exitCode !== null) throw new Error('Backend exited before startup');
                 await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS));
             }
         }
-        throw new Error('Backend startup timed out; see backend.log');
+        throw new Error('Backend startup timed out');
     }
 
     async request<T = Record<string, unknown>>(path: string, method = 'GET', body?: unknown): Promise<T> {

@@ -2,7 +2,6 @@ package ru.aigram.automation
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.domain.ai.ReplyResult
 import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.ChatRule
@@ -10,17 +9,17 @@ import ru.aigram.domain.chat.MessageEntity
 import ru.aigram.domain.chat.WritingStyle
 import ru.aigram.exception.impl.InvalidModelReplyException
 import ru.aigram.exception.impl.TelegramRateLimitException
-import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.AutomatedReplyStore
 import ru.aigram.storage.SettingsStore
+import java.nio.file.Files
 import java.nio.file.Path
-import java.time.Clock
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.stream.Stream
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ReplyCoordinatorTest {
@@ -30,8 +29,7 @@ class ReplyCoordinatorTest {
     @Test
     fun `invalid model output never reaches Telegram delivery`() {
         val gateway = FakeTelegramGateway()
-        val diagnostics = DiagnosticLog(directory, Clock.systemUTC(), ResourceCatalog())
-        ReplyCoordinator(enabledSettings(), gateway, diagnostics = diagnostics) { _, _ ->
+        ReplyCoordinator(enabledSettings(), gateway) { _, _ ->
             throw InvalidModelReplyException()
         }
             .use { coordinator ->
@@ -39,8 +37,7 @@ class ReplyCoordinatorTest {
                 await { coordinator.activities().any { it.status == "error" } }
                 assertTrue(gateway.sent.isEmpty())
                 assertEquals(InvalidModelReplyException().message, coordinator.activities().single().detail)
-                assertEquals("INVALID_MODEL_REPLY", diagnostics.report().errors.single().code)
-                assertEquals("reply", diagnostics.report().errors.single().source)
+                assertFalse(Files.exists(directory.resolve("diagnostics")))
             }
     }
 

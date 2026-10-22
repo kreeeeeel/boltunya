@@ -27,6 +27,8 @@ class EngineRestartTest {
             startProcess = { builder ->
                 assertFalse(original.isAlive)
                 assertEquals(listOf(executable.toString(), "serve"), builder.command())
+                assertEquals(ProcessBuilder.Redirect.DISCARD, builder.redirectOutput())
+                assertEquals(ProcessBuilder.Redirect.DISCARD, builder.redirectError())
                 replacement
             },
         )
@@ -37,6 +39,19 @@ class EngineRestartTest {
             assertTrue(replacement.isAlive)
         }
         assertFalse(replacement.isAlive)
+        assertFalse(Files.exists(directory.resolve("engine.log")))
+    }
+
+    @Test
+    fun `preparing an owned process leaves a legacy engine log unchanged`() {
+        val legacy = directory.resolve("engine.log")
+        Files.writeString(legacy, "Synthetic legacy log")
+        EngineManager(directory, OllamaRuntime("http://127.0.0.1:1")).use { engine ->
+            val process = engine.prepareProcess(directory.resolve("engine/ollama.exe"))
+            assertEquals(ProcessBuilder.Redirect.DISCARD, process.redirectOutput())
+            assertEquals(ProcessBuilder.Redirect.DISCARD, process.redirectError())
+        }
+        assertEquals("Synthetic legacy log", Files.readString(legacy))
     }
 
     @Test

@@ -538,31 +538,6 @@
         "initiative": "Бастама"
     },
     "modelWarming": "Дайындалуда",
-    "diagnostics": {
-        "title": "Қателер",
-        "description": "Қолданба қателері және оларды түзету жолдары.",
-        "refresh": "Жаңарту",
-        "clear": "Қателерді тазалау",
-        "loading": "Қателер жүктелуде",
-        "empty": "Қате жоқ",
-        "emptyDescription": "Мәселе туындаса, мәліметтер осында пайда болады.",
-        "occurrences": "Қайталануы: {count}",
-        "details": "Қате мәліметтері",
-        "happened": "Не болды",
-        "solution": "Не істеуге болады",
-        "technical": "Техникалық ақпарат",
-        "lastOccurrence": "Соңғы рет: {date}",
-        "firstOccurrence": "Алғаш рет: {date}",
-        "privacy": "Журналда хаттар, кіру кілттері және жад мазмұны сақталмайды.",
-        "close": "Жабу",
-        "sources": {
-            "reply": "ЖИ жауабы",
-            "engine": "Ollama",
-            "memory": "Жад",
-            "http": "Қолданба",
-            "update": "Жаңарту"
-        }
-    },
     "storageLocations": {
         "title": "Файлдардың орналасуы",
         "description": "Осы компьютердегі қолданба, жад және жергілікті модельдер қалталары.",
@@ -576,8 +551,7 @@
             "telegram-cache": "Telegram кэші",
             "ollama-runtime": "Ollama",
             "ollama-models": "Ollama модельдері",
-            "speech": "Дауыс модельдері",
-            "diagnostics": "Диагностика"
+            "speech": "Дауыс модельдері"
         }
     },
     "computeDevice": {

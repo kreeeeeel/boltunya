@@ -72,14 +72,14 @@ class AigramClientTest {
                 """{"paused":true,"defaultModel":"synthetic:model","rules":{},"globalPrompt":"Typed settings"}""",
             )
             server.response("/api/stickers", """{"recent":[],"favorites":[],"sets":[]}""")
-            server.response("/api/diagnostics/errors", """{"errors":[]}""")
+            server.response("/api/storage/locations", """{"locations":[]}""")
             server.response("/api/chats/42/messages/9007199254740993/link", """{"url":"https://t.me/example/7"}""")
             val token = AtomicReference("first-session")
             AigramClientFactory().create(server.baseUri, { token.get() }).use { client ->
-                val pending = client.system.diagnosticErrors()
+                val pending = client.system.storageLocations()
                 assertTrue(server.requests.isEmpty(), "Constructing a client or Mono must not send requests")
                 token.set("rotated-session")
-                assertTrue(assertNotNull(pending.block(REQUEST_TIMEOUT)).errors.isEmpty())
+                assertTrue(assertNotNull(pending.block(REQUEST_TIMEOUT)).locations.isEmpty())
                 assertTrue(assertNotNull(client.activity.cancelActivity("synthetic").block(REQUEST_TIMEOUT)).ok)
                 assertEquals(
                     "https://t.me/example/7",
@@ -133,14 +133,14 @@ class AigramClientTest {
     @Test
     fun `separate clients do not share session state and each request reads the current token`() {
         ClientTestServer().start().use { server ->
-            server.response("/api/diagnostics/errors", """{"errors":[]}""")
+            server.response("/api/storage/locations", """{"locations":[]}""")
             val first = AtomicReference("owner-one")
             AigramClientFactory().create(server.baseUri, { first.get() }).use { one ->
                 AigramClientFactory().create(server.baseUri, { "owner-two" }).use { two ->
-                    one.system.diagnosticErrors().block(REQUEST_TIMEOUT)
-                    two.system.diagnosticErrors().block(REQUEST_TIMEOUT)
+                    one.system.storageLocations().block(REQUEST_TIMEOUT)
+                    two.system.storageLocations().block(REQUEST_TIMEOUT)
                     first.set("owner-one-new")
-                    one.system.diagnosticErrors().block(REQUEST_TIMEOUT)
+                    one.system.storageLocations().block(REQUEST_TIMEOUT)
                 }
             }
             assertEquals(
@@ -173,10 +173,10 @@ class AigramClientTest {
     @Test
     fun `an empty required response fails clearly instead of a null assertion`() {
         ClientTestServer().start().use { server ->
-            server.response("/api/diagnostics/errors", "")
+            server.response("/api/storage/locations", "")
             AigramClientFactory().create(server.baseUri, { "synthetic-session" }).use { client ->
                 val failure = assertFailsWith<IllegalStateException> {
-                    client.system.diagnosticErrors().block(REQUEST_TIMEOUT)
+                    client.system.storageLocations().block(REQUEST_TIMEOUT)
                 }
                 assertEquals("Required response body is empty", failure.message)
                 assertEquals(1, server.requests.size)
@@ -205,7 +205,7 @@ class AigramClientTest {
             listOf("", "one; other=two", "one\r\nInjected: value").stream().forEach { token ->
                 factory.create(server.baseUri, { token }).use { client ->
                     val failure = assertFailsWith<InvalidClientSessionException> {
-                        client.system.diagnosticErrors().block(REQUEST_TIMEOUT)
+                        client.system.storageLocations().block(REQUEST_TIMEOUT)
                     }
                     assertEquals(AigramClientErrorCode.INVALID_SESSION, failure.code)
                     assertEquals("A valid API session token is required", failure.message)

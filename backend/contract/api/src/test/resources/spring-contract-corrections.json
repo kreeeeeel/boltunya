@@ -523,6 +523,10 @@
     {
       "model": "OutgoingMediaKind",
       "reason": "Retire the unreferenced transport-only enum after explicit removal of manual media sends. The internal domain kind remains for safe speech model upload/import leases."
+    },
+    {
+      "feature": "application-error-journal",
+      "reason": "Explicit user-requested retirement of the separate application error journal and its GET/DELETE routes. Retain current API failure responses, task status failures and storage/explorer location metadata. Legacy journal files remain untouched."
     }
   ],
   "paths": {},
@@ -685,7 +689,8 @@
       "/api/chats/{chatId}/gallery": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
       "/api/chats/{chatId}/attachments": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
       "/api/chats/{chatId}/stickers": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
-      "/api/metrics": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      "/api/metrics": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "/api/diagnostics/errors": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
     },
     "operations": {
       "GET /api/search/connection": "124aa773fa6bbe7c18253198bd54cecc0669203011745e03aa3a8336e309f903",
@@ -697,7 +702,9 @@
       "GET /api/chats/{chatId}/gallery": "38891a558c5e38911cf379ede80d6d9c7d900dfa798afea64ebcc67f96435760",
       "POST /api/chats/{chatId}/attachments": "b42425590c507216368618c743c912f9162740b82d8481cb158a412567d3b2eb",
       "POST /api/chats/{chatId}/stickers": "c17ed81de7c4b678c9ed850ee14b1c303a263936677a73d086c692e5a560ad7d",
-      "GET /api/metrics": "d76e5bda433886e328a08ace2e270d42673a92355b037c73aa5fb2bf7a202bdc"
+      "GET /api/metrics": "d76e5bda433886e328a08ace2e270d42673a92355b037c73aa5fb2bf7a202bdc",
+      "GET /api/diagnostics/errors": "2f42305a2c35559e08fdf0839b03e8c808d90a5bc63a909b9cd8b95e186b74b9",
+      "DELETE /api/diagnostics/errors": "5ad64eb62056357d028300b80f185c929d478f6868323dc1fc2f924b658a784d"
     },
     "schemas": {
       "SearchConnection": "833c2dc08b1ffecab88ae4654ac1253090a09f1143ca4e5f8bc3e090a0c2440d",
@@ -711,7 +718,10 @@
       "SendMediaRequest": "a4cacdc71e93edc2711e0b4665704e9e3b1f0fbe87bd0b6ad97c015bc2dc9dfd",
       "SendStickerRequest": "0544566b8364983578716a5c724f9698dcf249c1eef74d2c912c8b221e0f9ee8",
       "MetricSample": "daff2a68bfd28783eea2e9cc95b7b00fb3e98496ef1e1347f259e53f9e6723b5",
-      "OutgoingMediaKind": "b29cc978aa28fc337ed01c0d1dc5dfb6124c5becf36794cac753f0c41d22abbf"
+      "OutgoingMediaKind": "b29cc978aa28fc337ed01c0d1dc5dfb6124c5becf36794cac753f0c41d22abbf",
+      "DiagnosticEntry": "7590419fca18e51a40a9d2f72de960fae7745b8b9141b00f862d8f4c0b351bb7",
+      "DiagnosticReport": "915b855223c9d5986cad614627a0dc3c66916e5b2fafa9ec57a8be255f325adf",
+      "DiagnosticSource": "bca4224645509bd620d4cd5e9a64ed94d1d349271e218d9b421840d48a2b7dfb"
     }
   }
 }

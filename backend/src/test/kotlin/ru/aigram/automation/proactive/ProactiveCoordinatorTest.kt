@@ -3,7 +3,6 @@ package ru.aigram.automation.proactive
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import ru.aigram.automation.ReplyCoordinator
-import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.domain.ai.ReplyResult
 import ru.aigram.domain.chat.ChatMessage
 import ru.aigram.domain.chat.ChatRule
@@ -191,7 +190,7 @@ class ProactiveCoordinatorTest {
     }
 
     @Test
-    fun `checkpoint disk failure is diagnosed without blocking normal message dispatch`() {
+    fun `checkpoint disk failure does not block message dispatch or create an error journal`() {
         val settings = enabledSettings()
         val gateway = gateway()
         val ledger = ProactiveLedger(directory)
@@ -206,8 +205,7 @@ class ProactiveCoordinatorTest {
                 replies.onMessage(incoming)
                 await { gateway.delegate.sent.size == 1 }
                 assertEquals("regular reply", gateway.delegate.sent.single())
-                val report = DiagnosticLog(directory, clock, resources).report()
-                assertEquals(1, report.errors.size)
+                assertFalse(Files.exists(directory.resolve("diagnostics")))
             }
         }
     }
@@ -491,7 +489,6 @@ class ProactiveCoordinatorTest {
         ledger,
         clock,
         resources,
-        DiagnosticLog(directory, clock, resources),
         generate,
     )
 

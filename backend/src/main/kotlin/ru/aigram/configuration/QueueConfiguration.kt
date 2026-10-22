@@ -9,7 +9,6 @@ import ru.aigram.automation.activity.ActivityHistoryStore
 import ru.aigram.automation.activity.ReplyTraceScope
 import ru.aigram.automation.proactive.ProactiveCoordinator
 import ru.aigram.automation.proactive.ProactiveLedger
-import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.speech.reply.VoiceDraftStore
 import ru.aigram.storage.ActivityFeedbackStore
@@ -28,14 +27,13 @@ class QueueConfiguration {
         automated: AutomatedReplyStore,
         generator: PersonalReplyGenerator,
         tracing: ReplyTraceScope,
-        diagnostics: DiagnosticLog,
         feedback: ActivityFeedbackStore,
         delivery: ReplyDeliveryPolicy,
         exclusions: ContextExclusionStore,
         history: ActivityHistoryStore,
         voices: VoiceDraftStore,
     ): ReplyCoordinator = ReplyCoordinator(
-        settings, telegram, automated, tracing, diagnostics, feedback, delivery, exclusions, history,
+        settings, telegram, automated, tracing, feedback, delivery, exclusions, history,
         voices = voices,
         generate = generator::reply,
     )
@@ -48,7 +46,6 @@ class QueueConfiguration {
         ledger: ProactiveLedger,
         clock: Clock,
         resources: ResourceCatalog,
-        diagnostics: DiagnosticLog,
         generator: PersonalReplyGenerator,
     ): ProactiveCoordinator = ProactiveCoordinator(
         settings,
@@ -57,7 +54,6 @@ class QueueConfiguration {
         ledger,
         clock,
         resources,
-        diagnostics,
         generator::initiate,
     )
 }

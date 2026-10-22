@@ -31,7 +31,7 @@ private const val MEBIBYTE = 1024L * 1024
 private const val SECONDS_PER_DAY = 86400L
 private val ACTIVE_STATUSES = setOf("queued", "generating")
 
-/** Local, account-scoped conversation history. Diagnostics never receive its contents. */
+/** Local, account-scoped conversation history. */
 @Component
 class ActivityHistoryStore(directory: Path, private val clock: Clock, resources: ResourceCatalog) : AutoCloseable {
     private val closed = AtomicBoolean()

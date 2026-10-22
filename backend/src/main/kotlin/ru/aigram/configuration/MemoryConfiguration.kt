@@ -7,7 +7,6 @@ import ru.aigram.ai.ModelInference
 import ru.aigram.ai.OllamaRuntime
 import ru.aigram.ai.profile.ModelTargetResolver
 import ru.aigram.automation.MemoryWorkQueue
-import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.memory.MemoryCoordinator
 import ru.aigram.memory.MemoryProcessor
 import ru.aigram.memory.MemoryStore
@@ -31,12 +30,11 @@ class MemoryConfiguration {
         clock: Clock,
         automated: AutomatedReplyStore,
         queue: ObjectProvider<MemoryWorkQueue>,
-        diagnostics: DiagnosticLog,
         targets: ModelTargetResolver,
         roster: ParticipantRosterStore,
         exclusions: ContextExclusionStore,
     ): MemoryCoordinator = MemoryCoordinator(
         store, settings, telegram, runtime, processor, inference, clock, automated, queue,
-        diagnostics, targets, roster, exclusions,
+        targets, roster, exclusions,
     )
 }

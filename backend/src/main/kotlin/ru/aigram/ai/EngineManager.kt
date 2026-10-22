@@ -1,11 +1,9 @@
 package ru.aigram.ai
 
-import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.domain.ai.ComputeDevice
 import ru.aigram.domain.ai.ComputeDeviceStatus
 import ru.aigram.domain.ai.EngineStatus
 import ru.aigram.domain.ai.model.ModelInfo
-import ru.aigram.domain.events.diagnostics.DiagnosticSource
 import ru.aigram.exception.IntegrationException
 import ru.aigram.exception.InvalidInputException
 import ru.aigram.exception.impl.DownloadAlreadyRunningException
@@ -49,7 +47,6 @@ class EngineManager(
     private val inference: ModelInference = ModelInference(),
     private val installation: OllamaInstallation = OllamaInstallation(directory),
     private val localModels: OllamaModelInventory = OllamaModelInventory(),
-    private val diagnostics: DiagnosticLog? = null,
     private val devices: OllamaDeviceSelector? = null,
     private val startProcess: (ProcessBuilder) -> ProcessHandle = { it.start().toHandle() },
     private val automaticEnabled: () -> Boolean = { true },
@@ -184,10 +181,9 @@ class EngineManager(
     }
 
     internal fun prepareProcess(executable: Path, selected: String = devices?.selected() ?: "auto"): ProcessBuilder {
-        val logs = directory.resolve("engine.log").toFile()
         val process = ProcessBuilder(executable.toString(), "serve")
-            .redirectOutput(ProcessBuilder.Redirect.appendTo(logs))
-            .redirectError(ProcessBuilder.Redirect.appendTo(logs))
+            .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+            .redirectError(ProcessBuilder.Redirect.DISCARD)
         process.environment().putAll(devices?.environment(selected).orEmpty())
         return process
     }
@@ -215,7 +211,6 @@ class EngineManager(
                     }
                 }
             } catch (exception: IntegrationException) {
-                diagnostics?.record(DiagnosticSource.ENGINE, exception)
                 synchronized(this@EngineManager) {
                     if (version == warmupVersion.get()) {
                         failure = EngineWarmupFailedException().message
@@ -313,7 +308,6 @@ class EngineManager(
                 }
             } catch (exception: Exception) {
                 if (!task.isCancelled()) {
-                    diagnostics?.record(DiagnosticSource.ENGINE, exception)
                     failure = EngineInstallFailedException().message
                     System.err.println("Engine installation failed: ${exception.javaClass.simpleName}")
                 }
@@ -356,7 +350,6 @@ class EngineManager(
                 warm(model)
             } catch (exception: Exception) {
                 if (!task.isCancelled()) {
-                    diagnostics?.record(DiagnosticSource.ENGINE, exception)
                     failure = ModelPullInterruptedException().message
                     System.err.println("Model download failed: ${exception.javaClass.simpleName}")
                 }

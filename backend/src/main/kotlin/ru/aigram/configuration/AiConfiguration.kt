@@ -21,7 +21,6 @@ import ru.aigram.ai.model.ModelResponseStream
 import ru.aigram.ai.model.SpringAiModelFactory
 import ru.aigram.ai.profile.ProfileContextBudget
 import ru.aigram.ai.prompt.PromptTokenEstimator
-import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.resources.ResourceCatalog
 import ru.aigram.storage.ModelMeasurementStore
 import ru.aigram.storage.SettingsStore
@@ -83,12 +82,11 @@ class AiConfiguration {
         inference: ModelInference,
         installation: OllamaInstallation,
         inventory: OllamaModelInventory,
-        diagnostics: DiagnosticLog,
         devices: OllamaDeviceSelector,
         settings: SettingsStore,
     ): EngineManager = EngineManager(
         directory, runtime, models, installer, writer, processes, measurements, inference, installation,
-        inventory, diagnostics, devices,
+        inventory, devices,
         automaticEnabled = { !settings.get().paused },
     )
 }

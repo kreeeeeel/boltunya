@@ -20,7 +20,7 @@ class StorageLocations(
     private val userDirectory: Path = Path.of(System.getProperty("user.home")),
 ) {
     private val labels = Json.decodeFromString<Map<String, String>>(
-        resources.text("diagnostics/ru/storage.json"),
+        resources.text("storage/ru/storage.json"),
     )
 
     fun report(): StorageLocationReport {
@@ -47,7 +47,6 @@ class StorageLocations(
                 runtime?.let { directory("ollama-runtime", it) } ?: external("ollama-runtime"),
                 models?.let { directory("ollama-models", it, labels.getValue("models-note")) }
                     ?: external("ollama-models"),
-                directory("diagnostics", root.resolve("diagnostics")),
             ),
         )
     }

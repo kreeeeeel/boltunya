@@ -6,7 +6,6 @@ import ru.aigram.automation.activity.ReplyJob
 import ru.aigram.automation.activity.ReplyTraceScope
 import ru.aigram.automation.activity.withCurrentAvatar
 import ru.aigram.automation.proactive.ProactiveTask
-import ru.aigram.diagnostics.DiagnosticLog
 import ru.aigram.domain.ai.PreviewJob
 import ru.aigram.domain.ai.ReplyResult
 import ru.aigram.domain.chat.ChatMessage
@@ -24,7 +23,6 @@ import ru.aigram.domain.events.ActivityKind
 import ru.aigram.domain.events.ActivityPhase
 import ru.aigram.domain.events.ActivityStatus
 import ru.aigram.domain.events.ReplyQueueState
-import ru.aigram.domain.events.diagnostics.DiagnosticSource
 import ru.aigram.domain.settings.AppSettings
 import ru.aigram.domain.settings.ReplyProcessingMode
 import ru.aigram.exception.AppException
@@ -69,7 +67,6 @@ class ReplyCoordinator(
     private val telegram: TelegramGateway,
     private val automated: AutomatedReplyStore? = null,
     private val tracing: ReplyTraceScope = ReplyTraceScope(),
-    private val diagnostics: DiagnosticLog? = null,
     private val feedback: ActivityFeedbackStore? = null,
     private val delivery: ReplyDeliveryPolicy = ReplyDeliveryPolicy(settings),
     private val exclusions: ContextExclusionStore? = null,
@@ -706,7 +703,6 @@ class ReplyCoordinator(
             if (job.cancelled.get() || exception is ReplyCancelledException || Thread.currentThread().isInterrupted) {
                 job.trace.finish(ActivityStatus.CANCELLED, ReplyCancelledException().message)
             } else {
-                diagnostics?.record(DiagnosticSource.REPLY, exception)
                 job.trace.finish(
                     ActivityStatus.ERROR,
                     if (exception is AppException) {
@@ -756,7 +752,6 @@ class ReplyCoordinator(
             if (job.cancelled.get() || exception is ReplyCancelledException || Thread.currentThread().isInterrupted) {
                 job.trace.finish(ActivityStatus.CANCELLED, ReplyCancelledException().message)
             } else {
-                diagnostics?.record(DiagnosticSource.REPLY, exception)
                 job.trace.finish(
                     ActivityStatus.ERROR,
                     if (exception is AppException) {
@@ -818,7 +813,6 @@ class ReplyCoordinator(
                     },
                 )
             } else {
-                diagnostics?.record(DiagnosticSource.MEMORY, exception)
                 job.trace.finish(
                     ActivityStatus.ERROR,
                     if (exception is AppException) {

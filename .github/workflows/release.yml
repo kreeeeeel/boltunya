@@ -68,7 +68,6 @@ jobs:
             complie/Aigram.exe
             complie/SHA256.txt
             complie/Aigram-API-Client.tgz
-            scripts/diagnose-ai.ps1
           if-no-files-found: error
       - name: Publish GitHub release
         shell: pwsh
@@ -81,7 +80,6 @@ jobs:
           New-Item -ItemType Directory -Force -Path $releaseDirectory | Out-Null
           Copy-Item -LiteralPath 'complie/Aigram.exe' -Destination "$releaseDirectory/Aigram.exe"
           Copy-Item -LiteralPath "$releaseDirectory/Aigram.exe" -Destination "$releaseDirectory/Boltunya.exe"
-          Copy-Item -LiteralPath 'scripts/diagnose-ai.ps1' -Destination "$releaseDirectory/Diagnose-AI.ps1"
           Copy-Item -LiteralPath 'complie/Aigram-API-Client.tgz' -Destination "$releaseDirectory/Aigram-API-Client.tgz"
           $hash=(Get-FileHash -Algorithm SHA256 -LiteralPath "$releaseDirectory/Aigram.exe").Hash.ToLowerInvariant()
           $clientHash=(Get-FileHash -Algorithm SHA256 -LiteralPath "$releaseDirectory/Aigram-API-Client.tgz").Hash.ToLowerInvariant()
@@ -95,7 +93,7 @@ jobs:
           $checks="`n`n### Release checks`n`nKotlin, generated contracts and HTTP clients, frontend and Electron checks, browser scenarios, native window/tray, and updater smoke tests passed before publication. Built with JDK 21. Source: $env:GITHUB_SHA. [Verification run](https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID). Download SHA256.txt to verify Aigram.exe and the installable Aigram-API-Client.tgz SDK; Boltunya.exe is the identical compatibility download.`n"
           $notesPath=Join-Path $releaseDirectory 'notes.md'
           Set-Content -Encoding utf8 -LiteralPath $notesPath -Value ($entry.Trim() + $checks)
-          gh release create "v$version" "$releaseDirectory/Aigram.exe" "$releaseDirectory/Boltunya.exe" "$releaseDirectory/SHA256.txt" "$releaseDirectory/Diagnose-AI.ps1" "$releaseDirectory/Aigram-API-Client.tgz" --target "$env:GITHUB_SHA" --title "Aigram $version" --notes-file $notesPath
+          gh release create "v$version" "$releaseDirectory/Aigram.exe" "$releaseDirectory/Boltunya.exe" "$releaseDirectory/SHA256.txt" "$releaseDirectory/Aigram-API-Client.tgz" --target "$env:GITHUB_SHA" --title "Aigram $version" --notes-file $notesPath
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $release=gh api "repos/$env:GITHUB_REPOSITORY/releases/tags/v$version" | ConvertFrom-Json
           $exe=$release.assets | Where-Object name -eq 'Aigram.exe'

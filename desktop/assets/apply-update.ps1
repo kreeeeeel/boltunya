@@ -84,8 +84,6 @@ try {
                     Remove-Item -LiteralPath $Plan -Force
                 } catch {
                     Write-Warning 'Could not clean the confirmed update backup.'
-                    try { Write-AtomicJson (Join-Path $updateDirectory 'last-error.json') @{failedAt = [DateTime]::UtcNow.ToString('o'); stage = 'install'; code = 'UPDATE_INSTALL_FAILED'} }
-                    catch { Write-Warning 'Could not record confirmed update cleanup failure.' }
                 }
                 @($download, $ready, $started, $healthy) | ForEach-Object {
                     try { if (Test-Path -LiteralPath $_ -PathType Leaf) { Remove-Item -LiteralPath $_ -Force } }
@@ -116,9 +114,6 @@ try {
         throw
     }
 } catch {
-    try {
-        Write-AtomicJson (Join-Path (Split-Path -Parent $Plan) 'last-error.json') @{failedAt = [DateTime]::UtcNow.ToString('o'); stage = 'install'; code = 'UPDATE_INSTALL_FAILED'}
-    } catch { Write-Warning 'Could not record the update installation failure.' }
     if ($accepted -and $configuration -and -not $replaced -and (Test-Path -LiteralPath $configuration.target -PathType Leaf)) {
         $arguments = @('--update-failed')
         if ($configuration.startup) { $arguments += '--startup' }

@@ -20,8 +20,8 @@ try {
     & ./gradlew.bat :backend:contract:client:typescript:generateClient --no-daemon
     if ($LASTEXITCODE -ne 0) { throw 'API client generation failed' }
     if (-not $SkipChecks) {
-        node.exe --test scripts/tests/diagnose-ai.test.cjs scripts/tests/render-icon.test.cjs
-        if ($LASTEXITCODE -ne 0) { throw 'Diagnostic script checks failed' }
+        node.exe --test scripts/tests/render-icon.test.cjs
+        if ($LASTEXITCODE -ne 0) { throw 'Build script checks failed' }
         npm.cmd run check --prefix web
         if ($LASTEXITCODE -ne 0) { throw 'Frontend checks failed' }
         npm.cmd run check --prefix desktop
