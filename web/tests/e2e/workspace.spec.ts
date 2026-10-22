@@ -1335,7 +1335,8 @@ test('Electron title bar uses its isolated bridge and native drag region', async
     });
     await page.reload();
     const bar = page.locator('[data-qa="window-bar"]');
-    expect((await bar.boundingBox())?.height).toBe(36);
+    await expect(bar).toBeVisible();
+    await expect.poll(async () => (await bar.boundingBox())?.height).toBe(36);
     expect(
         await bar.evaluate((element) => getComputedStyle(element).getPropertyValue('-webkit-app-region')),
     ).toBe('drag');

@@ -145,6 +145,10 @@ Latest steering removes application error recording and its workspace. The journ
 - [x] Pass the final 634 Kotlin cases (18 optional/platform skips), 12 installed SDK tests, 303 UI tests, 40 Electron tests, icon script and all 143 browser scenarios. Review refreshed English/Russian screenshots, both themes and a narrow window. Repeat native and all four updater smokes after the runtime fix.
 - [ ] Complete the next Windows release, verify the actual downloaded EXE/SDK and source/tag, exercise packaged speech and restart the preserved actual profile. Record publication evidence in the release and local `complie/VERIFICATION.md`.
 
+Run 44 passed clean installation and the full source/packaging gate, then failed one of 143 browser cases: the title-bar test read geometry immediately after reload, before React mounted its Electron bridge. The other 142 passed. Add an explicit mount/style wait without relaxing the 36 px height, drag-region or control-action checks, and exercise that case repeatedly before the next release. No application runtime change is needed; the open local-8 remains current. Neither v2.6.43 nor v2.6.44 was published.
+
+The test-only correction passed 20 consecutive repetitions (33.6 s), TypeScript and formatting. All exact UI/bridge assertions remain. The next CI run must still pass the complete pipeline before publication.
+
 - [x] Open the rebuilt assistant workspace before running checks; final local-6 preserved Telegram authorization, settings, credentials, manual notes and the 32-voice catalog.
 - [x] Implement removal of internet search, standalone media viewing, manual attachment sending, plain text composition, custom theme editing and resource charts/hardware sampling. Preserve received inline media, voice sending, explicit AI-draft editing and model import.
 - [x] Implement pause/account guards around automatic inference, local-profile model tracking, confirmed read receipts, adaptive memory pagination and bounded archive bucket caching.

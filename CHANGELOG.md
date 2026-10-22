@@ -32,6 +32,7 @@ Release versions are assigned by Windows CI. Each GitHub release includes the fi
 
 ### Fixed
 
+- Wait for the Electron bridge title bar to mount after browser reload before asserting its exact height, drag region and control actions. Preserve the same UI requirements under slower CI rendering.
 - Serialize typing-indicator cancellation with task start/stop and avoid Kotlin's size-based snapshot shortcut on a concurrently changing map. Closing a queue can no longer fail while its last worker removes the typing task.
 - Repair the frontend lockfile with the same npm version used by CI, including missing optional WASM peer dependencies. Verify clean dependency installation rather than weakening `npm ci`.
 - Do not start or warm local models automatically while AI is paused. Recheck pause/account validity after history and transcription and between memory-model calls. Retain explicitly requested manual collection; release app-tracked models, including configured Ollama profiles on the managed endpoint, without unloading independent servers.
