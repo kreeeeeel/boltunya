@@ -7,9 +7,9 @@ import {useMemoryDocument} from '@/modules/memory/model/useMemoryDocument';
 import {MemoryContent} from '@/modules/memory/MemoryContent/MemoryContent';
 import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
 
-export function MemorySettings() {
+export function MemorySettings({active = true}: {readonly active?: boolean}) {
     const t = useTranslations();
-    const memory = useMemoryDocument('');
+    const memory = useMemoryDocument('', active);
     const feedback = useSaveFeedback(memory.notes);
     async function save() {
         feedback.clearSaved();

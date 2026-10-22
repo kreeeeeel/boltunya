@@ -121,7 +121,7 @@ export function SettingsCenter({
     );
     function content(id: SettingsSectionId) {
         if (id === 'memory') {
-            return <MemorySettings />;
+            return <MemorySettings active={section === 'memory'} />;
         }
         if (id === 'providers') {
             return <ProviderProfiles onRefresh={onRefresh} />;
@@ -189,7 +189,9 @@ export function SettingsCenter({
                     />
                 )}
                 {id === 'media' && <MediaSettings {...common} />}
-                {id === 'collection' && <MemoryCollectionSettings {...common} />}
+                {id === 'collection' && (
+                    <MemoryCollectionSettings {...common} active={section === 'collection'} />
+                )}
                 {id === 'language' && <LanguageSettings />}
                 {id === 'cache' && <CachePanel />}
                 {id === 'storage' && <StorageLocations />}

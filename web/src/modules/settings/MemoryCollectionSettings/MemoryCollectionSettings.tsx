@@ -6,9 +6,13 @@ import type {SettingsDraftSectionProps} from '@/modules/settings/model/SettingsD
 import {useMemoryDocument} from '@/modules/memory/model/useMemoryDocument';
 import {ContextCollectionStatus} from '@/modules/memory/ContextCollectionStatus/ContextCollectionStatus';
 
-export function MemoryCollectionSettings({value, onUpdate}: SettingsDraftSectionProps) {
+export function MemoryCollectionSettings({
+    value,
+    onUpdate,
+    active: readActive = true,
+}: SettingsDraftSectionProps & {readonly active?: boolean}) {
     const t = useTranslations();
-    const memory = useMemoryDocument('');
+    const memory = useMemoryDocument('', readActive);
     const [mode, setMode] = useState('update');
     const document = memory.document;
     const active = document?.collection?.active ?? false;
