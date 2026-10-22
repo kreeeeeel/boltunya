@@ -3,8 +3,12 @@ import {api, errorMessage} from '@/shared/api/client';
 import type {Activity} from '@/shared/api/client';
 import type * as Contract from '@aigram/api-client';
 import {mergeActivityEntries, orderActivityEntries} from '@/modules/activity/model/activity';
+
 const PAGE_SIZE = 30;
 const POLL_INTERVAL_MS = 5000;
+
+type HistoryRequest = {readonly controller: AbortController; readonly result: Promise<void>};
+
 export function useActivityHistory() {
     const [entries, setEntries] = useState<Activity[]>([]);
     const [storage, setStorage] = useState<Contract.ActivityHistoryStorage>();
@@ -15,88 +19,212 @@ export function useActivityHistory() {
     const [total, setTotal] = useState(0);
     const cursor = useRef<string | null>(null);
     const paginated = useRef(false);
+    const resetPending = useRef(false);
+    const mounted = useRef(false);
     const generation = useRef(0);
-    const requests = useRef(new Set<AbortController>());
-    const load = useCallback(async (more: boolean, reset = false) => {
-        if (reset) {
-            generation.current += 1;
-            paginated.current = false;
-            setLoadingMore(false);
+    const revision = useRef(0);
+    const completedRevision = useRef(-1);
+    const acceptedHead = useRef(0);
+    const headRequest = useRef<HistoryRequest | null>(null);
+    const olderRequest = useRef<HistoryRequest | null>(null);
+    const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+    const abortReads = useCallback(() => {
+        generation.current += 1;
+        clearTimeout(timer.current);
+        timer.current = undefined;
+        headRequest.current?.controller.abort();
+        olderRequest.current?.controller.abort();
+        headRequest.current = null;
+        olderRequest.current = null;
+    }, []);
+
+    const loadHead = useCallback(function readHead(force = false): Promise<void> {
+        if (force) {
+            revision.current += 1;
         }
+        if (!mounted.current || document.visibilityState === 'hidden') {
+            return Promise.resolve();
+        }
+
+        clearTimeout(timer.current);
+        timer.current = undefined;
         const version = generation.current;
-        const controller = new AbortController();
-        requests.current.add(controller);
-        if (more) {
-            setLoadingMore(true);
+        const requiredRevision = revision.current;
+        const fresh = (result: Promise<void>) =>
+            result.then(() => {
+                if (
+                    mounted.current &&
+                    document.visibilityState !== 'hidden' &&
+                    version === generation.current &&
+                    completedRevision.current < requiredRevision
+                ) {
+                    return readHead();
+                }
+            });
+
+        if (headRequest.current) {
+            return fresh(headRequest.current.result);
         }
-        try {
-            const page = await api.activity.activityHistory(
-                {
-                    limit: PAGE_SIZE,
-                    cursor: more ? (cursor.current ?? undefined) : undefined,
-                },
-                {
-                    signal: controller.signal,
-                },
-            );
-            if (controller.signal.aborted || version !== generation.current) {
-                return;
-            }
-            setEntries((previous) =>
-                orderActivityEntries(
-                    mergeActivityEntries(reset ? [] : previous, page.entries, more ? 'older' : 'newer'),
-                ),
-            );
-            setStorage(page.storage);
-            setTotal(page.total);
-            if (more || !paginated.current) {
-                cursor.current = page.nextCursor;
-                setHasMore(page.hasMore);
-            }
-            if (more) {
-                paginated.current = true;
-            }
-            setError('');
-        } catch (cause) {
-            if (!controller.signal.aborted && version === generation.current) {
-                setError(errorMessage(cause));
-            }
-        } finally {
-            requests.current.delete(controller);
-            if (!controller.signal.aborted && version === generation.current) {
-                setLoading(false);
-                if (more) {
+
+        const controller = new AbortController();
+        const current = () =>
+            mounted.current &&
+            document.visibilityState !== 'hidden' &&
+            version === generation.current &&
+            headRequest.current?.controller === controller &&
+            !controller.signal.aborted;
+        const result = Promise.resolve()
+            .then(async () => {
+                if (!current()) {
+                    return;
+                }
+                try {
+                    const page = await api.activity.activityHistory(
+                        {limit: PAGE_SIZE},
+                        {signal: controller.signal},
+                    );
+                    if (!current() || requiredRevision !== revision.current) {
+                        return;
+                    }
+
+                    const reset = resetPending.current;
+                    resetPending.current = false;
+                    completedRevision.current = requiredRevision;
+                    acceptedHead.current += 1;
+                    setEntries((previous) =>
+                        orderActivityEntries(mergeActivityEntries(reset ? [] : previous, page.entries)),
+                    );
+                    setStorage(page.storage);
+                    setTotal(page.total);
+                    if (!paginated.current) {
+                        cursor.current = page.nextCursor;
+                        setHasMore(page.hasMore);
+                    }
+                    setError('');
+                } catch (cause) {
+                    if (current() && requiredRevision === revision.current) {
+                        completedRevision.current = requiredRevision;
+                        setError(errorMessage(cause));
+                    }
+                }
+            })
+            .finally(() => {
+                if (current()) {
+                    headRequest.current = null;
+                    if (completedRevision.current >= revision.current) {
+                        setLoading(false);
+                    }
+                    timer.current = setTimeout(() => void readHead(), POLL_INTERVAL_MS);
+                }
+            });
+        headRequest.current = {controller, result};
+        return fresh(result);
+    }, []);
+
+    const loadMore = useCallback((): Promise<void> => {
+        if (olderRequest.current) {
+            return olderRequest.current.result;
+        }
+        if (
+            !mounted.current ||
+            document.visibilityState === 'hidden' ||
+            resetPending.current ||
+            !cursor.current
+        ) {
+            return Promise.resolve();
+        }
+
+        const version = generation.current;
+        const head = acceptedHead.current;
+        const pageCursor = cursor.current;
+        const controller = new AbortController();
+        const current = () =>
+            mounted.current &&
+            document.visibilityState !== 'hidden' &&
+            version === generation.current &&
+            olderRequest.current?.controller === controller &&
+            !controller.signal.aborted;
+        setLoadingMore(true);
+        const result = Promise.resolve()
+            .then(async () => {
+                if (!current()) {
+                    return;
+                }
+                try {
+                    const page = await api.activity.activityHistory(
+                        {limit: PAGE_SIZE, cursor: pageCursor},
+                        {signal: controller.signal},
+                    );
+                    if (!current()) {
+                        return;
+                    }
+
+                    const headChanged = head !== acceptedHead.current;
+                    setEntries((previous) => {
+                        const existing = new Set(previous.map((entry) => entry.id));
+                        const incoming = headChanged
+                            ? page.entries.filter((entry) => !existing.has(entry.id))
+                            : page.entries;
+                        return orderActivityEntries(mergeActivityEntries(previous, incoming, 'older'));
+                    });
+                    if (!headChanged) {
+                        setStorage(page.storage);
+                        setTotal(page.total);
+                    }
+                    paginated.current = true;
+                    cursor.current = page.nextCursor;
+                    setHasMore(page.hasMore);
+                    setError('');
+                } catch (cause) {
+                    if (current()) {
+                        setError(errorMessage(cause));
+                    }
+                }
+            })
+            .finally(() => {
+                if (current()) {
+                    olderRequest.current = null;
                     setLoadingMore(false);
                 }
-            }
-        }
+            });
+        olderRequest.current = {controller, result};
+        return result;
     }, []);
-    useEffect(() => {
-        let active = true;
-        let timer: ReturnType<typeof setTimeout>;
-        const pending = requests.current;
-        async function poll() {
-            await load(false);
-            if (active) {
-                timer = setTimeout(poll, POLL_INTERVAL_MS);
+
+    const refresh = useCallback(
+        (reset = false) => {
+            if (reset) {
+                abortReads();
+                resetPending.current = true;
+                paginated.current = false;
+                cursor.current = null;
+                setHasMore(false);
+                setLoadingMore(false);
             }
-        }
-        void poll();
-        return () => {
-            active = false;
-            clearTimeout(timer);
-            pending.forEach((request) => request.abort());
+            return loadHead(true);
+        },
+        [abortReads, loadHead],
+    );
+
+    useEffect(() => {
+        mounted.current = true;
+        const visibilityChanged = () => {
+            if (document.visibilityState === 'hidden') {
+                abortReads();
+                setLoadingMore(false);
+            } else {
+                void loadHead();
+            }
         };
-    }, [load]);
-    return {
-        entries,
-        storage,
-        loading,
-        loadingMore,
-        error,
-        hasMore,
-        total,
-        loadMore: () => load(true),
-        refresh: (reset = false) => load(false, reset),
-    };
+        document.addEventListener('visibilitychange', visibilityChanged);
+        void loadHead();
+        return () => {
+            mounted.current = false;
+            abortReads();
+            document.removeEventListener('visibilitychange', visibilityChanged);
+        };
+    }, [abortReads, loadHead]);
+
+    return {entries, storage, loading, loadingMore, error, hasMore, total, loadMore, refresh};
 }
