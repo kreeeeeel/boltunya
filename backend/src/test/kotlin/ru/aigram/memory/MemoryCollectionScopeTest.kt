@@ -102,9 +102,9 @@ class MemoryCollectionScopeTest {
     }
 
     private fun finishCollection(memory: MemoryCoordinator, store: MemoryStore, expected: Set<String>) {
+        memory.tick()
         assertTrue(
             IntStream.range(0, 300).anyMatch {
-                memory.tick()
                 if (expected.all { store.state(it)?.backfillComplete == true } &&
                     !memory.document("").collection.active
                 ) {
@@ -120,13 +120,19 @@ class MemoryCollectionScopeTest {
 
     private fun settings(): SettingsStore {
         val settings = SettingsStore(directory)
-        settings.saveRule("42", ChatRule(enabled = true))
-        settings.saveRule("43", ChatRule(enabled = false))
-        settings.saveRule("44", ChatRule(enabled = false, groupReplies = GroupReplyMode.DISABLED))
-        settings.saveRule("45", ChatRule(enabled = true, groupReplies = GroupReplyMode.DISABLED))
-        settings.saveRule("46", ChatRule(enabled = true, groupReplies = GroupReplyMode.MENTIONS))
-        settings.saveRule("47", ChatRule(enabled = true, useMemory = false))
-        settings.saveRule("48", ChatRule(enabled = true, groupReplies = GroupReplyMode.ALL))
+        settings.update {
+            it.copy(
+                rules = mapOf(
+                    "42" to ChatRule(enabled = true),
+                    "43" to ChatRule(enabled = false),
+                    "44" to ChatRule(enabled = false, groupReplies = GroupReplyMode.DISABLED),
+                    "45" to ChatRule(enabled = true, groupReplies = GroupReplyMode.DISABLED),
+                    "46" to ChatRule(enabled = true, groupReplies = GroupReplyMode.MENTIONS),
+                    "47" to ChatRule(enabled = true, useMemory = false),
+                    "48" to ChatRule(enabled = true, groupReplies = GroupReplyMode.ALL),
+                ),
+            )
+        }
         return settings
     }
 
