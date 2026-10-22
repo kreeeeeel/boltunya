@@ -115,7 +115,13 @@ class ActivityHistoryStore(directory: Path, private val clock: Clock, resources:
         val keys = index(ownerId)
         applyRetention(ownerId, keys)
         val after = cursor?.takeIf(String::isNotEmpty)?.let(::decodeCursor)
-        val selected = keys.stream().filter { after == null || it < after }.limit(limit.toLong() + 1).toList()
+
+        val remaining = if (after == null) {
+            keys
+        } else {
+            keys.tailSet(after, false)
+        }
+        val selected = remaining.stream().limit(limit.toLong() + 1).toList()
         val more = selected.size > limit
         val page = selected.take(limit)
         val entries = page.stream().map { key ->
@@ -346,8 +352,15 @@ class ActivityHistoryStore(directory: Path, private val clock: Clock, resources:
         if (policy.retentionDays == 0) {
             return
         }
+
         val cutoff = clock.instant().epochSecond - policy.retentionDays * SECONDS_PER_DAY
-        keys.toList().stream().filter { it.substringBefore('-').toLong() < cutoff }.forEach { remove(ownerId, it) }
+        if (cutoff <= 0) {
+            return
+        }
+
+        // A date-only boundary keeps every UUID tie at the cutoff in this newest-first index.
+        val boundary = cutoff.toString().padStart(20, '0')
+        keys.tailSet(boundary, false).stream().forEach { remove(ownerId, it) }
     }
 
     private fun remove(ownerId: String, key: String) {
