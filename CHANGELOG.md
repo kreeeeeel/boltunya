@@ -2,6 +2,21 @@
 
 Release versions are assigned by Windows CI. Each GitHub release includes the first dated entry below, the tested source commit and its verification run.
 
+## 2026-10-22 — Shared model connections and fresh action results
+
+### Fixed
+
+- Share the model-connection snapshot and in-flight read across the workspace, model catalog and visited settings sections. Keep unchanged results stable and combine change events into a fresh follow-up instead of starting a request for every consumer.
+- Prevent older reads from restoring deleted connections. Explicit post-action refresh waits for fresh data; obsolete and aborted results cannot replace the current snapshot.
+- Suspend connection reads in a hidden window, revalidate on return or a new view, and release the final request/listeners on close. A discarded StrictMode mount or queued callback cannot start a read after unmount.
+- Remove the redundant internal change broadcast after saving/deleting a connection. The shared refresh updates all consumers; external change events remain supported, with local draft and mutation errors preserved.
+
+### Verification and limitations
+
+- The same actual React-hook workload on Node 24.11.1 with five synthetic consumers recorded initial GETs 5 → 1 and three external change events in one burst 15 → 1. A simulated post-success action follow-up fell from 6 to 1 GET: the harness models the source-derived refresh/broadcast flow without mounting the full provider editor or issuing mutations; separate component tests exercise the real save/delete handlers. StrictMode initial reads fell from 2 to 1, queued reads after unmount from 1 to 0, and hidden initial/change-event reads from 3 to 0 each. Visibility return now performs one shared read. The controlled old result no longer restores a deleted connection. Evidence retains source hashes and counters; these are request-scheduling/correctness measurements, not whole-application CPU or rendering claims.
+- Opened the changed portable before project checks and preserved Telegram authorization, credentials, settings, installed voices and manual notes with AI paused. Passed 640 Kotlin cases (18 optional/platform skips), 12 SDK, 346 UI including 21 focused cases, 40 Electron, the icon script and all 143 browser scenarios. Lint/styles/types/format, native window/tray/startup and four updater smokes passed. English/Russian, both themes and narrow screenshots were reviewed; incidental generated images were restored. No runtime correction or rebuild was needed after opening. Exact published-payload verification follows successful Windows CI in the release notes.
+- This stage changes only frontend model-connection read coordination. Backend Ollama probing, inference, model selection and stored credentials retain their existing behavior.
+
 ## 2026-10-22 — Event refresh lifecycle and response ordering
 
 ### Fixed
