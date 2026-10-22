@@ -2,6 +2,26 @@
 
 Release versions are assigned by Windows CI. Each GitHub release includes the first dated entry below, the tested source commit and its verification run.
 
+## 2026-10-22 — Shared speech updates and indexed event pagination
+
+### Changed
+
+- Share one speech-library snapshot, in-flight request and active-download timer across the title bar, catalog, settings and chat controls. Preserve explicit refresh, installation, cancellation and model import; unchanged responses keep the previous snapshot identity.
+- Seek directly into the existing ordered event index for older pages. Retention visits only expired keys instead of copying and scanning the complete index for every request. Keep the same JSON files, cursors, account isolation and storage accounting; no database migration is needed.
+
+### Fixed
+
+- Suspend speech-status requests when the window is hidden and refresh on return. Release the timer, pending request and event listeners when the final consumer closes. Ignore aborted or superseded responses, and combine refreshes during an in-flight request into a fresh follow-up.
+- Stop retaining the chat's voice-readiness subscription after its assistant menu closes. Keep installation action errors local to the initiating control while synchronizing the shared catalog after completion.
+- Revalidate the speech catalog when another voice view opens, recovering from transient read failures and external file changes. Join an existing request and replace its download timer instead of retaining stale availability or creating parallel requests.
+- Preserve exclusive event cursors when the referenced record is absent, inserted around or removed before restart. Retention keeps all events exactly at its cutoff, including timestamp ties and early-epoch boundaries.
+
+### Verification and limitations
+
+- A synthetic real-React comparison with three consumers and a download recorded 15 → 5 status requests in five seconds and 3 → 1 timers. Two consumers recorded 10 → 5 requests. The following hidden-window intervals recorded 10/15 → 0 requests; idle initial requests fell from 3 to 1, with no idle timer. Raw timestamps and final source hashes are retained. Neither scenario made network calls or accessed user data.
+- The compiled event store with 200,000 warm index keys, 62 synthetic summary files and 30-entry pages recorded median deep-page times of 5.039 → 1.221 ms; with retention enabled and no expired entries, 12.272 → 1.004 ms. IDs, order, exclusive cursors and totals matched. The first-page control also moved from 2.834 to 1.401 ms, so these local timings include JVM/filesystem/load effects; the change removes avoidable index scans and is not a whole-application CPU or latency claim. Cold index loading, model inference and RVC conversion are outside this stage.
+- Local gates passed: 640 Kotlin cases with 18 optional/platform skips and zero failures, 12 installed SDK cases, 315 UI tests including 17 targeted lifecycle cases, 40 Electron unit cases, the icon script and all 143 browser scenarios. Lint, styles, types and formatting passed. Native window/tray/startup and four updater smokes passed again after the final rebuild. Each runtime adjustment was rebuilt and opened before follow-up checks; Telegram authorization, credentials, settings, installed voices and manual memory notes were preserved, with AI paused. Exact published-payload verification is recorded in the release after successful Windows CI.
+
 ## 2026-10-22 — A leaner assistant workspace and local character voices
 
 ### Added

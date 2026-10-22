@@ -123,7 +123,7 @@ Alice, streamer and Minecraft searches must distinguish direct text-to-speech fr
 
 ## Included work — speech workspace and chat preferences
 
-The following changes are included in the current optimization work. Local checks and publication are tracked in the next checkpoint; v2.6.42 results do not establish this work's correctness.
+The following changes were published in v2.6.45. Their local checks and publication are recorded below, independently of the older v2.6.42 results.
 
 - [x] Give speech models a separate workspace with Engine / Recognition / Synthesis tabs, searchable cards, language filters, engine/format metadata and explicit dependency/download sizes. Keep installed model selection and real voice testing in the global speech preferences.
 - [x] Replace the long chat-preferences form with grouped navigation, the chat's avatar/name, compact sections and a fixed save footer. Saving keeps the window open and reports success; changing sections retains the draft.
@@ -132,30 +132,46 @@ The following changes are included in the current optimization work. Local check
 - [x] Implement the optional Applio/RVC conversion path as a separate speech-engine integration; keep its model/runtime requirements distinct from direct Piper synthesis.
 - [x] Complete UI/native/package checks and inspect light/dark, narrow-window and chat preferences. Final gates cover 638 Kotlin cases (18 skipped), 12 SDK, 305 UI, 37 Electron and 10 script cases, all 143 browser scenarios and four updater smokes; 27 focused UI cases passed again after final adjustments.
 - [x] Verify real Alice conversion in an isolated profile: pinned Applio/Piper → RVC → Opus → Whisper passed in 508.497 s, including 82.607 s synthesis on two CPU threads. Retain meaningful transcription and a waveform different from the base voice; no Telegram messages or LLM calls.
-- [ ] Publish the next release through Windows CI, verify the downloaded EXE/SDK, matching tag/source and real packaged behavior, then restart the preserved actual profile. Record the results separately from v2.6.42.
+- [x] Publish [v2.6.45](https://github.com/kreeeeeel/boltunya/releases/tag/v2.6.45), source `8dbf83d`, through successful Windows CI; verify EXE/SDK hashes, real packaged speech and the preserved actual-profile restart. Results are recorded in the release and local `complie/VERIFICATION.md`.
 
-## Current optimization checkpoint
+## Published optimization checkpoint — v2.6.45
 
-The user resumed recurring optimization every 30 minutes, with separate backend/frontend analysis agents. A single coordinator owns builds, restarts and release verification. Continue this checkpoint before starting another change.
+The user resumed recurring optimization every 30 minutes, with separate backend/frontend analysis agents. A single coordinator owns builds, restarts and release verification. This checkpoint is published; the next bounded stage is tracked below.
 
 Latest steering removes application error recording and its workspace. The journal, transport models/endpoints, desktop/backend/engine log writers and support-report script have been removed from source; inline action failures and update recovery markers remain. The contract now has 60 paths, 72 operations and 121 schemas. Run 43 failed before compilation because npm 11.19.1 detected two missing optional WASM peer dependencies. Regenerating the lockfile with that version restored a clean installation; checks were not weakened. Do not treat v2.6.43 as published.
 
 - [x] Rebuild and open local-8 before final checks, preserving Telegram authorization, credentials, all settings and manual notes.
 - [x] Fix the verified typing-cancellation race found during queue shutdown; pass 200 concurrent stop/cancel/close rounds. Preserve album-processing assertions. Stabilize the chat-search test by waiting for the filtered list rather than asserting a detached old row.
 - [x] Pass the final 634 Kotlin cases (18 optional/platform skips), 12 installed SDK tests, 303 UI tests, 40 Electron tests, icon script and all 143 browser scenarios. Review refreshed English/Russian screenshots, both themes and a narrow window. Repeat native and all four updater smokes after the runtime fix.
-- [ ] Complete the next Windows release, verify the actual downloaded EXE/SDK and source/tag, exercise packaged speech and restart the preserved actual profile. Record publication evidence in the release and local `complie/VERIFICATION.md`.
+- [x] Publish v2.6.45 through successful [Windows CI](https://github.com/kreeeeeel/boltunya/actions/runs/39710855694), verify the actual downloaded EXE/SDK and source/tag, exercise packaged speech and restart the preserved actual profile. Publication evidence is recorded in the release and local `complie/VERIFICATION.md`.
 
 Run 44 passed clean installation and the full source/packaging gate, then failed one of 143 browser cases: the title-bar test read geometry immediately after reload, before React mounted its Electron bridge. The other 142 passed. Add an explicit mount/style wait without relaxing the 36 px height, drag-region or control-action checks, and exercise that case repeatedly before the next release. No application runtime change is needed; the open local-8 remains current. Neither v2.6.43 nor v2.6.44 was published.
 
-The test-only correction passed 20 consecutive repetitions (33.6 s), TypeScript and formatting. All exact UI/bridge assertions remain. The next CI run must still pass the complete pipeline before publication.
+The test-only correction passed 20 consecutive repetitions (33.6 s), TypeScript and formatting. All exact UI/bridge assertions remain. Run 45 subsequently passed the complete pipeline and published v2.6.45. Real speech in the exact downloaded payload passed in 26.557 s; Telegram authorization, credentials, settings and manual notes were preserved.
 
 - [x] Open the rebuilt assistant workspace before running checks; final local-6 preserved Telegram authorization, settings, credentials, manual notes and the 32-voice catalog.
 - [x] Implement removal of internet search, standalone media viewing, manual attachment sending, plain text composition, custom theme editing and resource charts/hardware sampling. Preserve received inline media, voice sending, explicit AI-draft editing and model import.
 - [x] Implement pause/account guards around automatic inference, local-profile model tracking, confirmed read receipts, adaptive memory pagination and bounded archive bucket caching.
 - [x] Stop hidden/background conversation polling and redundant unchanged-status renders. Add debounced chat search, installed-model filters and compact neutral model/voice/slider styling.
 - [x] Build and open the final batch, then pass the complete Kotlin/contract/SDK/UI/native/browser gate and inspect localized screenshots. Final runtime adjustments were opened before the follow-up checks.
-- [ ] Publish and verify the exact downloaded payload, source/tag and hashes; restart the preserved actual profile.
+- [x] Publish and verify the exact v2.6.45 payload, source/tag and hashes; restart the preserved actual profile with AI paused and no running or queued tasks.
 
 SQLite remains a candidate for large archived event/deletion indexes after measurement. Settings and exclusions are already cached; no database migration is justified merely by their JSON format. The archive cache bounds source text to 64 × 128 KiB and checks file identity, size and modification time; large buckets remain uncached. CPU/RAM snapshots taken under different build/test loads are observations, not a controlled speedup claim. Optional Applio currently uses CPU isolation; its measured conversion latency must not be advertised as instant.
 
-The controlled history refresh comparison passed against `49c1f72`: 10,000 retained / 100 unchanged recent messages, 10 warmups and 100 measurements on Node 24.11.1. Merge plus structural sharing averaged 7.318 ms before and 0.662 ms after, with identical content and retained list identity. Evidence: local `build/history-merge-benchmark.json`. Next candidates are a single shared speech-status poller, a bounded cached offline Ollama inventory probe, ordered event-index pagination and separate Piper/process/conversion timings before considering a persistent speech worker or optional GPU execution.
+The controlled history refresh comparison passed against `49c1f72`: 10,000 retained / 100 unchanged recent messages, 10 warmups and 100 measurements on Node 24.11.1. Merge plus structural sharing averaged 7.318 ms before and 0.662 ms after, with identical content and retained list identity. Evidence: local `build/history-merge-benchmark.json`.
+
+## Current optimization checkpoint — shared speech polling and indexed event pages
+
+Two agents reviewed independent backend/frontend paths. The bounded scope is redundant speech-status requests and avoidable scans of an existing ordered event index. No database migration, model downloads or speech-engine replacement is required.
+
+- [x] Verify v2.6.45 publication and a clean working tree before starting this stage.
+- [x] Capture the compiled event-store baseline with 200,000 synthetic index keys and 62 synthetic summary files. A 30-entry deep page after 180,000 keys took a median 5.039 ms; enabling retention with no expired entries raised it to 12.272 ms. First-page medians were 2.834 / 13.703 ms. This isolates a warm RAM index and does not measure cold archive loading or real user data.
+- [x] Compare the real React hook on Node 24.11.1 with the same synthetic active download. Three consumers made 15 → 5 requests in five visible seconds, then 15 → 0 in five hidden seconds; active timers fell from 3 to 1. Two consumers made 10 → 5 visible requests. Idle initial requests fell from 3 to 1, with no idle timer. Unmount left no timer or further request. Final source hashes and raw timings are retained in local `build/speech-polling-{baseline,after,comparison}.json`; an earlier sampling-boundary variation is preserved separately in `*-before-revalidation.json`.
+- [x] Share the speech snapshot, in-flight request and active-download timer; suspend hidden-window requests and release subscriptions on close. Preserve explicit refresh/install/cancel/import behavior and current action errors.
+- [x] Seek directly past the event cursor and inspect only the expired index range for retention. Preserve order, ties, exclusive cursors, account isolation, storage sizes and strict cutoff semantics. The same compiled-store workload now takes median 1.221 ms for a deep page and 1.004 ms with retention, versus 5.039 / 12.272 ms before. The first-page control also moved from 2.834 to 1.401 ms; do not attribute every timing difference to the patch or infer whole-app CPU savings. Evidence and methodology: local `build/performance-automation-3/README.md` and `events-{baseline,after}.txt`.
+- [x] Build and open the changed application before checks; repeat after the final new-subscriber revalidation fix. Both restarts preserved Telegram authorization, credentials, settings, installed voices and manual notes, with AI paused. Pass 640 Kotlin cases (18 optional/platform skips), 12 SDK cases, 315 UI tests including 17 focused cases, 40 Electron unit cases, the icon script and all 143 browser scenarios. Lint/styles/types/format, native window/tray/startup and four updater smokes passed; native/browser checks ran again on the final package. Inspect both themes, English/Russian and narrow screenshots. Preserve synthetic evidence; discard incidental screenshot timestamp/animation changes rather than claim an unrelated visual redesign.
+- [ ] Commit and publish through successful Windows CI; verify tag/source, downloaded EXE/SDK hashes and preserved-profile restart. Record exact release evidence separately.
+
+Remaining candidates: a bounded cached offline Ollama inventory probe, cold event-index loading, and separate Piper/process/conversion timings before considering a persistent speech worker or optional GPU execution. Keep the existing JSON/Markdown storage until measurements justify a different approach.
+
+The publication checkbox is intentionally pending in the source commit that starts CI. After that run, consult its release notes and local `complie/VERIFICATION.md` before starting another stage; do not republish a verified release solely to change this checkbox.
