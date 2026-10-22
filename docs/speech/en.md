@@ -69,7 +69,7 @@ The local gate passed 644 Kotlin cases (20 opt-in/platform skips), 12 installed 
 
 Real GLaDOS and Dmitri installation/synthesis/Opus/Whisper checks passed in 77.408 s. The final HTTP upload/import/preview/manual synthesis and synthetic single-delivery check passed in 29.294 s. No real Telegram messages were sent. These are complete local test timings, not latency guarantees; published EXE verification is recorded separately.
 
-[Speech library](../resources/speech-library-dark.png) · [Manual voice composition](../resources/manual-voice-dark.png) · [Compact window](../resources/manual-voice-compact.png) · [Sent voice](../resources/outgoing-voice-dark-390.png).
+[Speech library](../resources/en/speech-library.png) · [Chat voice preferences](../resources/en/chat-voice.png) · [Manual voice composition](../resources/en/manual-voice.png).
 
 ## Character voices and engines
 

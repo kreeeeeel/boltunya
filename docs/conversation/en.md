@@ -12,7 +12,7 @@ API: `POST /api/preview/jobs`, `GET /api/preview/jobs/{id}`. Existing activity c
 
 Every memory batch is an Events task, including startup and scheduled collection. The scheduler only discovers eligible tracked chats and enqueues one bounded history page; it does not read every chat at startup. Queue pause, cancellation and priority apply to memory too. Cancelling collection preserves manual notes and completed checkpoints. Automatic batches yield to replies and drafts, while explicitly requested or prioritized collection may wait fairly for its model resource instead of being repeatedly preempted.
 
-The active-task limit is not a promise of concurrent generation on one GPU. Local Ollama requests keep their model-resource gate; independently routed API targets can run alongside other resources when task routing is enabled. Events show resource waiting separately. Memory Events retain model, duration and token counts, without copying memory source text, summaries or thinking into diagnostics history. Changing only the queue limit does not cancel existing work.
+The active-task limit is not a promise of concurrent generation on one GPU. Local Ollama requests keep their model-resource gate; independently routed API targets can run alongside other resources when task routing is enabled. Events show resource waiting separately. Memory Events retain model, duration and token counts. Changing only the queue limit does not cancel existing work.
 
 ## Excluding context
 

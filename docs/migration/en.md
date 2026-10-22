@@ -138,6 +138,13 @@ The following changes are included in the current optimization work. Local check
 
 The user resumed recurring optimization every 30 minutes, with separate backend/frontend analysis agents. A single coordinator owns builds, restarts and release verification. Continue this checkpoint before starting another change.
 
+Latest steering removes application error recording and its workspace. The journal, transport models/endpoints, desktop/backend/engine log writers and support-report script have been removed from source; inline action failures and update recovery markers remain. The contract now has 60 paths, 72 operations and 121 schemas. Run 43 failed before compilation because npm 11.19.1 detected two missing optional WASM peer dependencies. Regenerating the lockfile with that version restored a clean installation; checks were not weakened. Do not treat v2.6.43 as published.
+
+- [x] Rebuild and open local-8 before final checks, preserving Telegram authorization, credentials, all settings and manual notes.
+- [x] Fix the verified typing-cancellation race found during queue shutdown; pass 200 concurrent stop/cancel/close rounds. Preserve album-processing assertions. Stabilize the chat-search test by waiting for the filtered list rather than asserting a detached old row.
+- [x] Pass the final 634 Kotlin cases (18 optional/platform skips), 12 installed SDK tests, 303 UI tests, 40 Electron tests, icon script and all 143 browser scenarios. Review refreshed English/Russian screenshots, both themes and a narrow window. Repeat native and all four updater smokes after the runtime fix.
+- [ ] Complete the next Windows release, verify the actual downloaded EXE/SDK and source/tag, exercise packaged speech and restart the preserved actual profile. Record publication evidence in the release and local `complie/VERIFICATION.md`.
+
 - [x] Open the rebuilt assistant workspace before running checks; final local-6 preserved Telegram authorization, settings, credentials, manual notes and the 32-voice catalog.
 - [x] Implement removal of internet search, standalone media viewing, manual attachment sending, plain text composition, custom theme editing and resource charts/hardware sampling. Preserve received inline media, voice sending, explicit AI-draft editing and model import.
 - [x] Implement pause/account guards around automatic inference, local-profile model tracking, confirmed read receipts, adaptive memory pagination and bounded archive bucket caching.

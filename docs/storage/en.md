@@ -38,7 +38,7 @@ Deletion cancels a pending reply to that message. Archived deleted content is us
 
 Tests cover categories and limits, sequential prefetch, explicit media download, cleanup with remaining bytes, protected endpoints, text and formatting across restarts, account isolation, pagination, permanent deletion versus cache eviction, attachment fingerprint conflicts and cancellation of replies to deleted messages. Browser tests use mocked API responses and do not change real conversations or user cache files.
 
-## Local files and error history
+## Local files
 
 Open **Settings → File locations** to see the directories used by the running application. **Open in Explorer** is available for existing local folders. Electron receives a location identifier and checks the backend allowlist again; web content cannot supply an arbitrary filesystem path.
 
@@ -49,21 +49,16 @@ Open **Settings → File locations** to see the directories used by the running 
 | Telegram files | The `telegram` directory contains TDLib data and downloaded media. Use the cache controls to clear downloaded media without manually deleting session files. |
 | Ollama runtime | The installed application-managed or detected local Ollama executable directory. |
 | Ollama models | `OLLAMA_MODELS`, when configured, or the current user's `.ollama/models` directory for a detected local installation. An external service can use a different directory. |
-| Error history | `diagnostics/errors.json`, a bounded support log with up to 100 grouped errors. |
 
 Docker, another operating-system user, and remote Ollama services can use storage that is not visible to the application. Such locations are shown as external, without an invented host path or Explorer action. This page does not move files or download models.
 
-The **Errors** page records failed replies, model downloads and warmup, memory operations, server requests and desktop updates. Repeated errors of the same source, code and exception type share a card with a counter. A card shows the time, a static explanation, suggested checks and technical metadata. The history survives restarts and can be cleared.
-
-The support log excludes exception messages, Telegram message contents, account and chat identifiers, prompts and credentials. Technical metadata is limited to HTTP status, exception types, application stack locations and updater stages. It does not include a raw log or a full generation trace. Desktop updater failures are imported from the fixed file `desktop/updates/last-error.json`; clearing the history also clears this imported source.
+Current failures appear beside the affected action. The separate Errors page, technical journal, backend log and updater failure reports have been removed. Old log files are neither read nor deleted. Update handoff, readiness and rollback markers remain because they protect installation recovery. AI task outcomes and requested model traces retain their separate local event-history settings.
 
 The local authenticated API is defined in [the OpenAPI contract](../../backend/contract/api/schema/api.yaml):
 
 - `GET /api/storage/locations` — known folders, availability and whether Explorer can open them.
-- `GET /api/diagnostics/errors` — safe grouped errors and details.
-- `DELETE /api/diagnostics/errors` — clear the support history.
 
-These endpoints require the application's local session cookie. They do not expose a public network service. For a separate report with model inventory and an optional synthetic generation check, use the [Windows diagnostic script](../diagnostics/ru.md).
+The endpoint requires the application's local session cookie and does not expose a public network service.
 
 ## Profile migration
 

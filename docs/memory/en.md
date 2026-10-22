@@ -52,7 +52,7 @@ An unfinished explicit request for a disabled chat does not restart automaticall
 - **Rebuild summary** preserves manual notes and restarts deep processing.
 - **Use chat memory** controls that chat’s prompt context and collection; the existing shared owner profile remains available.
 
-Both memory windows use compact actions sized to their labels. Controls wrap on narrow screens and keep their size while opening Explorer: [conversation memory](../resources/memory-dialog-light.png), [shared memory](../resources/settings-memory-dark.png), [narrow layout](../resources/memory-actions-narrow-dark.png).
+Both memory windows use compact actions sized to their labels. Controls wrap on narrow screens and keep their size while opening Explorer.
 
 Global notes, the owner profile, chat notes and the current summary supplement recent history for autoreplies and drafts. They are encoded as reference JSON data rather than executable instructions. Fresh messages and explicit owner settings take precedence. Known automated messages are distinguished from actual owner statements; group sources include sender IDs so equal display names do not merge people.
 

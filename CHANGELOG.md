@@ -24,6 +24,7 @@ Release versions are assigned by Windows CI. Each GitHub release includes the fi
 
 ### Removed
 
+- Remove the Errors workspace, technical journal and its OpenAPI/SDK operations, diagnostic resources and standalone support-report script. Stop writing backend, managed Ollama and updater failure logs. Existing private log files are preserved and no longer read; current action errors and AI task outcomes remain visible. Update handoff, health and rollback markers remain functional.
 - Remove internet search, current-information planning, search credentials UI, related backend integrations, dependencies and API operations. Replies use the configured model and available conversation context.
 - Remove standalone photo/video viewing, manual photo/video/document uploads and their sending/gallery endpoints. Received media remains inline; voice-note sending and model-package import remain supported.
 - Remove the custom palette/CSS theme editor and appearance API. Built-in light/dark themes and language selection remain available. Existing private profile files are preserved.
@@ -31,6 +32,8 @@ Release versions are assigned by Windows CI. Each GitHub release includes the fi
 
 ### Fixed
 
+- Serialize typing-indicator cancellation with task start/stop and avoid Kotlin's size-based snapshot shortcut on a concurrently changing map. Closing a queue can no longer fail while its last worker removes the typing task.
+- Repair the frontend lockfile with the same npm version used by CI, including missing optional WASM peer dependencies. Verify clean dependency installation rather than weakening `npm ci`.
 - Do not start or warm local models automatically while AI is paused. Recheck pause/account validity after history and transcription and between memory-model calls. Retain explicitly requested manual collection; release app-tracked models, including configured Ollama profiles on the managed endpoint, without unloading independent servers.
 - Do not show pending or failed outgoing Telegram messages as read before they have a confirmed positive message ID.
 - Keep per-chat voice overrides independent of unrelated global changes. Recheck account/session and recognition preferences before committing transcribed memory; disabled transcription preserves the original history.
@@ -40,7 +43,7 @@ Release versions are assigned by Windows CI. Each GitHub release includes the fi
 
 - A controlled synthetic Node 24.11.1 comparison against `49c1f72` used 10,000 retained messages, 100 unchanged recent messages, 10 warmups and 100 measured refreshes. Merge plus structural sharing averaged 7.318 ms before and 0.662 ms after, with identical content. This approximately 11× improvement describes that operation, not whole-application latency.
 - Real cached Alice verification passed Piper → RVC → Opus → Whisper, with meaningful transcription and a converted waveform distinct from the base voice. Installation took 420.305 s; synthesis of a 3.260 s recording took 82.607 s on two CPU threads; the full isolated check took 508.497 s. No Telegram messages or conversation-model requests were sent. Other RVC voices have reviewed metadata, not individual audio verification.
-- Local gates passed 638 Kotlin cases (18 optional/platform skips, zero failures), all 12 installed SDK tests, 305 UI tests with 27 final focused repeats, 37 Electron unit tests and 10 script tests. All 143 browser scenarios passed after the final rebuild, with localized screenshot review. Native window/tray/Windows startup and all four updater smoke checks passed. Published-payload and preserved-profile verification are recorded in the release after publication.
+- Final local gates passed 634 Kotlin cases (18 optional/platform skips, zero failures), all 12 installed SDK tests, 303 UI tests, 40 Electron unit tests and the icon-rendering script test. All 143 browser scenarios passed after the final rebuild, with localized screenshot review. Native window/tray/Windows startup and all four updater smoke checks passed again after the typing-cancellation fix. The new lifecycle regression checks 200 concurrent stop/cancel/close rounds; retired journal routes return 404 without touching legacy files. Published-payload and preserved-profile verification are recorded in the release after publication.
 - Applio is an optional 6.31 GiB download, approximately 9.67 GiB unpacked, and is expensive on CPU. Arbitrary RVC checkpoint import is not supported. Existing installed foreign voices remain usable; new downloads focus on Russian and English. Community names do not imply endorsement or dataset rights. DonationAlerts' full server-side catalog is not exported by its documented public API and is not claimed here.
 
 ## 2026-10-22 — Voice catalog, manual recordings and transcribed history

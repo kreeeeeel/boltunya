@@ -36,7 +36,7 @@ Aigram is a Windows desktop assistant for Telegram. Read conversations, prepare 
 - **Keep factual memory.** Shared owner facts, per-chat summaries and editable notes stay in local files. Automatic collection follows the configured interval; explicit collection and deep rebuild remain available. Source batches adapt to the model's token budget, with visible progress and cancellation. [Memory details](docs/memory/en.md).
 - **Support a conversation when asked.** Opt in to an AI-written or exact predefined message after a chosen idle period. The assistant waits for a real response before another initiative. New incoming messages can replace an active reply, follow it as a combined task, or receive separate sequential replies. [Conversation support](docs/ai/conversation-support-en.md).
 - **Inspect the shared queue.** Replies, drafts, speech and memory share a controllable queue. Pause, prioritize or cancel work; inspect model input, available thinking, final output and timing/token metrics. Completed replies support local ratings and comments.
-- **Manage a desktop application.** Use the tray, separate Windows-startup and AI-resume preferences, a draggable title bar, error cards and storage folders that open in Explorer. The download center shows engine/model transfers, progress, speed and cancellation. Settings have grouped navigation, compact controls, four languages and built-in light/dark themes. Golos Text is bundled locally.
+- **Manage a desktop application.** Use the tray, separate Windows-startup and AI-resume preferences, a draggable title bar and storage folders that open in Explorer. The download center shows engine/model transfers, progress, speed and cancellation. Settings have grouped navigation, compact controls, four languages and built-in light/dark themes. Golos Text is bundled locally.
 
 The AI badge appears on enabled contacts' avatars. **Esc** closes the current conversation after dismissing any open dialog. Chat wallpapers appear only while that conversation is open, with a neutral theme background when an image is unavailable.
 
@@ -60,7 +60,7 @@ The profile lives under `%LOCALAPPDATA%\Aigram`, including Electron data in `des
 | `memory/` | Factual summaries, owner profile, collection state and manual notes |
 | `telegram/`, `history/` | Telegram session, media and observed local message snapshots |
 | `speech/` | Optional speech runtimes, installed models and generated local audio |
-| `activity/`, `feedback/`, `diagnostics/` | Task traces, ratings and bounded technical errors |
+| `activity/`, `feedback/` | Task traces and response ratings |
 | `desktop/updates/`, `desktop/browser/` | Update handoff state and Electron storage |
 
 Native Ollama weights normally live in `%USERPROFILE%\.ollama\models` or `OLLAMA_MODELS`. External services and containers may use another location; the storage panel distinguishes these cases. Telegram credentials and model API keys use Windows DPAPI. Login codes and Telegram two-step passwords are not persisted by the application.
@@ -119,12 +119,8 @@ The **Windows release** workflow checks sources, packages the portable applicati
 
 Packaged launches check stable GitHub Releases in a small startup window. Downloads are verified against the published SHA-256. The helper acknowledges readiness before the old process exits, and the replacement must confirm backend/UI startup before its backup is removed. Failure keeps or restores the previous version. Windows startup follows the same check and then leaves the application in the tray. No GitHub token is required.
 
-If an old updater closed the app without reopening it, launch a freshly downloaded `Aigram.exe` once manually. For other failures, open **Errors** and inspect the recovery instructions. The release's **Diagnose-AI.ps1** can produce a bounded support report while Aigram is open:
+If an old updater closed the app without reopening it, launch a freshly downloaded `Aigram.exe` once manually. Current failures appear beside the affected action; AI task outcomes remain in Events. The application has no separate Errors page or persistent technical error journal. Existing legacy log files are left untouched and are no longer read.
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Diagnose-AI.ps1 -TestModel
-```
-
-The optional model test uses a synthetic prompt and sends no Telegram message. [Diagnostic guide](docs/diagnostics/ru.md) · [Settings](docs/settings/en.md) · [Speech](docs/speech/en.md) · [Memory](docs/memory/en.md).
+[Settings](docs/settings/en.md) · [Speech](docs/speech/en.md) · [Memory](docs/memory/en.md).
 
 See [NOTICE.md](NOTICE.md) for third-party notices and model provenance. Golos Text uses the [SIL Open Font License](web/src/shared/assets/fonts/OFL-GolosText.txt). Model and optional runtime licenses differ. Aigram is independent and is not affiliated with Telegram or the owners of character voices.

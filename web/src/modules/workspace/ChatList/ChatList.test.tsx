@@ -51,8 +51,10 @@ describe('Chat selection', () => {
         fireEvent.scroll(scroll);
         await waitFor(() => expect(view.container.querySelectorAll('[data-qa="chat-row"]')).toHaveLength(95));
         fireEvent.change(screen.getByRole('textbox', {name: ru.search}), {target: {value: 'Контакт 94'}});
-        expect(await screen.findByRole('button', {name: 'Контакт 94'})).toBeInTheDocument();
-        await waitFor(() => expect(view.container.querySelectorAll('[data-qa="chat-row"]')).toHaveLength(1));
+        await waitFor(() => {
+            expect(view.container.querySelectorAll('[data-qa="chat-row"]')).toHaveLength(1);
+            expect(screen.getByRole('button', {name: 'Контакт 94'})).toBeInTheDocument();
+        });
         fireEvent.change(screen.getByRole('textbox', {name: ru.search}), {target: {value: ''}});
         await waitFor(() => expect(view.container.querySelectorAll('[data-qa="chat-row"]')).toHaveLength(40));
     });
