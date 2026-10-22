@@ -57,7 +57,6 @@ export function ProviderProfiles({onRefresh}: {readonly onRefresh: () => Promise
             setKey('');
             feedback.markValueSaved(JSON.stringify([next, '']));
             await report.refresh();
-            window.dispatchEvent(new Event('aigram-model-profiles-changed'));
             void onRefresh().catch(() => setError(t('refreshFailed')));
         } catch (cause) {
             setError(errorMessage(cause));
@@ -78,7 +77,6 @@ export function ProviderProfiles({onRefresh}: {readonly onRefresh: () => Promise
             setSelected(null);
             setValue(null);
             await report.refresh();
-            window.dispatchEvent(new Event('aigram-model-profiles-changed'));
             void onRefresh().catch(() => setError(t('refreshFailed')));
         } catch (cause) {
             setError(errorMessage(cause));
