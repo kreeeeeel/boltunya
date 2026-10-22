@@ -2,24 +2,26 @@
 
 [Русская версия](ru.md)
 
-The canonical contract is [`backend/contract/api/schema/api.yaml`](../../backend/contract/api/schema/api.yaml). It describes 61 paths, 76 operations and 122 named schemas. Operation documents live in `schema/operations/`; reusable models and enums live in `schema/models/`. Relative references connect these files. Message editing uses revision-protected `messageEditOptions` and `editMessage` operations; see [editing](../messages/en.md).
+The canonical contract is [`backend/contract/api/schema/api.yaml`](../../backend/contract/api/schema/api.yaml). It describes 61 paths, 74 operations and 124 named schemas. Operation documents live in `schema/operations/`; reusable models and enums live in `schema/models/`. Relative references connect these files. Message editing uses revision-protected `messageEditOptions` and `editMessage` operations; see [editing](../messages/en.md).
 
-Spring Boot owns dependency injection and the embedded servlet server. Feature controllers implement all eight generated Spring MVC interfaces; components reuse application services and stateless top-level extension functions map generated DTOs to feature domain models without Spring beans. The previous `ru.aigram.http` server/router has been removed. The web application calls the generated feature operations from `@aigram/api-client`; its workspace alias resolves the canonical generated SDK source. The previous `openapi-fetch` transport, separate type generator and schema bridge have been removed.
+Spring Boot owns dependency injection and the embedded servlet server. Feature controllers implement all nine generated Spring MVC interfaces; components reuse application services and stateless top-level extension functions map generated DTOs to feature domain models without Spring beans. The previous `ru.aigram.http` server/router has been removed. The web application calls the generated feature operations from `@aigram/api-client`; its workspace alias resolves the canonical generated SDK source. The previous `openapi-fetch` transport, separate type generator and schema bridge have been removed.
 
 ## Modules
+
+This release intentionally retires internet-search, custom-appearance, standalone-gallery/manual attachment or sticker sending, and resource-metrics operations. Consumers must remove those calls. Received inline media, revision-protected text/caption editing, voice delivery and speech-model package import remain supported.
 
 | Gradle project                        | Responsibility                                                                                             | Output                                                           |
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | `:backend:contract:api`               | Validate and bundle the contract; generate `kotlin-spring` interfaces and DTOs for Spring Boot 4/Jackson 3 | `build/bundled/api.yaml`, `build/generated/openapi`, JVM library |
-| `:backend:contract:client:openapi`    | Generate the Kotlin `jvm-spring-webclient` transport, models and eight API groups                          | `build/generated/openapi`, JVM library                           |
+| `:backend:contract:client:openapi`    | Generate the Kotlin `jvm-spring-webclient` transport, models and nine API groups                          | `build/generated/openapi`, JVM library                           |
 | `:backend:contract:client`            | Handwritten `AigramClientFactory` and closeable `AigramClient` wrapper                                     | JVM library exporting the generated client dependency            |
 | `:backend:contract:client:typescript` | Generate the Fetch SDK, compile JavaScript and declarations, package and verify a consumer installation    | `build/generated/openapi`, `build/dist`, `build/package`         |
 
 All three generators use OpenAPI Generator **7.25.0**. JVM modules use JDK **21** and Kotlin **2.3.21**. The TypeScript module requires Node.js **22 or newer** and pins TypeScript **5.9.3** in its own lockfile.
 
-The eight groups are `activity`, `chats`, `media`, `memory`, `models`, `settings`, `system` and `telegram`. IDs declared as strings remain strings, including Telegram IDs larger than JavaScript's safe integer range. Named enums retain their wire values. The TypeScript error model is named `ApiError` to avoid a language-name collision; this does not change the JSON error shape.
+The eight groups are `activity`, `chats`, `media`, `memory`, `models`, `settings`, `speech`, `system` and `telegram`. IDs declared as strings remain strings, including Telegram IDs larger than JavaScript's safe integer range. Named enums retain their wire values. The TypeScript error model is named `ApiError` to avoid a language-name collision; this does not change the JSON error shape.
 
-Six dedicated input schemas preserve the existing constructor defaults for chat rules, model profile options/capabilities, model prompts, appearance and event-history settings. Responses keep their complete, required fields. Kotlin callers now pass the corresponding `*Input` model for those requests. Existing operation names, URLs and JSON field names remain stable; PATCH still distinguishes an absent field from an invalid explicit `null`. Schema defaults, including empty nested objects, are generated rather than filled through a JSON bridge. The reviewed `x-kotlin-empty-default` marker works around missing empty-object metadata in the pinned generator and is validated against the canonical default.
+Five dedicated input schemas preserve the existing constructor defaults for chat rules, model profile options/capabilities, model prompts and event-history settings. Responses keep their complete, required fields. Kotlin callers now pass the corresponding `*Input` model for those requests. Retained operation names, URLs and JSON field names remain stable; PATCH still distinguishes an absent field from an invalid explicit `null`. Schema defaults, including empty nested objects, are generated rather than filled through a JSON bridge. The reviewed `x-kotlin-empty-default` marker works around missing empty-object metadata in the pinned generator and is validated against the canonical default.
 
 `POST /api/engine/restart` is the additional operation. It restarts only an Ollama process owned by Aigram; an external service returns a typed conflict instead of being stopped. Binary uploads accept arbitrary content types, including WebP, while server responses continue to stream resources and byte ranges.
 
@@ -136,9 +138,9 @@ Within this Gradle build, depend on `project(":backend:contract:client")`. The p
 
 The factory is an explicit library entry point. Consumers can register it in their own DI container; the module does not automatically create an application client bean. Binary media operations use `ByteArray` for raw response bytes.
 
-The factory bounds buffered responses at **16 MiB**, including binary media. This supports ordinary photos beyond WebClient's 256 KiB default without creating an unlimited buffer. For larger media, supply your own configured `WebClient` to a generated API group with an appropriate bounded codec limit; streaming large downloads is outside this wrapper. The application's existing media viewer uses its separate transport.
+The factory bounds buffered responses at **16 MiB**, including binary media. This supports ordinary photos beyond WebClient's 256 KiB default without creating an unlimited buffer. For larger media, supply your own configured `WebClient` to a generated API group with an appropriate bounded codec limit; streaming large downloads is outside this wrapper. Inline Telegram media uses the application's authenticated, range-capable media endpoint; the standalone viewer has been removed.
 
-`AigramClient` exposes `activity`, `chats`, `media`, `memory`, `models`, `settings`, `system` and `telegram`. Their generated operations return Reactor `Mono`; the wrapper owns its JDK HTTP transport and must be closed. A blocking CLI example is:
+`AigramClient` exposes `activity`, `chats`, `media`, `memory`, `models`, `settings`, `speech`, `system` and `telegram`. Their generated operations return Reactor `Mono`; the wrapper owns its JDK HTTP transport and must be closed. A blocking CLI example is:
 
 ```kotlin
 import ru.aigram.client.configuration.AigramClientFactory

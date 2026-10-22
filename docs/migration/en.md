@@ -108,7 +108,7 @@ The recurring enhancement automation remains paused. Work is limited to the requ
 
 Details and current limitations: [voice messages](../speech/en.md), [runtime](../speech/runtime-en.md). Speech remains off until explicitly enabled. The integrated settings test cannot send Telegram messages. This checkpoint is published and verified; recurring enhancement automation remains paused.
 
-## Current manual checkpoint — speech library and reply settings
+## Published manual checkpoint — speech library and reply settings
 
 - [x] Expand the catalog with distinct, verified single-speaker Piper voices, preserving existing IDs, exact artifact sizes/checksums, source model cards and license qualifications. Include a real compatible character voice only when its package is confirmed.
 - [x] Move automatic text/voice reply mode and probability to Assistant → Replies. Organize Speech models using the shared Engine / Recognition / Synthesis tabs, searchable language-filtered cards and the real settings preview.
@@ -117,6 +117,34 @@ Details and current limitations: [voice messages](../speech/en.md), [runtime](..
 - [x] Transcribe every eligible incoming/outgoing voice in selected reply history and memory batches; preserve provenance/exclusions and replan memory token budgets after transcription without skipping sources.
 - [x] Verify at least two newly added voices through download verification, installation, native synthesis, Opus and recognition in an isolated profile. Do not install the whole catalog in the user's profile or send Telegram messages.
 - [x] Pass local backend/SDK/UI/Electron/script checks; verify all 141 browser scenarios across full/final speech runs, inspect both themes and narrow/short windows, and update English/Russian guides and screenshots.
-- [ ] Publish through Windows CI, verify the downloaded EXE/SDK hashes and source/tag, exercise real speech in the published payload, and restart the preserved actual profile. Record final evidence in release notes and local complie/VERIFICATION.md.
+- [x] Publish [v2.6.42](https://github.com/kreeeeeel/boltunya/releases/tag/v2.6.42), source `49c1f72`, through successful [Windows CI](https://github.com/kreeeeeel/boltunya/actions/runs/39684168158). Verify the downloaded EXE/SDK hashes and matching tag/source, exercise real speech in the exact published payload (38.349 s), and restart the existing profile with Telegram authorization, credentials, settings and manual memory notes preserved. Final evidence is recorded in the release notes and local `complie/VERIFICATION.md`.
 
 Alice, streamer and Minecraft searches must distinguish direct text-to-speech from RVC/So-VITS voice conversion. A renamed archive is not a compatible model; unsupported packages must not become fake downloadable TTS cards.
+
+## Included work — speech workspace and chat preferences
+
+The following changes are included in the current optimization work. Local checks and publication are tracked in the next checkpoint; v2.6.42 results do not establish this work's correctness.
+
+- [x] Give speech models a separate workspace with Engine / Recognition / Synthesis tabs, searchable cards, language filters, engine/format metadata and explicit dependency/download sizes. Keep installed model selection and real voice testing in the global speech preferences.
+- [x] Replace the long chat-preferences form with grouped navigation, the chat's avatar/name, compact sections and a fixed save footer. Saving keeps the window open and reports success; changing sections retains the draft.
+- [x] Add per-chat speech preferences as one inherited or overridden group: recognition, recognition/synthesis models, reply format, probability and speed. An override does not enable automatic replies or change shared preferences. Show the effective speech choices in the chat inspector.
+- [x] Add the explicit Text / Voice choice to message-context reply generation and align the shared tabs' icons, labels and selected indicator.
+- [x] Implement the optional Applio/RVC conversion path as a separate speech-engine integration; keep its model/runtime requirements distinct from direct Piper synthesis.
+- [x] Complete UI/native/package checks and inspect light/dark, narrow-window and chat preferences. Final gates cover 638 Kotlin cases (18 skipped), 12 SDK, 305 UI, 37 Electron and 10 script cases, all 143 browser scenarios and four updater smokes; 27 focused UI cases passed again after final adjustments.
+- [x] Verify real Alice conversion in an isolated profile: pinned Applio/Piper → RVC → Opus → Whisper passed in 508.497 s, including 82.607 s synthesis on two CPU threads. Retain meaningful transcription and a waveform different from the base voice; no Telegram messages or LLM calls.
+- [ ] Publish the next release through Windows CI, verify the downloaded EXE/SDK, matching tag/source and real packaged behavior, then restart the preserved actual profile. Record the results separately from v2.6.42.
+
+## Current optimization checkpoint
+
+The user resumed recurring optimization every 30 minutes, with separate backend/frontend analysis agents. A single coordinator owns builds, restarts and release verification. Continue this checkpoint before starting another change.
+
+- [x] Open the rebuilt assistant workspace before running checks; final local-6 preserved Telegram authorization, settings, credentials, manual notes and the 32-voice catalog.
+- [x] Implement removal of internet search, standalone media viewing, manual attachment sending, plain text composition, custom theme editing and resource charts/hardware sampling. Preserve received inline media, voice sending, explicit AI-draft editing and model import.
+- [x] Implement pause/account guards around automatic inference, local-profile model tracking, confirmed read receipts, adaptive memory pagination and bounded archive bucket caching.
+- [x] Stop hidden/background conversation polling and redundant unchanged-status renders. Add debounced chat search, installed-model filters and compact neutral model/voice/slider styling.
+- [x] Build and open the final batch, then pass the complete Kotlin/contract/SDK/UI/native/browser gate and inspect localized screenshots. Final runtime adjustments were opened before the follow-up checks.
+- [ ] Publish and verify the exact downloaded payload, source/tag and hashes; restart the preserved actual profile.
+
+SQLite remains a candidate for large archived event/deletion indexes after measurement. Settings and exclusions are already cached; no database migration is justified merely by their JSON format. The archive cache bounds source text to 64 × 128 KiB and checks file identity, size and modification time; large buckets remain uncached. CPU/RAM snapshots taken under different build/test loads are observations, not a controlled speedup claim. Optional Applio currently uses CPU isolation; its measured conversion latency must not be advertised as instant.
+
+The controlled history refresh comparison passed against `49c1f72`: 10,000 retained / 100 unchanged recent messages, 10 warmups and 100 measurements on Node 24.11.1. Merge plus structural sharing averaged 7.318 ms before and 0.662 ms after, with identical content and retained list identity. Evidence: local `build/history-merge-benchmark.json`. Next candidates are a single shared speech-status poller, a bounded cached offline Ollama inventory probe, ordered event-index pagination and separate Piper/process/conversion timings before considering a persistent speech worker or optional GPU execution.

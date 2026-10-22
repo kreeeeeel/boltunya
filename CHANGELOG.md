@@ -2,6 +2,47 @@
 
 Release versions are assigned by Windows CI. Each GitHub release includes the first dated entry below, the tested source commit and its verification run.
 
+## 2026-10-22 — A leaner assistant workspace and local character voices
+
+### Added
+
+- Add a top-level Speech models workspace with Engine / Recognition / Voice tabs, searchable Russian/English cards, shared Refresh/Explorer/Import actions and separate voice-preview dialogs. Show required engines, formats, download sizes and source/license links.
+- Offer 32 synthesis voices: 17 Piper voices and 15 optional community RVC conversions. The pinned Applio 3.7.0 integration converts local Piper speech to character timbre before Opus encoding. Install prerequisites in order with shared progress, cancellation, verified SHA-256 and safe ZIP64 extraction.
+- Add inherited or independent recognition, voice, rate and text/voice policy per chat. Apply effective preferences to replies, voice drafts, selected history and memory transcription. Organize chat settings with sidebar navigation and compact sections.
+- Display active model/engine downloads in the title bar, with transfer name, fill, percentage, measured speed and hover-to-cancel. Retain explicit Text/Voice generation and manual spoken-text composition.
+- Display Telegram forward origins, a generic marker for unknown forwarded sources and read receipts in chat previews. Use Golos Text from the Persons interface and localized English/Russian documentation screenshots.
+
+### Changed
+
+- Replace ordinary message composition with a compact assistant bar: current model, memory, voice and AI actions. AI-generated text remains explicitly editable and sendable; manual voice composition remains available.
+- Use borderless searches/model cards with neutral selected backgrounds, installed-model filters, centered source links, filled tabs and a compact rounded slider layout throughout settings. Move voice-library previews into dialogs.
+- Size memory work units from the model's token budget across native Telegram pages, preserving whole messages, exclusions and continuation cursors. Keep the configured automatic interval and explicit deep collection behavior.
+- Debounce chat search, retain a centered empty state and stop history polling when the conversation is not visible. Reuse unchanged history status instead of forcing parent renders on every poll.
+- Cache up to 64 small archive buckets, with file identity/size/modification checks and write invalidation, to avoid repeatedly reading and decoding unchanged JSON. Keep JSON/Markdown storage and account-scoped history compatibility.
+- Reduce desktop state polling from 1.5 to 5 seconds; explicit controls still synchronize immediately. Avoid media/waveform construction when generating chat-list previews, use indexed reply lookups and preserve memoized message/chat rows on unrelated activity changes.
+- Compare only an unchanged latest history window before falling back to the existing merge, retaining the complete paginated list by identity. Continue applying edits, deletions, media updates and context exclusions through the full merge when needed.
+
+### Removed
+
+- Remove internet search, current-information planning, search credentials UI, related backend integrations, dependencies and API operations. Replies use the configured model and available conversation context.
+- Remove standalone photo/video viewing, manual photo/video/document uploads and their sending/gallery endpoints. Received media remains inline; voice-note sending and model-package import remain supported.
+- Remove the custom palette/CSS theme editor and appearance API. Built-in light/dark themes and language selection remain available. Existing private profile files are preserved.
+- Remove the resource-charts page, metrics endpoint, hardware sampling and OSHI/Recharts dependencies. Queue parallelism retains its qualitative load estimate without polling hardware.
+
+### Fixed
+
+- Do not start or warm local models automatically while AI is paused. Recheck pause/account validity after history and transcription and between memory-model calls. Retain explicitly requested manual collection; release app-tracked models, including configured Ollama profiles on the managed endpoint, without unloading independent servers.
+- Do not show pending or failed outgoing Telegram messages as read before they have a confirmed positive message ID.
+- Keep per-chat voice overrides independent of unrelated global changes. Recheck account/session and recognition preferences before committing transcribed memory; disabled transcription preserves the original history.
+- Correct bubble and voice-note rounding, reply-preview spacing, compact voice-dialog actions and model-card geometry. Prevent stale preview selection and dependency-progress errors.
+
+### Verification and limitations
+
+- A controlled synthetic Node 24.11.1 comparison against `49c1f72` used 10,000 retained messages, 100 unchanged recent messages, 10 warmups and 100 measured refreshes. Merge plus structural sharing averaged 7.318 ms before and 0.662 ms after, with identical content. This approximately 11× improvement describes that operation, not whole-application latency.
+- Real cached Alice verification passed Piper → RVC → Opus → Whisper, with meaningful transcription and a converted waveform distinct from the base voice. Installation took 420.305 s; synthesis of a 3.260 s recording took 82.607 s on two CPU threads; the full isolated check took 508.497 s. No Telegram messages or conversation-model requests were sent. Other RVC voices have reviewed metadata, not individual audio verification.
+- Local gates passed 638 Kotlin cases (18 optional/platform skips, zero failures), all 12 installed SDK tests, 305 UI tests with 27 final focused repeats, 37 Electron unit tests and 10 script tests. All 143 browser scenarios passed after the final rebuild, with localized screenshot review. Native window/tray/Windows startup and all four updater smoke checks passed. Published-payload and preserved-profile verification are recorded in the release after publication.
+- Applio is an optional 6.31 GiB download, approximately 9.67 GiB unpacked, and is expensive on CPU. Arbitrary RVC checkpoint import is not supported. Existing installed foreign voices remain usable; new downloads focus on Russian and English. Community names do not imply endorsement or dataset rights. DonationAlerts' full server-side catalog is not exported by its documented public API and is not claimed here.
+
 ## 2026-10-22 — Voice catalog, manual recordings and transcribed history
 
 ### Added

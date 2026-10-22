@@ -1,24 +1,36 @@
 # Local speech runtime
 
-Aigram uses the official sherpa-onnx **1.13.8 Java API** for CPU speech recognition and synthesis. Its Windows x64 JNI runtime and the selected models are optional downloads. Opening the app or changing a setting never downloads them. Models require the separately installed `sherpa-runtime` asset; inference reports a missing installation instead of installing dependencies automatically.
+Aigram supports two optional local CPU engines on Windows x64. The official **sherpa-onnx 1.13.8 Java API** runs Whisper recognition and Piper/VITS text-to-speech. **Applio 3.7.0** converts a synthesized recording into the timbre of a selected RVC character model. RVC is voice conversion, not standalone text-to-speech: its path is **Piper → WAV → Applio/RVC → WAV → Ogg/Opus**. Conversion failure reports an error; it never silently substitutes the base Piper voice.
 
-The table below records the historical five-asset baseline of the published **v2.6.41**, including its original three synthesis voices. It is not the complete current library. See the [expanded catalog](catalog-en.md) for the current models and their individual terms.
+The new-download catalog contains **32 Russian/English synthesis voices: 17 Sherpa/Piper and 15 RVC models**, plus two runtimes and Whisper tiny. Previously installed voices in other languages and imported models retain their IDs and remain selectable. Uninstalled foreign-language entries are not offered as new downloads. The following table lists representative dependencies and voices, not all 32; see the [complete catalog](catalog-en.md) for exact sources and individual terms.
 
 | Asset ID | Download bytes | Purpose |
 | --- | ---: | --- |
 | `sherpa-runtime` | 8,277,046 | Windows x64 CPU JNI runtime |
+| `applio-runtime` | 6,775,972,339 | Applio 3.7.0 portable Python/PyTorch runtime; 6.31 GiB compressed |
 | `whisper-tiny` | 116,204,861 | Multilingual Whisper tiny; installed inference uses int8 encoder/decoder |
 | `piper-ru-irina` | 21,149,417 | Russian Irina voice |
 | `piper-ru-ruslan` | 21,127,907 | Russian Ruslan voice |
 | `piper-en-amy` | 21,099,246 | English Amy voice |
+| `rvc-alice` | 64,237,755 | Community YandexAliceRVC checkpoint and FAISS index; requires Applio and Russian Irina |
 
-Sizes describe downloads, not expanded disk use. Current recognition language choices are automatic detection, Russian, English, Ukrainian and Kazakh. Small Whisper models can misrecognize speech; synthesis voices and recognition models are independent selections. No audio is sent to an external speech service.
+Sizes describe downloads, not expanded disk use. Starting the app, changing a selection and requesting inference never install missing assets. An explicit **Install** action queues missing dependencies before the selected asset, with their sizes visible before downloading. Current recognition language choices remain automatic detection, Russian, English, Ukrainian and Kazakh; the RU/EN restriction applies to new synthesis voices. Small Whisper models can misrecognize speech. No audio is sent to an external speech service.
 
 ## Installation and integrity
 
-The versioned [catalog](../../backend/src/main/resources/speech/catalog.json) contains the exact official URLs, sizes, SHA-256 digests and required files. The runtime is an official release JAR, not the much larger CLI bundle. Downloads accept only HTTPS GitHub release hosts, enforce the declared size and verify SHA-256 before installation.
+The versioned [catalog](../../backend/src/main/resources/speech/catalog.json) records exact URLs, byte counts, SHA-256 digests and required files. Sherpa uses the small official native JAR. Applio uses its pinned upstream portable ZIP, and RVC checkpoints/indexes come from pinned community repository revisions. Downloads permit HTTPS only on an explicit GitHub/Hugging Face host allowlist, including approved redirect hosts. Byte count and SHA-256 must match before extraction.
 
-Model archives extract into a unique staging directory. Extraction rejects traversal, absolute paths, links and special files, limits archive entries and expanded size, and retains the required inference files and upstream model card. An atomic directory move publishes a completed installation. Failed or cancelled attempts do not become installed assets. There is one installer worker with a bounded queue; repeated requests for an in-flight asset are deduplicated.
+Archives extract into a unique staging directory; an atomic directory move publishes the completed installation. Failed or cancelled attempts do not become installed assets. Limits are:
+
+| Archive | Maximum entries | Maximum expanded bytes |
+| --- | ---: | ---: |
+| Curated Sherpa/Piper `.tar.bz2` | 4,096 | 512 MiB |
+| Curated RVC model ZIP | 4,096 | 512 MiB |
+| Curated Applio runtime ZIP64 | 50,000 | 12 GiB |
+
+Extraction rejects traversal, absolute paths, links and duplicate/unsafe Windows ZIP names. ZIP entries also have declared-size and CRC checks. Required inference files and upstream notices are retained. Applio's inspected archive contains 37,231 entries totaling 10,386,551,490 expanded bytes; before its download the installer requires free space for the archive plus the 12 GiB extraction allowance. The selected runtime includes its interpreter, RVC sources/support models and dependency notices, not an Aigram-managed pip installation.
+
+One installer worker processes a bounded queue and deduplicates in-flight assets. Installing an RVC voice queues Sherpa, Applio and its base Piper voice before its own weights. A failed dependency makes the parent fail rather than remain queued. Cancelling a voice cancels its dependency jobs only when another requested installation does not need them. Cancelling an active runtime cancels the dependent installation plans as well, including when that runtime was separately requested. An already installed imported voice remains a no-download operation; its missing Sherpa runtime must be installed explicitly.
 
 Installed assets live below the configured application directory, normally `%LOCALAPPDATA%/Aigram/speech/<asset-id>`. Installation markers identify the pinned artifact. Pending transfers are not resumed automatically after app restart.
 
@@ -28,17 +40,21 @@ The integrated settings preview queues real synthesis with the supplied text, se
 
 Model import uploads a `.tar.bz2` archive through the local authenticated API, then validates it in an isolated staging directory. Limits are 100 MiB compressed, 512 MiB expanded and 4,096 entries. The package must have one top-level directory, one root-level ONNX model, `tokens.txt` and the required eSpeak data. Traversal, duplicate paths, links, special files and executable files are rejected. Original model notices and Aigram's runtime notices are retained. Import computes a local SHA-256 fingerprint; unlike curated downloads, it has no pinned upstream identity.
 
-Successful imports publish a `custom-…` voice and its persistent local registry atomically. The catalog includes it in the regular synthesis selector after restart. Missing files are reported as an incomplete local installation; a user-provided voice has no automatic download URL. **Refresh list** rereads installation state, and the desktop **Open in Explorer** action accepts only the fixed `speech` storage-location ID. See the [supported package layout](en.md#test-and-import-voices-in-settings).
+Successful imports publish a `custom-…` voice and its persistent local registry atomically. The catalog includes it in the regular synthesis selector after restart. This import path supports Sherpa-compatible ONNX packages, not arbitrary RVC/PTH/ZIP models or executable runtimes. Missing files are reported as an incomplete local installation; a user-provided voice has no automatic download URL. **Refresh list** rereads installation state, and the desktop **Open in Explorer** action accepts only the fixed `speech` storage-location ID. See the [supported package layout](en.md#test-and-import-voices-in-settings).
 
 The manual **Voice message** dialog uses a separate chat-bound draft path. It accepts an installed voice and speed for this request without updating global preferences. **Test** is optional; **Speak and send** queues synthesis and sends the resulting voice note, or reuses an unchanged ready preview. Closing or cancelling clears the send intention before dispatch. An uncertain send cannot be retried with the same recording, and a failed refresh after confirmed delivery retries only the refresh. See [manual voice and AI drafts](en.md#preview-before-sending).
 
 ## Worker isolation and private data
 
-Each inference starts an owned JVM worker without Spring. Requests, including text, travel through bounded UTF-8 JSON on standard input. The command line contains no utterance or transcript. Native standard output and error are discarded; a bounded private result file carries the response and is removed after the request.
+Each Sherpa stage starts an owned JVM worker without Spring. Text travels through bounded UTF-8 JSON on standard input; a bounded private result file carries the response and is removed after the request. RVC starts only the installed `env/python.exe -s core.py infer` with local WAV/checkpoint/index paths. Neither command line contains the utterance or transcript. Native standard output and error are discarded in production.
 
-The worker uses CPU inference with two threads, a 512 MiB Java heap and a ten-minute timeout. Native inference allocates additional memory outside the Java heap. Cancelling the request terminates its owned worker. Recognition accepts a caller-owned WAV; synthesis returns a caller-owned WAV that the integration removes after Opus conversion. Temporary protocol files are cleaned after success and failure. Audio contents and native diagnostic output are not written to application error logs. Recognized text included in model prompts and signed-in voice-preview text can persist in the private local activity history under its retention and cleanup settings.
+Native stages share a serialized inference slot and a ten-minute process timeout. Sherpa uses two CPU threads and a 512 MiB Java heap; native memory is additional. Applio's CPU thread environment is set to two and GPU visibility is disabled. The JVM heap limit does not constrain the Python/PyTorch process; its memory use depends on the loaded models. Cancellation stops the owned worker and its descendants, not external Ollama or unrelated processes. RVC deletes its intermediate Piper WAV after conversion; the integration removes the final WAV after Opus conversion.
 
-Synthesis accepts up to 4,096 UTF-16 units and a speed multiplier between 0.5 and 2.0. Input audio is limited to 25 MiB; produced audio must fit the ten-minute and 64 MiB output limits. The codec normalizes incoming Telegram voice notes to mono 16 kHz PCM WAV and converts synthesized WAV to an Ogg/Opus voice note.
+Applio never runs its installer, updater, web server or cloud TTS. The adapter checks real paths for the interpreter, CLI, checkpoint, index, ContentVec files and RMVPE predictor before launch. Python home/search paths point to the installed runtime, user site packages are disabled and Hugging Face/Transformers use offline mode. `APPLIO_CONFIG_FILE`, `APPLIO_CONFIG_DIR`, `APPLIO_ROOT`, `APPLIO_CODE_ROOT`, `APPLIO_LOGS_DIR`, `HF_HOME`, `TORCH_HOME`, `TEMP` and `TMP` are explicitly scoped to the runtime or request work directory, overriding inherited Applio profile locations.
+
+Recognition accepts a caller-owned WAV, and synthesis returns a caller-owned WAV. Temporary request/configuration/result files are cleaned after success and failure. Audio contents and native diagnostics are not written to application error logs. Recognized text included in model prompts and signed-in voice-preview text can persist in private local activity history under its retention and cleanup settings.
+
+Synthesis accepts up to 4,096 UTF-16 units and speed 0.5–2.0; RVC applies that speed to the base Piper synthesis. Input audio is limited to 25 MiB. Output must fit 600 seconds and 64 MiB; a converted WAV must be signed 16-bit mono PCM at 8–48 kHz. The codec normalizes incoming Telegram voice notes to mono 16 kHz PCM WAV and converts synthesized WAV to Ogg/Opus.
 
 ## Licences and upstream sources
 
@@ -48,8 +64,27 @@ The catalog displays licence provenance instead of calling every model unrestric
 - OpenAI Whisper code and weights are published under [MIT](https://github.com/openai/whisper/blob/main/LICENSE).
 - Piper's voice repository is MIT, but the individual dataset notices matter: [Irina's model card](https://huggingface.co/rhasspy/piper-voices/blob/main/ru/ru_RU/irina/medium/MODEL_CARD) leaves the dataset licence unspecified; [Ruslan's card](https://huggingface.co/rhasspy/piper-voices/blob/main/ru/ru_RU/ruslan/medium/MODEL_CARD) identifies CC-BY-NC-SA-4.0; [Amy's card](https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/amy/low/MODEL_CARD) links to its Mimic3 dataset provenance. The voice archives also include eSpeak NG data.
 - The [official Java integration example](https://github.com/k2-fsa/sherpa-onnx/blob/v1.13.8/java-api-examples/gradle-examples/build.gradle) separates the small JVM API dependency from platform-native JARs.
+- [Applio 3.7.0](https://github.com/IAHispano/Applio/tree/3.7.0) application code is MIT. Its optional portable archive contains dependencies with their own licences; their notices and upstream terms are preserved. Aigram invokes the [official CLI](https://github.com/IAHispano/Applio/blob/3.7.0/core.py), not a locally maintained Python ecosystem.
+- Community RVC cards identify their actual uploader/model names. The Alice and Joxi repositories declare a generic OpenRAIL tag without an exact licence text or dataset permission. This does not establish unrestricted commercial, redistribution or voice/character rights, or affiliation with Yandex, streamers or DonationAlerts. Complete source cards and available notices are in [licenses](licenses/README.md).
 
 ## Verification
+
+### Real RVC verification
+
+The recorded local synthetic checks passed: `ApplioSpeechWorkerTest` (3 cases), `SpeechZipInstallerTest` (4), `SpeechDependencyInstallTest` (6) and `SpeechConversionTest` (2). These 15 cases check CPU/offline/private-argument construction, explicit environment isolation, archive limits/traversal/links/Windows aliases, dependency ordering/failure/cancellation, preservation of installed legacy voices and conversion cleanup without base-voice substitution. They use synthetic files and executor stubs and do not establish real RVC audio quality. This is targeted evidence, not a claim that the current complete release gate has passed.
+
+Real Alice verification passed with the pinned Applio runtime and community model: Piper → RVC → Opus → Whisper retained the spoken meaning, and the converted waveform differed from the base voice. Isolated installation took 420.305 s; synthesis of a 3.260 s recording took 82.607 s on two CPU threads; the whole check took 508.497 s. These are measured local timings, not latency guarantees. No Telegram messages or conversation-model requests were sent. Evidence: `build/speech-verification/rvc-proof-1434426430849561619/proof.json`. The other 14 RVC voices have verified metadata, not real audio verification.
+
+The passed opt-in gate uses only those cached artifacts plus cached Sherpa, Irina and Whisper tiny archives:
+
+```powershell
+$env:AIGRAM_LIVE_RVC = 'true'
+.\gradlew.bat :backend:test --tests 'ru.aigram.speech.LiveRvcSpeechTest' --rerun-tasks
+```
+
+`LiveRvcSpeechTest` installs into a fresh `build/speech-verification/rvc-proof-*/profile`, runs real Piper → Applio → Opus → 16 kHz WAV → Whisper, and requires both a changed WAV and recognizable synthetic words. It does not use Telegram, the real app profile or conversation-model inference. Synthetic audio and timing/boolean evidence remain in that proof directory; transcripts are not added to the report. A passing result must be recorded before claiming verified RVC operation. The packaged smoke below continues to verify the Sherpa path, not Applio.
+
+### Historical Sherpa baseline
 
 The original speech release's unit and HTTP regressions cover pinned byte bounds and checksums, archive traversal/link rejection, installation state, cancellation, offline startup, selected models, exact Unicode synthesis input, protocol cleanup, preview/send separation and imported-model persistence. Its final Gradle gate completed with 619 Kotlin cases, zero failures and 14 skips: 12 unrelated opt-in AI/network/memory checks and two Windows symlink-privilege checks. All 12 installed SDK tests, 257 full UI unit tests, 39 Electron tests and 10 script tests passed. A further focused run passed 16 tests across four files, including three new hook regressions. These are historical baseline results. New expanded-library local results are recorded in the main speech guide; publication is verified separately.
 

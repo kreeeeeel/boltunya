@@ -4,18 +4,18 @@ Aigram can recognize incoming Telegram voice notes and synthesize spoken replies
 
 ## Set up
 
-Open **Settings → Models and tools → Speech models**. The shared tabs separate **Engine**, **Recognition** and **Synthesis**. Download **Sherpa runtime**, **Whisper tiny** for recognition, and the synthesis voices you want. Each download is explicit, shows progress inside its button and can be cancelled. The application verifies the catalog's pinned SHA-256 before installing it. Downloading a voice does not enable automatic replies.
+Open **Speech models** in the main sidebar, beside AI models and Events. The shared tabs separate **Engine**, **Recognition** and **Voice models**. Download **Sherpa runtime**, **Whisper tiny** for recognition, and the synthesis voices you want. Each download is explicit, shows progress inside its button and can be cancelled. The application verifies the catalog's pinned SHA-256 before installing it. Downloading a voice does not enable automatic replies.
 
 Search the synthesis library by name and filter it by language. Installed voices can be selected and tested directly from their cards; filtering the library does not reset the chosen voice. Read each source card and its license before downloading: voice datasets have different terms, including non-commercial or unspecified terms. Character voices only support the languages shown on their cards. The optional runtime includes eSpeak NG. [Catalog and sources](catalog-en.md), [runtime and licenses](runtime-en.md).
 
-Enable incoming voice recognition separately in the **Recognition** tab. Automatic reply format belongs to **Settings → Assistant → Replies**, where you can choose:
+Enable transcription under **Settings → Assistant → Voice** and choose installed recognition/synthesis models there. Automatic reply format belongs to **Settings → Assistant → Replies**, where you can choose:
 
 - **Text:** generated automatic replies remain text.
 - **Always voice:** AI-generated automatic replies are synthesized.
 - **Random:** each generated reply independently uses your selected probability.
 - **Voice to voice:** reply by voice only when the incoming message is a voice note. Music/audio attachments do not count as voice notes.
 
-Select recognition under **Recognition**, and voice/speed under **Synthesis**. These settings are global; existing conversation permissions, delays, reply/send preferences and group restrictions still apply. Exact predefined idle messages remain literal text. Speech starts disabled, and missing assets produce an actionable error instead of a silent download.
+Open a chat’s settings and select **Voice** to inherit these global values or configure personal recognition, voice, speed, reply format and random probability. Conversation settings now use the same sidebar layout as global settings, with the chat’s avatar and name. Existing chat permissions, delays, reply/send preferences and group restrictions still apply. Exact predefined idle messages remain literal text. Speech starts disabled; opening the catalog never downloads anything.
 
 ## Processing
 
@@ -39,19 +39,19 @@ Draft audio is served only through the authenticated local API and is bound to t
 
 Outgoing voice notes and attachments use a separate owned copy under `telegram/files/outgoing`, so removing a staged upload or expiring a draft does not break the sent message. This cache is bounded to 500 MiB and 1,024 entries; completed copies expire on later cleanup after 24 hours and can be cleared in storage settings. Active or uncertain native uploads stay pinned, including after a timeout/restart, and count against the limit. They are not silently deleted to make space. Cache statistics include these copies; Telegram can redownload a sent remote file after a completed local copy has been cleared.
 
-## Test and import voices in settings
+## Test and import voices
 
-Actual local synthesis in an isolated profile:
+The dedicated voice library (synthetic English UI data):
 
-![Real local voice preview in Aigram settings](../resources/voice-settings-local.png)
+![Voice library](../resources/en/speech-library.png)
 
-The **Voice test** section in **Synthesis** speaks exactly the text you enter, using the currently selected voice and rate even before you save these preferences. An installed card's **Test** action selects that voice in the unsaved draft and starts this same real preview. It uses the shared queue, with progress, cancellation and playback. It never calls the conversation model or sends a Telegram message. Preview-only recordings cannot be submitted as outgoing drafts. Local testing also works before Telegram sign-in.
+An installed card’s **Test** action opens a separate voice-preview dialog that speaks exactly the text you enter. An installed card's **Test** action previews that voice without changing your global selection. **Choose** explicitly saves the default model. Global **Settings → Assistant → Voice** also has a preview for testing unsaved voice and rate preferences. Both use the shared queue, with progress, cancellation and playback. They never call the conversation model or send a Telegram message. Preview-only recordings cannot be submitted as outgoing drafts. Local testing also works before Telegram sign-in.
 
 The catalog toolbar has **Refresh list**, **Open in Explorer** and **Import model**, using the same controls as the storage settings. Refresh rereads the installed assets. In the desktop application, Explorer opens only the active profile's fixed `speech` directory once it exists; it cannot open an arbitrary supplied path.
 
 Import accepts a compatible **sherpa-onnx VITS/Piper `.tar.bz2` package**, up to 100 MiB compressed and 512 MiB expanded. It must contain a single top-level directory with one ONNX model, `tokens.txt` and complete `espeak-ng-data` (including `phondata`, `phonindex` and `phontab`). Original license/model-card files are preserved. Sign in to Telegram before importing, then set a descriptive name, optional language and license information; imported voices appear in the normal synthesis selector and persist after restarting Aigram. The official runtime remains a separate verified download. Import validates the package structure; user-entered license information does not verify its provenance or grant usage rights.
 
-A WAV recording, Python checkpoint or unrelated ONNX model is not a compatible voice package. A voice named “Alice” works only if it is supplied in the supported format; importing a recording does not clone a voice. Damaged or incompatible packages produce an error and do not replace installed voices. Missing imported files are reported instead of trying to download a user-supplied model from an invented URL.
+User import currently accepts compatible Piper archives, not arbitrary recordings or RVC checkpoints. Curated RVC voices use their separately listed Applio engine and base Piper voice. Importing a recording does not clone a voice. Damaged or incompatible packages produce an error and do not replace installed voices. Missing imported files are reported instead of trying to download a user-supplied model from an invented URL.
 
 ## Storage and verification
 
@@ -70,3 +70,11 @@ The local gate passed 644 Kotlin cases (20 opt-in/platform skips), 12 installed 
 Real GLaDOS and Dmitri installation/synthesis/Opus/Whisper checks passed in 77.408 s. The final HTTP upload/import/preview/manual synthesis and synthetic single-delivery check passed in 29.294 s. No real Telegram messages were sent. These are complete local test timings, not latency guarantees; published EXE verification is recorded separately.
 
 [Speech library](../resources/speech-library-dark.png) · [Manual voice composition](../resources/manual-voice-dark.png) · [Compact window](../resources/manual-voice-compact.png) · [Sent voice](../resources/outgoing-voice-dark-390.png).
+
+## Character voices and engines
+
+The main catalog focuses on Russian and English: 17 Piper voices and 15 RVC voice-conversion models. The latter include Alice, Bratishkinoff, Stint, T2x2, itpedia, Wylsacom, Johnny Silverhand and other source-identified models. A character name identifies the community model, not an official DonationAlerts voice or endorsement. DonationAlerts does not document model export or a standalone TTS endpoint in its [public API](https://www.donationalerts.com/apidoc); its complete hosted voice list has not been replicated.
+
+RVC first synthesizes text using its listed base Piper voice, then converts the resulting audio with Applio. The optional pinned Windows runtime downloads **6.31 GiB** and expands to approximately **9.67 GiB**, separately from the small application EXE. Its CPU process also needs substantially more RAM than Piper. Cards show the engine, format, languages and missing download sizes before installation. Choosing **Download** installs the listed prerequisites in order; the voice button includes their progress and cancellation. Shared prerequisite downloads remain available to other requested installations. No Python installer, model download or upstream web server is started merely by opening Aigram.
+
+Real Alice verification passed with the pinned Applio runtime and community model: Piper → RVC → Opus → Whisper retained the spoken meaning, and the converted waveform differed from the base voice. Isolated installation took 420.305 s; synthesis of a 3.260 s recording took 82.607 s on two CPU threads; the whole check took 508.497 s. These are measured local timings, not latency guarantees. No Telegram messages or conversation-model requests were sent. Evidence: `build/speech-verification/rvc-proof-1434426430849561619/proof.json`. The other 14 RVC voices have verified metadata, not real audio verification.

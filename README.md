@@ -1,135 +1,71 @@
 <p align="center"><img src="web/public/assets/brand/aigram.svg" width="88" alt="Aigram logo"></p>
 <h1 align="center">Aigram</h1>
-<p align="center">Telegram, your voice, and the models you choose.</p>
+<p align="center">Telegram conversations, your assistant, and the voices you choose.</p>
 <p align="center">
   <a href="https://github.com/kreeeeeel/boltunya/actions/workflows/release.yml"><img alt="Windows release" src="https://github.com/kreeeeeel/boltunya/actions/workflows/release.yml/badge.svg"></a>
   <img alt="Kotlin 2.3" src="https://img.shields.io/badge/Kotlin-2.3-7F52FF?logo=kotlin&logoColor=white">
+  <img alt="Spring Boot 4.1" src="https://img.shields.io/badge/Spring_Boot-4.1-6DB33F?logo=spring">
+  <img alt="Spring AI 2.0" src="https://img.shields.io/badge/Spring_AI-2.0-6DB33F?logo=spring">
   <img alt="Electron 44" src="https://img.shields.io/badge/Electron-44-47848F?logo=electron&logoColor=white">
   <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-111111?logo=nextdotjs">
-  <img alt="Gravity UI" src="https://img.shields.io/badge/Gravity_UI-7-FFBE5C">
-  <img alt="Spring Boot" src="https://img.shields.io/badge/Spring_Boot-4.1-6DB33F?logo=spring">
-  <img alt="Spring AI" src="https://img.shields.io/badge/Spring_AI-2.0-6DB33F?logo=spring">
+  <img alt="Gravity UI 7" src="https://img.shields.io/badge/Gravity_UI-7-FFBE5C">
   <img alt="Ollama" src="https://img.shields.io/badge/Ollama-local_AI-111111?logo=ollama">
   <img alt="Windows x64" src="https://img.shields.io/badge/Windows-x64-0078D4">
 </p>
 <p align="center"><a href="https://github.com/kreeeeeel/boltunya/releases/latest">Download for Windows</a> · <a href="docs/ru.md">Русская документация</a> · <a href="#development">Development</a></p>
 
-Aigram is a Windows desktop application for reading Telegram conversations and managing a personal AI assistant. Choose who it can reply to, shape its tone, and let local or API-connected models use conversation history and long-term memory. You can also write replies yourself and look up current information without a paid search API.
+Aigram is a Windows desktop assistant for Telegram. Read conversations, prepare editable AI replies, choose a writing style for each chat, and keep useful facts in a local memory bank. Use an installed Ollama model or an API connection you configure. Local speech can transcribe voice notes and turn exact text or an AI draft into a native Telegram voice message.
 
-![Telegram workspace in the light theme](docs/resources/readme-chat-light.png)
+![English conversation view in the light theme](docs/resources/en/chats-light.png)
 
-*Screenshots use synthetic conversations and illustrative data. No personal Telegram history is included.*
+*These six screenshots use the English interface and synthetic conversations. The [Russian guide](docs/ru.md) has its own Russian screenshots. No private Telegram history is included.*
+
+<table>
+  <tr><td><img src="docs/resources/en/chats-dark.png" alt="English conversation view in the dark theme"></td><td><img src="docs/resources/en/models.png" alt="English AI model catalog"></td></tr>
+  <tr><td><img src="docs/resources/en/speech-library.png" alt="English speech model catalog"></td><td><img src="docs/resources/en/chat-voice.png" alt="English per-chat voice settings"></td></tr>
+  <tr><td colspan="2"><img src="docs/resources/en/manual-voice.png" alt="English voice message composition"></td></tr>
+</table>
 
 ## What it does
 
-- **A familiar conversation view.** Avatars, formatted text, clickable links, replies, photos, video, audio, documents, spoilers and static/animated stickers. Group messages show author photos and names, with consecutive messages grouped by sender. The selected conversation's wallpaper spans the workspace behind opaque panels and floating navigation. History loads as you scroll without losing your position.
-- **An explicit tone per conversation.** The selected built-in or named custom style is a separate system instruction. Optional adaptation uses only real outgoing messages and cannot replace that style. Known AI replies are excluded.
-- **Local models with a useful catalog.** Search downloadable models across Qwen, Gemma, DeepSeek, GPT-OSS, Llama, Mistral and Phi. Compare memory estimates, context, reasoning, license and download size; measure speed on your own machine. Install Ollama and models from the application with progress feedback.
-- **Explicit compute selection.** Choose automatic placement, CPU or a detected NVIDIA GPU for app-managed Ollama. External services remain under their own configuration; AMD and Intel use Ollama's automatic selection. [Device settings](docs/ai/gpu-en.md).
-- **Current information, naturally phrased.** Keyless search, Open-Meteo weather, dated news and official exchange rates. Short follow-ups retain the previous topic. Replies are instructed to preserve significant digits and dates while matching your style; links are limited to retrieved sources and follow your preferences.
-- **A memory bank you control.** Shared owner facts and habits, per-chat summaries, editable notes, incremental collection and manual deep rebuilds. Source batches and reply memory adapt to the model's token budget; progress, queue state and cancellation stay visible.
-- **Opt-in conversation support.** Choose an AI-written or exact predefined idle message and a delay per chat; review enabled conversations in settings. Initiatives use the shared queue and wait for a real response before sending another. [How it works](docs/ai/conversation-support-en.md).
-- **Optional AI formatting.** Enable native bold, italic, spoilers, code and links. Generated drafts remain editable and retain formatting in attachment captions. [Reply formatting](docs/messages/en.md#optional-ai-reply-formatting).
-- **Local voice replies.** Transcribe eligible voice notes from both participants in selected reply history and memory batches with Whisper. Choose from 63 downloadable voices across 39 languages, including compatible GLaDOS/Portal voices. Search the speech library by language, test entered text and import compatible packages. Compose exact spoken text with the microphone button; automatic text/voice preferences live under Replies. Speech shares the reply queue and starts disabled. [Setup and limits](docs/speech/en.md), [verified catalog](docs/speech/catalog-en.md).
-- **One controllable queue.** Automatic replies, manual drafts and memory collection share a queue. Keep processing sequential or allow up to four concurrent tasks, with resource guidance, cancellation and priorities. Choose whether new messages restart the current answer, follow it as one combined task or receive separate sequential replies, globally or per chat. Delivery to each conversation remains ordered. Group automation starts disabled.
-- **A visible reply queue.** Pause dispatch, prioritize or stop tasks, inspect prompts, streamed thinking, responses and token/timing metrics, and rate completed replies with an optional comment. Full traces persist locally and load in pages across restarts. [Queue and trace details](docs/activity/en.md).
-- **Built-in troubleshooting.** The Errors page groups failures into cards with a timestamp, occurrence count, explanation and recovery steps. Detail dialogs show safe technical metadata, without copying conversation text or credentials into the error log.
-- **A proper desktop shell.** A draggable title bar, maximize within the Windows work area, compact tray menu, optional startup in the tray, and separate startup/resume preferences. Resource charts show application and system activity.
-- **A settings center.** Grouped sidebar navigation, saved model connections, task routing, memory, owner instructions, local storage and a recoverable appearance editor with scoped custom CSS. English, Russian, Kazakh and Ukrainian; light/dark themes and bundled Noto Sans typography.
-- **Media and context controls.** Send photos, albums, documents and voice notes; browse photos and video in a separate viewer. Exclude a message or a range from AI context. Delete Telegram messages with an explicit scope while retaining a marked local archive copy. Optional image analysis supplies the latest photograph or album to the visual model.
-- **Edit your sent messages.** Change text and photo/video captions from the message menu. A visual editor preserves Telegram formatting, links and original custom entities; a revision check protects changes made in another client. Saving updates the message in place and keeps the editor open. [Editing details](docs/messages/en.md).
+- **Read Telegram conversations.** Search chats, view group authors and reply threads, and read native formatting, spoilers, links and received media. History loads gradually while preserving your scroll position.
+- **Prepare and control replies.** The conversation assistant offers AI text drafts and voice drafts. Edit a generated text draft before sending, or write exact text in the voice composition dialog.
+- **Choose a tone per chat.** Built-in and named custom styles remain separate from factual memory. Optional writing-style adaptation uses real outgoing messages and excludes known AI replies. Edit your own Telegram text and photo/video captions while preserving their existing formatting.
+- **Choose local or connected models.** Browse Ollama models, compare context and memory estimates, install missing models with visible progress and cancellation, and benchmark installed models. Saved API connections can serve replies, memory or image analysis. App-managed Ollama has explicit CPU/GPU controls; external services retain their own configuration.
+- **Use local speech.** The dedicated catalog offers Russian/English voices, recognition models and optional engines. Cards show format, dependencies, total download size and source. Test a voice in a separate dialog. Sherpa/Piper handles local synthesis; compatible character packs use the optional Applio/RVC dependency. Per-chat voice settings inherit global preferences or override them. [Speech setup](docs/speech/en.md) · [Catalog and provenance](docs/speech/catalog-en.md).
+- **Keep factual memory.** Shared owner facts, per-chat summaries and editable notes stay in local files. Automatic collection follows the configured interval; explicit collection and deep rebuild remain available. Source batches adapt to the model's token budget, with visible progress and cancellation. [Memory details](docs/memory/en.md).
+- **Support a conversation when asked.** Opt in to an AI-written or exact predefined message after a chosen idle period. The assistant waits for a real response before another initiative. New incoming messages can replace an active reply, follow it as a combined task, or receive separate sequential replies. [Conversation support](docs/ai/conversation-support-en.md).
+- **Inspect the shared queue.** Replies, drafts, speech and memory share a controllable queue. Pause, prioritize or cancel work; inspect model input, available thinking, final output and timing/token metrics. Completed replies support local ratings and comments.
+- **Manage a desktop application.** Use the tray, separate Windows-startup and AI-resume preferences, a draggable title bar, error cards and storage folders that open in Explorer. The download center shows engine/model transfers, progress, speed and cancellation. Settings have grouped navigation, compact controls, four languages and built-in light/dark themes. Golos Text is bundled locally.
 
-The chat list uses two-line previews and a small AI badge on enabled conversations' avatars. Press **Esc** to close the current chat; an open dialog is dismissed first. Telegram chat-specific and default light/dark wallpapers are supported when TDLib provides them. Conversation backgrounds appear only while a chat is open on the Chats page. The default conversation background is plain and follows the application theme; unavailable images also use this neutral background.
-
-<table>
-  <tr><td><img src="docs/resources/speech-library-dark.png" alt="Searchable catalog of 63 local voices"></td><td><img src="docs/resources/manual-voice-dark.png" alt="Compose exact text as a voice message"></td></tr>
-  <tr><td><img src="docs/resources/voice-draft-dark.png" alt="AI voice draft with an editable transcript"></td><td><img src="docs/resources/outgoing-voice-dark-1440.png" alt="Native outgoing voice message with compact metadata"></td></tr>
-  <tr><td><img src="docs/resources/reply-controls-rich-draft-dark.png" alt="Editable AI reply with native Telegram formatting"></td><td><img src="docs/resources/reply-controls-proactive-chats-dark.png" alt="Configured idle-message conversations"></td></tr>
-  <tr><td><img src="docs/resources/readme-chat-dark.png" alt="Dark conversation view"></td><td><img src="docs/resources/readme-models.png" alt="Searchable model comparison catalog"></td></tr>
-  <tr><td><img src="docs/resources/errors.png" alt="Grouped application errors"></td><td><img src="docs/resources/error-details.png" alt="Error details and recovery steps"></td></tr>
-  <tr><td><img src="docs/resources/memory-formatted.png" alt="Formatted memory bank"></td><td><img src="docs/resources/storage-locations.png" alt="Storage locations with Explorer actions"></td></tr>
-  <tr><td><img src="docs/resources/settings-center.png" alt="Unified settings navigation"></td><td><img src="docs/resources/model-connections.png" alt="Configurable model connections"></td></tr>
-  <tr><td><img src="docs/resources/appearance-editor.png" alt="Workspace theme editor"></td><td><img src="docs/resources/parallel-tasks.png" alt="Shared inference queue limits"></td></tr>
-  <tr><td><img src="docs/resources/history-dark.png" alt="Persistent event history"></td><td><img src="docs/resources/settings-language-light.png" alt="Language selection with native names"></td></tr>
-  <tr><td><img src="docs/resources/model-connections-empty-dark.png" alt="Adding the first model connection"></td><td><img src="docs/resources/settings-memory-dark.png" alt="Shared memory with compact actions"></td></tr>
-</table>
+The AI badge appears on enabled contacts' avatars. **Esc** closes the current conversation after dismissing any open dialog. Chat wallpapers appear only while that conversation is open, with a neutral theme background when an image is unavailable.
 
 ## Get started
 
-Conversation prompts follow the selected tone and owner instructions. They do not inject a shared disagreement or refusal template. Individual models can still have their own response policies.
+1. **Download Windows x64.** Get **Aigram.exe** from [Releases](https://github.com/kreeeeeel/boltunya/releases/latest). The portable package includes Electron, the Kotlin backend, a Java runtime and the web interface. Java and Node.js do not need a separate installation. TDLib may require the [Microsoft Visual C++ x64 runtime](https://aka.ms/vs/17/release/vc_redist.x64.exe).
+2. **Connect Telegram.** Obtain your own API ID and API Hash at [my.telegram.org/apps](https://my.telegram.org/apps), then enter your phone number, login code and two-step password when requested.
+3. **Choose a model.** Existing local Ollama installations and complete models are detected. Open **AI models** to install additional models or configure an API connection in settings. Model weights and optional speech engines are separate downloads; inspect their size before starting.
+4. **Configure a chat.** Set its tone, context and reply preferences. Automatic sending and voice features are optional. Starting AI displays model warmup while it prepares an installed model.
 
-**Windows x64** is supported. Download **Aigram.exe** from [Releases](https://github.com/kreeeeeel/boltunya/releases/latest) and open it. The portable EXE includes Electron, the Kotlin application, a Java runtime and the static web interface. A separate Java or Node.js installation is not needed to run it. Ollama and model weights are additional downloads managed from the model page. TDLib may require the [Microsoft Visual C++ x64 runtime](https://aka.ms/vs/17/release/vc_redist.x64.exe).
-
-1. **Connect Telegram.** Obtain your own API ID and API Hash at [my.telegram.org/apps](https://my.telegram.org/apps), then follow the sign-in form. In-app guidance explains these fields, the login code and two-step verification.
-2. **Choose a model.** Open **AI models**. Existing Ollama installations and downloaded models are detected automatically; complete local models are recognized even while the server is stopped. Install Ollama only if it is missing, then download any additional model you want. Speed and memory labels are estimates; the benchmark measures actual local performance.
-3. **Configure a conversation.** Open its conversation settings, enable replies and choose a model, tone, context and writing-style adaptation. Review global instructions in **Settings → Replies**. Configure API connections in **Settings → Models** if needed.
-4. **Start AI.** Use the title-bar control, or enable **Enable AI when the app starts** in settings. This applies to both ordinary launches and Windows startup. Starting with Windows keeps the window hidden in the tray until you open it.
-
-Saving settings keeps the dialog open. The save button briefly displays a success icon and **Saved**, then returns to its usual state. Further edits clear the confirmation. All Telegram history entries use the model's `user` role with a JSON envelope containing username, name, message, timestamp and reliable author metadata. Owner messages and known AI replies remain distinguishable; system instructions explain the format and require a plain final reply without transport metadata. Refreshing the latest history page replaces Telegram's temporary send identifiers while retaining older pages and deliberately repeated messages.
-
-While an automatic reply is queued or generated, the open conversation displays the same process block as Events: the current phase, available streamed thinking, elapsed time and a stop action. Stopping is disabled once delivery has started.
-
-Screenshots: [reply progress](docs/resources/chat-generation.png) · [saved settings](docs/resources/settings-saved.png).
-
-Cancelling a manual draft keeps your unfinished text and offers a retry through the same queue. Failures use a single dismissible notice in the conversation. App-managed Ollama can be restarted from its card after a compute-device change; external services stay under their owner's control. Screenshots: [draft cancellation](docs/resources/draft-cancelled-light.png) · [model restart feedback](docs/resources/engine-restart-dark.png).
-
-Chat controls: [message context menu](docs/resources/message-menu-left-dark.png) · [task model filters](docs/resources/task-models-dark.png) · [local task routing](docs/resources/task-routing-dark.png). The composer provides attachments and manual voice composition; received Telegram stickers continue to display normally.
-
-Use the profile menu to open the settings center or sign out. Language, appearance, custom styles, shared memory and owner instructions have dedicated settings sections. Conversation settings contain memory collection and per-chat preferences. Memory summaries render Markdown, including headings, lists and emphasis. Photos, other media and deleted-message snapshots have cache and retention controls. The storage section lists actual data locations and opens available folders in Windows Explorer; external Ollama services are identified separately.
+Saving settings keeps the dialog open and briefly changes the button to **Saved**. The conversation assistant keeps AI text and voice drafts under your control before manual delivery. Model behavior varies; review drafts and choose the conversations where automation is appropriate.
 
 ## Data and privacy
 
-Local inference runs through Ollama. Configuring and selecting an API connection sends the context required for that task to the endpoint you choose; this can include conversation messages, memory and explicitly enabled images. Provider requests can incur charges. API keys are protected with Windows DPAPI, bound to their saved endpoint and never returned to the web interface. Telegram connectivity uses TDLib. When web search is enabled, external services receive a short generated query; weather services receive a city. The application does not send entire conversations or Telegram credentials to search providers. Exa MCP is an **optional** fallback with your own key; the default search path needs no key.
+The profile lives under `%LOCALAPPDATA%\Aigram`, including Electron data in `desktop/browser`. A normal launch can safely copy an existing legacy Tiho profile, verify it and switch directories atomically; original folders remain for recovery. Migration waits for the previous application to close and is deferred during an active legacy update handoff. Explicit data-directory overrides retain their behavior. [Storage and migration](docs/storage/en.md).
 
-The persistent profile is `%LOCALAPPDATA%\Aigram`, including the Electron profile under `desktop/browser`. On a normal launch, the application safely copies an existing Tiho profile and its selected Electron profile, verifies the copy and switches directories atomically. The original folders remain as a recovery backup; new writes use Aigram. Migration waits until the old application is closed and is deferred during an active legacy update handoff. Explicit data-directory environment overrides retain their existing behavior. See [profile migration](docs/storage/en.md#profile-migration).
-
-| Location | Purpose |
+| Location | Contents |
 | --- | --- |
-| `settings.json` | Preferences, conversation rules and instructions |
-| `models/prompts.json` | Per-model instructions, local working context and token estimate preferences |
-| `activity/` | Account-scoped event archive, trace details and storage policy |
-| `models/profiles.json`, `models/credentials/` | Model connection metadata and DPAPI-protected secrets |
-| `appearance.json` | Theme tokens and validated workspace CSS |
-| `automation/initiatives.json` | Account-scoped follow-up delivery checkpoints; no message text |
-| `context-exclusions/` | Account-scoped AI context exclusions |
-| `telegram.credentials` | API credentials protected by Windows DPAPI |
-| `telegram/` | TDLib session database and downloaded media |
-| `memory/MEMORY.md`, `memory/<account-id>/<chat-id>/MEMORY.md` | Shared and conversation memory with editable notes |
-| `memory/<account-id>/PROFILE.md`, `state.json` | Account-specific automatic owner profile and collection cursors |
-| `history/`, `automated-replies.json` | Observed message snapshots and known AI message IDs |
-| `engine/` | App-managed Ollama runtime |
-| `diagnostics/` | Bounded technical error history |
-| `feedback/activity.json` | Local response ratings and optional comments |
-| `desktop/updates/` | Verified update downloads and installer state |
-| `desktop/browser/` | Electron preferences, browser storage and cache |
+| `settings.json` | Preferences, chat rules and owner instructions |
+| `models/` | Saved connections, protected credentials and per-model prompts |
+| `memory/` | Factual summaries, owner profile, collection state and manual notes |
+| `telegram/`, `history/` | Telegram session, media and observed local message snapshots |
+| `speech/` | Optional speech runtimes, installed models and generated local audio |
+| `activity/`, `feedback/`, `diagnostics/` | Task traces, ratings and bounded technical errors |
+| `desktop/updates/`, `desktop/browser/` | Update handoff state and Electron storage |
 
-Native Ollama model weights usually live in `%USERPROFILE%\.ollama\models`, or the location set by `OLLAMA_MODELS`. A separate service or container can use a different directory. The application's storage panel distinguishes these cases instead of inventing a local path for a remote service.
+Native Ollama weights normally live in `%USERPROFILE%\.ollama\models` or `OLLAMA_MODELS`. External services and containers may use another location; the storage panel distinguishes these cases. Telegram credentials and model API keys use Windows DPAPI. Login codes and Telegram two-step passwords are not persisted by the application.
 
-Login codes and Telegram two-step passwords are not persisted by the application. Local memory and message snapshots contain private information; the profile, credentials, build outputs and local logs are excluded from Git. Deleted messages can only be retained if the application observed them beforehand. Clearing downloaded media does not sign you out or remove your settings and memory.
-
-Full exit stops the application-managed Ollama process. An independently managed Ollama server is left running. Closing to the tray keeps the application active according to your settings.
-
-## Project structure
-
-| Directory | Responsibility |
-| --- | --- |
-| `desktop/` | Electron window, isolated preload, native lifecycle, tray and startup |
-| `backend/` | Kotlin/JVM, Spring Boot, TDLib, automation, search, memory and local API |
-| `backend/contract/` | Split OpenAPI source, generated Spring interfaces/DTOs, Kotlin and TypeScript HTTP clients |
-| `web/` | TypeScript, React, Next.js static export, Gravity UI and generated API types |
-| `.github/workflows/` | Windows checks, portable packaging and GitHub Releases |
-| `docker/` | Development/checking containers; not the signed-in desktop application |
-| `scripts/` | Windows build, icons and browser verification |
-| `docs/` | English/Russian feature documentation and synthetic screenshots |
-| `complie/` | Generated EXE and SHA-256 checksum; intentionally ignored by Git |
-
-The Kotlin package is `ru.aigram`. Prompts, literal language vocabularies, errors and model metadata live in backend resources. The single OpenAPI source is `backend/contract/api/schema/api.yaml`, with feature operations and individual model/enum files. Gradle validates and bundles it before generating Spring interfaces/DTOs, a Kotlin WebClient SDK and an installable TypeScript HTTP SDK. Generated files remain under each module's `build/` directory. The local servlet API implements these generated interfaces through feature controllers, components and stateless DTO extension functions. Domain models are grouped under chat, media, memory, AI, settings, events and system packages. Spring uses implicit constructor injection and `ObjectProvider` for lazy dependencies. Frontend production requests now call the generated feature operations from `@aigram/api-client`; the workspace alias points to the canonical generated SDK source. The old `openapi-fetch` transport, `openapi-typescript` generator and handwritten schema bridge are removed. See [client modules and usage](docs/api-client/en.md). The local API uses a private loopback session and Host/Origin checks. The renderer has no Node.js access.
-
-Spring AI's Ollama and OpenAI adapters provide typed requests, structured responses, separate thinking output and inference statistics. Saved connections and optional task routes choose an installed local model or API connection separately for replies, memory, research and vision. See [task routing and image analysis](docs/ai/tasks-en.md). Local tasks share a resource gate, while independent endpoints can run concurrently within the queue limit. `ConversationService` coordinates search and final replies; `ChatCompletionService` owns inference, and `OllamaRuntime` owns local model management. Spring AI `ChatMemory` builds the recent conversation window; the Markdown memory bank retains long-term summaries and owner facts. Spring Boot wires these services through constructor injection and functional integration configurations. Spring MVC controllers implement the generated OpenAPI interfaces; typed components and extension mappings keep transport DTOs separate from feature domain models. See the [migration checkpoint](docs/migration/en.md). See [AI architecture](docs/ai/en.md).
-
-Prompt settings show the selected model’s working context, reserved output budget and estimated space remaining for history. Independent instructions can be saved per model and connection. Oversized mandatory context fails explicitly without silently losing the latest question. [Token budgets and model prompts](docs/ai/prompts-en.md).
-
-Conversations follow the global model selection by default; an explicit per-chat override remains available. Speed measurements persist across restarts and run automatically when you select an unmeasured installed model. Downloads use an inline progress button with cancellation.
+Selecting an API model sends the required task context to that configured endpoint and may incur provider charges. Local memory and task traces can contain private conversations: do not share the profile or trace details indiscriminately. Clearing downloaded media preserves sign-in, settings and memory. Full exit stops app-managed Ollama and leaves independently managed services running.
 
 ## Development
 
@@ -145,78 +81,50 @@ npm.cmd run test:smoke --prefix desktop
 npm.cmd run test:updater --prefix desktop
 ```
 
-The build runs Kotlin, frontend and Electron checks, exports the web interface, creates a minimal Java runtime and writes `complie/Aigram.exe` plus `SHA256.txt`. Browser tests serve the static export on a temporary local port. Native smoke tests use an isolated data directory and do not sign in to Telegram.
+The build generates the canonical API client, checks Kotlin/frontend/Electron sources, exports the web interface and packages `complie/Aigram.exe` with `SHA256.txt`. Browser and native smoke tests use synthetic or isolated profiles. They do not sign in to Telegram.
 
-The native update regressions cover helper startup failure, a replacement that starts then crashes, healthy startup confirmation and rollback. For a staging build, pass `-OutputDirectory complie/.staging -SkipShortcut`. Native smoke tests accept `AIGRAM_TEST_EXECUTABLE` (or its legacy alias `BOLTUNYA_TEST_EXECUTABLE`) to select the staging package's unpacked executable. CI skips local shortcut creation and publishes only after validation.
+| Directory | Responsibility |
+| --- | --- |
+| `desktop/` | Electron shell, preload, updater, tray and Windows startup |
+| `backend/` | Kotlin, Spring Boot/MVC, Spring AI, TDLib, speech, memory and task scheduling |
+| `backend/contract/` | Canonical OpenAPI source and generated server/Kotlin/TypeScript clients |
+| `web/` | React, Next.js static export, Gravity UI and the generated API SDK |
+| `scripts/`, `.github/workflows/` | Checks, packaging and release automation |
+| `docs/` | English/Russian documentation and synthetic screenshots |
 
-For targeted checks:
+Spring MVC controllers implement generated interfaces. Feature components own business operations; extension functions map domain values to transport DTOs. The frontend calls generated operations from `@aigram/api-client`. Runtime settings and memory remain local JSON/Markdown files. [Architecture](docs/architecture/en.md) · [API clients](docs/api-client/en.md) · [Migration checkpoint](docs/migration/en.md).
 
-The Windows script generates the canonical TypeScript SDK before npm checks. For standalone web commands, first run `./gradlew.bat :backend:contract:client:typescript:generateClient --no-daemon`; `sdk:check` reports missing output instead of maintaining a separate frontend schema. Docker generates the same client in a JDK build stage.
+Standalone web checks require generated SDK output:
 
 ```powershell
-$env:JAVA_TOOL_OPTIONS='-Djdk.net.unixdomain.tmpdir=C:/tiho-no-unix-sockets'
-./gradlew.bat check --no-daemon
+./gradlew.bat :backend:contract:client:typescript:generateClient --no-daemon
 npm.cmd run check --prefix web
-npm.cmd run check --prefix desktop
+./gradlew.bat check --no-daemon
 ```
 
-Optional live research tests require a running Ollama server with **gemma3:4b** already installed and internet access. They use synthetic questions about weather, news, currencies and follow-ups; they neither download models nor send Telegram messages.
+After a testing web build is running, refresh the localized documentation gallery with synthetic data:
 
 ```powershell
-$env:TIHO_LIVE_INTERNET='true'
-./gradlew.bat :backend:test --tests 'ru.aigram.ai.Live*' --no-daemon
+$env:TIHO_TEST_URL='http://127.0.0.1:3100'
+Push-Location web
+npm.cmd exec -- playwright test docs-screenshots.spec.ts --reporter=list
+Pop-Location
 ```
 
-To check conversation quality on **every installed model**, use the separate 20-scenario matrix. It exercises real local inference with synthetic conversations and deterministic weather/news/rate fixtures, including topic follow-ups, owner-style samples, six conversation tones, reasoning separation and complete final answers. It does not install missing catalog models. Reports are written to `backend/build/reports/model-quality.json` after each case.
+The scenario writes six screenshots per language under `docs/resources/en/` and `docs/resources/ru/`; it makes no real Telegram or model requests. [Docker tooling](docker/README.md) describes static frontend and JVM checking environments.
 
-```powershell
-$env:TIHO_LIVE_AI='true'
-./gradlew.bat :backend:test --tests 'ru.aigram.ai.LiveModelQualityTest' --no-daemon
-```
+## Releases and troubleshooting
 
-The current `qwen3:4b` tag requires thinking and is listed separately from its instruct variant. Reasoning stays in its own channel. Empty or provider-truncated responses fail explicitly; ordinary repeated phrases and writing style are not classified with handwritten regular expressions. A bounded correction is reserved for exact facts retrieved by search. Memory supplies confirmed owner facts, relationships and arrangements, rather than writing instructions. Optional observations of manual outgoing messages remain separate from memory and subordinate to the selected tone. The optional “Ignore assistant tasks” setting skips requests such as recipes before automatic generation; manual previews can still test them.
+The **Windows release** workflow checks sources, packages the portable application and runs browser/native regressions before publishing **Aigram.exe** and **SHA256.txt**. A byte-identical **Boltunya.exe** alias supports updates from older installations. The latest release link identifies the published version; screenshots and source documentation do not establish that an unpublished build has passed release checks.
 
-Active streaming generation has no three-minute total deadline. An inference stream fails after ten minutes without a new chunk; thinking chunks count as progress. Tasks can still be stopped from the queue. Response ratings are local feedback, not automatic model training.
+Packaged launches check stable GitHub Releases in a small startup window. Downloads are verified against the published SHA-256. The helper acknowledges readiness before the old process exits, and the replacement must confirm backend/UI startup before its backup is removed. Failure keeps or restores the previous version. Windows startup follows the same check and then leaves the application in the tray. No GitHub token is required.
 
-Models that fail the application's automation checks are labelled **Drafts only**. In this release, `qwen3:0.6b` is restricted after a harmful-request test failure: it can be downloaded, selected while AI is paused and used for manual previews, while automatic sending is rejected. The application keeps the model you selected. Explicit requests to recall earlier facts allow those facts to be repeated. You can exclude individual messages or ranges from future model context using the message context menu. This also rebuilds affected automatic memory while preserving manual notes. The original conversation remains visible.
-
-Recorded model results and the complete synthetic outputs are available in the [installed-model quality report](docs/ai/model-quality-2026-10-16.md). It includes failures and manual review findings; passing the automated checks does not certify a model for every conversation.
-
-The [20 October follow-up](docs/ai/model-quality-2026-10-20.md) verifies final/thinking separation on the currently installed R1 and GPT-OSS models and records the remaining tone-compliance failures.
-
-The [21 October focused check](docs/ai/model-quality-2026-10-21.md) verifies factual recall and business wording with the new memory/style separation. It also records R1's failure to start streaming and GPT-OSS's remaining rough-style failure.
-
-See [Docker tooling](docker/README.md) for a static frontend preview and JVM checks. The Telegram desktop session and Windows DPAPI remain native.
-
-## Releases
-
-Every push to `main`, or a manual **Windows release** run, checks and builds the application on GitHub Actions. It then runs browser and native Electron tests before publishing **Aigram.exe** and **SHA256.txt** to [Releases](https://github.com/kreeeeeel/boltunya/releases). Release versions use the source major/minor and the workflow run number; each version has a separate portable extraction directory.
-
-Releases also contain a byte-identical `Boltunya.exe` compatibility alias, with both filenames listed in `SHA256.txt`, so existing installations can update to Aigram. Telegram sessions, memory and settings stay in their existing profile.
-
-The repository and releases are public. Packaged launches check the latest stable GitHub release in a small, draggable startup window. A newer portable EXE is downloaded, verified against its published SHA-256 and installed before the application starts. The installer must acknowledge readiness before the old process exits. The replacement must finish backend and interface startup before its backup is removed; failed startup rolls back and reopens the previous version. Network or verification failures leave the installed version available. Windows startup follows the same updater flow, then keeps the main application in the tray. No GitHub key is required.
-
-If an older version downloaded an update, closed and never reopened, download and launch the current `Aigram.exe` once manually. Older helpers that fail before executing cannot install their own fix; subsequent updates use the acknowledged handoff and startup rollback protocol.
-
-<p align="center"><img src="docs/resources/updater.png" width="340" alt="Frameless startup updater with download progress"></p>
-
-To verify a manual download:
-
-```powershell
-Get-FileHash -Algorithm SHA256 -LiteralPath '.\Aigram.exe'
-Get-Content -LiteralPath '.\SHA256.txt'
-```
-
-## Further documentation
-
-If AI does not respond on another computer, first open **Errors** and inspect the latest card's explanation and recovery steps. For a separate support report, download **Diagnose-AI.ps1** from the release, leave Aigram open and run it in PowerShell:
+If an old updater closed the app without reopening it, launch a freshly downloaded `Aigram.exe` once manually. For other failures, open **Errors** and inspect the recovery instructions. The release's **Diagnose-AI.ps1** can produce a bounded support report while Aigram is open:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Diagnose-AI.ps1 -TestModel
 ```
 
-The report `aigram-diagnostics.json` is written to the Desktop. It contains runtime/model availability, RAM/GPU metadata, automation settings and structured generation status. The optional `-TestModel` runs a synthetic preview without sending a Telegram message. Without this flag, no generation runs. Chats, contact identifiers, API credentials, prompts, generated text and raw logs are excluded. Share the report together with the error text visible in **Events**; event details themselves can contain private conversations. See the [diagnostic guide](docs/diagnostics/ru.md) for interpreting results.
+The optional model test uses a synthetic prompt and sends no Telegram message. [Diagnostic guide](docs/diagnostics/ru.md) · [Settings](docs/settings/en.md) · [Speech](docs/speech/en.md) · [Memory](docs/memory/en.md).
 
-[Russian guide](docs/ru.md) · [Settings](docs/settings/en.md) · [Model connections](docs/ai/providers-en.md) · [Context controls](docs/conversation/en.md) · [Architecture](docs/architecture/en.md) · [Dependency injection](docs/dependency-injection/en.md) · [Memory bank](docs/memory/en.md) · [Web search](docs/internet/en.md) · [Storage and cache](docs/storage/en.md)
-
-See [NOTICE.md](NOTICE.md) for third-party licenses and data sources. Noto Sans is bundled under the [SIL Open Font License](web/src/shared/assets/fonts/OFL.txt). Model licenses remain specific to each model. Aigram is an independent application and is not affiliated with Telegram.
+See [NOTICE.md](NOTICE.md) for third-party notices and model provenance. Golos Text uses the [SIL Open Font License](web/src/shared/assets/fonts/OFL-GolosText.txt). Model and optional runtime licenses differ. Aigram is independent and is not affiliated with Telegram or the owners of character voices.

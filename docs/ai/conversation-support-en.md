@@ -15,5 +15,3 @@ Before sending, Aigram checks that the account, conversation anchor and settings
 Generation failures or cancellations before delivery wait another configured interval rather than retrying every scheduler tick. An uncertain delivery result is never automatically retried, since Telegram may already have accepted the message. A restart begins a fresh observation interval while retaining the successful-delivery gate. This is an opt-in idle follow-up mechanism, not a scheduled broadcast or a guarantee of immediate delivery.
 
 Local API settings: `proactiveEnabled` and `proactiveIntervalMinutes`; chat rules: `proactiveMode` (`inherit`, `disabled`, `enabled`), `proactiveIntervalMinutes` (`0` inherits the global interval), `proactiveMessageMode` (`ai` or `text`, default `ai`) and `proactiveText`. Existing saved rules retain their AI mode and opt-in state.
-
-![Per-chat idle message settings](../resources/reply-controls-per-chat-light.png)

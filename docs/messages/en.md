@@ -1,6 +1,5 @@
 # Editing sent messages
 
-![Visual editor with preserved formatting, using synthetic text](../resources/message-edit-dark.png)
 
 Open the context menu on your own text, photo or video and choose **Edit**. Telegram decides whether the message is still editable; Aigram checks that permission when opening the editor and again when saving. Received and deleted messages cannot be edited.
 
