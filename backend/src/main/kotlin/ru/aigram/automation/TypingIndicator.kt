@@ -42,8 +42,9 @@ class TypingIndicator(private val telegram: TelegramGateway) : AutoCloseable {
         }
     }
 
+    @Synchronized
     fun cancelAll() {
-        active.keys.toList().stream().forEach(::cancel)
+        active.keys.stream().forEach(::cancel)
     }
 
     fun stop(chatId: String, task: ScheduledFuture<*>?) {
