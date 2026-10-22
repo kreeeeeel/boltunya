@@ -1,4 +1,4 @@
-import {Box, Button, Flex, Icon, Label, Loader, Skeleton, Text, TextInput} from '@gravity-ui/uikit';
+import {Box, Button, Flex, Icon, Label, Loader, Skeleton, Switch, Text, TextInput} from '@gravity-ui/uikit';
 import {
     Check,
     ArrowDownToLine,
@@ -36,6 +36,7 @@ export function ModelsPanel({
     const [error, setError] = useState('');
     const [search, setSearch] = useState('');
     const [category, setCategory] = useState('all');
+    const [installedOnly, setInstalledOnly] = useState(false);
     const [measurements, setMeasurements] = useState<Record<string, Reply>>({});
     async function measure(model: string) {
         const reply = await api.models.preview({
@@ -47,7 +48,6 @@ export function ModelsPanel({
                     useDefaultModel: false,
                     style: 'concise',
                     maxTokens: 64,
-                    internetAccess: false,
                     useMemory: false,
                     matchMyStyle: false,
                 },
@@ -109,11 +109,12 @@ export function ModelsPanel({
                         justifyContent="space-between"
                         gap={3}
                     >
-                        <Skeleton className={styles.searchInput} height={40} />
+                        <Skeleton className={styles.searchInput} height={36} />
                         <Skeleton width={100} height={20} />
                     </Flex>
                     <Box className={styles.filters}>
-                        <Skeleton width={320} height={36} />
+                        <Skeleton className={styles.filterSkeleton} height={36} />
+                        <Skeleton width={160} height={20} />
                     </Box>
                     <Box className={styles.cards}>
                         {Array.from({length: 12}, (_, index) => (
@@ -163,6 +164,7 @@ export function ModelsPanel({
     const installingEngine = engine.downloading === 'Ollama';
     const models = engine.models.filter(
         (model) =>
+            (!installedOnly || model.installed) &&
             (category === 'all' || (category === 'vision' ? model.supportsVision : !model.supportsVision)) &&
             [model.id, model.name, model.description].some((value) =>
                 value.toLocaleLowerCase(locale).includes(query),
@@ -171,6 +173,7 @@ export function ModelsPanel({
     const enabledProfiles = connections.profiles.filter((profile) => profile.enabled);
     const profiles = enabledProfiles.filter(
         (profile) =>
+            !installedOnly &&
             (category === 'all' ||
                 (category === 'vision' ? profile.capabilities.vision : !profile.capabilities.vision)) &&
             [profile.name, profile.model].some((value) => value.toLocaleLowerCase(locale).includes(query)),
@@ -335,6 +338,7 @@ export function ModelsPanel({
                 </Flex>
                 <Box className={styles.filters}>
                     <SegmentedTabs
+                        view="panel"
                         label={t('modelFilters.label')}
                         value={category}
                         onUpdate={setCategory}
@@ -343,6 +347,9 @@ export function ModelsPanel({
                             label: t('modelFilters.' + value),
                         }))}
                     />
+                    <Switch checked={installedOnly} onUpdate={setInstalledOnly}>
+                        {t('modelFilters.installed')}
+                    </Switch>
                 </Box>
                 <ProfileModelCards
                     selected={defaultModelProfileId}
@@ -372,7 +379,7 @@ export function ModelsPanel({
                                 qa="model-card"
                                 data-model-id={model.id}
                                 gap={4}
-                                className={`${styles.card} ${model.recommended ? styles.recommended : ''} ${!defaultModelProfileId && defaultModel === model.id ? styles.selected : ''}`}
+                                className={`${styles.card} ${!defaultModelProfileId && defaultModel === model.id ? styles.selected : ''}`}
                             >
                                 <Flex alignItems="center" justifyContent="space-between" gap={2}>
                                     <Box className={styles.modelIcon}>

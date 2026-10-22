@@ -21,11 +21,9 @@ import {LanguageSettings} from '@/modules/settings/LanguageSettings/LanguageSett
 import {StylesEditor} from '@/modules/settings/StylesEditor/StylesEditor';
 import {MemorySettings} from '@/modules/settings/MemorySettings/MemorySettings';
 import {MemoryCollectionSettings} from '@/modules/settings/MemoryCollectionSettings/MemoryCollectionSettings';
-import {AppearanceSettings} from '@/modules/settings/AppearanceSettings/AppearanceSettings';
 import {ProviderProfiles} from '@/modules/settings/ProviderProfiles/ProviderProfiles';
 import {ModelRoutingSettings} from '@/modules/settings/ModelRoutingSettings/ModelRoutingSettings';
 import {CachePanel} from '@/modules/workspace/CachePanel/CachePanel';
-import {SearchConnectionPanel} from '@/modules/workspace/SearchConnectionPanel';
 import {StorageLocations} from '@/modules/storage/StorageLocations/StorageLocations';
 import {ComputeDevicePanel} from '@/modules/workspace/ComputeDevicePanel/ComputeDevicePanel';
 import styles from '@/modules/settings/SettingsCenter/SettingsCenter.module.css';
@@ -38,6 +36,7 @@ export function SettingsCenter({
     chats = [],
     telegramUserId,
     onConfigureChat,
+    onOpenSpeechLibrary,
 }: {
     readonly settings: AppState['settings'];
     readonly engine?: Engine;
@@ -47,6 +46,7 @@ export function SettingsCenter({
     readonly chats?: Chat[];
     readonly telegramUserId?: string;
     readonly onConfigureChat?: (chat: Chat) => void;
+    readonly onOpenSpeechLibrary?: () => void;
 }) {
     const t = useTranslations();
     const [section, setSection] = useState<SettingsSectionId>(initialSection);
@@ -123,9 +123,6 @@ export function SettingsCenter({
         if (id === 'memory') {
             return <MemorySettings />;
         }
-        if (id === 'appearance') {
-            return <AppearanceSettings />;
-        }
         if (id === 'providers') {
             return <ProviderProfiles onRefresh={onRefresh} />;
         }
@@ -153,7 +150,13 @@ export function SettingsCenter({
             >
                 {id === 'application' && <ApplicationSettings {...common} />}
                 {id === 'replies' && <ReplySettings {...common} />}
-                {id === 'voice' && <VoiceSettings {...common} />}
+                {id === 'voice' && (
+                    <VoiceSettings
+                        {...common}
+                        onOpenLibrary={onOpenSpeechLibrary}
+                        libraryDisabled={dirty || busy}
+                    />
+                )}
                 {id === 'proactive' && (
                     <ProactiveSettings
                         {...common}
@@ -188,7 +191,6 @@ export function SettingsCenter({
                 {id === 'media' && <MediaSettings {...common} />}
                 {id === 'collection' && <MemoryCollectionSettings {...common} />}
                 {id === 'language' && <LanguageSettings />}
-                {id === 'search' && <SearchConnectionPanel />}
                 {id === 'cache' && <CachePanel />}
                 {id === 'storage' && <StorageLocations />}
                 {error && id === section && (

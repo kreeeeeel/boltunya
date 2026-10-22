@@ -1,3 +1,4 @@
+import {initializeTestTheme, persistTestTheme} from '../fixtures/settings';
 import {expect, test} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
@@ -7,11 +8,14 @@ import ru from '../../src/shared/i18n/ru.json';
 import labels from '../../src/modules/media/i18n/ru.json';
 
 test.beforeEach(async ({page}) => {
+    await initializeTestTheme(page, true);
     const state = structuredClone(workspaceState);
     state.chats = [
         {
             ...state.chats[0],
             kind: 'group',
+            lastMessageOutgoing: true,
+            lastMessageRead: true,
             typingUsers: [
                 {id: '101', name: 'Анна', action: 'typing'},
                 {id: '102', name: 'Марк', action: 'typing'},
@@ -26,6 +30,7 @@ test.beforeEach(async ({page}) => {
         date: 1792064000 + id,
         kind: 'photo',
         senderName: 'Анна',
+        forwardedFrom: 'Synthetic origin',
         media: {
             fileId: id,
             mimeType: 'image/png',
@@ -43,14 +48,10 @@ test.beforeEach(async ({page}) => {
         const path = new URL(request.url()).pathname;
         if (path === '/api/state') {
             await route.fulfill({json: state});
-        } else if (path === '/api/appearance') {
-            await route.fulfill({json: {mode: 'dark', tokens: {}, css: ''}});
         } else if (path === '/api/model-profiles') {
             await route.fulfill({json: {profiles: [], presets: []}});
         } else if (path === '/api/chats/41/messages') {
             await route.fulfill({json: messages});
-        } else if (path === '/api/chats/41/gallery') {
-            await route.fulfill({json: {messages, hasMoreBefore: false, hasMoreAfter: false}});
         } else if (path.startsWith('/api/media/')) {
             await route.fulfill({
                 contentType: 'image/png',
@@ -106,26 +107,30 @@ test.beforeEach(async ({page}) => {
     await page.getByRole('button', {name: state.chats[0].title, exact: true}).click();
 });
 
-test('photo viewer supports navigation and zoom and Escape leaves the chat open', async ({page}) => {
-    await page.getByRole('button', {name: ru.openPhoto, exact: true}).first().click();
-    const viewer = page.getByRole('dialog', {name: labels.open, exact: true});
-    await expect(viewer).toBeVisible();
-    await viewer.getByRole('button', {name: labels.zoomIn, exact: true}).click();
-    await expect(viewer.getByRole('button', {name: labels.reset, exact: true})).toHaveText('150%');
-    await page.keyboard.press('ArrowRight');
-    await expect(viewer.getByText('Synthetic photo 2', {exact: true})).toBeVisible();
-    await page.keyboard.press('Escape');
-    await expect(viewer).not.toBeVisible();
+test('Telegram photos remain inline without opening a media viewer', async ({page}) => {
+    const photo = page.getByRole('img', {name: ru.photo, exact: true}).first();
+    await expect(photo).toBeVisible();
+    await photo.click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page.getByRole('button', {name: ru.openPhoto, exact: true})).toHaveCount(0);
     await expect(page.locator('[data-qa="conversation-header"]')).toBeVisible();
 });
 
-test('manual generation uses a queue card while keeping the composer visible', async ({page}) => {
+test('shows a real forward label and an outgoing read receipt from Telegram metadata', async ({page}) => {
+    await expect(page.locator('[data-qa="message-forwarded"]').first()).toHaveText(
+        ru.assistantBar.forwarded.replace('{name}', 'Synthetic origin'),
+    );
+    await expect(page.locator('[data-qa="message-forwarded"] a')).toHaveCount(0);
+    await expect(page.getByRole('img', {name: ru.assistantBar.messageRead, exact: true})).toBeVisible();
+});
+
+test('manual generation uses a queue card while the assistant bar stays visible', async ({page}) => {
     await page.getByRole('button', {name: ru.draft, exact: true}).click();
     await page.getByRole('menuitem', {name: ru.voice.generateText, exact: true}).click();
     await expect(page.locator('[data-qa="conversation-generation"]')).toBeVisible();
-    await expect(page.getByRole('textbox', {name: ru.messagePlaceholder, exact: true})).toBeVisible();
-    await expect(page.locator('[data-qa="message-composer"] .g-skeleton')).toHaveCount(0);
-    await expect(page.getByRole('textbox', {name: ru.messagePlaceholder, exact: true})).toHaveValue(
+    await expect(page.locator('[data-qa="conversation-assistant-bar"]')).toBeVisible();
+    await expect(page.getByRole('textbox', {name: ru.messagePlaceholder, exact: true})).toHaveCount(0);
+    await expect(page.getByRole('textbox', {name: ru.assistantBar.draftText, exact: true})).toHaveText(
         'Готовый черновик',
     );
 });
@@ -148,9 +153,7 @@ for (const dark of [false, true]) {
         page,
     }) => {
         let olderRequests = 0;
-        await page.route('**/api/appearance', (route) =>
-            route.fulfill({json: {mode: dark ? 'dark' : 'light', tokens: {}, css: ''}}),
-        );
+        await persistTestTheme(page, dark);
         const history: Message[] = Array.from({length: 30}, (_, index) => ({
             id: String(index + 1),
             chatId: '41',
@@ -230,29 +233,53 @@ for (const dark of [false, true]) {
         }
     });
 
-    test(`composer offers manual voice and attachment actions without emoji or sticker pickers in ${dark ? 'dark' : 'light'} theme`, async ({
+    test(`assistant bar exposes memory voice and AI actions without a manual text composer in ${dark ? 'dark' : 'light'} theme`, async ({
         page,
     }) => {
-        await page.route('**/api/appearance', (route) =>
-            route.fulfill({json: {mode: dark ? 'dark' : 'light', tokens: {}, css: ''}}),
-        );
+        await persistTestTheme(page, dark);
         await page.reload();
         await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
-        const input = page.getByRole('textbox', {name: ru.messagePlaceholder, exact: true});
-        await input.fill('Before selected after');
+        const bar = page.locator('[data-qa="conversation-assistant-bar"]');
+        await expect(bar).toContainText(ru.assistantBar.modelCaption);
+        await expect(bar.getByRole('button')).toHaveCount(3);
+        await expect(bar.getByRole('button', {name: ru.memory.openChat, exact: true})).toBeVisible();
+        await expect(bar.getByRole('button', {name: ru.voice.manualTitle, exact: true})).toBeVisible();
+        await expect(page.getByRole('textbox', {name: ru.messagePlaceholder, exact: true})).toHaveCount(0);
+        await expect(page.getByRole('button', {name: labels.attach, exact: true})).toHaveCount(0);
         await expect(page.getByRole('button', {name: ru.chooseEmoji, exact: true})).toHaveCount(0);
         await expect(page.getByRole('button', {name: labels.stickers, exact: true})).toHaveCount(0);
-        await expect(page.getByRole('button', {name: ru.voice.manualTitle, exact: true})).toBeVisible();
-        await expect(input).toHaveValue('Before selected after');
-        await page.getByRole('button', {name: labels.attach, exact: true}).click();
-        for (const name of ['Фотографии', 'Видео', labels.documents]) {
-            const icon = page.getByRole('menuitem', {name, exact: true}).locator('.g-menu__item-icon');
-            await expect(icon).toHaveCount(1);
-            await expect(icon.locator('svg').first()).toBeVisible();
+        const header = page.locator('[data-qa="conversation-header"]');
+        await expect(header.getByRole('button', {name: ru.memory.openChat, exact: true})).toHaveCount(0);
+        for (const width of [1440, 390]) {
+            await page.setViewportSize({width, height: 900});
+            if (width === 1440) {
+                const label = await bar.getByText(ru.assistantBar.modelCaption, {exact: true}).boundingBox();
+                const model = await bar.getByText('qwen3:1.7b', {exact: true}).boundingBox();
+                expect(Math.abs(label!.y + label!.height / 2 - model!.y - model!.height / 2)).toBeLessThan(1);
+                expect(model!.x - label!.x - label!.width).toBeGreaterThanOrEqual(7);
+            }
+            await expect
+                .poll(() =>
+                    bar.evaluate((element) => {
+                        const bounds = element.getBoundingClientRect();
+                        const buttons = Array.from(element.querySelectorAll('button'));
+                        const centers = buttons.map((button) => {
+                            const rect = button.getBoundingClientRect();
+                            return rect.top + rect.height / 2;
+                        });
+                        return (
+                            bounds.left >= 0 &&
+                            bounds.right <= innerWidth &&
+                            element.scrollWidth <= element.clientWidth &&
+                            Math.max(...centers) - Math.min(...centers) <= 1
+                        );
+                    }),
+                )
+                .toBe(true);
+            await page.screenshot({
+                path: `../docs/resources/chat-actions-${dark ? 'dark' : 'light'}-${width}.png`,
+                animations: 'disabled',
+            });
         }
-        await page.screenshot({
-            path: `../docs/resources/chat-actions-${dark ? 'dark' : 'light'}.png`,
-            animations: 'disabled',
-        });
     });
 }

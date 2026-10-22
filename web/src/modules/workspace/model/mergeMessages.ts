@@ -1,4 +1,5 @@
 import type {Message} from '@/shared/api/client';
+import {shareSnapshot} from '@/modules/workspace/model/shareSnapshot';
 
 export function mergeMessages(previous: Message[], current: Message[]): Message[] {
     const merged = new Map(previous.map((message) => [`${message.chatId}:${message.id}`, message]));
@@ -34,6 +35,19 @@ export function mergeRecentMessages(previous: Message[], current: Message[]): Me
     const oldest = current.reduce((left, right) =>
         compareIdentifiers(left.id, right.id) <= 0 ? left : right,
     );
+    // Unchanged polling should inspect only the latest page, not the paginated history.
+    const offset = previous.length - current.length;
+    const preceding = previous[offset - 1];
+    if (
+        offset >= 0 &&
+        previous[0]?.chatId === oldest.chatId &&
+        (!preceding || preceding.deleted || compareIdentifiers(preceding.id, oldest.id) < 0)
+    ) {
+        const recent = previous.slice(offset);
+        if (shareSnapshot(recent, current) === recent) {
+            return previous;
+        }
+    }
     const currentIds = new Set(current.map((message) => message.id));
     return mergeMessages(
         previous.filter(

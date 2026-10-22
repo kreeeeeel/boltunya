@@ -1,3 +1,4 @@
+import {initializeTestTheme} from './settings';
 import type {BrowserContext} from '@playwright/test';
 import type {
     Message,
@@ -88,6 +89,8 @@ export function createVoiceDemoSpeech(): SpeechState {
                 id: 'sherpa-runtime',
                 title: 'sherpa-onnx 1.13.8 · Windows x64 CPU',
                 kind: 'runtime',
+                engine: 'sherpa',
+                format: 'JVM/JNI',
                 languages: [],
                 sizeBytes: 8277046,
                 license:
@@ -100,6 +103,8 @@ export function createVoiceDemoSpeech(): SpeechState {
                 id: 'whisper-tiny',
                 title: 'Whisper tiny · multilingual int8',
                 kind: 'recognition',
+                engine: 'sherpa',
+                format: 'Whisper ONNX int8',
                 languages: ['ru', 'en', 'uk', 'kk'],
                 sizeBytes: 116204861,
                 license: 'MIT · OpenAI Whisper',
@@ -111,6 +116,8 @@ export function createVoiceDemoSpeech(): SpeechState {
                 id: 'piper-ru-irina',
                 title: 'Piper · Ирина · Russian',
                 kind: 'synthesis',
+                engine: 'sherpa',
+                format: 'Piper/VITS ONNX',
                 languages: ['ru'],
                 sizeBytes: 21149417,
                 license:
@@ -126,7 +133,7 @@ export function createVoiceDemoSpeech(): SpeechState {
 }
 
 export async function installVoiceMocks(
-    surface: Pick<BrowserContext, 'route'>,
+    surface: Pick<BrowserContext, 'route' | 'addInitScript'>,
     {
         state,
         speech,
@@ -143,6 +150,7 @@ export async function installVoiceMocks(
         interactive?: boolean;
     },
 ) {
+    await initializeTestTheme(surface, dark);
     const sent: VoiceSendRequest[] = [];
     const requests: string[] = [];
     const jobs = new Map<string, PreviewJob>();
@@ -157,8 +165,6 @@ export async function installVoiceMocks(
         const path = new URL(request.url()).pathname;
         if (path === '/api/state') {
             await route.fulfill({json: state});
-        } else if (path === '/api/appearance') {
-            await route.fulfill({json: {mode: dark ? 'dark' : 'light', tokens: {}, css: ''}});
         } else if (path === '/api/speech') {
             if (interactive) {
                 speech.downloads.forEach((download) => {
@@ -246,8 +252,6 @@ export async function installVoiceMocks(
             await route.fulfill({json: {ok: true}});
         } else if (path === '/api/model-profiles') {
             await route.fulfill({json: {profiles: [], presets: []}});
-        } else if (path === '/api/search/connection') {
-            await route.fulfill({json: {configured: false, state: 'unchecked'}});
         } else if (path === '/api/settings') {
             Object.assign(state.settings, request.postDataJSON());
             await route.fulfill({json: state.settings});

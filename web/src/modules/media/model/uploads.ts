@@ -2,40 +2,7 @@ import type * as Contract from '@aigram/api-client';
 import {api} from '@/shared/api/client';
 import {apiConfiguration} from '@/shared/api/configuration';
 export type UploadedFile = Contract.UploadedFile;
-export type AttachmentKind = 'media' | 'document';
-export const MAX_ATTACHMENTS = 10;
 export const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
-export const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
-export const MAX_BATCH_BYTES = 500 * 1024 * 1024;
-export function validAttachments(
-    files: File[],
-    kind: AttachmentKind,
-): 'tooMany' | 'tooLarge' | 'unsupported' | '' {
-    if (!files.length || files.length > MAX_ATTACHMENTS) {
-        return 'tooMany';
-    }
-    if (
-        files.reduce((total, file) => total + file.size, 0) > MAX_BATCH_BYTES ||
-        files.some(
-            (file) =>
-                file.size > MAX_UPLOAD_BYTES ||
-                file.size === 0 ||
-                (kind === 'media' && file.type.startsWith('image/') && file.size > MAX_PHOTO_BYTES),
-        )
-    ) {
-        return 'tooLarge';
-    }
-    if (
-        kind === 'media' &&
-        files.some(
-            (file) =>
-                !['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/webm'].includes(file.type),
-        )
-    ) {
-        return 'unsupported';
-    }
-    return '';
-}
 export async function uploadFile(
     file: File,
     signal: AbortSignal,

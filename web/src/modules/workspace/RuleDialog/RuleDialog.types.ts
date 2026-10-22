@@ -6,6 +6,7 @@ export interface RuleDialogProps {
     readonly engine: Engine | undefined;
     readonly defaultModel: string;
     readonly defaultModelProfileId?: string;
+    readonly settings?: AppState['settings'];
     readonly onClose: () => void;
     readonly onCollectContext: () => void;
     readonly onDeleted: () => void;

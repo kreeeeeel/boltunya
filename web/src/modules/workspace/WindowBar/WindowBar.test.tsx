@@ -7,6 +7,8 @@ import {WindowBar} from '@/modules/workspace/WindowBar/WindowBar';
 import {workspaceState} from '@tests/fixtures/workspace';
 import ru from '@/shared/i18n/ru.json';
 
+vi.mock('@/modules/speech/model/useSpeechState', () => ({useSpeechState: () => ({state: undefined})}));
+
 it('shows an immediate pending state and real model warmup while keeping pause available', async () => {
     const pending = Promise.withResolvers<void>();
     const onPause = vi.fn(() => pending.promise);

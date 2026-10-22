@@ -277,4 +277,13 @@ it('filters image-capable installed and catalog models together with API profile
     );
     fireEvent.click(screen.getByRole('tab', {name: ru.modelFilters.all}));
     expect(view.container.querySelectorAll('[data-qa="model-card"]')).toHaveLength(3);
+    fireEvent.click(screen.getByRole('switch', {name: ru.modelFilters.installed}));
+    expect(view.container.querySelectorAll('[data-qa="model-card"]')).toHaveLength(2);
+    expect(view.container.querySelectorAll('[data-qa="profile-model-card"]')).toHaveLength(0);
+    expect(screen.queryByText('Gemma 3 · 4B')).toBeNull();
+    fireEvent.change(screen.getByRole('textbox', {name: ru.modelSearch.label}), {
+        target: {value: 'qwen3:1.7b'},
+    });
+    expect(view.container.querySelectorAll('[data-qa="model-card"]')).toHaveLength(1);
+    expect(screen.getByText('Qwen 3 · 1.7B')).toBeVisible();
 });

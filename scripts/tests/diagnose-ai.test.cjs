@@ -88,7 +88,7 @@ test('collects allowlisted runtime metadata and runs only an explicit synthetic 
     assert.equal(report.generation.tokensPerSecond, 18.5);
     const generation = requests.find(request => request.path === '/api/preview');
     assert.equal(generation.cookie, `tiho=${secret}`);
-    assert.deepEqual(JSON.parse(generation.body), {text: 'Say hello in one short sentence.', rule: {model: 'gemma3:4b', useDefaultModel: false, internetAccess: false, matchMyStyle: false, useMemory: false}});
+    assert.deepEqual(JSON.parse(generation.body), {text: 'Say hello in one short sentence.', rule: {model: 'gemma3:4b', useDefaultModel: false, matchMyStyle: false, useMemory: false}});
     assert.equal(requests.find(request => request.path === '/api/version').cookie, undefined);
     assert.equal(requests.find(request => request.path === '/api/tags').cookie, undefined);
 });

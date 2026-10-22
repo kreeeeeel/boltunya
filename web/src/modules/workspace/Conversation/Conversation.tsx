@@ -1,7 +1,7 @@
 import {Box, Button, Flex, Icon, Loader, Text, Tooltip} from '@gravity-ui/uikit';
-import {ArrowLeft, BookOpen, CircleInfo, Sliders} from '@gravity-ui/icons';
-import {useLocale, useTranslations} from 'next-intl';
-import {Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
+import {ArrowLeft, CircleInfo, Sliders} from '@gravity-ui/icons';
+import {useTranslations} from 'next-intl';
+import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {messageDay} from '@/modules/workspace/model/messagePresentation';
 
 import type {ConversationProps} from '@/modules/workspace/Conversation/Conversation.types';
@@ -11,9 +11,9 @@ import {ConversationSkeleton} from '@/modules/workspace/ConversationSkeleton/Con
 import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
 import {ChatHeading} from '@/modules/workspace/ChatHeading/ChatHeading';
 import {ConversationGeneration} from '@/modules/workspace/ConversationGeneration/ConversationGeneration';
-import {MessageBubble} from '@/modules/workspace/Conversation/MessageBubble';
-import {ConversationComposer} from '@/modules/workspace/Conversation/ConversationComposer';
-import {MediaViewerProvider} from '@/modules/media/MediaViewer/MediaViewerProvider';
+import {ConversationMessageList} from '@/modules/workspace/Conversation/ConversationMessageList';
+import {ConversationAssistantBar} from '@/modules/workspace/Conversation/ConversationAssistantBar';
+import {AiDraftPanel} from '@/modules/workspace/Conversation/AiDraftPanel';
 import {DraftPreparationError} from '@/modules/workspace/model/DraftPreparationError';
 import {StatusNotice} from '@/shared/ui/StatusNotice/StatusNotice';
 import {MessageEditDialog} from '@/modules/messages/MessageEditDialog/MessageEditDialog';
@@ -47,17 +47,16 @@ export function Conversation({
     onEarlier,
 }: ConversationProps) {
     const t = useTranslations();
-    const locale = useLocale();
     const [today, setToday] = useState(() => messageDay(Date.now() / 1000));
     useEffect(() => {
         const timer = setInterval(() => setToday(messageDay(Date.now() / 1000)), 60000);
         return () => clearInterval(timer);
     }, []);
-    const [input, setInput] = useState<{message: OutgoingText; richId?: string}>({message: {text: ''}});
+    const [input, setInput] = useState<{message: OutgoingText; richId: string}>();
     const [voiceDraft, setVoiceDraft] = useState<Reply & {voice: GeneratedVoice}>();
-    const text = input.message.text;
+    const text = input?.message.text ?? '';
     const [richFailure, setRichFailure] = useState<{id: string; message: string}>();
-    const richError = richFailure && richFailure.id === input.richId ? richFailure.message : '';
+    const richError = richFailure && richFailure.id === input?.richId ? richFailure.message : '';
     const [busy, setBusy] = useState<'send' | 'draft' | ''>('');
     const [localError, setLocalError] = useState('');
     const [editedMessage, setEditedMessage] = useState<Message>();
@@ -161,19 +160,15 @@ export function Conversation({
     ]);
 
     async function send() {
-        if (!text.trim() || busy || richError) {
+        if (!input || !text.trim() || busy || richError) {
             return;
         }
         setBusy('send');
         setLocalError('');
         setDraftNotice(undefined);
         try {
-            if (input.richId) {
-                await onSend(text, input.message.entities ?? []);
-            } else {
-                await onSend(text.trim());
-            }
-            setInput({message: {text: ''}});
+            await onSend(text, input.message.entities ?? []);
+            setInput(undefined);
             stick.current = true;
         } catch (cause) {
             setLocalError(errorMessage(cause));
@@ -182,38 +177,42 @@ export function Conversation({
         }
     }
 
-    async function draft(messageId?: string, output: PreviewJobRequest['output'] = 'text') {
-        if (busy) {
-            return;
-        }
-        setBusy('draft');
-        setLocalError('');
-        setDraftNotice(undefined);
-        try {
-            const result = output === 'voice' ? await onDraft(messageId, output) : await onDraft(messageId);
-            if (output === 'voice') {
-                if (!result.voice) {
-                    throw new Error(t('voice.generationFailed'));
-                }
-                setVoiceDraft({...result, voice: result.voice});
+    const draft = useCallback(
+        async (messageId?: string, output: PreviewJobRequest['output'] = 'text') => {
+            if (busy) {
                 return;
             }
-            setVoiceDraft(undefined);
-            setInput({
-                message: {text: result.text, entities: result.entities ?? []},
-                ...(result.entities?.length ? {richId: crypto.randomUUID()} : {}),
-            });
-        } catch (cause) {
-            if (!(cause instanceof DOMException && cause.name === 'AbortError')) {
-                setDraftNotice({
-                    status: cause instanceof DraftPreparationError ? cause.status : 'error',
-                    description: errorMessage(cause),
+            setBusy('draft');
+            setLocalError('');
+            setDraftNotice(undefined);
+            try {
+                const result =
+                    output === 'voice' ? await onDraft(messageId, output) : await onDraft(messageId);
+                if (output === 'voice') {
+                    if (!result.voice) {
+                        throw new Error(t('voice.generationFailed'));
+                    }
+                    setVoiceDraft({...result, voice: result.voice});
+                    return;
+                }
+                setVoiceDraft(undefined);
+                setInput({
+                    message: {text: result.text, entities: result.entities ?? []},
+                    richId: crypto.randomUUID(),
                 });
+            } catch (cause) {
+                if (!(cause instanceof DOMException && cause.name === 'AbortError')) {
+                    setDraftNotice({
+                        status: cause instanceof DraftPreparationError ? cause.status : 'error',
+                        description: errorMessage(cause),
+                    });
+                }
+            } finally {
+                setBusy('');
             }
-        } finally {
-            setBusy('');
-        }
-    }
+        },
+        [busy, onDraft, t],
+    );
 
     if (loading) {
         return <ConversationSkeleton />;
@@ -241,7 +240,7 @@ export function Conversation({
     }
 
     return (
-        <MediaViewerProvider messages={messages}>
+        <>
             <Flex direction="column" className={styles.root}>
                 <Flex
                     qa="conversation-header"
@@ -256,25 +255,6 @@ export function Conversation({
                         <ChatHeading chat={chat} />
                     </Flex>
                     <Flex className={styles.actions} alignItems="center">
-                        <Tooltip content={t('autoNote')}>
-                            <Text className={styles.model}>
-                                {modelLabel ??
-                                    chat.rule.model
-                                        .replace('qwen3:', 'Qwen 3 · ')
-                                        .replace('qwen2.5:', 'Qwen 2.5 · ')
-                                        .replace('gemma3:', 'Gemma 3 · ')}
-                            </Text>
-                        </Tooltip>
-                        <Tooltip content={t('memory.openChat')}>
-                            <Button
-                                className={styles.headerButton}
-                                view="flat-secondary"
-                                aria-label={t('memory.openChat')}
-                                onClick={onMemory}
-                            >
-                                <Icon data={BookOpen} size={19} />
-                            </Button>
-                        </Tooltip>
                         <Tooltip content={t('configure')}>
                             <Button
                                 className={styles.headerButton}
@@ -321,42 +301,16 @@ export function Conversation({
                                     <Loader size="s" />
                                 </Flex>
                             )}
-                            {messages.map((message, index) => (
-                                <Fragment key={message.id}>
-                                    {(index === 0 ||
-                                        messageDay(message.date) !==
-                                            messageDay(messages[index - 1].date)) && (
-                                        <Text className={styles.date} qa="message-date">
-                                            {messageDay(message.date) === today
-                                                ? t('today')
-                                                : new Date(message.date * 1000).toLocaleDateString(locale, {
-                                                      day: 'numeric',
-                                                      month: 'long',
-                                                  })}
-                                        </Text>
-                                    )}
-                                    <MessageBubble
-                                        message={message}
-                                        onContextChanged={onContextChanged}
-                                        onDeleted={onMessageDeleted}
-                                        onEditRequest={onMessageUpdated ? setEditedMessage : undefined}
-                                        onMenuOpenChange={menuOpenChanged}
-                                        onDraftRequest={
-                                            !message.outgoing ? () => draft(message.id) : undefined
-                                        }
-                                        nextMessage={messages[index + 1]}
-                                        previousMessage={messages[index - 1]}
-                                        group={
-                                            chat.kind === 'group' ||
-                                            chat.kind === 'supergroup' ||
-                                            message.group
-                                        }
-                                        replyText={
-                                            messages.find((item) => item.id === message.replyToId)?.text
-                                        }
-                                    />
-                                </Fragment>
-                            ))}
+                            <ConversationMessageList
+                                messages={messages}
+                                group={chat.kind === 'group' || chat.kind === 'supergroup'}
+                                today={today}
+                                onContextChanged={onContextChanged}
+                                onDeleted={onMessageDeleted}
+                                onEditRequest={onMessageUpdated ? setEditedMessage : undefined}
+                                onMenuOpenChange={menuOpenChanged}
+                                onDraftRequest={draft}
+                            />
                             {messages.length === 0 && !error && (
                                 <Text className={styles.noHistory}>{t('noHistory')}</Text>
                             )}
@@ -419,26 +373,30 @@ export function Conversation({
                             />
                         </Box>
                     )}
-                    <ConversationComposer
+                    {input && (
+                        <AiDraftPanel
+                            key={input.richId}
+                            draft={{id: input.richId, message: input.message}}
+                            busy={busy === 'send'}
+                            error={richError}
+                            onUpdate={(message) =>
+                                setInput((previous) =>
+                                    previous?.richId === input.richId ? {...previous, message} : previous,
+                                )
+                            }
+                            onError={() =>
+                                setRichFailure({id: input.richId, message: t('formattedDraftError')})
+                            }
+                            onSend={send}
+                            onDiscard={() => setInput(undefined)}
+                        />
+                    )}
+                    <ConversationAssistantBar
                         chatId={chat.id}
-                        text={text}
-                        onTextChange={(text) => setInput({message: {text}})}
-                        richDraft={input.richId ? {id: input.richId, message: input.message} : undefined}
-                        richError={richError}
-                        onRichChange={(id, message) =>
-                            setInput((previous) =>
-                                previous.richId === id ? {...previous, message} : previous,
-                            )
-                        }
-                        onRichError={(id) => setRichFailure({id, message: t('formattedDraftError')})}
-                        onRichConsumed={(id) =>
-                            setInput((previous) =>
-                                previous.richId === id ? {message: {text: ''}} : previous,
-                            )
-                        }
-                        busy={busy}
-                        onSend={send}
+                        modelLabel={modelLabel ?? chat.rule.model}
+                        busy={!!busy}
                         onDraft={(output) => draft(undefined, output)}
+                        onMemory={onMemory}
                         voiceSynthesisModel={voiceSynthesisModel}
                         voiceSpeechRate={voiceSpeechRate}
                         onVoiceSettings={onVoiceSettings}
@@ -454,6 +412,6 @@ export function Conversation({
                     onClose={() => setEditedMessage(undefined)}
                 />
             )}
-        </MediaViewerProvider>
+        </>
     );
 }

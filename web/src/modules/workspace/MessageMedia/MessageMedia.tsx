@@ -1,5 +1,5 @@
-import {Box, Button, Flex, Icon, Link, Skeleton, Text} from '@gravity-ui/uikit';
-import {ArrowDownToLine, File, ArrowsExpand} from '@gravity-ui/icons';
+import {Box, Flex, Icon, Link, Skeleton, Text} from '@gravity-ui/uikit';
+import {ArrowDownToLine, File} from '@gravity-ui/icons';
 import {useTranslations} from 'next-intl';
 import {useState} from 'react';
 
@@ -8,17 +8,12 @@ import {AudioMessage} from '@/modules/workspace/MessageMedia/AudioMessage';
 import {AnimatedSticker} from '@/modules/workspace/MessageMedia/AnimatedSticker';
 import styles from '@/modules/workspace/MessageMedia/MessageMedia.module.css';
 import {DeferredMedia} from '@/modules/workspace/MessageMedia/DeferredMedia';
-import {useMediaViewer} from '@/modules/media/MediaViewer/MediaViewerProvider';
-import {MediaViewerOverlay} from '@/modules/media/MediaViewer/MediaViewerOverlay';
 
 export function MessageMedia({message}: {readonly message: Message}) {
     const t = useTranslations();
     const [loaded, setLoaded] = useState(false);
     const [failed, setFailed] = useState(false);
-    const [expanded, setExpanded] = useState(false);
     const [requested, setRequested] = useState(false);
-    const viewer = useMediaViewer();
-    const open = () => (viewer ? viewer(message) : setExpanded(true));
     const media = message.media;
     if (!media) {
         return message.kind === 'text' ? null : <Text color="secondary">{t('unsupportedMedia')}</Text>;
@@ -62,14 +57,6 @@ export function MessageMedia({message}: {readonly message: Message}) {
                             onError={() => setFailed(true)}
                             style={{opacity: loaded ? 1 : 0}}
                         />
-                        {!sticker && (
-                            <Button
-                                view="flat"
-                                className={styles.photoButton}
-                                onClick={open}
-                                aria-label={t(sticker ? 'sticker' : 'openPhoto')}
-                            />
-                        )}
                     </Box>
                 </>
             )}
@@ -94,16 +81,6 @@ export function MessageMedia({message}: {readonly message: Message}) {
                         }
                         onError={() => setFailed(true)}
                     />
-                    {!sticker && (
-                        <Button
-                            view="flat-secondary"
-                            className={styles.expandVideo}
-                            aria-label={t('openPhoto')}
-                            onClick={open}
-                        >
-                            <Icon data={ArrowsExpand} size={18} />
-                        </Button>
-                    )}
                 </Box>
             )}
             {audio && <AudioMessage message={message} />}
@@ -119,13 +96,6 @@ export function MessageMedia({message}: {readonly message: Message}) {
                 </Flex>
             )}
             {failed && <Text color="danger">{t('mediaError')}</Text>}
-            {expanded && (
-                <MediaViewerOverlay
-                    messages={[message]}
-                    initialId={message.id}
-                    onClose={() => setExpanded(false)}
-                />
-            )}
         </Box>
     );
 }

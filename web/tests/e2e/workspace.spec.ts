@@ -1,4 +1,10 @@
-import {chooseSettingsSection, toggleTheme, persistTestTheme} from '../fixtures/settings';
+import {
+    initializeTestTheme,
+    chooseSettingsSection,
+    toggleTheme,
+    persistTestTheme,
+} from '../fixtures/settings';
+import {chooseChatSettingsSection} from '../fixtures/chatSettings';
 import {expect, test} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
@@ -14,10 +20,9 @@ import ru from '../../src/shared/i18n/ru.json';
 const launchFile = process.env.TIHO_LAUNCH_FILE ?? join(process.env.LOCALAPPDATA ?? '', 'Tiho', 'launch.url');
 
 test.beforeEach(async ({page}) => {
+    await initializeTestTheme(page, false);
     const state = structuredClone(workspaceState);
     const histories = new Map<string, Message[]>();
-    let appearance = {mode: 'system', tokens: {}, css: ''};
-    let searchConnection = {configured: false, state: 'unchecked'};
     await page.route('**/api/**', async (route) => {
         const request = route.request();
         const path = new URL(request.url()).pathname;
@@ -30,10 +35,7 @@ test.beforeEach(async ({page}) => {
             ['messages', 'rule'].includes(parts[4])
                 ? [path, parts[3], parts[4]]
                 : null;
-        if (path === '/api/appearance') {
-            if (request.method() === 'PUT') appearance = request.postDataJSON();
-            await route.fulfill({json: appearance});
-        } else if (path === '/api/activity/history') {
+        if (path === '/api/activity/history') {
             await route.fulfill({json: historyPage(state.activity)});
         } else if (path === '/api/prompts/budget') {
             await route.fulfill({json: syntheticPromptBudget(request.postDataJSON())});
@@ -43,16 +45,6 @@ test.beforeEach(async ({page}) => {
             await route.fulfill({json: {profiles: [], presets: []}});
         } else if (path === '/api/state') {
             await route.fulfill({json: state});
-        } else if (path === '/api/search/connection') {
-            if (request.method() === 'POST') {
-                searchConnection = {configured: true, state: 'unchecked'};
-            } else if (request.method() === 'DELETE') {
-                searchConnection = {configured: false, state: 'unchecked'};
-            }
-            await route.fulfill({json: searchConnection});
-        } else if (path === '/api/search/check') {
-            searchConnection = {...searchConnection, state: 'limited'};
-            await route.fulfill({json: searchConnection});
         } else if (path === '/api/storage/locations') {
             await route.fulfill({json: {locations: []}});
         } else if (path === '/api/engine/devices') {
@@ -147,21 +139,14 @@ test('chat selection, sending, filtering and saving a rule use the real API flow
     ]) {
         await expect(page.getByText(text, {exact: false})).toHaveCount(0);
     }
-    await page.getByRole('textbox', {name: 'Написать сообщение…'}).fill('Проверка отправки');
-    const sent = page.waitForRequest(
-        (request) => request.method() === 'POST' && request.url().endsWith('/api/chats/41/messages'),
+    await expect(page.getByRole('textbox', {name: ru.messagePlaceholder, exact: true})).toHaveCount(0);
+    await expect(page.locator('[data-qa="conversation-assistant-bar"]')).toContainText(
+        ru.assistantBar.modelCaption,
     );
-    await page.getByRole('button', {name: 'Отправить сообщение'}).click();
-    expect((await sent).postDataJSON()).toEqual({text: 'Проверка отправки'});
-    await expect(
-        page.locator('[data-qa="message-outgoing"]').getByText('Проверка отправки', {exact: true}),
-    ).toBeVisible();
-    await expect(page.getByRole('textbox', {name: 'Написать сообщение…'})).toHaveValue('');
     await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
+    await chooseChatSettingsSection(page, 'memory');
     await expect(page.getByText('Глубина контекста', {exact: true})).toBeVisible();
-    const internet = page.getByRole('switch', {name: 'Поиск в интернете', exact: true});
-    await expect(internet).toBeChecked();
-    await internet.click();
+    await chooseChatSettingsSection(page, 'model');
     await page.getByRole('combobox', {name: 'Модель ИИ', exact: true}).click();
     await page.getByRole('option', {name: 'Gemma 3 · 4B'}).click();
     const saved = page.waitForRequest(
@@ -172,7 +157,6 @@ test('chat selection, sending, filtering and saving a rule use the real API flow
     expect(savedRule.contextMessages).toBeGreaterThan(0);
     expect(savedRule.model).toBe('gemma3:4b');
     expect(savedRule.useDefaultModel).toBe(false);
-    expect(savedRule.internetAccess).toBe(false);
     await expect(page.getByRole('dialog')).toBeVisible();
     await expect(page.getByRole('status')).toHaveText('Сохранено');
     await page.keyboard.press('Escape');
@@ -360,7 +344,7 @@ test('Escape dismisses a dialog first and then closes the conversation', async (
     await expect(page.getByRole('dialog')).toBeVisible();
     await expect(page.locator('[data-qa="communication-dialog"] .g-modal__content')).toHaveCSS(
         'border-radius',
-        '24px',
+        '22px',
     );
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -383,7 +367,7 @@ test('conversation background appears only for an open chat on the chats page', 
     );
     await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
     await expect(wallpaper).toBeAttached();
-    for (const tab of ['models', 'activity', 'metrics']) {
+    for (const tab of ['models', 'activity', 'speech']) {
         await page.locator(`[data-qa="nav-${tab}"]`).click();
         await expect(wallpaper).toHaveCount(0);
     }
@@ -409,7 +393,9 @@ test('Escape clears pointer focus on the chat row while keyboard focus remains v
 });
 
 [1440, 640].forEach((width) => {
-    test(`conversation skeleton preserves the header and composer geometry at ${width}px`, async ({page}) => {
+    test(`conversation skeleton preserves the header and assistant-bar geometry at ${width}px`, async ({
+        page,
+    }) => {
         await page.setViewportSize({width, height: 900});
         await page.emulateMedia({reducedMotion: 'reduce'});
         await page.keyboard.press('Escape');
@@ -425,13 +411,13 @@ test('Escape clears pointer focus on the chat row while keyboard focus remains v
         const skeleton = page.locator('[data-qa="conversation-skeleton"]');
         await expect(skeleton).toBeVisible();
         const geometry = await skeleton.evaluate((element) =>
-            ['skeleton-conversation-header', 'skeleton-message-composer'].map((qa) => {
+            ['skeleton-conversation-header', 'skeleton-assistant-bar'].map((qa) => {
                 const rect = element.querySelector(`[data-qa="${qa}"]`)!.getBoundingClientRect();
                 return {x: rect.x, y: rect.y, width: rect.width, height: rect.height};
             }),
         );
         const controls = await skeleton
-            .locator('[data-qa="skeleton-composer-control"]')
+            .locator('[data-qa="skeleton-assistant-action"]')
             .evaluateAll((elements) =>
                 elements.map((element) => {
                     const rect = element.getBoundingClientRect();
@@ -450,13 +436,13 @@ test('Escape clears pointer focus on the chat row while keyboard focus remains v
             await Promise.all(element.parentElement!.getAnimations().map((animation) => animation.finished));
         });
         const loaded = await page.evaluate(() =>
-            ['conversation-header', 'message-composer'].map((qa) => {
+            ['conversation-header', 'conversation-assistant-bar'].map((qa) => {
                 const rect = document.querySelector(`[data-qa="${qa}"]`)!.getBoundingClientRect();
                 return {x: rect.x, y: rect.y, width: rect.width, height: rect.height};
             }),
         );
         const loadedControls = await page
-            .locator('[data-qa="message-composer"] button')
+            .locator('[data-qa="conversation-assistant-bar"] button')
             .evaluateAll((elements) =>
                 elements.map((element) => {
                     const rect = element.getBoundingClientRect();
@@ -772,7 +758,7 @@ test('plain and Telegram photo backgrounds cover the shell behind opaque control
                 'background-color',
                 wallpaper ? 'rgb(36, 42, 52)' : 'rgb(255, 255, 255)',
             );
-            await expect(page.locator('[data-qa="message-composer"]')).toHaveCSS(
+            await expect(page.locator('[data-qa="conversation-assistant-bar"]')).toHaveCSS(
                 'background-color',
                 wallpaper ? 'rgb(36, 42, 52)' : 'rgb(255, 255, 255)',
             );
@@ -849,6 +835,7 @@ test('initial state, history and preview use skeletons until responses arrive', 
         await route.fulfill({json: {text: 'Тестовый ответ', durationMs: 100, tokensPerSecond: 50}});
     });
     await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
+    await chooseChatSettingsSection(page, 'preview');
     await page.getByRole('button', {name: 'Проверить ответ', exact: true}).click();
     await expect(page.getByRole('status', {name: 'Готовит ответ'})).toBeVisible();
     releaseReply();
@@ -1045,8 +1032,9 @@ test('Telegram avatars, photos and static/animated stickers render as media', as
     expect((await photo.boundingBox())?.width).toBeGreaterThan(200);
     await expect(page.getByText('Подпись фотографии', {exact: true})).toBeVisible();
     await expect(page.locator('[role="img"][aria-label="Стикер"] svg')).toBeVisible();
-    await page.getByRole('button', {name: 'Открыть фотографию', exact: true}).click();
-    await expect(page.getByRole('dialog', {name: 'Открыть медиа', exact: true})).toBeVisible();
+    await photo.click();
+    await expect(page.getByRole('dialog', {name: 'Открыть медиа', exact: true})).toHaveCount(0);
+    await expect(page.getByRole('button', {name: 'Открыть фотографию', exact: true})).toHaveCount(0);
     await page.screenshot({animations: 'disabled', path: '../docs/resources/media.png'});
 });
 
@@ -1216,6 +1204,7 @@ test('external Ollama device selection explains why its controls are disabled', 
 
 test('all writing styles have emoji and rough styles and imitation survive saving', async ({page}) => {
     await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
+    await chooseChatSettingsSection(page, 'tone');
     await page.getByRole('combobox', {name: 'Стиль общения', exact: true}).click();
     const rough = page.getByRole('option', {name: 'Быдланский'});
     await expect(rough).toContainText('🤬');
@@ -1301,6 +1290,7 @@ test('style option content is centered within every dropdown row in dark theme',
     await page.reload();
     await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
     await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
+    await chooseChatSettingsSection(page, 'tone');
     await page.getByRole('combobox', {name: 'Стиль общения', exact: true}).click();
     const offsets = await page.getByRole('option').evaluateAll((options) =>
         options.flatMap((option) => {
@@ -1435,6 +1425,7 @@ test('named writing styles can be saved and selected for a conversation', async 
     await dialog.getByRole('button', {name: 'Отмена', exact: true}).click();
     await expect(dialog).toHaveCount(0);
     await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
+    await chooseChatSettingsSection(page, 'tone');
     await page.getByRole('combobox', {name: 'Стиль общения', exact: true}).click();
     await expect(page.getByRole('option', {name: 'Свой стиль', exact: true})).toHaveCount(0);
     await page.getByRole('option', {name: 'Спокойный'}).click();
@@ -1445,6 +1436,7 @@ test('named writing styles can be saved and selected for a conversation', async 
     expect((await rule).postDataJSON()).toMatchObject({style: 'custom', styleId: preset.id});
     await page.keyboard.press('Escape');
     await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
+    await chooseChatSettingsSection(page, 'tone');
     await expect(page.getByRole('combobox', {name: 'Стиль общения', exact: true})).toContainText('Спокойный');
     await page.keyboard.press('Escape');
     await page.getByRole('button', {name: 'Параметры общения', exact: true}).click();
@@ -1461,9 +1453,11 @@ test('legacy unnamed custom selections retain instructions and show a concrete s
     await page.reload();
     await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
     await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
+    await chooseChatSettingsSection(page, 'tone');
     await expect(page.getByRole('combobox', {name: 'Стиль общения', exact: true})).toContainText(
         'Дружелюбный',
     );
+    await chooseChatSettingsSection(page, 'model');
     await expect(page.getByRole('textbox', {name: 'Личные инструкции'})).toHaveValue('Без длинных ответов.');
     const saved = page.waitForRequest(
         (request) => request.method() === 'PUT' && request.url().endsWith(`/api/chats/${chat.id}/rule`),
@@ -1770,31 +1764,6 @@ test('AI replies are marked locally and media bubbles fill their photo width', a
     await expect(page.locator('[data-qa="chat-checkbox"]')).toHaveCount(0);
 });
 
-test('resource charts render real API readings and tolerate unavailable GPU', async ({page}) => {
-    const sample = {
-        timestamp: Date.now(),
-        cpuPercent: 27,
-        appCpuPercent: 5,
-        memoryUsedBytes: 8589934592,
-        memoryTotalBytes: 17179869184,
-        appMemoryBytes: 536870912,
-        backendMemoryBytes: 268435456,
-        ollamaMemoryBytes: 1073741824,
-        networkReceiveBytesPerSecond: 1048576,
-        networkSendBytesPerSecond: 524288,
-        gpuPercent: null,
-        gpuMemoryUsedBytes: null,
-        gpuMemoryTotalBytes: null,
-    };
-    await page.route('**/api/metrics', (route) => route.fulfill({json: [sample]}));
-    await page.locator('[data-qa="nav-metrics"]').click();
-    await expect(page.getByText('27.0%', {exact: true})).toBeVisible();
-    await expect(page.getByText('Нет данных', {exact: true}).first()).toBeVisible();
-    await expect(page.getByText('Сеть · MB/s', {exact: true})).toBeVisible();
-    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
-    await page.screenshot({path: '../docs/resources/metrics.png', animations: 'disabled'});
-});
-
 test('group settings support per-chat mention mode and disabled global default', async ({page}) => {
     const state = structuredClone(workspaceState);
     state.chats[0].kind = 'group';
@@ -1804,6 +1773,7 @@ test('group settings support per-chat mention mode and disabled global default',
     await page.reload();
     await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
     await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
+    await chooseChatSettingsSection(page, 'groups');
     await page.getByRole('combobox', {name: 'Ответы в группах', exact: true}).click();
     await page.getByRole('option', {name: 'Только при упоминании', exact: true}).click();
     const request = page.waitForRequest(
@@ -1817,7 +1787,7 @@ test('modal actions stay visible while the form scrolls in a short window', asyn
     await page.setViewportSize({width: 1000, height: 580});
     await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
     const dialog = page.getByRole('dialog');
-    const body = dialog.locator('.g-dialog-body');
+    const body = dialog.locator('[data-qa="chat-settings-scroll-replies"]');
     const save = dialog.getByRole('button', {name: 'Сохранить настройки', exact: true});
     await expect(save).toBeInViewport();
     await dialog.evaluate((element) =>
@@ -1912,27 +1882,21 @@ test('global memory and its background interval are accessible from profile sett
     expect((await patch).postDataJSON()).toMatchObject({memoryEnabled: true, memoryIntervalHours: 12});
 });
 
-test('conversation header shows a real username or participant count below the title', async ({page}) => {
+test('conversation header shows a compact name or participant count without username controls', async ({
+    page,
+}) => {
     const state = structuredClone(workspaceState);
     state.chats[0].username = 'anya_smirnova';
     await page.route('**/api/state', (route) => route.fulfill({json: state}));
     const header = page.locator('[data-qa="conversation-header"]');
-    await expect(header.getByText('@anya_smirnova', {exact: true})).toBeVisible();
-    const title = await header.getByText(state.chats[0].title, {exact: true}).boundingBox();
-    const subtitle = header.locator('[data-qa="chat-subtitle"]');
-    const tag = await subtitle.boundingBox();
-    expect(tag && title && tag.y >= title.y + title.height).toBe(true);
-    expect(tag && title ? tag.y - title.y - title.height : 10).toBeLessThanOrEqual(1);
-    expect(
-        await subtitle.evaluate((element) => parseFloat(getComputedStyle(element).fontSize)),
-    ).toBeGreaterThanOrEqual(14);
+    await expect(header.getByText('@anya_smirnova', {exact: true})).toHaveCount(0);
+    await expect(header.getByRole('button', {name: ru.chatCopy.username, exact: true})).toHaveCount(0);
+    await expect(header.getByRole('button', {name: ru.memory.openChat, exact: true})).toHaveCount(0);
     state.chats[0].kind = 'supergroup';
     state.chats[0].memberCount = 123;
     await expect(header.getByText('123 участника', {exact: true})).toBeVisible();
-    await expect(header.getByText('@anya_smirnova', {exact: true})).toHaveCount(0);
     state.chats[0].kind = 'private';
-    state.chats[0].username = '';
-    await expect(subtitle).toHaveCount(0);
+    await expect(header.locator('[data-qa="chat-subtitle"]')).toHaveCount(0);
 });
 
 test('context collection opens from communication settings and preserves unsaved changes', async ({page}) => {
@@ -1980,9 +1944,11 @@ test('context collection opens from communication settings and preserves unsaved
     await expect(panel).toBeVisible();
     await panel.getByRole('button', {name: 'Настроить общение', exact: true}).click();
     const settings = page.getByRole('dialog', {name: 'Общение с Аня Смирнова', exact: true});
+    await chooseChatSettingsSection(page, 'model');
     await settings
         .getByRole('textbox', {name: 'Личные инструкции', exact: true})
         .fill('Несохранённая правка');
+    await chooseChatSettingsSection(page, 'memory');
     const open = settings.getByRole('button', {name: 'Собрать контекст', exact: true});
     await open.click();
     await expect(dialog.getByText('Просмотрено сообщений: 240', {exact: true})).toBeVisible();
@@ -1997,9 +1963,11 @@ test('context collection opens from communication settings and preserves unsaved
     await page.screenshot({path: '../docs/resources/context-collection.png', animations: 'disabled'});
     await dialog.locator('.g-dialog-footer').getByRole('button', {name: 'Закрыть', exact: true}).click();
     await expect(settings).toBeVisible();
+    await chooseChatSettingsSection(page, 'model');
     await expect(settings.getByRole('textbox', {name: 'Личные инструкции', exact: true})).toHaveValue(
         'Несохранённая правка',
     );
+    await chooseChatSettingsSection(page, 'memory');
     await expect(settings.locator('[data-qa="context-progress"]')).toBeVisible();
     await expect(settings.getByText('Просмотрено сообщений: 40', {exact: true})).toBeVisible();
     await settings.getByRole('button', {name: 'Отменить сбор', exact: true}).click();
@@ -2168,51 +2136,6 @@ test('global collection can be started from profile with a complete rebuild', as
     expect(document.notes).toBe('Ручной профиль');
 });
 
-test('search key controls mask credentials and explain fallback without closing settings', async ({page}) => {
-    await page.getByRole('button', {name: 'Мой профиль', exact: true}).click();
-    await page.getByRole('menuitem', {name: 'Настройки', exact: true}).click();
-    const dialog = page.getByRole('dialog', {name: 'Настройки', exact: true});
-    await chooseSettingsSection(page, 'search');
-    const panel = dialog.locator('[data-qa="search-connection"]');
-    await expect(panel.getByText('Работает без ключей')).toBeVisible();
-    await panel.getByRole('button', {name: 'Дополнительно: резервный поиск Exa', exact: true}).click();
-    const key = panel.getByLabel('API-ключ Exa', {exact: true});
-    await expect(key).toHaveAttribute('type', 'password');
-    await key.fill('fake-exa-key-123');
-    const saved = page.waitForRequest(
-        (request) => request.method() === 'POST' && request.url().endsWith('/api/search/connection'),
-    );
-    await panel.getByRole('button', {name: 'Сохранить ключ', exact: true}).click();
-    expect((await saved).postDataJSON()).toEqual({apiKey: 'fake-exa-key-123'});
-    await expect(key).toHaveValue('');
-    await expect(panel.getByText('Собственный ключ сохранён', {exact: true})).toBeVisible();
-    await panel.getByRole('button', {name: 'Проверить подключение', exact: true}).click();
-    await expect(panel.getByRole('status')).toContainText('Основной бесплатный поиск продолжает работать');
-    await page.screenshot({path: '../docs/resources/internet-search-settings.png', animations: 'disabled'});
-    await panel.getByRole('button', {name: 'Удалить ключ', exact: true}).click();
-    await expect(
-        panel.getByText('Exa не подключена. Для основного поиска ключ не нужен.', {exact: true}),
-    ).toBeVisible();
-});
-
-test('a conversation saves its source link policy and restores it when reopened', async ({page}) => {
-    await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
-    const dialog = page.getByRole('dialog', {name: 'Общение с Аня Смирнова', exact: true});
-    const mode = dialog.getByRole('combobox', {name: 'Ссылки в ответах', exact: true});
-    await expect(mode).toContainText('Когда собеседник просит');
-    await mode.click();
-    await page.getByRole('option', {name: 'Не отправлять', exact: true}).click();
-    const saved = page.waitForRequest(
-        (request) => request.method() === 'PUT' && request.url().endsWith('/api/chats/41/rule'),
-    );
-    await dialog.getByRole('button', {name: 'Сохранить настройки', exact: true}).click();
-    expect((await saved).postDataJSON().sourceLinks).toBe('never');
-    await expect(dialog).toBeVisible();
-    await page.keyboard.press('Escape');
-    await page.getByRole('button', {name: 'Настроить общение', exact: true}).click();
-    await expect(mode).toContainText('Не отправлять');
-});
-
 test('large dialog lists load on scroll, preserve filters and show message authors', async ({page}) => {
     const state = structuredClone(workspaceState);
     state.chats = Array.from({length: 125}, (_, index) => ({
@@ -2269,25 +2192,16 @@ test('large dialog lists load on scroll, preserve filters and show message autho
     await expect(rows).toContainText('Контакт 124');
 });
 
-test('username controls copy the tag and Telegram link', async ({page}) => {
-    await page.evaluate(() => {
-        Object.defineProperty(navigator, 'clipboard', {
-            configurable: true,
-            value: {
-                writeText: async (value: string) => {
-                    document.documentElement.dataset.copiedValue = value;
-                },
-            },
-        });
-    });
+test('conversation header keeps username metadata out of the chat controls', async ({page}) => {
     const state = structuredClone(workspaceState);
     state.chats[0].username = 'anya_smirnova';
     await page.route('**/api/state', (route) => route.fulfill({json: state}));
     const header = page.locator('[data-qa="conversation-header"]');
-    await header.getByRole('button', {name: 'Копировать тег', exact: true}).click();
-    await expect(page.locator('html')).toHaveAttribute('data-copied-value', '@anya_smirnova');
-    await header.getByRole('button', {name: 'Копировать ссылку Telegram', exact: true}).click();
-    await expect(page.locator('html')).toHaveAttribute('data-copied-value', 'https://t.me/anya_smirnova');
+    await expect(header.getByText('Аня Смирнова', {exact: true})).toBeVisible();
+    await expect(header.getByText('@anya_smirnova', {exact: true})).toHaveCount(0);
+    await expect(header.getByRole('button', {name: ru.chatCopy.username, exact: true})).toHaveCount(0);
+    await expect(header.getByRole('button', {name: ru.chatCopy.link, exact: true})).toHaveCount(0);
+    await expect(header.getByRole('button', {name: ru.memory.openChat, exact: true})).toHaveCount(0);
 });
 
 for (const dark of [false, true]) {
@@ -2352,8 +2266,8 @@ for (const dark of [false, true]) {
                 await page.reload();
                 await page.getByRole('button', {name: 'Аня Смирнова', exact: true}).click();
             }
-            const input = page.getByRole('textbox', {name: ru.messagePlaceholder, exact: true});
-            await input.fill('Мой незавершённый текст');
+            const input = page.getByRole('textbox', {name: ru.assistantBar.draftText, exact: true});
+            await expect(input).toHaveCount(0);
             await expect(page.locator('[data-qa="conversation-generation-error"]')).toHaveCount(1);
             const prepare = page.getByRole('button', {name: ru.draft, exact: true});
             await prepare.click();
@@ -2367,7 +2281,7 @@ for (const dark of [false, true]) {
             await expect(page.locator('[data-qa="conversation-generation-error"]')).toHaveCount(0);
             const contentAlerts = page.locator('[data-qa="workspace-view"]').getByRole('alert');
             await expect(contentAlerts).toHaveCount(terminal === 'error' ? 1 : 0);
-            await expect(input).toHaveValue('Мой незавершённый текст');
+            await expect(input).toHaveCount(0);
             await expect(prepare).toBeEnabled();
             await page.screenshot({
                 path: `../docs/resources/draft-${terminal}-${theme}.png`,
@@ -2380,10 +2294,59 @@ for (const dark of [false, true]) {
             await expect(contentAlerts).toHaveCount(0);
             await prepare.click();
             await page.getByRole('menuitem', {name: ru.voice.generateText, exact: true}).click();
-            await expect(input).toHaveValue('Проверенный новый черновик');
+            await expect(input).toHaveText('Проверенный новый черновик');
             await expect(notice).toHaveCount(0);
             await expect(page.locator('[data-qa="conversation-generation-error"]')).toHaveCount(0);
             expect(starts).toBe(2);
         });
     }
+}
+
+for (const dark of [false, true]) {
+    test(`filtered chat empty state is centered and illustrated in ${dark ? 'dark' : 'light'} theme`, async ({
+        page,
+    }) => {
+        await persistTestTheme(page, dark);
+        await page
+            .getByRole('textbox', {name: ru.search, exact: true})
+            .fill('No synthetic contact matches this');
+        const empty = page.locator('[data-qa="chat-list-empty"]');
+        await expect(empty).toContainText(ru.noResults);
+        await expect(empty).toContainText(ru.chatSearchEmptyHint);
+        await expect(empty.locator('img')).toHaveAttribute('src', '/assets/illustrations/conversations.png');
+        for (const width of [1440, 390]) {
+            await page.setViewportSize({width, height: 900});
+            if (width === 390) {
+                await page
+                    .locator('[data-qa="conversation-header"]')
+                    .getByRole('button', {name: ru.back, exact: true})
+                    .click();
+            }
+            await expect(empty).toBeVisible();
+            await expect
+                .poll(() =>
+                    empty.evaluate((element) => {
+                        const viewport = document
+                            .querySelector('[data-qa="chat-list-scroll"]')!
+                            .getBoundingClientRect();
+                        const parts = Array.from(element.children).map((child) =>
+                            child.getBoundingClientRect(),
+                        );
+                        const top = Math.min(...parts.map((part) => part.top));
+                        const bottom = Math.max(...parts.map((part) => part.bottom));
+                        const bounds = element.getBoundingClientRect();
+                        return {
+                            centered: Math.abs((top + bottom) / 2 - viewport.top - viewport.height / 2) < 8,
+                            contained: bounds.left >= 0 && bounds.right <= innerWidth,
+                            noOverflow: document.documentElement.scrollWidth <= innerWidth,
+                        };
+                    }),
+                )
+                .toEqual({centered: true, contained: true, noOverflow: true});
+            await page.screenshot({
+                path: `../build/chat-list-empty-${dark ? 'dark' : 'light'}-${width}.png`,
+                animations: 'disabled',
+            });
+        }
+    });
 }

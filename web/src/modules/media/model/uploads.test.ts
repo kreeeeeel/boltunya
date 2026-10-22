@@ -1,24 +1,7 @@
 import {afterEach, expect, it, vi} from 'vitest';
-import {MAX_UPLOAD_BYTES, uploadFile, validAttachments} from '@/modules/media/model/uploads';
+import {uploadFile} from '@/modules/media/model/uploads';
 
 afterEach(() => vi.unstubAllGlobals());
-
-it('validates whole attachment batches before any network request', () => {
-    const photo = new File(['image'], 'photo.jpg', {type: 'image/jpeg'});
-    const video = new File(['video'], 'video.mp4', {type: 'video/mp4'});
-    expect(validAttachments([photo, video], 'media')).toBe('');
-    expect(validAttachments(Array(11).fill(photo), 'media')).toBe('tooMany');
-    expect(validAttachments([new File(['pdf'], 'report.pdf', {type: 'application/pdf'})], 'media')).toBe(
-        'unsupported',
-    );
-    expect(validAttachments([new File(['pdf'], 'report.pdf', {type: 'application/pdf'})], 'document')).toBe(
-        '',
-    );
-    const large = new File(['x'], 'large.bin');
-    Object.defineProperty(large, 'size', {value: MAX_UPLOAD_BYTES + 1});
-    expect(validAttachments([large], 'document')).toBe('tooLarge');
-    expect(validAttachments([new File([], 'empty.bin')], 'document')).toBe('tooLarge');
-});
 
 it('uses the generated upload operation while retaining native progress and cancellation', async () => {
     const completed = {id: 'upload-1', fileName: 'отчёт.pdf', size: 4, mimeType: 'application/pdf'};

@@ -1,5 +1,15 @@
 import {Box, Dialog, DropdownMenu, Icon, Portal, Text} from '@gravity-ui/uikit';
-import {Copy, Link, EyeSlash, ArrowRotateLeft, Sparkles, TrashBin, Pencil} from '@gravity-ui/icons';
+import {
+    Copy,
+    Link,
+    EyeSlash,
+    ArrowRotateLeft,
+    Sparkles,
+    TrashBin,
+    Pencil,
+    Text as TextIcon,
+    Volume,
+} from '@gravity-ui/icons';
 import {useState} from 'react';
 import {useTranslations} from 'next-intl';
 import {api, errorMessage} from '@/shared/api/client';
@@ -16,7 +26,7 @@ export interface MessageContextMenuProps {
     } | null;
     readonly onClose: () => void;
     readonly onExcludedChanged: (change: ContextExclusionChange) => Promise<void>;
-    readonly onDraftRequest?: () => Promise<void>;
+    readonly onDraftRequest?: (output: 'text' | 'voice') => Promise<void>;
     readonly messageLink?: string;
     readonly onDeleted?: (result: MessageDeletionResult) => Promise<void>;
     readonly onDialogOpenChange?: (open: boolean) => void;
@@ -136,7 +146,19 @@ export function MessageContextMenu({
                                               text: t('draft'),
                                               iconStart: <Icon data={Sparkles} size={17} />,
                                               disabled: busy,
-                                              action: () => void action(onDraftRequest),
+                                              items: [
+                                                  {
+                                                      text: common('voice.generateText'),
+                                                      iconStart: <Icon data={TextIcon} size={17} />,
+                                                      action: () => void action(() => onDraftRequest('text')),
+                                                  },
+                                                  {
+                                                      text: common('voice.generateVoice'),
+                                                      iconStart: <Icon data={Volume} size={17} />,
+                                                      action: () =>
+                                                          void action(() => onDraftRequest('voice')),
+                                                  },
+                                              ],
                                           },
                                       ]
                                     : []),

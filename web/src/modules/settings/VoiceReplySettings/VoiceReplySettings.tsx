@@ -1,6 +1,7 @@
-import {Flex, Select, Slider, Text} from '@gravity-ui/uikit';
+import {Flex, Select, Text} from '@gravity-ui/uikit';
 import {useTranslations} from 'next-intl';
 import type {SettingsDraftSectionProps} from '@/modules/settings/model/SettingsDraftSectionProps';
+import {SettingsSlider} from '@/shared/ui/SettingsSlider';
 
 export function VoiceReplySettings({value, onUpdate}: SettingsDraftSectionProps) {
     const t = useTranslations('voice');
@@ -29,20 +30,15 @@ export function VoiceReplySettings({value, onUpdate}: SettingsDraftSectionProps)
             />
             <Text color="secondary">{t('replyHints.' + value.voiceReplyMode)}</Text>
             {value.voiceReplyMode === 'random' && (
-                <Flex direction="column" gap={2}>
-                    <Flex justifyContent="space-between" gap={3}>
-                        <Text>{t('probability')}</Text>
-                        <Text color="secondary">{value.voiceReplyProbability}%</Text>
-                    </Flex>
-                    <Slider
-                        min={0}
-                        max={100}
-                        step={1}
-                        value={value.voiceReplyProbability}
-                        aria-label={t('probability')}
-                        onUpdate={(voiceReplyProbability) => onUpdate({...value, voiceReplyProbability})}
-                    />
-                </Flex>
+                <SettingsSlider
+                    label={t('probability')}
+                    displayValue={value.voiceReplyProbability + '%'}
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={value.voiceReplyProbability}
+                    onUpdate={(voiceReplyProbability) => onUpdate({...value, voiceReplyProbability})}
+                />
             )}
         </Flex>
     );

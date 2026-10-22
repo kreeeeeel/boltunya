@@ -28,12 +28,6 @@
     flex-shrink: 0;
 }
 
-.model {
-    font-size: 14px;
-    color: var(--g-color-text-brand);
-    white-space: nowrap;
-}
-
 .headerButton {
     --g-button-height: 32px;
 
@@ -89,7 +83,7 @@
     display: flow-root;
     user-select: text;
     padding: 8px 11px 5px;
-    border-radius: 12px;
+    border-radius: 16px;
     box-shadow: var(--tiho-shadow);
     min-width: 72px;
     animation: message-enter 180ms var(--tiho-ease);
@@ -170,62 +164,9 @@
     user-select: none;
 }
 
-.composerArea {
-    position: relative;
-    padding: 8px 18px 10px;
-    flex-shrink: 0;
-}
-
-.richDraft {
-    margin-bottom: 8px;
-}
-
 .voiceDraft {
     margin: 0 10px 8px;
     flex-shrink: 0;
-}
-
-.composer {
-    padding: 4px 6px;
-    background: var(--tiho-panel);
-    border-radius: 10px;
-    box-shadow: var(--tiho-shadow);
-    min-height: 44px;
-}
-
-.input {
-    flex: 1;
-    min-width: 0;
-}
-
-.composerButton {
-    --g-button-height: 32px;
-
-    width: 32px;
-    flex-shrink: 0;
-    border-radius: 8px;
-    align-self: center;
-}
-
-.attachmentMenu {
-    --g-popup-border-width: 0px;
-    --g-popup-border-radius: 14px;
-
-    overflow: hidden;
-}
-
-.attachmentMenu :global(.g-menu) {
-    padding: 6px;
-}
-
-.attachmentMenu :global(.g-menu__item) {
-    border-radius: 8px;
-    min-height: 36px;
-}
-
-.draftSkeleton {
-    margin: 10px 0;
-    flex: 1;
 }
 
 .empty {
@@ -310,20 +251,12 @@
         gap: 4px;
     }
 
-    .model {
-        display: none;
-    }
-
     .bubble {
         max-width: 88%;
     }
 
     .messageInner {
         padding: 16px 8px;
-    }
-
-    .composerArea {
-        padding-inline: 10px;
     }
 }
 
@@ -348,7 +281,7 @@
 
 .grouped {
     margin-bottom: -3px;
-    border-radius: 12px;
+    border-radius: 16px;
 }
 
 .stickerBubble::before {
@@ -417,12 +350,30 @@
     padding: 5px 8px;
     border-left: 3px solid var(--g-color-text-brand);
     background: color-mix(in srgb, var(--g-color-text-brand) 8%, transparent);
-    border-radius: 4px;
+    border-radius: 7px;
+    margin-top: 6px;
     margin-bottom: 6px;
     font-size: 14px;
     line-height: 20px;
     max-height: 46px;
     overflow: hidden;
+}
+
+.forwarded {
+    margin: 4px 0 8px;
+    color: var(--g-color-text-brand);
+    font-size: 14px;
+    line-height: 18px;
+}
+
+.mediaBubble .forwarded,
+.mediaBubble .replyQuote {
+    margin-inline: 8px;
+}
+
+.bubble:is([data-message-kind='voice'], [data-message-kind='audio']) {
+    padding: 6px 0 4px;
+    border-radius: 18px;
 }
 
 .mediaBubble .messageText {

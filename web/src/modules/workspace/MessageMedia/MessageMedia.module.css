@@ -1,16 +1,3 @@
-.photoButton {
-    --g-button-background-color-hover: transparent;
-    --g-button-background-color-active: transparent;
-    --g-button-height: 100%;
-    --g-button-padding: 0;
-
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 8px;
-}
-
 .picture {
     border-radius: 10px;
     position: relative;
@@ -35,14 +22,6 @@
     transition: opacity var(--tiho-duration);
 }
 
-.expanded {
-    display: block;
-    width: 100%;
-    height: calc(100dvh - 72px);
-    padding: 20px;
-    object-fit: contain;
-}
-
 .animation {
     position: absolute;
     inset: 0;
@@ -58,15 +37,6 @@
 
 .videoContainer {
     position: relative;
-}
-
-.expandVideo {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background: #10131690;
-    color: #fff;
-    border-radius: 10px;
 }
 
 .audio {
@@ -92,30 +62,6 @@
     height: 180px;
     object-fit: contain;
     filter: drop-shadow(0 2px 3px #0001);
-}
-
-.viewerModal {
-    --g-modal-margin: 0px;
-    --g-modal-max-width: 100vw;
-    --g-modal-border-radius: 0px;
-}
-
-.viewer {
-    width: 100vw;
-    height: 100dvh;
-    max-width: 100vw;
-    background: #121a21;
-    color: #fff;
-}
-
-.viewerBar {
-    height: 72px;
-    padding: 0 24px;
-    color: #fff;
-}
-
-.viewerBar :global(.g-button) {
-    --g-button-text-color: #fff;
 }
 
 .videoNote {

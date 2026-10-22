@@ -1,8 +1,8 @@
 'use client';
 import {Box, Button, Flex, Icon, Text, Tooltip} from '@gravity-ui/uikit';
-import {Clock, Comments, Moon, Sparkles, ChartColumn, CircleExclamation} from '@gravity-ui/icons';
+import {Clock, Comments, Moon, Sparkles, CircleExclamation, Volume} from '@gravity-ui/icons';
 import {useTranslations} from 'next-intl';
-import {useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import {ActivityPanel} from '@/modules/activity/ActivityPanel/ActivityPanel';
 import {ChatList} from '@/modules/workspace/ChatList/ChatList';
 import {SettingsDialog} from '@/modules/workspace/SettingsDialog/SettingsDialog';
@@ -12,7 +12,8 @@ import {Conversation} from '@/modules/workspace/Conversation/Conversation';
 import {ChatWallpaper} from '@/modules/workspace/ChatWallpaper/ChatWallpaper';
 import {Inspector} from '@/modules/workspace/Inspector/Inspector';
 import {ModelsPanel} from '@/modules/workspace/ModelsPanel/ModelsPanel';
-import {MetricsPanel} from '@/modules/monitoring/MetricsPanel/MetricsPanel';
+import {SpeechLibrary} from '@/modules/speech/SpeechLibrary/SpeechLibrary';
+import {voicePreferences} from '@/modules/speech/model/voicePreferences';
 import {RuleDialog} from '@/modules/workspace/RuleDialog/RuleDialog';
 import {useWorkspace} from '@/modules/workspace/hooks/useWorkspace';
 import {Welcome} from '@/modules/workspace/Welcome/Welcome';
@@ -36,7 +37,7 @@ import type {MessageDeletionResult} from '@/modules/messages/MessageDeletionDial
 export function Workspace() {
     const t = useTranslations();
     const modelProfiles = useModelProfiles();
-    const {theme} = usePreferences();
+    const {theme, toggleTheme} = usePreferences();
     const [tab, setTab] = useState('chats');
     const [selected, setSelected] = useState<string | null>(null);
     const selectedChat = useRef<string | null>(null);
@@ -68,7 +69,7 @@ export function Workspace() {
         setMessages,
         updateMessage,
         historyVersion,
-    } = useWorkspace(selected);
+    } = useWorkspace(selected, tab === 'chats');
     const chats = state?.chats ?? [];
     const chat = chats.find((item) => item.id === selected);
     const profileId =
@@ -77,7 +78,7 @@ export function Workspace() {
             : chat?.rule.modelProfileId;
     const modelLabel = modelProfiles.profiles.find((profile) => profile.id === profileId)?.name;
     const paused = state?.settings.paused ?? true;
-    const queuedDraft = useQueuedDraft(chat?.id, refresh);
+    const {generate: generateDraft, synthesize: synthesizeDraft} = useQueuedDraft(chat?.id, refresh);
     useEffect(() => {
         if (!selected || tab !== 'chats') {
             return;
@@ -153,36 +154,48 @@ export function Workspace() {
         );
         await refresh();
     }
-    async function updateContextFlags(change: ContextExclusionChange) {
-        if (chat && selectedChat.current === chat.id) {
-            setMessages((previous) => applyContextExclusion(previous, chat.id, change));
-        }
-        await refresh();
-    }
-    async function messageDeleted(result: MessageDeletionResult) {
-        setMessages((previous) =>
-            previous.map((message) =>
-                message.chatId === result.chatId && message.id === result.messageId
-                    ? {...message, deleted: true, deletedAt: result.deletedAt}
-                    : message,
-            ),
-        );
-        await refresh();
-    }
-    async function draft(messageId?: string, output?: Parameters<typeof queuedDraft.generate>[2]) {
-        if (!chat) {
-            throw new DOMException('Aborted', 'AbortError');
-        }
-        return queuedDraft.generate(chat.rule, messageId, output);
-    }
-    function select(id: string) {
-        if (id === selected) {
-            return;
-        }
-        selectedChat.current = id;
-        setSelected(id);
-        setMessages([]);
-    }
+    const updateContextFlags = useCallback(
+        async (change: ContextExclusionChange) => {
+            if (chat && selectedChat.current === chat.id) {
+                setMessages((previous) => applyContextExclusion(previous, chat.id, change));
+            }
+            await refresh();
+        },
+        [chat, refresh, setMessages],
+    );
+    const messageDeleted = useCallback(
+        async (result: MessageDeletionResult) => {
+            setMessages((previous) =>
+                previous.map((message) =>
+                    message.chatId === result.chatId && message.id === result.messageId
+                        ? {...message, deleted: true, deletedAt: result.deletedAt}
+                        : message,
+                ),
+            );
+            await refresh();
+        },
+        [refresh, setMessages],
+    );
+    const draft = useCallback(
+        async (messageId?: string, output?: Parameters<typeof generateDraft>[2]) => {
+            if (!chat) {
+                throw new DOMException('Aborted', 'AbortError');
+            }
+            return generateDraft(chat.rule, messageId, output);
+        },
+        [chat, generateDraft],
+    );
+    const select = useCallback(
+        (id: string) => {
+            if (id === selected) {
+                return;
+            }
+            selectedChat.current = id;
+            setSelected(id);
+            setMessages([]);
+        },
+        [selected, setMessages],
+    );
     async function earlier() {
         if (!chat || messages.length === 0) {
             return false;
@@ -231,7 +244,7 @@ export function Workspace() {
     }
     if (state?.telegram.state !== 'ready') {
         return (
-            <Flex direction="column" className={styles.root} qa="workspace-shell" data-aigram-css-scope="">
+            <Flex direction="column" className={styles.root} qa="workspace-shell">
                 <WindowBar state={state} onPause={pause} onError={setActionError} />
                 <Welcome
                     state={state}
@@ -251,8 +264,9 @@ export function Workspace() {
             </Flex>
         );
     }
+    const voice = voicePreferences(state.settings, chat?.rule);
     return (
-        <Flex direction="column" className={styles.root} qa="workspace-shell" data-aigram-css-scope="">
+        <Flex direction="column" className={styles.root} qa="workspace-shell">
             {tab === 'chats' && chat && (
                 <ChatWallpaper
                     wallpaper={theme === 'dark' ? (chat.darkWallpaper ?? chat.wallpaper) : chat.wallpaper}
@@ -281,19 +295,13 @@ export function Workspace() {
                         {[
                             {id: 'chats', icon: Comments},
                             {id: 'models', icon: Sparkles},
+                            {id: 'speech', icon: Volume},
                             {id: 'activity', icon: Clock},
-                            {id: 'metrics', icon: ChartColumn},
                             {id: 'errors', icon: CircleExclamation},
                         ].map((item) => (
                             <Tooltip
                                 key={item.id}
-                                content={t(
-                                    item.id === 'errors'
-                                        ? 'diagnostics.title'
-                                        : item.id === 'metrics'
-                                          ? item.id + 'Nav'
-                                          : item.id,
-                                )}
+                                content={t(item.id === 'errors' ? 'diagnostics.title' : item.id)}
                                 placement="right"
                             >
                                 <Button
@@ -303,13 +311,7 @@ export function Workspace() {
                                     qa={'nav-' + item.id}
                                     aria-current={tab === item.id ? 'page' : undefined}
                                     onClick={() => setTab(item.id)}
-                                    aria-label={t(
-                                        item.id === 'errors'
-                                            ? 'diagnostics.title'
-                                            : item.id === 'metrics'
-                                              ? item.id + 'Nav'
-                                              : item.id,
-                                    )}
+                                    aria-label={t(item.id === 'errors' ? 'diagnostics.title' : item.id)}
                                 >
                                     <Icon data={item.icon} size={21} />
                                 </Button>
@@ -323,7 +325,7 @@ export function Workspace() {
                                 size="l"
                                 view="flat-secondary"
                                 aria-label={t('theme')}
-                                onClick={() => setSettingsSection('appearance')}
+                                onClick={toggleTheme}
                             >
                                 <Icon data={Moon} size={21} />
                             </Button>
@@ -374,7 +376,7 @@ export function Workspace() {
                                     }}
                                     onSend={send}
                                     onDraft={draft}
-                                    onVoiceSynthesis={queuedDraft.synthesize}
+                                    onVoiceSynthesis={synthesizeDraft}
                                     onVoiceSend={async (voiceId) => {
                                         if (chat) {
                                             await api.speech.sendVoiceDraft({
@@ -388,11 +390,9 @@ export function Workspace() {
                                             }
                                         }
                                     }}
-                                    voiceSynthesisModel={
-                                        state.settings.voiceSynthesisModel ?? 'piper-ru-irina'
-                                    }
-                                    voiceSpeechRate={state.settings.voiceSpeechRate ?? 1}
-                                    onVoiceSettings={() => setSettingsSection('voice')}
+                                    voiceSynthesisModel={voice.voiceSynthesisModel}
+                                    voiceSpeechRate={voice.voiceSpeechRate}
+                                    onVoiceSettings={() => setTab('speech')}
                                     onBack={() => {
                                         selectedChat.current = null;
                                         setSelected(null);
@@ -408,6 +408,7 @@ export function Workspace() {
                                         chat={chat}
                                         modelLabel={modelLabel}
                                         customStyles={state.settings.customStyles ?? []}
+                                        settings={state.settings}
                                         onConfigure={() => setEditing(chat)}
                                         onCollectContext={() => setContextChat(chat)}
                                         onDeleted={() => setDeletedChat(chat)}
@@ -418,11 +419,6 @@ export function Workspace() {
                             )}
                         </>
                     )}
-                    {tab === 'metrics' && (
-                        <Box className={styles.panel}>
-                            <MetricsPanel />
-                        </Box>
-                    )}
                     {tab === 'errors' && <ErrorsPanel />}
                     {tab === 'models' && !stateLoading && (
                         <Box className={styles.panel}>
@@ -432,6 +428,11 @@ export function Workspace() {
                                 defaultModelProfileId={state?.settings.defaultModelProfileId}
                                 onRefresh={refresh}
                             />
+                        </Box>
+                    )}
+                    {tab === 'speech' && (
+                        <Box className={styles.panel}>
+                            <SpeechLibrary settings={state.settings} onRefresh={refresh} />
                         </Box>
                     )}
                     {tab === 'activity' && !stateLoading && (
@@ -484,12 +485,17 @@ export function Workspace() {
                         setSettingsSection(null);
                         setEditing(chat);
                     }}
+                    onOpenSpeechLibrary={() => {
+                        setSettingsSection(null);
+                        setTab('speech');
+                    }}
                 />
             )}
             {editing && (
                 <RuleDialog
                     key={`rule:${editing.id}`}
                     chat={editing}
+                    settings={state.settings}
                     engine={state?.engine}
                     defaultModel={state.settings.defaultModel}
                     defaultModelProfileId={state.settings.defaultModelProfileId}

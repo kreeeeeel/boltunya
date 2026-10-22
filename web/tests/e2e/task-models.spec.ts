@@ -37,13 +37,11 @@ test.beforeEach(async ({page}) => {
             supportsVision: true,
         },
     ];
-    let appearance: Contract.AppearanceSettings = {mode: 'light', tokens: {}, css: ''};
     let routing: Contract.ModelTaskRouting = {
         enabled: true,
         parallelIndependentTasks: false,
         replyProfileId: '',
         memoryProfileId: '',
-        researchProfileId: '',
         visionProfileId: '',
     };
     await page.route('**/api/**', async (route) => {
@@ -51,9 +49,6 @@ test.beforeEach(async ({page}) => {
         const path = new URL(request.url()).pathname;
         if (path === '/api/state') {
             await route.fulfill({json: state});
-        } else if (path === '/api/appearance') {
-            if (request.method() === 'PUT') appearance = request.postDataJSON();
-            await route.fulfill({json: appearance});
         } else if (path === '/api/model-profiles') {
             await route.fulfill({json: {profiles: modelProfiles, presets: [providerPreset]}});
         } else if (path === '/api/model-routing') {
@@ -149,7 +144,42 @@ for (const dark of [false, true]) {
         const search = page.getByRole('textbox', {name: ru.modelSearch.label, exact: true});
         await expect(locals).toHaveCount(4);
         await expect(profiles).toHaveCount(2);
+        for (const cards of [locals, profiles]) {
+            const appearance = await cards.evaluateAll((elements) =>
+                elements.map((element) => ({
+                    border: getComputedStyle(element).borderWidth,
+                    radius: getComputedStyle(element).borderRadius,
+                })),
+            );
+            expect(appearance.every((card) => card.border === '0px' && card.radius === '16px')).toBe(true);
+        }
+        const backgrounds = await page
+            .locator('[data-qa="model-card"]')
+            .evaluateAll((elements) =>
+                elements.slice(0, 2).map((element) => getComputedStyle(element).backgroundColor),
+            );
+        expect(backgrounds[0]).not.toBe(backgrounds[1]);
         await expect(page.locator('[data-model-id="custom:local"]')).toContainText(ru.modelMetadataUnknown);
+        const installedOnly = page.getByRole('switch', {name: ru.modelFilters.installed, exact: true});
+        await installedOnly.focus();
+        await installedOnly.press('Space');
+        await expect(installedOnly).toBeChecked();
+        await expect(locals).toHaveCount(3);
+        await expect(profiles).toHaveCount(0);
+        await expect(page.locator('[data-model-id="qwen3-vl:4b"]')).toHaveCount(0);
+        await search.fill('custom');
+        await expect(locals).toHaveCount(1);
+        await search.fill('');
+        await installedOnly.press('Space');
+        await expect(installedOnly).not.toBeChecked();
+        await expect(locals).toHaveCount(4);
+        expect(
+            await search.evaluate(
+                (element) => getComputedStyle(element.closest('.g-text-input')!).borderWidth,
+            ),
+        ).toBe('0px');
+        const tabs = page.getByRole('tablist', {name: ru.modelFilters.label}).locator('..');
+        await expect(tabs).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
         await page.getByRole('tab', {name: ru.modelFilters.vision, exact: true}).click();
         await expect(locals).toHaveCount(2);
         await expect(profiles).toHaveCount(1);

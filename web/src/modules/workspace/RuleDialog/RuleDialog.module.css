@@ -1,14 +1,162 @@
 .modal {
-    --g-modal-border-radius: 24px;
-    --g-modal-margin: 24px;
+    --g-modal-border-radius: 22px;
+    --g-modal-margin: 20px;
 }
 
 .dialog {
-    padding-block: 6px;
+    width: min(920px, calc(100vw - 48px));
+    max-width: none;
+    padding: 0;
+    overflow: hidden;
 }
 
-.body {
-    padding: 8px 0 16px;
+.shell {
+    position: relative;
+    height: min(780px, calc(100dvh - 64px));
+    min-height: 420px;
+    overflow: hidden;
+    background: var(--tiho-panel);
+}
+
+.sidebar {
+    width: 228px;
+    flex-shrink: 0;
+    min-height: 0;
+    background: var(--tiho-bg);
+}
+
+.navigation {
+    height: 100%;
+    min-height: 0;
+}
+
+.identity {
+    padding: 24px 18px 20px;
+    flex-shrink: 0;
+}
+
+.identityText {
+    min-width: 0;
+}
+
+.identityText > :last-child {
+    font-size: 13px;
+}
+
+.chatName {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 650;
+    font-size: 15px;
+    line-height: 22px;
+}
+
+.navScroll,
+.main,
+.panel,
+.scroll {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+}
+
+.panel,
+.scroll {
+    height: 100%;
+}
+
+.panel[hidden] {
+    display: none;
+}
+
+.navScroll :global(.g-menu) {
+    padding: 0 10px 20px;
+    background: transparent;
+    box-shadow: none;
+    border: 0;
+}
+
+.navigation :global(.g-menu__group) {
+    padding-block: 8px;
+}
+
+.navigation :global(.g-menu__group-label) {
+    padding: 0 12px 8px;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.navigation :global(.g-menu__item) {
+    min-height: 38px;
+    margin-block: 2px;
+    padding-inline: 12px;
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+.navigation :global(.g-menu__item-content) {
+    min-width: 0;
+    line-height: 20px;
+}
+
+.heading {
+    padding: 24px 60px 16px 24px;
+    flex-shrink: 0;
+    line-height: 1.6;
+}
+
+.heading :global(.g-text) {
+    margin: 0;
+}
+
+.content {
+    width: 100%;
+    padding: 8px 24px 24px;
+    line-height: 1.6;
+}
+
+.footer {
+    padding: 12px 24px;
+    flex-shrink: 0;
+    background: var(--tiho-panel);
+}
+
+.footer :global(.g-dialog-footer) {
+    padding: 0;
+}
+
+.footer :global(.g-dialog-footer__bts-wrapper) {
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+.footer :global(.g-dialog-footer__button) {
+    min-width: 108px;
+}
+
+.error {
+    display: block;
+    margin-bottom: 12px;
+}
+
+.close {
+    position: absolute;
+    top: 20px;
+    right: 18px;
+    border-radius: 50%;
+    z-index: 2;
+}
+
+.enable {
+    padding: 16px;
+    border-radius: 14px;
+    background: var(--tiho-selected);
+}
+
+.fieldLabel {
+    margin-bottom: 10px;
 }
 
 .styleControl :global(.g-select-control__option-text) {
@@ -18,43 +166,76 @@
     min-width: 0;
 }
 
-.enable {
-    padding: 18px;
-    border-radius: 14px;
-    color: var(--g-color-text-brand);
-    background: var(--tiho-selected);
+.selectPopup {
+    border-radius: 12px;
 }
 
-.label {
-    display: block;
-    font-weight: 600;
-    font-size: 13px;
-    margin-bottom: 12px;
+.selectFilter {
+    padding: 8px 8px 4px;
 }
 
-.label:has(> *) {
+.searchIcon {
     display: flex;
-}
-
-.hint {
-    display: block;
-    font-size: 13px;
-    color: var(--tiho-muted);
-    line-height: 1.7;
-    margin-top: 8px;
-}
-
-.test {
-    padding: 20px;
-    background: var(--tiho-bg);
-    border: 1px solid var(--tiho-line);
-    border-radius: 16px;
+    align-items: center;
+    justify-content: center;
+    padding-left: 12px;
+    padding-right: 10px;
+    color: var(--g-color-text-secondary);
 }
 
 .result {
-    padding: 14px;
-    background: var(--tiho-panel);
-    border-radius: 12px;
+    padding: 16px;
+    border-radius: 14px;
+    background: var(--tiho-bg);
     line-height: 1.7;
     white-space: pre-wrap;
+}
+
+.mobileHeading {
+    display: none;
+}
+
+@media (width <= 720px) {
+    .modal {
+        --g-modal-margin: 0px;
+        --g-modal-border-radius: 0px;
+    }
+
+    .dialog {
+        width: 100vw;
+    }
+
+    .shell {
+        height: 100dvh;
+        min-height: 0;
+    }
+
+    .sidebar {
+        display: none;
+    }
+
+    .mobileHeading {
+        display: flex;
+        padding: 20px 20px 0;
+    }
+
+    .mobileHeading > :first-child {
+        padding-right: 40px;
+    }
+
+    .heading {
+        padding: 20px 20px 12px;
+    }
+
+    .heading :global(.g-text_variant_header-1) {
+        font-size: 20px;
+    }
+
+    .content {
+        padding: 8px 20px 20px;
+    }
+
+    .footer {
+        padding: 12px 20px;
+    }
 }

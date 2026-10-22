@@ -3,6 +3,7 @@ import {Box, Button, Flex, Icon, Label, Link, Text, Tooltip} from '@gravity-ui/u
 import {useLocale, useTranslations} from 'next-intl';
 import type {SpeechAsset, SpeechDownload} from '@aigram/api-client';
 import {speechLanguageName} from '@/modules/speech/model/speechLanguageName';
+import {formatSpeechSize} from '@/modules/speech/model/formatSpeechSize';
 import styles from '@/modules/speech/SpeechAssetCard/SpeechAssetCard.module.css';
 
 export function SpeechAssetCard({
@@ -15,6 +16,7 @@ export function SpeechAssetCard({
     onCancel,
     onSelect,
     onPreview,
+    requiredDownloadBytes,
 }: {
     readonly asset: SpeechAsset;
     readonly download?: SpeechDownload;
@@ -25,6 +27,7 @@ export function SpeechAssetCard({
     readonly onCancel: () => void;
     readonly onSelect?: () => void;
     readonly onPreview?: () => void;
+    readonly requiredDownloadBytes?: number;
 }) {
     const t = useTranslations('voice');
     const locale = useLocale();
@@ -50,13 +53,7 @@ export function SpeechAssetCard({
                     <Text variant="subheader-2" className={styles.title}>
                         {asset.title}
                     </Text>
-                    <Text color="secondary">
-                        {t('assetSize', {
-                            size: new Intl.NumberFormat(locale, {maximumFractionDigits: 1}).format(
-                                asset.sizeBytes / 1024 / 1024,
-                            ),
-                        })}
-                    </Text>
+                    <Text color="secondary">{t('engines.' + (asset.engine ?? 'sherpa'))}</Text>
                 </Flex>
             </Flex>
             <Flex gap={2} wrap="wrap" alignItems="center">
@@ -67,11 +64,47 @@ export function SpeechAssetCard({
                     </Label>
                 )}
             </Flex>
-            <Text color="secondary" className={styles.languages}>
-                {asset.languages.length
-                    ? asset.languages.map((language) => speechLanguageName(language, locale)).join(' · ')
-                    : t('allLanguages')}
-            </Text>
+            <Flex direction="column" className={styles.features}>
+                {[
+                    {
+                        label: t('downloadSize'),
+                        value: formatSpeechSize(requiredDownloadBytes ?? asset.sizeBytes, locale),
+                    },
+                    {
+                        label: t('modelLanguages'),
+                        value: asset.languages.length
+                            ? asset.languages
+                                  .filter((language) => language === 'ru' || language === 'en')
+                                  .map((language) => speechLanguageName(language, locale))
+                                  .join(' · ') ||
+                              asset.languages
+                                  .map((language) => speechLanguageName(language, locale))
+                                  .join(' · ')
+                            : t('languageIndependent'),
+                    },
+                    {
+                        label: t('modelFormat'),
+                        value:
+                            asset.format ||
+                            (asset.kind === 'runtime'
+                                ? 'Windows x64'
+                                : asset.kind === 'recognition'
+                                  ? 'Whisper'
+                                  : 'VITS / Piper'),
+                    },
+                ].map(({label, value}) => (
+                    <Flex
+                        key={label}
+                        alignItems="center"
+                        justifyContent="space-between"
+                        gap={3}
+                        className={styles.feature}
+                    >
+                        <Text color="secondary">{label}</Text>
+                        <Text className={styles.featureValue}>{value}</Text>
+                    </Flex>
+                ))}
+            </Flex>
             {!!missing.length && (
                 <Text color="secondary">{t('dependencies', {names: missing.join(', ')})}</Text>
             )}
@@ -135,7 +168,7 @@ export function SpeechAssetCard({
                         className={styles.action}
                         size="l"
                         view={selected ? 'flat-info' : 'flat-secondary'}
-                        disabled={selected || !ready}
+                        disabled={selected || !ready || busy}
                         onClick={onSelect}
                         aria-label={t(selected ? 'selectedAsset' : 'selectAsset', {name: asset.title})}
                     >

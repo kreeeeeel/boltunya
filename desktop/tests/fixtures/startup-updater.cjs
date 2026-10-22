@@ -9,11 +9,6 @@ const {ReleaseClient} = require(join(root, 'desktop/dist/release-client.js'));
 const state = {telegram: {state: 'waitPhoneNumber'}, settings: {paused: true, closeToTray: true, launchAtLogin: false}};
 const server = createServer((request, response) => {
     response.setHeader('Content-Type', 'text/html;charset=utf-8');
-    if (request.url.startsWith('/media-viewer/')) {
-        if (!request.headers.cookie?.includes('tiho=synthetic-desktop-session')) { response.writeHead(401); response.end('Session required'); return; }
-        response.end('<main data-qa="native-media-viewer">Synthetic authenticated media</main>');
-        return;
-    }
     if (request.url === '/') response.setHeader('Set-Cookie', 'tiho=synthetic-desktop-session;Path=/;HttpOnly;SameSite=Strict');
     response.end(request.url === '/tray/' ? '<div data-qa="tray-menu" style="height:146px">Synthetic tray</div>' : '<main data-qa="startup-main">Synthetic startup</main>');
 });

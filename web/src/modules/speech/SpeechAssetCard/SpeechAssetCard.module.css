@@ -1,12 +1,12 @@
 .card {
     min-width: 0;
-    padding: 16px;
+    padding: 20px;
     border-radius: 16px;
-    background: var(--g-color-base-generic);
+    background: var(--tiho-panel);
 }
 
 .selected {
-    background: var(--g-color-base-info-light);
+    background: color-mix(in srgb, var(--tiho-panel) 90%, var(--tiho-ink) 10%);
 }
 
 .icon {
@@ -27,9 +27,26 @@
     overflow-wrap: anywhere;
 }
 
-.languages {
-    overflow-wrap: anywhere;
+.features {
+    flex: 1;
+}
+
+.feature {
+    padding-block: 10px;
+    border-bottom: 1px solid var(--tiho-line);
+    font-size: 14px;
     line-height: 1.5;
+}
+
+.feature:last-child {
+    border-bottom: 0;
+}
+
+.featureValue {
+    max-width: 56%;
+    overflow-wrap: anywhere;
+    text-align: right;
+    font-weight: 500;
 }
 
 .actions {
@@ -49,6 +66,10 @@
 }
 
 .source {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
     overflow-wrap: anywhere;
 }
 

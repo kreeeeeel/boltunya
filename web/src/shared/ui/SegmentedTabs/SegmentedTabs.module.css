@@ -10,6 +10,10 @@
     scrollbar-width: none;
 }
 
+.panel {
+    background: var(--tiho-panel);
+}
+
 .list[role='tablist'] {
     --g-tabs-border-width: 0px;
     --g-tabs-item-border-width: 0px;
@@ -39,6 +43,17 @@
 
 .icon {
     display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.content {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    line-height: 18px;
 }
 
 .tab[aria-selected='true'] .icon {

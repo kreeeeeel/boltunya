@@ -16,15 +16,6 @@
     text-overflow: ellipsis;
 }
 
-.subtitleRow {
-    min-width: 0;
-    height: 18px;
-}
-
-.copy {
-    flex-shrink: 0;
-}
-
 .title {
     font-size: 15px;
     font-weight: 600;

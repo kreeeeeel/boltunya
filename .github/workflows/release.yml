@@ -61,8 +61,6 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npm run test:updater --prefix desktop
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          npm run test:media --prefix desktop
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: Aigram-Windows
@@ -94,7 +92,7 @@ jobs:
           $nextEntry=$changelog.IndexOf("`n## ", $entryStart + 3, [StringComparison]::Ordinal)
           $entry=if ($nextEntry -lt 0) { $changelog.Substring($entryStart) } else { $changelog.Substring($entryStart, $nextEntry - $entryStart) }
           if (-not $entry.Contains('### Changed') -and -not $entry.Contains('### Fixed') -and -not $entry.Contains('### Added') -and -not $entry.Contains('### Removed')) { throw 'Release entry must describe actual changes' }
-          $checks="`n`n### Release checks`n`nKotlin, generated contracts and HTTP clients, frontend and Electron checks, browser scenarios, native window/tray, updater and media smoke tests passed before publication. Built with JDK 21. Source: $env:GITHUB_SHA. [Verification run](https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID). Download SHA256.txt to verify Aigram.exe and the installable Aigram-API-Client.tgz SDK; Boltunya.exe is the identical compatibility download.`n"
+          $checks="`n`n### Release checks`n`nKotlin, generated contracts and HTTP clients, frontend and Electron checks, browser scenarios, native window/tray, and updater smoke tests passed before publication. Built with JDK 21. Source: $env:GITHUB_SHA. [Verification run](https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID). Download SHA256.txt to verify Aigram.exe and the installable Aigram-API-Client.tgz SDK; Boltunya.exe is the identical compatibility download.`n"
           $notesPath=Join-Path $releaseDirectory 'notes.md'
           Set-Content -Encoding utf8 -LiteralPath $notesPath -Value ($entry.Trim() + $checks)
           gh release create "v$version" "$releaseDirectory/Aigram.exe" "$releaseDirectory/Boltunya.exe" "$releaseDirectory/SHA256.txt" "$releaseDirectory/Diagnose-AI.ps1" "$releaseDirectory/Aigram-API-Client.tgz" --target "$env:GITHUB_SHA" --title "Aigram $version" --notes-file $notesPath

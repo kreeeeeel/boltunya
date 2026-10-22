@@ -6,11 +6,13 @@ export function filterSpeechAssets(
     query: string,
     language: string,
     locale: string,
+    installedOnly = false,
 ): SpeechAsset[] {
     const search = query.trim().toLocaleLowerCase(locale);
     return assets.filter(
         (asset) =>
             (!kind || asset.kind === kind) &&
+            (!installedOnly || asset.installed) &&
             (!language || asset.languages.includes(language)) &&
             (!search ||
                 [asset.title, asset.id, ...asset.languages].some((value) =>

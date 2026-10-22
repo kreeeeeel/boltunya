@@ -1,19 +1,19 @@
+import {initializeTestTheme, persistTestTheme} from '../fixtures/settings';
 import {expect, test} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {workspaceState} from '../fixtures/workspace';
 import {activityDetails, testActivity} from '../fixtures/activity';
 import type * as Contract from '@aigram/api-client';
-import {persistTestTheme} from '../fixtures/settings';
 import {historyPage, historyStorage} from '../fixtures/activityHistory';
 import ru from '../../src/shared/i18n/ru.json';
 test.beforeEach(async ({page}) => {
+    await initializeTestTheme(page, false);
     const state = structuredClone(workspaceState);
     state.activity = structuredClone(testActivity);
     state.replyQueue = {paused: false, queued: 1, running: 1};
     state.settings.paused = false;
     const feedbacks = new Map<string, Contract.ActivityFeedback>();
-    let appearance = {mode: 'light', tokens: {}, css: ''};
     await page.route('**/api/**', async (route) => {
         const request = route.request();
         const path = new URL(request.url()).pathname;
@@ -24,12 +24,7 @@ test.beforeEach(async ({page}) => {
                 ? [path, parts[3], parts[4]]
                 : null;
         const feedbackMatch = item && parts.length === 5 && parts[4] === 'feedback' ? [path, parts[3]] : null;
-        if (path === '/api/appearance') {
-            if (request.method() === 'PUT') {
-                appearance = request.postDataJSON();
-            }
-            await route.fulfill({json: appearance});
-        } else if (path === '/api/activity/history') {
+        if (path === '/api/activity/history') {
             await route.fulfill({json: historyPage(state.activity)});
         } else if (path === '/api/activity/history/settings') {
             await route.fulfill({
@@ -37,8 +32,8 @@ test.beforeEach(async ({page}) => {
             });
         } else if (path === '/api/model-profiles') {
             await route.fulfill({json: {profiles: [], presets: []}});
-        } else if (path === '/api/metrics') {
-            await route.fulfill({json: []});
+        } else if (path === '/api/speech') {
+            await route.fulfill({json: {assets: [], downloads: []}});
         } else if (path === '/api/settings') {
             Object.assign(state.settings, request.postDataJSON());
             if (state.replyQueue) {
@@ -291,11 +286,19 @@ test('dark events use the app palette and readable card sizes', async ({page}) =
     await page.screenshot({path: '../docs/resources/activity-dark.png', animations: 'disabled'});
 });
 test('parallel queue settings persist without fabricated resource forecasts', async ({page}) => {
+    let metricRequests = 0;
+    page.on('request', (request) => {
+        if (new URL(request.url()).pathname === '/api/metrics') {
+            metricRequests += 1;
+        }
+    });
     await page.getByRole('button', {name: 'Параллельные задачи', exact: true}).click();
     const dialog = page.getByRole('dialog', {name: 'Параллельные задачи', exact: true});
     await dialog.getByRole('radio', {name: '4', exact: true}).check();
     await expect(dialog.getByText('Очень высокая', {exact: true})).toBeVisible();
-    await expect(dialog.getByText('Текущие метрики недоступны.', {exact: true})).toBeVisible();
+    await expect(dialog.getByText(ru.events.parallel.estimateHint, {exact: true})).toBeVisible();
+    await expect(dialog.getByRole('progressbar')).toHaveCount(0);
+    expect(metricRequests).toBe(0);
     const saved = page.waitForRequest(
         (request) => request.method() === 'PATCH' && request.url().endsWith('/api/settings'),
     );

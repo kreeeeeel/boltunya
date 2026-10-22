@@ -39,7 +39,7 @@
     flex-direction: column;
     gap: 3px;
     padding: 8px 11px 5px;
-    border-radius: 12px;
+    border-radius: 16px;
     background: var(--tiho-bubble);
     max-width: min(72%, 560px);
     flex-shrink: 0;
@@ -56,19 +56,16 @@
     background: var(--tiho-outgoing);
 }
 
-.composerArea {
-    padding: 8px 18px 10px;
+.assistant {
+    margin: 8px 12px 12px;
+    padding: 10px 12px;
+    min-height: 64px;
+    border-radius: 16px;
+    background: var(--tiho-panel);
     flex-shrink: 0;
 }
 
-.composer {
-    background: var(--tiho-panel);
-    padding: 4px 6px;
-    border-radius: 10px;
-    min-height: 44px;
-}
-
-.input {
+.model {
     flex: 1;
     min-width: 0;
 }
@@ -99,10 +96,6 @@
         display: block;
     }
 
-    .model {
-        display: none;
-    }
-
     .bubble {
         max-width: 88%;
     }
@@ -110,8 +103,18 @@
     .messages {
         padding: 16px 8px;
     }
+}
 
-    .composerArea {
-        padding-inline: 10px;
+@media (width <= 480px) {
+    .model {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .assistant {
+        margin: 8px;
+        padding: 8px;
+        gap: 8px;
     }
 }

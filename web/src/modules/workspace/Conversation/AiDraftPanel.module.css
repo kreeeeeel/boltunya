@@ -1,0 +1,14 @@
+.root {
+    margin: 8px 12px 0;
+    padding: 16px;
+    min-width: 0;
+    border-radius: 16px;
+    background: var(--tiho-panel);
+}
+
+@media (height <= 700px) {
+    .root {
+        max-height: 42dvh;
+        overflow-y: auto;
+    }
+}

@@ -1,10 +1,45 @@
 .bar {
+    position: relative;
     -webkit-app-region: drag;
     height: 36px;
     min-height: 36px;
     flex-shrink: 0;
     background: color-mix(in srgb, var(--tiho-panel) 96%, transparent);
     user-select: none;
+}
+
+.download {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 460px;
+    max-width: calc(100% - 600px);
+    min-width: 0;
+}
+
+@media (width <= 760px) {
+    .bar {
+        gap: 8px;
+    }
+
+    .download {
+        position: static;
+        flex: 1;
+        width: auto;
+        max-width: none;
+        transform: none;
+    }
+
+    .brand :global(.g-text),
+    .ai :global(.g-text) {
+        display: none;
+    }
+
+    .ai {
+        --g-button-padding: 6px;
+
+        margin-right: 0;
+    }
 }
 
 .brand {

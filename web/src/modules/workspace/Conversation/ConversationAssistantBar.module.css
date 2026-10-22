@@ -1,0 +1,78 @@
+.root {
+    min-width: 0;
+    min-height: 64px;
+    flex-shrink: 0;
+    margin: 8px 12px 12px;
+    padding: 10px 12px;
+    border-radius: 16px;
+    background: var(--tiho-panel);
+}
+
+.mark {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 11px;
+    color: var(--g-color-text-brand);
+    background: var(--tiho-selected);
+}
+
+.model {
+    flex: 1;
+    min-width: 0;
+}
+
+.caption,
+.modelName {
+    line-height: 18px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.caption {
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.modelName {
+    color: var(--g-color-text-brand);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.actions {
+    flex-shrink: 0;
+}
+
+.action {
+    --g-button-padding: 0;
+
+    width: 36px;
+    border-radius: 10px;
+}
+
+.popup {
+    --g-popup-border-width: 0px;
+    --g-popup-border-radius: 12px;
+}
+
+@media (width <= 480px) {
+    .model {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .root {
+        margin: 8px;
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .mark {
+        width: 28px;
+        height: 32px;
+        background: transparent;
+    }
+}

@@ -14,10 +14,8 @@
 | Gravity Markdown Editor / ProseMirror | MIT — https://github.com/gravity-ui/markdown-editor , https://github.com/ProseMirror/prosemirror |
 | highlight.js / lowlight | BSD-3-Clause / MIT — https://github.com/highlightjs/highlight.js , https://github.com/wooorm/lowlight |
 | next-intl | MIT — https://github.com/amannn/next-intl |
-| openapi-typescript / openapi-fetch | MIT — https://github.com/openapi-ts/openapi-typescript |
-| jsoup | MIT — https://jsoup.org/ |
-| MCP Java SDK | MIT — https://github.com/modelcontextprotocol/java-sdk |
-| Noto Sans | SIL Open Font License — https://github.com/notofonts/latin-greek-cyrillic; bundled license: web/src/shared/assets/fonts/OFL.txt |
+| OpenAPI Generator | Apache-2.0 — https://github.com/OpenAPITools/openapi-generator |
+| Golos Text | SIL Open Font License 1.1; bundled license: web/src/shared/assets/fonts/OFL-GolosText.txt |
 | Ollama | MIT — https://github.com/ollama/ollama |
 | Spring AI / Spring Framework | Apache-2.0 — https://github.com/spring-projects/spring-ai , https://github.com/spring-projects/spring-framework |
 | JavaCV 1.5.14 | Apache-2.0, выбранный вариант двойной лицензии — [лицензия и исходники](https://github.com/bytedeco/javacv/blob/1.5.14/LICENSE.txt) |
@@ -25,6 +23,7 @@
 | FFmpeg 8.1.2, JavaCPP preset 8.1.2-1.5.14 | LGPL-3.0-or-later, обычный `windows-x86_64` classifier — [условия](https://github.com/FFmpeg/FFmpeg/blob/n8.1.2/LICENSE.md), [LGPLv3](https://github.com/FFmpeg/FFmpeg/blob/n8.1.2/COPYING.LGPLv3), [GPLv3, включённая в LGPLv3](https://github.com/FFmpeg/FFmpeg/blob/n8.1.2/COPYING.GPLv3) |
 | libopus 1.3.1 в FFmpeg | BSD-3-Clause — [лицензия и патентные уведомления](https://github.com/xiph/opus/blob/v1.3.1/COPYING) |
 | sherpa-onnx Java API 1.13.8 | Apache-2.0 — [лицензия и исходники](https://github.com/k2-fsa/sherpa-onnx/blob/v1.13.8/LICENSE) |
+| Applio 3.7.0, отдельный optional runtime | MIT для исходников Applio; зависимости portable-сборки имеют собственные лицензии — [исходники и условия](https://github.com/IAHispano/Applio/tree/3.7.0), [полные уведомления и ограничения RVC-моделей](docs/speech/licenses/README.md) |
 | Qwen 3, Qwen 2.5 7B | Apache-2.0 — https://huggingface.co/Qwen |
 | Gemma 3 | Gemma Terms of Use — https://ai.google.dev/gemma/terms |
 | Eclipse Temurin runtime | GPL-2.0 with Classpath Exception — https://adoptium.net |
@@ -33,14 +32,8 @@
 
 - [lottie-web](https://github.com/airbnb/lottie-web), MIT — отображение анимированных Telegram-стикеров TGS.
 
-Погодные данные предоставляет [Open-Meteo](https://open-meteo.com/) по [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Основной поиск обращается к DuckDuckGo и резервной RSS-выдаче Bing; Exa MCP используется только как дополнительный резерв с ключом пользователя; эти внешние сервисы не входят в поставку приложения. Бесплатный доступ Exa имеет ограничения; собственный ключ относится к учётной записи пользователя Exa.
-
 - [Electron](https://github.com/electron/electron), MIT — окно и системный трей. Уведомления Chromium включены в поставку Electron.
 - [Spring Boot](https://github.com/spring-projects/spring-boot), Apache-2.0 — жизненный цикл и внедрение зависимостей.
-- [OSHI](https://github.com/oshi/oshi), MIT — мониторинг ресурсов.
-- [Recharts](https://github.com/recharts/recharts), MIT — графики.
-
-Официальные курсы запрашиваются из XML-сервиса Банка России. Датированные новостные заголовки и описания запрашиваются из публичных RSS РБК и ТАСС; сервисы и их содержимое не входят в поставку приложения.
 
 ## Офлайн-речь и аудиокодек
 

@@ -1,6 +1,7 @@
-import {Box, Button, Flex, Loader, Select, Slider, Text, TextArea} from '@gravity-ui/uikit';
+import {Box, Button, Flex, Loader, Select, Text, TextArea} from '@gravity-ui/uikit';
 import {useTranslations} from 'next-intl';
 import type {useVoiceComposition} from '@/modules/speech/VoiceComposeDialog/useVoiceComposition';
+import {SettingsSlider} from '@/shared/ui/SettingsSlider';
 
 export function VoiceComposeFields({
     composition,
@@ -60,21 +61,16 @@ export function VoiceComposeFields({
                     </Box>
                 )}
             </Flex>
-            <Flex direction="column" gap={2}>
-                <Flex justifyContent="space-between">
-                    <Text>{t('speechRate')}</Text>
-                    <Text color="secondary">{composition.speed.toFixed(1)}×</Text>
-                </Flex>
-                <Slider
-                    min={0.5}
-                    max={2}
-                    step={0.1}
-                    value={composition.speed}
-                    disabled={disabled}
-                    onUpdate={composition.updateSpeed}
-                    aria-label={t('speechRate')}
-                />
-            </Flex>
+            <SettingsSlider
+                label={t('speechRate')}
+                displayValue={composition.speed.toFixed(1) + '×'}
+                min={0.5}
+                max={2}
+                step={0.1}
+                value={composition.speed}
+                disabled={disabled}
+                onUpdate={composition.updateSpeed}
+            />
             <Flex direction="column" gap={2}>
                 <Flex justifyContent="space-between" gap={3}>
                     <Text>{t('manualText')}</Text>

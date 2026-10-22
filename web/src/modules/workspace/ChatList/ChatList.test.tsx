@@ -1,6 +1,6 @@
 import {ThemeProvider} from '@gravity-ui/uikit';
 import {NextIntlClientProvider} from 'next-intl';
-import {fireEvent, render, screen, waitFor} from '@testing-library/react';
+import {act, fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {describe, expect, it, vi} from 'vitest';
 
 import {ChatList} from '@/modules/workspace/ChatList/ChatList';
@@ -116,7 +116,7 @@ describe('Chat selection', () => {
         expect(onSelect).toHaveBeenCalledExactlyOnceWith('43');
         expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     });
-    it('filters chats without changing automation settings', () => {
+    it('filters chats without changing automation settings', async () => {
         render(
             <NextIntlClientProvider locale="ru" messages={ru}>
                 <ThemeProvider>
@@ -126,6 +126,43 @@ describe('Chat selection', () => {
         );
         fireEvent.change(screen.getByRole('textbox', {name: ru.search}), {target: {value: 'Лиза'}});
         expect(screen.getByText('Лиза')).toBeInTheDocument();
-        expect(screen.queryByText('Марк Волков')).not.toBeInTheDocument();
+        await waitFor(() => expect(screen.queryByText('Марк Волков')).not.toBeInTheDocument());
+    });
+
+    it('debounces rapid input and shows an illustrated result only after the latest query settles', async () => {
+        vi.useFakeTimers();
+        try {
+            const view = render(
+                <NextIntlClientProvider locale="ru" messages={ru}>
+                    <ThemeProvider>
+                        <ChatList chats={testChats} selected={null} onSelect={vi.fn()} />
+                    </ThemeProvider>
+                </NextIntlClientProvider>,
+            );
+            const search = screen.getByRole('textbox', {name: ru.search});
+            fireEvent.change(search, {target: {value: 'Лиза'}});
+            await act(async () => {
+                vi.advanceTimersByTime(200);
+            });
+            fireEvent.change(search, {target: {value: 'Никого с таким именем'}});
+            await act(async () => {
+                vi.advanceTimersByTime(249);
+            });
+            expect(screen.getByRole('button', {name: 'Марк Волков'})).toBeVisible();
+            expect(view.container.querySelector('[data-qa="chat-list-skeleton"]')).toBeNull();
+            await act(async () => {
+                vi.advanceTimersByTime(1);
+            });
+            expect(screen.queryByRole('button', {name: 'Лиза'})).toBeNull();
+            const empty = view.container.querySelector('[data-qa="chat-list-empty"]');
+            expect(empty).toHaveTextContent(ru.noResults);
+            expect(empty).toHaveTextContent(ru.chatSearchEmptyHint);
+            expect(empty?.querySelector('img')).toHaveAttribute(
+                'src',
+                '/assets/illustrations/conversations.png',
+            );
+        } finally {
+            vi.useRealTimers();
+        }
     });
 });

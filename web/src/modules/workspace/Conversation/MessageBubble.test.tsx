@@ -88,3 +88,17 @@ it('shows the Telegram edited marker without replacing AI or context metadata', 
     expect(screen.getByLabelText(ru.aiMessage)).toBeVisible();
     expect(screen.getByLabelText(ru.messageMenu.excluded)).toBeVisible();
 });
+
+it('shows the real Telegram forward origin without inventing a profile link', () => {
+    const view = render(
+        <NextIntlClientProvider locale="ru" messages={ru}>
+            <ThemeProvider>
+                <MessageBubble message={{...message, forwardedFrom: 'Synthetic source'}} />
+            </ThemeProvider>
+        </NextIntlClientProvider>,
+    );
+    expect(view.container.querySelector('[data-qa="message-forwarded"]')).toHaveTextContent(
+        ru.assistantBar.forwarded.replace('{name}', 'Synthetic source'),
+    );
+    expect(view.container.querySelector('[data-qa="message-forwarded"] a')).toBeNull();
+});

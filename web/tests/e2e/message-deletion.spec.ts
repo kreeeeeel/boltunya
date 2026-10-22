@@ -1,3 +1,4 @@
+import {initializeTestTheme} from '../fixtures/settings';
 import {expect, test} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
@@ -9,6 +10,7 @@ for (const dark of [false, true]) {
     test(`deletion confirms an explicit scope and retains compact badges and scroll position in ${dark ? 'dark' : 'light'} theme`, async ({
         page,
     }) => {
+        await initializeTestTheme(page, dark);
         const state = structuredClone(workspaceState);
         state.chats = [state.chats[0]];
         const history: Message[] = Array.from({length: 40}, (_, index) => ({
@@ -28,8 +30,6 @@ for (const dark of [false, true]) {
             const path = new URL(request.url()).pathname;
             if (path === '/api/state') {
                 await route.fulfill({json: state});
-            } else if (path === '/api/appearance') {
-                await route.fulfill({json: {mode: dark ? 'dark' : 'light', tokens: {}, css: ''}});
             } else if (path === '/api/model-profiles') {
                 await route.fulfill({json: {profiles: [], presets: []}});
             } else if (path === '/api/chats/41/messages') {

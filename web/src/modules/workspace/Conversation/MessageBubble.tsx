@@ -1,6 +1,6 @@
 import {Box, Flex, Icon, Text, Tooltip} from '@gravity-ui/uikit';
-import {Check, CheckDouble, Sparkles, TrashBin, EyeSlash} from '@gravity-ui/icons';
-import {useEffect, useRef, useState} from 'react';
+import {ArrowRight, Check, CheckDouble, Sparkles, TrashBin, EyeSlash} from '@gravity-ui/icons';
+import {memo, useEffect, useMemo, useRef, useState} from 'react';
 import {useLocale, useTranslations} from 'next-intl';
 import type {Message} from '@/shared/api/client';
 import {isEmojiMessage} from '@/modules/workspace/model/messagePresentation';
@@ -12,12 +12,13 @@ import {messagesGrouped} from '@/modules/workspace/model/messagesGrouped';
 import {MessageContextMenu} from '@/modules/messages/MessageContextMenu/MessageContextMenu';
 import type {ContextExclusionChange} from '@/modules/messages/model/ContextExclusionChange';
 import type {MessageDeletionResult} from '@/modules/messages/MessageDeletionDialog/MessageDeletionDialog.types';
-export function MessageBubble({
+export const MessageBubble = memo(function MessageBubble({
     message,
     nextMessage,
     previousMessage,
     group = message.group,
     replyText,
+    timeFormat,
     onContextChanged,
     onDraftRequest,
     onMenuOpenChange,
@@ -29,8 +30,9 @@ export function MessageBubble({
     readonly previousMessage?: Message;
     readonly group?: boolean;
     readonly replyText?: string;
+    readonly timeFormat?: Intl.DateTimeFormat;
     readonly onContextChanged?: (change: ContextExclusionChange) => Promise<void>;
-    readonly onDraftRequest?: () => Promise<void>;
+    readonly onDraftRequest?: (messageId: string, output: 'text' | 'voice') => Promise<void>;
     readonly onMenuOpenChange?: (messageId: string, open: boolean) => void;
     readonly onDeleted?: (result: MessageDeletionResult) => Promise<void>;
     readonly onEditRequest?: (message: Message) => void;
@@ -38,6 +40,11 @@ export function MessageBubble({
     const t = useTranslations();
     const chatUi = useTranslations('chatUi');
     const locale = useLocale();
+    const clock = useMemo(
+        () => timeFormat ?? new Intl.DateTimeFormat(locale, {hour: '2-digit', minute: '2-digit'}),
+        [locale, timeFormat],
+    );
+    const emoji = isEmojiMessage(message.text);
     const [menu, setMenu] = useState<{x: number; y: number} | null>(null);
     const [menuInitialized, setMenuInitialized] = useState(false);
     const row = useRef<HTMLDivElement>(null);
@@ -60,12 +67,22 @@ export function MessageBubble({
             data-message-kind={message.kind}
             data-message-deleted={message.deleted || undefined}
             data-message-context-excluded={message.contextExcluded || undefined}
-            className={`${styles.bubble} ${message.outgoing ? styles.outgoing : styles.incoming} ${message.kind === 'sticker' || isEmojiMessage(message.text) ? styles.stickerBubble : ''} ${isEmojiMessage(message.text) ? styles.emojiBubble : ''} ${message.media ? styles.mediaBubble : ''} ${continues ? styles.grouped : styles.tail}`}
+            className={`${styles.bubble} ${message.outgoing ? styles.outgoing : styles.incoming} ${message.kind === 'sticker' || emoji ? styles.stickerBubble : ''} ${emoji ? styles.emojiBubble : ''} ${message.media ? styles.mediaBubble : ''} ${continues ? styles.grouped : styles.tail}`}
         >
             {groupIncoming && !messagesGrouped(message, previousMessage, group) && (
                 <Text className={styles.sender} qa="message-sender-name">
                     {message.senderName}
                 </Text>
+            )}
+            {(message.forwarded || message.forwardedFrom) && (
+                <Flex alignItems="center" gap={2} className={styles.forwarded} qa="message-forwarded">
+                    <Icon data={ArrowRight} size={14} />
+                    <Text>
+                        {message.forwardedFrom
+                            ? t('assistantBar.forwarded', {name: message.forwardedFrom})
+                            : t('assistantBar.forwardedUnknown')}
+                    </Text>
+                </Flex>
             )}
             {message.replyToId && (
                 <Box className={styles.replyQuote}>
@@ -123,12 +140,7 @@ export function MessageBubble({
                         </Text>
                     </Tooltip>
                 )}
-                <Text>
-                    {new Date(message.date * 1000).toLocaleTimeString(locale, {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                    })}
-                </Text>
+                <Text>{clock.format(message.date * 1000)}</Text>
                 {!!message.editedAt && (
                     <Tooltip
                         content={t('messageEdit.editedAt', {
@@ -197,7 +209,9 @@ export function MessageBubble({
                     position={menu}
                     onClose={closeMenu}
                     onExcludedChanged={onContextChanged ?? (async () => {})}
-                    onDraftRequest={onDraftRequest}
+                    onDraftRequest={
+                        onDraftRequest ? (output) => onDraftRequest(message.id, output) : undefined
+                    }
                     onDeleted={onDeleted}
                     onEditRequest={onEditRequest}
                     onDialogOpenChange={(open) => onMenuOpenChange?.(message.id, open)}
@@ -205,4 +219,4 @@ export function MessageBubble({
             )}
         </>
     );
-}
+});

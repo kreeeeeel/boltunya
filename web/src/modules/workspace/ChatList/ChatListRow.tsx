@@ -1,5 +1,6 @@
 import {Box, Button, Flex, Icon, Text} from '@gravity-ui/uikit';
-import {Sparkles} from '@gravity-ui/icons';
+import {Check, CheckDouble, Sparkles} from '@gravity-ui/icons';
+import {memo} from 'react';
 import {useTranslations} from 'next-intl';
 
 import type {Chat} from '@/shared/api/client';
@@ -7,7 +8,7 @@ import {TelegramAvatar} from '@/shared/ui/TelegramAvatar/TelegramAvatar';
 import styles from '@/modules/workspace/ChatList/ChatList.module.css';
 import {TypingIndicator} from '@/modules/workspace/TypingIndicator/TypingIndicator';
 
-export function ChatListRow({
+export const ChatListRow = memo(function ChatListRow({
     chat,
     selected,
     timeFormat,
@@ -76,13 +77,29 @@ export function ChatListRow({
                 )}
             </Flex>
             <Flex direction="column" alignItems="flex-end" className={styles.aside}>
-                <Text className={styles.time}>
-                    {chat.date > 0 ? timeFormat.format(chat.date * 1000) : ''}
-                </Text>
+                <Flex alignItems="center" gap={1}>
+                    {chat.lastMessageOutgoing && (
+                        <Box
+                            className={`${styles.readStatus} ${chat.lastMessageRead ? styles.read : ''}`}
+                            role="img"
+                            qa="chat-read-status"
+                            aria-label={t(
+                                chat.lastMessageRead
+                                    ? 'assistantBar.messageRead'
+                                    : 'assistantBar.messageSent',
+                            )}
+                        >
+                            <Icon data={chat.lastMessageRead ? CheckDouble : Check} size={16} />
+                        </Box>
+                    )}
+                    <Text className={styles.time}>
+                        {chat.date > 0 ? timeFormat.format(chat.date * 1000) : ''}
+                    </Text>
+                </Flex>
                 <Flex alignItems="center" gap={2} className={styles.controls}>
                     {chat.unread > 0 && <Text className={styles.unread}>{chat.unread}</Text>}
                 </Flex>
             </Flex>
         </Box>
     );
-}
+});

@@ -4,6 +4,81 @@ import {mergeMessages, mergeRecentMessages} from '@/modules/workspace/model/merg
 import type {Message} from '@/shared/api/client';
 
 describe('History pagination', () => {
+    it('retains a long history by identity when its latest window is unchanged', () => {
+        const previous: Message[] = Array.from({length: 10000}, (_, index) => ({
+            id: String(index + 1),
+            chatId: '42',
+            date: index,
+            outgoing: false,
+            kind: 'text',
+            text: `Message ${index + 1}`,
+            entities: [{offset: 0, length: 7, type: 'bold'}],
+        }));
+        const current = previous.slice(-100).map((message) => ({
+            ...message,
+            entities: message.entities?.map((entity) => ({...entity})),
+        }));
+
+        expect(mergeRecentMessages(previous, current)).toBe(previous);
+    });
+
+    it.each([
+        {text: 'Edited', editedAt: 100},
+        {deleted: true, deletedAt: 100},
+        {contextExcluded: true},
+        {
+            kind: 'voice',
+            media: {
+                fileId: 7,
+                mimeType: 'audio/ogg',
+                fileName: 'voice.ogg',
+                width: 0,
+                height: 0,
+                thumbnailFileId: 0,
+                size: 512,
+                downloaded: true,
+                uniqueId: 'confirmed-voice',
+                waveform: [1, 2, 3],
+            },
+        },
+    ])('merges changes within the latest window instead of retaining stale data: %j', (change) => {
+        const previous: Message[] = Array.from({length: 1000}, (_, index) => ({
+            id: String(index + 1),
+            chatId: '42',
+            date: index,
+            outgoing: false,
+            kind: 'text',
+            text: `Message ${index + 1}`,
+        }));
+        const current = previous
+            .slice(-100)
+            .map((message, index) => (index === 50 ? {...message, ...change} : {...message}));
+        const result = mergeRecentMessages(previous, current);
+
+        expect(result).not.toBe(previous);
+        expect(result).toHaveLength(previous.length);
+        expect(result[950]).toEqual(current[50]);
+        expect(result[0]).toBe(previous[0]);
+    });
+
+    it('removes missing recent messages even when the remaining latest messages are unchanged', () => {
+        const previous: Message[] = Array.from({length: 1000}, (_, index) => ({
+            id: String(index + 1),
+            chatId: '42',
+            date: index,
+            outgoing: false,
+            kind: 'text',
+            text: `Message ${index + 1}`,
+        }));
+        const current = previous.slice(-100).filter((message) => message.id !== '950');
+        const result = mergeRecentMessages(previous, current);
+
+        expect(result).not.toBe(previous);
+        expect(result).toHaveLength(999);
+        expect(result.some((message) => message.id === '950')).toBe(false);
+        expect(result[0]).toBe(previous[0]);
+    });
+
     it('retains newer confirmed edit content when an older snapshot arrives while refreshing read flags', () => {
         const updated: Message = {
             id: '123',

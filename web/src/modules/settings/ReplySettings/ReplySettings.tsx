@@ -1,9 +1,10 @@
-import {Box, Flex, Select, Slider, Switch, Text} from '@gravity-ui/uikit';
+import {Box, Flex, Select, Switch, Text} from '@gravity-ui/uikit';
 import {useTranslations} from 'next-intl';
 
 import type {SettingsDraftSectionProps} from '@/modules/settings/model/SettingsDraftSectionProps';
 import type {SettingsDraft} from '@/modules/settings/model/settingsDraft';
 import {VoiceReplySettings} from '@/modules/settings/VoiceReplySettings/VoiceReplySettings';
+import {SettingsSlider} from '@/shared/ui/SettingsSlider';
 
 export function ReplySettings({value, onUpdate}: SettingsDraftSectionProps) {
     const t = useTranslations();
@@ -12,19 +13,15 @@ export function ReplySettings({value, onUpdate}: SettingsDraftSectionProps) {
             <VoiceReplySettings value={value} onUpdate={onUpdate} />
             <Text color="secondary">{t('queueHint')}</Text>
             {(['replyDelaySeconds', 'replyIntervalSeconds'] as const).map((key) => (
-                <Flex direction="column" gap={3} key={key}>
-                    <Flex justifyContent="space-between">
-                        <Text>{t(key)}</Text>
-                        <Text color="secondary">{t('seconds', {count: value[key]})}</Text>
-                    </Flex>
-                    <Slider
-                        min={0}
-                        max={120}
-                        value={value[key]}
-                        aria-label={t(key)}
-                        onUpdate={(next) => onUpdate({...value, [key]: next})}
-                    />
-                </Flex>
+                <SettingsSlider
+                    key={key}
+                    label={t(key)}
+                    displayValue={t('seconds', {count: value[key]})}
+                    min={0}
+                    max={120}
+                    value={value[key]}
+                    onUpdate={(next) => onUpdate({...value, [key]: next})}
+                />
             ))}
             <Switch checked={value.showTyping} onUpdate={(showTyping) => onUpdate({...value, showTyping})}>
                 {t('showTyping')}

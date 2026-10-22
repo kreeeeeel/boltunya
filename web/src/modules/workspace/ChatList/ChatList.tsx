@@ -1,7 +1,7 @@
 import {Box, Flex, Icon, Loader, Skeleton, Text, TextInput} from '@gravity-ui/uikit';
-import {Magnifier, LogoTelegram} from '@gravity-ui/icons';
+import {Magnifier} from '@gravity-ui/icons';
 import {useLocale, useTranslations} from 'next-intl';
-import {useMemo} from 'react';
+import {memo, useMemo} from 'react';
 
 import type {ChatListProps} from '@/modules/workspace/ChatList/ChatList.types';
 import styles from '@/modules/workspace/ChatList/ChatList.module.css';
@@ -10,7 +10,7 @@ import {useChatPages} from '@/modules/workspace/ChatList/useChatPages';
 import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
 import {SegmentedTabs} from '@/shared/ui/SegmentedTabs/SegmentedTabs';
 
-export function ChatList({chats, selected, loading = false, onSelect}: ChatListProps) {
+export const ChatList = memo(function ChatList({chats, selected, loading = false, onSelect}: ChatListProps) {
     const t = useTranslations();
     const locale = useLocale();
     const pages = useChatPages(chats, locale);
@@ -73,7 +73,7 @@ export function ChatList({chats, selected, loading = false, onSelect}: ChatListP
             </Box>
             <ScrollArea
                 className={styles.list}
-                busy={pending || pages.loadingMore}
+                busy={pending || pages.searching || pages.loadingMore}
                 qa="chat-list-scroll"
                 viewportRef={pages.viewport}
                 onScroll={pages.loadMore}
@@ -106,10 +106,24 @@ export function ChatList({chats, selected, loading = false, onSelect}: ChatListP
                     ))
                 )}
                 {!pending && pages.empty && (
-                    <Flex direction="column" alignItems="center" gap={3} className={styles.empty}>
-                        <Icon data={LogoTelegram} size={30} />
+                    <Flex
+                        direction="column"
+                        alignItems="center"
+                        justifyContent="center"
+                        gap={3}
+                        className={styles.empty}
+                        qa="chat-list-empty"
+                    >
+                        <Box
+                            as="img"
+                            src="/assets/illustrations/conversations.png"
+                            alt=""
+                            className={styles.illustration}
+                        />
                         <Text variant="subheader-2">{t(chats.length ? 'noResults' : 'emptyChats')}</Text>
-                        {!chats.length && <Text color="secondary">{t('emptyChatsText')}</Text>}
+                        <Text color="secondary">
+                            {t(chats.length ? 'chatSearchEmptyHint' : 'emptyChatsText')}
+                        </Text>
                     </Flex>
                 )}
                 {!pending && pages.hasMore && (
@@ -127,4 +141,4 @@ export function ChatList({chats, selected, loading = false, onSelect}: ChatListP
             </ScrollArea>
         </Flex>
     );
-}
+});

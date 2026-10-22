@@ -1,4 +1,4 @@
-import {Check, Microphone, PaperPlane, Xmark} from '@gravity-ui/icons';
+import {Check, PaperPlane, Xmark} from '@gravity-ui/icons';
 import {Box, Button, Dialog, Flex, Icon, Loader, Text} from '@gravity-ui/uikit';
 import {useTranslations} from 'next-intl';
 import {useVoiceComposition} from '@/modules/speech/VoiceComposeDialog/useVoiceComposition';
@@ -23,6 +23,16 @@ export function VoiceComposeDialog(props: VoiceComposeDialogProps) {
             disableOutsideClick={composition.sending}
         >
             <Dialog.Header caption={t('manualTitle')} />
+            <Button
+                className={styles.close}
+                view="flat-secondary"
+                size="l"
+                disabled={composition.sending}
+                onClick={composition.close}
+                aria-label={common('close')}
+            >
+                <Icon data={Xmark} size={20} />
+            </Button>
             <Dialog.Body className={styles.body}>
                 <Flex direction="column" gap={4}>
                     <Text color="secondary">{t('manualHint')}</Text>
@@ -83,49 +93,40 @@ export function VoiceComposeDialog(props: VoiceComposeDialogProps) {
                     )}
                 </Flex>
             </Dialog.Body>
-            <Dialog.Footer
-                textButtonCancel={common('close')}
-                onClickButtonCancel={composition.close}
-                propsButtonCancel={{disabled: composition.sending}}
-                renderButtons={(_, closeButton) => (
-                    <Flex gap={2} wrap="wrap" className={styles.actions}>
-                        {closeButton}
-                        {composition.generating ? (
-                            <Button
-                                size="l"
-                                view="flat-secondary"
-                                disabled={!composition.hasJob || composition.cancelling}
-                                onClick={() => void composition.cancel()}
-                            >
-                                <Icon data={Xmark} size={18} />
-                                {t('cancel')}
-                            </Button>
-                        ) : (
-                            <Button
-                                size="l"
-                                view="flat-secondary"
-                                disabled={!composition.canGenerate}
-                                onClick={() => void composition.generate()}
-                            >
-                                <Icon data={Microphone} size={18} />
-                                {t('previewCheck')}
-                            </Button>
-                        )}
-                        <Button
-                            className={styles.primary}
-                            size="l"
-                            view="action"
-                            loading={composition.sending || composition.autoSending}
-                            disabled={!composition.canSend}
-                            onClick={() => void composition.send()}
-                            aria-label={t(composition.delivered ? 'manualSent' : 'manualSpeakAndSend')}
-                        >
-                            <Icon data={composition.delivered ? Check : PaperPlane} size={18} />
-                            {t(composition.delivered ? 'manualSent' : 'manualSpeakAndSend')}
-                        </Button>
-                    </Flex>
+            <Flex gap={2} className={`${styles.actions} ${styles.footer}`}>
+                {composition.generating ? (
+                    <Button
+                        size="l"
+                        view="flat-secondary"
+                        disabled={!composition.hasJob || composition.cancelling}
+                        onClick={() => void composition.cancel()}
+                    >
+                        <Icon data={Xmark} size={18} />
+                        {t('cancel')}
+                    </Button>
+                ) : (
+                    <Button
+                        size="l"
+                        view="flat-secondary"
+                        disabled={!composition.canGenerate}
+                        onClick={() => void composition.generate()}
+                    >
+                        {t('previewCheck')}
+                    </Button>
                 )}
-            />
+                <Button
+                    className={styles.primary}
+                    size="l"
+                    view="action"
+                    loading={composition.sending || composition.autoSending}
+                    disabled={!composition.canSend}
+                    onClick={() => void composition.send()}
+                    aria-label={t(composition.delivered ? 'manualSent' : 'manualSpeakAndSend')}
+                >
+                    <Icon data={composition.delivered ? Check : PaperPlane} size={18} />
+                    {t(composition.delivered ? 'manualSent' : 'manualSpeakAndSend')}
+                </Button>
+            </Flex>
         </Dialog>
     );
 }

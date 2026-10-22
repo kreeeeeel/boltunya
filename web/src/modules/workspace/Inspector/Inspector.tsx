@@ -7,11 +7,13 @@ import styles from '@/modules/workspace/Inspector/Inspector.module.css';
 import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
 import {communicationStyles} from '@/modules/workspace/model/communicationStyles';
 import {ChatHistoryActions} from '@/modules/workspace/ChatHistoryActions';
+import {VoiceSummary} from '@/modules/speech/VoiceSummary/VoiceSummary';
 
 export function Inspector({
     chat,
     modelLabel,
     customStyles,
+    settings,
     onConfigure,
     onEnable,
     onClose,
@@ -61,6 +63,7 @@ export function Inspector({
                         </Flex>
                         <Text className={styles.caption}>{t('statusOnline')}</Text>
                     </Box>
+                    {settings && <VoiceSummary settings={settings} rule={chat.rule} />}
                     <Flex direction="column" gap={2} className={styles.context}>
                         <Icon data={BookOpen} size={21} />
                         <Text className={styles.strong}>{t('context.heading')}</Text>

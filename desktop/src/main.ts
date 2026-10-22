@@ -11,9 +11,8 @@ import {ReleaseClient} from './release-client';
 import {PortableUpdate} from './portable-update';
 import {APP_ID, APP_NAME, ICON_FILE} from './brand';
 import {DesktopProfile} from './profile';
-import {MediaViewer} from './media-viewer';
 
-const STATE_INTERVAL_MS = 1500;
+const STATE_INTERVAL_MS = 5000;
 type State = {telegram: {state: string}; settings: {paused: boolean; closeToTray: boolean; launchAtLogin: boolean}};
 let main: BrowserWindow | undefined;
 let backend: Backend | undefined;
@@ -24,7 +23,6 @@ let backgroundStartup = process.argv.includes('--startup');
 let decidingClose = false;
 let timer: ReturnType<typeof setTimeout> | undefined;
 let updateWindow: UpdateWindow | undefined;
-let mediaViewer: MediaViewer | undefined;
 let portableUpdate: PortableUpdate | undefined;
 let updateConfirmed = false;
 let handlingStartupFailure = false;
@@ -74,7 +72,6 @@ async function start(): Promise<void> {
     backend.onExit(() => { if (!updateConfirmed && process.argv.includes('--updated')) void startupFailure(new Error('Updated backend exited before readiness')); else void shutdown(); });
     state = await backend.request<State>('/api/state');
     tray = new TrayController(image, preload, show);
-    mediaViewer = new MediaViewer(preload, image, openExternal);
     main = new BrowserWindow({
         width: 1320, height: 860, minWidth: 880, minHeight: 580, frame: false, show: false,
         fullscreenable: false, backgroundColor: '#f3f5f7', title: APP_NAME, icon: image,
@@ -103,7 +100,6 @@ async function start(): Promise<void> {
     main.webContents.on('will-navigate', (event, target) => { if (new URL(target).origin !== new URL(url).origin) { event.preventDefault(); openExternal(target); } });
     main.webContents.session.setPermissionRequestHandler((contents, permission, callback) => callback(contents.id === main?.webContents.id && permission === 'clipboard-sanitized-write'));
     ipcMain.handle('window:state', event => {
-        if (mediaViewer?.owns(event.sender.id)) return mediaViewer.state();
         if (event.sender.id !== main?.webContents.id) return {};
         return windowState();
     });
@@ -116,19 +112,11 @@ async function start(): Promise<void> {
         await storage.openLocation(id);
     });
     ipcMain.handle('window:action', (event, action: string) => {
-        if (mediaViewer?.owns(event.sender.id)) { mediaViewer.action(action); return; }
         if (event.sender.id !== main?.webContents.id) return;
         if (action === 'show') show();
         else if (action === 'minimize') main.minimize();
         else if (action === 'maximize') { if (main.isMaximized()) main.unmaximize(); else main.maximize(); }
         else if (action === 'close') main.close();
-    });
-    ipcMain.handle('media:open', async (event, request: unknown) => {
-        if (event.sender.id !== main?.webContents.id) throw new Error('Media viewer cannot be opened from this window');
-        await mediaViewer?.open(new URL(url).origin, request);
-    });
-    ipcMain.handle('media:close', event => {
-        if (event.sender.id === main?.webContents.id || mediaViewer?.owns(event.sender.id)) mediaViewer?.close();
     });
     ipcMain.handle('tray:action', async (event, action: string) => {
         if (!tray?.owns(event.sender.id)) return;
@@ -181,7 +169,6 @@ async function shutdown(): Promise<void> {
     main?.hide();
     updateWindow?.close();
     tray?.close();
-    mediaViewer?.close();
     await backend?.close();
     main?.destroy();
     app.quit();

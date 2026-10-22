@@ -1,0 +1,18 @@
+.dialog {
+    position: relative;
+    width: min(600px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    border-radius: 16px;
+    background: var(--tiho-panel);
+}
+
+.close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+}
+
+.body {
+    min-width: 0;
+    padding-bottom: 24px;
+}

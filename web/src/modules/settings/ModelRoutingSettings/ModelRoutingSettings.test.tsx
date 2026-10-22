@@ -23,7 +23,6 @@ const initial: Contract.ModelTaskRouting = {
     parallelIndependentTasks: false,
     replyProfileId: '',
     memoryProfileId: '',
-    researchProfileId: '',
     visionProfileId: '',
 };
 beforeEach(() => {

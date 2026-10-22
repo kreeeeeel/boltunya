@@ -74,8 +74,6 @@
     "seconds": "{count} sec",
     "creativity": "Creativity",
     "emoji": "Use emoji",
-    "internetAccess": "Internet search",
-    "internetAccessHint": "Weather and current information. External services receive only the search query or city.",
     "save": "Save settings",
     "cancel": "Cancel",
     "saved": "Saved",
@@ -297,24 +295,6 @@
         "mentions": "Only when mentioned",
         "all": "Follow the conversation"
     },
-    "metrics": {
-        "title": "Resource charts",
-        "live": "Live",
-        "disconnected": "Disconnected",
-        "description": "Computer and application resources · last 3 minutes",
-        "system": "Computer",
-        "application": "Aigram",
-        "unavailable": "Unavailable",
-        "gpuLoad": "GPU utilization",
-        "memory": "System memory",
-        "applicationMemory": "Application and models",
-        "network": "Network · MB/s",
-        "receive": "Receive",
-        "send": "Send",
-        "details": "Memory usage",
-        "gb": "{value} GiB",
-        "note": "Working memory of processes; shared pages may be counted more than once. Network is total computer interface traffic. GPU statistics require NVIDIA drivers."
-    },
     "speed": {
         "fastest": "Very fast",
         "fast": "Fast",
@@ -332,7 +312,6 @@
     "thinkingOn": "Reasoning",
     "benchmarkInput": "Reply in one short sentence: how are you?",
     "modelResourceHint": "Context is the model’s maximum capacity listed by Ollama. The app uses an 8,192-token window to limit memory use. Speed depends on your hardware, conversation length and reasoning.",
-    "metricsNav": "Resource charts",
     "modelFamily": {
         "qwen": "Qwen",
         "gemma": "Google Gemma",
@@ -415,33 +394,6 @@
         "hint": "Messages received by the app before deletion are kept here. Media remain available while stored in the local cache.",
         "empty": "No saved deleted messages yet.",
         "earlier": "Show earlier messages"
-    },
-    "internetSearch": {
-        "title": "Web search",
-        "hint": "Free search is enabled by default. Links appear on request or according to chat settings.",
-        "key": "Exa API key",
-        "configured": "Your key is saved",
-        "keyless": "Exa is disconnected. The primary search needs no key.",
-        "save": "Save key",
-        "remove": "Remove key",
-        "check": "Test connection",
-        "refresh": "Refresh status",
-        "getKey": "Get an Exa key",
-        "linksTitle": "Links in replies",
-        "linksHint": "Links are limited to relevant retrieved sources.",
-        "modes": {
-            "requested": "When the contact asks",
-            "always": "Whenever search is used",
-            "never": "Do not send"
-        },
-        "states": {
-            "unchecked": "Connection has not been checked",
-            "ready": "Exa is available",
-            "limited": "Exa quota reached. The primary free search continues to work.",
-            "unavailable": "Exa is unavailable. Fallback search is active."
-        },
-        "free": "No keys needed: DuckDuckGo with Bing fallback. Weather uses Open-Meteo.",
-        "optionalExa": "Optional: Exa fallback search"
     },
     "chatPreviewYou": "You",
     "chatCopy": {
@@ -578,10 +530,7 @@
                 "high": "High",
                 "veryHigh": "Very high"
             },
-            "estimateHint": "This is a qualitative estimate. Usage depends on the model and computer. Readings below are current measurements, not a forecast.",
-            "ram": "Application and Ollama now: {value} RAM",
-            "vram": "GPU now: {used} / {total} VRAM",
-            "metricsUnavailable": "Current resource readings are unavailable."
+            "estimateHint": "This is a qualitative estimate. Actual resource use depends on the selected models."
         },
         "memoryDetails": "Context collection history",
         "taskTime": "Processing time",
@@ -701,16 +650,14 @@
         "sections": {
             "application": "Application",
             "replies": "Replies",
-            "voice": "Speech models",
+            "voice": "Voice",
             "prompt": "Global prompt",
             "styles": "Writing styles",
             "providers": "Model connections",
             "routing": "Task routing",
             "compute": "Compute",
-            "search": "Internet search",
             "memory": "Shared memory",
             "collection": "Context collection",
-            "appearance": "Appearance",
             "language": "Language",
             "media": "Media downloads",
             "cache": "Telegram cache",
@@ -720,60 +667,20 @@
         "descriptions": {
             "application": "Window behavior, tray and Windows startup.",
             "replies": "Response pacing and message delivery.",
-            "voice": "Engine, recognition and voices. Choose models, install them and test speech on this computer.",
+            "voice": "Installed models and speech speed. Set the automatic reply format under Replies.",
             "prompt": "Your instructions for every conversation.",
             "styles": "Named styles with your own instructions.",
             "providers": "Local Ollama models and compatible APIs in one place.",
-            "routing": "Use different models for replies, memory, research and images.",
+            "routing": "Use different models for replies, memory and images.",
             "compute": "Choose the device for app-managed Ollama.",
-            "search": "Current information and optional search sources.",
             "memory": "Facts, preferences and relationships. Writing style is controlled by the selected style and a separate matching option.",
             "collection": "Update memory from new messages or collect conversation history.",
-            "appearance": "Create a palette and customize the interface.",
             "language": "Choose your interface language.",
             "media": "Choose which Telegram files download automatically.",
             "cache": "Review local media usage and free up space.",
             "storage": "Open application data, memory and models in Explorer.",
             "proactive": "Conversation initiative and the pause before a new message."
         }
-    },
-    "appearance": {
-        "mode": "Base theme",
-        "modes": {
-            "system": "System",
-            "light": "Light",
-            "dark": "Dark"
-        },
-        "colors": "Color palette",
-        "colorsHint": "Leave a color empty to use the base theme.",
-        "livePreview": "Theme example",
-        "livePreviewHint": "Colors update the example immediately. Preview applies the settings across the app.",
-        "pickColor": "Choose color: {name}",
-        "exampleName": "Anna",
-        "exampleIncoming": "Hey! How do you like the new theme?",
-        "exampleOutgoing": "This looks good to me 🙂",
-        "examplePlaceholder": "Write a message…",
-        "defaultColor": "Default",
-        "tokens": {
-            "accent": "Accent",
-            "background": "Background",
-            "panel": "Panels",
-            "text": "Text",
-            "muted": "Secondary text",
-            "incoming": "Incoming messages",
-            "outgoing": "Outgoing messages",
-            "border": "Dividers"
-        },
-        "css": "Custom CSS",
-        "cssHint": "CSS rules apply only inside the application workspace. No imports, URLs or global at-rules.",
-        "cssScope": "The settings center stays outside custom CSS so you can always reset your theme.",
-        "reset": "Reset theme",
-        "preview": "Preview",
-        "revert": "Revert preview",
-        "invalidTheme": "Invalid theme or CSS is too long.",
-        "invalidColor": "Use a hex color such as #4488ff.",
-        "invalidCss": "Invalid CSS. Check the syntax.",
-        "unsafeCss": "Imports, external resources and global CSS rules are not supported."
     },
     "modelProfiles": {
         "create": "Add connection",
@@ -846,7 +753,6 @@
         "tasks": {
             "replyProfileId": "Conversation replies",
             "memoryProfileId": "Memory summaries",
-            "researchProfileId": "Internet research",
             "visionProfileId": "Image analysis"
         },
         "parallel": "Run independent tasks in parallel",
@@ -928,7 +834,7 @@
     },
     "voice": {
         "recognitionEnabled": "Recognize voice messages",
-        "recognitionHint": "Transcribes incoming voice messages for AI. Off by default; audio is processed locally.",
+        "recognitionHint": "Transcribes voice messages in conversation history for AI, regardless of the sender. Off by default; processed locally.",
         "replyMode": "Automatic reply format",
         "replyModes": {
             "text": "Text only",
@@ -1025,7 +931,7 @@
         "tabs": {
             "runtime": "Engine",
             "recognition": "Recognition",
-            "synthesis": "Synthesis"
+            "synthesis": "Voice models"
         },
         "searchModels": "Search speech models",
         "languageFilter": "Model language",
@@ -1049,7 +955,26 @@
         "manualRefreshFailed": "The voice message was sent, but the chat could not refresh yet. Sending it again is blocked.",
         "manualSendUnconfirmed": "Could not confirm delivery. Check the chat; to prevent duplicates, create new audio before trying again.",
         "manualSpeakAndSend": "Speak and send",
-        "manualRefresh": "Refresh chat"
+        "manualRefresh": "Refresh chat",
+        "libraryTitle": "Speech models",
+        "libraryHint": "Engines, recognition and voices for your conversations.",
+        "openLibrary": "Open the voice catalog",
+        "selectionUnavailable": "Choose an installed model. Download and import voices in the catalog.",
+        "summaryTitle": "Voice",
+        "chatOverride": "Custom chat settings",
+        "chatInherited": "Global settings",
+        "recognitionOn": "Recognition enabled",
+        "recognitionOff": "Recognition disabled",
+        "engines": {
+            "sherpa": "Sherpa ONNX",
+            "applio-rvc": "Applio · RVC"
+        },
+        "downloadSize": "Download with engine",
+        "modelLanguages": "Language",
+        "modelFormat": "Format",
+        "languageIndependent": "Any",
+        "saveBeforeLibrary": "Save your settings changes first.",
+        "installedOnly": "Installed only"
     },
     "replyInterruption": {
         "title": "Handling new messages",
@@ -1099,7 +1024,8 @@
         "label": "Model type",
         "all": "All",
         "generation": "Generation",
-        "vision": "Image analysis"
+        "vision": "Image analysis",
+        "installed": "Installed only"
     },
     "modelMetadataUnknown": "Unknown",
     "imagesSupported": "Supported",
@@ -1165,5 +1091,56 @@
         "linkApply": "Apply link",
         "linkCancel": "Cancel",
         "error": "The editor could not preserve formatting. Reopen the message."
-    }
+    },
+    "speech": "Speech models",
+    "chatSettings": {
+        "title": "Chat settings",
+        "navigation": "Chat settings section",
+        "groups": {
+            "assistant": "Assistant",
+            "context": "Context and features"
+        },
+        "sections": {
+            "replies": "Replies",
+            "model": "Model and instructions",
+            "tone": "Conversation style",
+            "voice": "Voice",
+            "proactive": "Keep the conversation going",
+            "preview": "Test a reply",
+            "memory": "Memory and history",
+            "internet": "Internet",
+            "media": "Photos and stickers",
+            "groups": "Group messages"
+        },
+        "hints": {
+            "replies": "When to reply and how to handle new messages.",
+            "model": "A model and additional instructions for this chat.",
+            "tone": "Tone, phrasing and habits in your conversations.",
+            "voice": "Use shared speech preferences or configure this conversation.",
+            "proactive": "Start a conversation after a pause. This does not enable automatic replies.",
+            "preview": "Try the current preferences without sending anything to the other person.",
+            "memory": "Choose what to use from history and saved context.",
+            "internet": "Current information and source links in replies.",
+            "media": "Additional features for messages containing media.",
+            "groups": "Choose which messages to reply to in this group."
+        },
+        "voice": {
+            "source": "Speech preferences",
+            "inherit": "Use shared preferences",
+            "override": "Customize for this chat",
+            "inheritHint": "Voice, recognition and reply format follow your shared preferences.",
+            "overrideHint": "These preferences apply only to this conversation. Shared preferences stay unchanged."
+        }
+    },
+    "assistantBar": {
+        "modelCaption": "Model used in this chat:",
+        "draftTitle": "AI reply",
+        "draftText": "AI reply text",
+        "discardDraft": "Discard draft",
+        "forwarded": "Forwarded from {name}",
+        "messageRead": "Read",
+        "messageSent": "Sent",
+        "forwardedUnknown": "Forwarded message"
+    },
+    "chatSearchEmptyHint": "Try another name or change the chat filter."
 }

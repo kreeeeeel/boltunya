@@ -12,4 +12,5 @@ export interface SegmentedTabsProps {
     readonly value: string;
     readonly onUpdate: (value: string) => void;
     readonly label: string;
+    readonly view?: 'default' | 'panel';
 }

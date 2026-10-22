@@ -8,6 +8,7 @@ import type {AppState} from '@/shared/api/client';
 import {desktopBridge} from '@/shared/desktop/bridge';
 import type {DesktopWindowAction} from '@/shared/desktop/bridge';
 import styles from '@/modules/workspace/WindowBar/WindowBar.module.css';
+import {DownloadCenter} from '@/modules/workspace/WindowBar/DownloadCenter';
 
 export function WindowBar({
     state,
@@ -49,6 +50,9 @@ export function WindowBar({
             <Flex gap={2} alignItems="center" className={styles.brand}>
                 <Avatar imgUrl="/assets/brand/aigram.svg" alt="" size="xs" shape="square" />
                 <Text>{t('app')}</Text>
+            </Flex>
+            <Flex justifyContent="center" className={styles.download}>
+                <DownloadCenter engine={state?.engine} onError={onError} />
             </Flex>
             <Flex alignItems="center" className={styles.controls}>
                 {state?.telegram.state === 'ready' && (

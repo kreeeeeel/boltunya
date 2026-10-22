@@ -37,6 +37,7 @@ function mount(
     onExcludedChanged = vi.fn(async () => {}),
     target = message,
     onEditRequest?: (value: Message) => void,
+    onDraftRequest?: (output: 'text' | 'voice') => Promise<void>,
 ) {
     function Example() {
         const [position, setPosition] = useState<{
@@ -52,6 +53,7 @@ function mount(
                         onClose={() => setPosition(null)}
                         onExcludedChanged={onExcludedChanged}
                         onEditRequest={onEditRequest}
+                        onDraftRequest={onDraftRequest}
                     />
                 </ThemeProvider>
             </NextIntlClientProvider>
@@ -59,6 +61,23 @@ function mount(
     }
     return render(<Example />);
 }
+
+it.each(['text', 'voice'] as const)(
+    'offers an explicit %s draft in the prepare-reply flyout',
+    async (output) => {
+        const generate = vi.fn(async () => {});
+        mount(undefined, message, undefined, generate);
+        const trigger = await screen.findByRole('menuitem', {name: ru.messageMenu.draft});
+        fireEvent.mouseEnter(trigger);
+        expect(generate).not.toHaveBeenCalled();
+        fireEvent.click(
+            await screen.findByRole('menuitem', {
+                name: output === 'text' ? ru.voice.generateText : ru.voice.generateVoice,
+            }),
+        );
+        await waitFor(() => expect(generate).toHaveBeenCalledWith(output));
+    },
+);
 
 it('opens editing only after the owner explicitly selects the action', async () => {
     const edit = vi.fn();

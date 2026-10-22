@@ -1,4 +1,4 @@
-import {useEffect, useRef} from 'react';
+import {useCallback, useEffect, useRef} from 'react';
 import {useTranslations} from 'next-intl';
 import {api} from '@/shared/api/client';
 import type {ChatRule} from '@/shared/api/client';
@@ -26,45 +26,48 @@ export function useQueuedDraft(chatId: string | undefined, onRefresh: () => Prom
     const t = useTranslations('draftQueue');
     const pending = useRef<AbortController | null>(null);
     useEffect(() => () => pending.current?.abort(), [chatId]);
-    async function execute(enqueue: (signal: AbortSignal) => Promise<PreviewJob>) {
-        if (!chatId) {
-            throw new DOMException('Aborted', 'AbortError');
-        }
-        pending.current?.abort();
-        const controller = new AbortController();
-        pending.current = controller;
-        const signal = controller.signal;
-        try {
-            let job = await enqueue(signal);
-            await onRefresh();
-            while (job.status === 'queued' || job.status === 'generating') {
-                await nextPoll(signal);
-                job = await api.models.previewJob(
-                    {
-                        id: job.id,
-                    },
-                    {
-                        signal,
-                    },
-                );
+    const execute = useCallback(
+        async (enqueue: (signal: AbortSignal) => Promise<PreviewJob>) => {
+            if (!chatId) {
+                throw new DOMException('Aborted', 'AbortError');
             }
-            await onRefresh();
-            signal.throwIfAborted();
-            if (job.status === 'cancelled') {
-                throw new DraftPreparationError(t('cancelled'), 'cancelled');
+            pending.current?.abort();
+            const controller = new AbortController();
+            pending.current = controller;
+            const signal = controller.signal;
+            try {
+                let job = await enqueue(signal);
+                await onRefresh();
+                while (job.status === 'queued' || job.status === 'generating') {
+                    await nextPoll(signal);
+                    job = await api.models.previewJob(
+                        {
+                            id: job.id,
+                        },
+                        {
+                            signal,
+                        },
+                    );
+                }
+                await onRefresh();
+                signal.throwIfAborted();
+                if (job.status === 'cancelled') {
+                    throw new DraftPreparationError(t('cancelled'), 'cancelled');
+                }
+                if (job.status === 'error' || !job.result?.text) {
+                    throw new DraftPreparationError(job.error || t('failed'), 'error');
+                }
+                return job.result;
+            } finally {
+                if (pending.current === controller) {
+                    pending.current = null;
+                }
             }
-            if (job.status === 'error' || !job.result?.text) {
-                throw new DraftPreparationError(job.error || t('failed'), 'error');
-            }
-            return job.result;
-        } finally {
-            if (pending.current === controller) {
-                pending.current = null;
-            }
-        }
-    }
-    return {
-        generate: (rule: ChatRule, messageId?: string, output: PreviewJobRequest['output'] = 'text') =>
+        },
+        [chatId, onRefresh, t],
+    );
+    const generate = useCallback(
+        (rule: ChatRule, messageId?: string, output: PreviewJobRequest['output'] = 'text') =>
             execute((signal) =>
                 api.models.enqueuePreviewJob(
                     {
@@ -78,9 +81,14 @@ export function useQueuedDraft(chatId: string | undefined, onRefresh: () => Prom
                     {signal},
                 ),
             ),
-        synthesize: (text: string) =>
+        [chatId, execute],
+    );
+    const synthesize = useCallback(
+        (text: string) =>
             execute((signal) =>
                 api.speech.enqueueVoiceDraft({voiceDraftRequest: {chatId: chatId ?? '', text}}, {signal}),
             ),
-    };
+        [chatId, execute],
+    );
+    return {generate, synthesize};
 }

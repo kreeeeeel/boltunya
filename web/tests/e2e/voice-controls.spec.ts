@@ -7,7 +7,7 @@ import {workspaceState} from '../fixtures/workspace';
 import {testHistory} from '../fixtures/chats';
 import {speechState as installedSpeech} from '../fixtures/speech';
 import {installVoiceMocks} from '../fixtures/voiceDemo';
-import {chooseSettingsSection} from '../fixtures/settings';
+import {chooseSettingsSection, expectSettingsSlider} from '../fixtures/settings';
 import ru from '../../src/shared/i18n/ru.json';
 
 const title = 'Синтетический голосовой чат';
@@ -90,6 +90,23 @@ async function capture(page: Page, target: Locator, name: string, dark: boolean)
     await page.setViewportSize({width: 1440, height: 900});
 }
 
+async function library(page: Page) {
+    await page.locator('[data-qa="nav-speech"]').click();
+    const view = page.locator('[data-qa="speech-library"]');
+    await expect(view).toBeVisible();
+    return view;
+}
+
+async function prepareTextDraft(page: Page, text: string) {
+    await page.getByRole('button', {name: ru.draft, exact: true}).click();
+    await page.getByRole('menuitem', {name: ru.voice.generateText, exact: true}).click();
+    const editor = page.locator('[data-qa="ai-text-draft"]').getByRole('textbox');
+    await expect(editor).toBeEditable();
+    await editor.fill(text);
+    await expect(editor).toHaveText(text);
+    return editor;
+}
+
 async function manualBounds(page: Page) {
     const dialog = page.getByRole('dialog', {name: ru.voice.manualTitle, exact: true});
     await expect
@@ -98,22 +115,53 @@ async function manualBounds(page: Page) {
                 const bounds = modal.getBoundingClientRect();
                 const controls = Array.from(
                     modal.querySelectorAll('button, textarea, [role="combobox"], [role="slider"]'),
-                ).map((element) => element.getBoundingClientRect());
+                ).map((element) => ({
+                    label: element.getAttribute('aria-label') ?? element.textContent,
+                    rect: element.getBoundingClientRect(),
+                }));
+                const outsideControls = controls
+                    .filter(
+                        ({rect}) =>
+                            rect.width > 5 &&
+                            rect.height > 5 &&
+                            (rect.left < bounds.left || rect.right > bounds.right),
+                    )
+                    .map(({label, rect}) => ({
+                        label,
+                        left: rect.left,
+                        right: rect.right,
+                        modalLeft: bounds.left,
+                        modalRight: bounds.right,
+                    }));
+                const footer = Array.from(modal.querySelectorAll('button'))
+                    .filter(
+                        (button) =>
+                            button.textContent?.includes('Проверить') ||
+                            button.textContent?.includes('Озвучить и отправить'),
+                    )
+                    .map((button) => button.getBoundingClientRect());
                 return {
                     noHorizontalOverflow: modal.scrollWidth <= modal.clientWidth,
                     withinViewport:
                         bounds.left >= 0 && bounds.right <= innerWidth && bounds.height <= innerHeight,
-                    controlsWithinModal: controls
-                        .filter((control) => control.width > 5 && control.height > 5)
-                        .every((control) => control.left >= bounds.left && control.right <= bounds.right),
+                    outsideControls,
+                    footerAligned:
+                        footer.length === 2 &&
+                        Math.abs(footer[0].top - footer[1].top) < 1 &&
+                        Math.abs(footer[0].height - footer[1].height) < 1,
                 };
             }),
         )
-        .toEqual({noHorizontalOverflow: true, withinViewport: true, controlsWithinModal: true});
+        .toEqual({
+            noHorizontalOverflow: true,
+            withinViewport: true,
+            outsideControls: [],
+            footerAligned: true,
+        });
 }
 
 for (const dark of [false, true]) {
-    test(`manual voice composer previews exact text and speaks-and-sends edits without losing the normal draft in ${dark ? 'dark' : 'light'}`, async ({
+    test(`manual voice composer previews exact text and speaks-and-sends edits without losing the AI text draft in ${dark ? 'dark' : 'light'}`, async ({
         page,
     }) => {
         const {state, speech, sent, drafts} = await prepare(page, dark);
@@ -123,18 +171,19 @@ for (const dark of [false, true]) {
             title: 'Синтетический голос для ручной озвучки',
         });
         await page.getByRole('button', {name: title, exact: true}).click();
-        const normal = page.getByRole('textbox', {name: ru.messagePlaceholder, exact: true});
-        await normal.fill('Мой обычный черновик');
+        await expect(page.getByRole('textbox', {name: ru.messagePlaceholder, exact: true})).toHaveCount(0);
+        const textDraft = await prepareTextDraft(page, 'Мой подготовленный черновик');
         await expect(page.getByRole('button', {name: ru.chooseEmoji, exact: true})).toHaveCount(0);
         await expect(page.getByRole('button', {name: 'Стикеры', exact: true})).toHaveCount(0);
         await page.getByRole('button', {name: ru.voice.manualTitle, exact: true}).click();
         const dialog = page.getByRole('dialog', {name: ru.voice.manualTitle, exact: true});
+        await expectSettingsSlider(dialog.locator('[data-qa="settings-slider"]'));
         await dialog.getByRole('combobox', {name: ru.voice.models.synthesis, exact: true}).click();
         await page.getByRole('option', {name: 'Синтетический голос для ручной озвучки', exact: true}).click();
         const text = dialog.getByRole('textbox', {name: ru.voice.manualText, exact: true});
         await text.fill('  Дословная проверка 🙂 ');
         await dialog.getByRole('button', {name: ru.voice.previewCheck, exact: true}).click();
-        await expect(dialog.locator('audio')).toHaveAttribute('src', '/api/speech/audio/voice-job-1');
+        await expect(dialog.locator('audio')).toHaveAttribute('src', '/api/speech/audio/voice-job-2');
         await expect
             .poll(() => dialog.locator('audio').evaluate((element: HTMLAudioElement) => element.duration))
             .toBeGreaterThan(4);
@@ -167,10 +216,10 @@ for (const dark of [false, true]) {
             {chatId: '41', text: '  Дословная проверка 🙂 ', modelId: 'manual-alternative', speed: 1},
             {chatId: '41', text: 'Изменённый текст для отправки.', modelId: 'manual-alternative', speed: 1},
         ]);
-        expect(sent).toEqual([{voiceId: 'voice-job-2'}]);
+        expect(sent).toEqual([{voiceId: 'voice-job-3'}]);
         expect(state.settings.voiceSynthesisModel).toBe('piper-ru-irina');
         await dialog.getByRole('button', {name: ru.close, exact: true}).click();
-        await expect(normal).toHaveValue('Мой обычный черновик');
+        await expect(textDraft).toHaveText('Мой подготовленный черновик');
     });
 
     test(`manual voice cancellation and closing prevent automatic delivery in ${dark ? 'dark' : 'light'}`, async ({
@@ -200,13 +249,18 @@ for (const dark of [false, true]) {
     test(`speech catalog tabs and filters preserve selected voices with real card preview in ${dark ? 'dark' : 'light'}`, async ({
         page,
     }) => {
-        const {state, speech, previews, sent} = await prepare(page, dark);
-        const catalog = JSON.parse(
+        const {state, speech, previews, sent, controls, requests} = await prepare(page, dark);
+        const definitions = JSON.parse(
             readFileSync(
                 join(process.cwd(), '..', 'backend', 'src', 'main', 'resources', 'speech', 'catalog.json'),
                 'utf8',
             ),
         ) as {asset: Omit<SpeechAsset, 'installed'>}[];
+        const catalog = definitions.filter(
+            ({asset}) =>
+                asset.kind !== 'synthesis' ||
+                asset.languages.some((language) => language === 'ru' || language === 'en'),
+        );
         const english = catalog.find(
             (entry) => entry.asset.kind === 'synthesis' && entry.asset.languages.includes('en'),
         )?.asset;
@@ -216,11 +270,44 @@ for (const dark of [false, true]) {
         }
         speech.assets = catalog.map(({asset}) => ({
             ...asset,
-            installed: asset.kind !== 'synthesis' || asset.id === 'piper-ru-irina' || asset.id === english.id,
+            installed:
+                asset.id === 'sherpa-runtime' ||
+                asset.id === 'whisper-tiny' ||
+                asset.id === 'piper-ru-irina' ||
+                asset.id === english.id,
         }));
-        const dialog = await settings(page);
+        const dialog = await library(page);
         const catalogView = dialog.locator('[data-qa="speech-assets"]');
+        await expect(dialog.locator('[data-qa="speech-preview"]')).toHaveCount(0);
+        await expect(dialog.getByRole('tablist').locator('svg')).toHaveCount(0);
+        const tabs = dialog.getByRole('tablist').locator('..');
+        await expect(tabs).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+        const card = catalogView.locator('[data-qa="speech-asset"]').first();
+        await expect(card).toHaveCSS('border-width', '0px');
+        await expect(card).toHaveCSS('border-radius', '16px');
+        const source = card.getByRole('link', {name: ru.voice.sourceAndLicense, exact: true});
+        const centered = await source.evaluate((link) => {
+            const card = link.closest('[data-qa="speech-asset"]')!.getBoundingClientRect();
+            const source = link.getBoundingClientRect();
+            return Math.abs(source.x + source.width / 2 - card.x - card.width / 2);
+        });
+        expect(centered).toBeLessThan(1);
         const search = catalogView.getByRole('textbox', {name: ru.voice.searchModels, exact: true});
+        expect(
+            await search.evaluate(
+                (element) => getComputedStyle(element.closest('.g-text-input')!).borderWidth,
+            ),
+        ).toBe('0px');
+        const installedOnly = catalogView.getByRole('switch', {name: ru.voice.installedOnly, exact: true});
+        await installedOnly.focus();
+        await installedOnly.press('Space');
+        await expect(installedOnly).toBeChecked();
+        await expect(catalogView.locator('[data-qa="speech-asset"]')).toHaveCount(2);
+        await search.fill(english.id);
+        await expect(catalogView.locator('[data-qa="speech-asset"]')).toHaveCount(1);
+        await search.fill('');
+        await installedOnly.press('Space');
+        await expect(installedOnly).not.toBeChecked();
         await expect(dialog.getByRole('tab', {name: ru.voice.tabs.synthesis, exact: true})).toHaveAttribute(
             'aria-selected',
             'true',
@@ -243,15 +330,13 @@ for (const dark of [false, true]) {
         await expect(catalogView.locator('[data-qa="speech-asset"]')).toHaveCount(
             catalog.filter(({asset}) => asset.kind === 'synthesis' && asset.languages.includes('en')).length,
         );
-        const currentVoice = dialog.getByRole('combobox', {name: ru.voice.models.synthesis, exact: true});
-        await expect(currentVoice).toContainText(
-            speech.assets.find((asset) => asset.id === 'piper-ru-irina')?.title ?? '',
-        );
         await dialog.getByRole('tab', {name: ru.voice.tabs.runtime, exact: true}).click();
-        await expect(catalogView.locator('[data-qa="speech-asset"]')).toHaveCount(1);
+        await expect(catalogView.locator('[data-qa="speech-asset"]')).toHaveCount(
+            catalog.filter(({asset}) => asset.kind === 'runtime').length,
+        );
         await expect(
             catalogView.getByRole('combobox', {name: ru.voice.languageFilter, exact: true}),
-        ).toBeDisabled();
+        ).toHaveCount(0);
         await dialog.getByRole('tab', {name: ru.voice.tabs.synthesis, exact: true}).click();
         await expect(
             catalogView.getByRole('combobox', {name: ru.voice.languageFilter, exact: true}),
@@ -259,20 +344,36 @@ for (const dark of [false, true]) {
         await catalogView
             .getByRole('button', {name: ru.voice.selectAsset.replace('{name}', english.title), exact: true})
             .click();
-        await expect(currentVoice).toContainText(english.title);
-        expect(state.settings.voiceSynthesisModel).toBe('piper-ru-irina');
+        await expect(
+            catalogView.getByRole('button', {
+                name: ru.voice.selectedAsset.replace('{name}', english.title),
+                exact: true,
+            }),
+        ).toBeDisabled();
+        expect(state.settings.voiceSynthesisModel).toBe(english.id);
         await capture(page, search, 'voice-catalog', dark);
         await catalogView
             .getByRole('button', {name: ru.voice.previewAsset.replace('{name}', english.title), exact: true})
             .click();
-        const preview = dialog.locator('[data-qa="speech-preview"]');
+        const previewDialog = page.getByRole('dialog', {name: ru.voice.previewTitle, exact: true});
+        const preview = previewDialog.locator('[data-qa="speech-preview"]');
         await expect(preview.locator('audio')).toHaveAttribute('src', '/api/speech/audio/voice-job-1');
         expect(previews[0]).toMatchObject({modelId: english.id, speed: 1, text: ru.voice.previewSample});
         await expect
             .poll(() => preview.locator('audio').evaluate((element: HTMLAudioElement) => element.duration))
             .toBeGreaterThan(4);
-        await dialog.getByRole('button', {name: ru.save, exact: true}).click();
-        await expect(dialog.getByRole('button', {name: ru.saved, exact: true})).toBeVisible();
+        expect(state.settings.voiceSynthesisModel).toBe(english.id);
+        expect(sent).toEqual([]);
+        await capture(page, preview, 'voice-catalog-preview', dark);
+        await previewDialog.getByRole('button', {name: ru.close, exact: true}).click();
+        await expect(dialog.locator('[data-qa="speech-preview"]')).toHaveCount(0);
+        controls.holdPreview = true;
+        await catalogView
+            .getByRole('button', {name: ru.voice.previewAsset.replace('{name}', english.title), exact: true})
+            .click();
+        await expect(preview.getByText(ru.voice.previewRunning, {exact: true})).toBeVisible();
+        await previewDialog.getByRole('button', {name: ru.close, exact: true}).click();
+        await expect.poll(() => requests.includes('CANCEL voice-job-2')).toBe(true);
         expect(state.settings.voiceSynthesisModel).toBe(english.id);
         expect(sent).toEqual([]);
     });
@@ -301,6 +402,7 @@ for (const dark of [false, true]) {
             };
         });
         const dialog = await settings(page);
+        await expectSettingsSlider(dialog.locator('[data-qa="settings-slider"]'));
         await dialog.getByRole('combobox', {name: ru.voice.models.synthesis, exact: true}).click();
         await page.getByRole('option', {name: 'Синтетический второй голос', exact: true}).click();
         await dialog.getByRole('slider', {name: ru.voice.speechRate, exact: true}).press('ArrowRight');
@@ -325,16 +427,6 @@ for (const dark of [false, true]) {
             .poll(() => preview.locator('audio').evaluate((element: HTMLAudioElement) => element.paused))
             .toBe(false);
         await capture(page, preview, 'voice-settings-preview', dark);
-        const folder = dialog
-            .locator('[data-qa="speech-toolbar"]')
-            .getByRole('button', {name: ru.voice.openFolder, exact: true});
-        await expect(folder).toBeEnabled();
-        await folder.click();
-        expect(
-            await page.evaluate(
-                () => (window as typeof window & {openedSpeechFolders?: string[]}).openedSpeechFolders,
-            ),
-        ).toEqual(['speech']);
         await input.fill('Вторая проверка');
         await expect(preview.locator('audio')).toHaveCount(0);
         controls.holdPreview = true;
@@ -347,6 +439,18 @@ for (const dark of [false, true]) {
         await expect.poll(() => previews.length).toBe(3);
         await dialog.getByRole('button', {name: ru.close, exact: true}).click();
         await expect.poll(() => requests.includes('CANCEL voice-job-3')).toBe(true);
+        const catalog = await library(page);
+        const folder = catalog
+            .locator('[data-qa="speech-toolbar"]')
+            .getByRole('button', {name: ru.voice.openFolder, exact: true});
+        await expect(folder).toBeEnabled();
+        await folder.click();
+        expect(
+            await page.evaluate(
+                () => (window as typeof window & {openedSpeechFolders?: string[]}).openedSpeechFolders,
+            ),
+        ).toEqual(['speech']);
+
         expect(sent).toEqual([]);
     });
 
@@ -354,7 +458,7 @@ for (const dark of [false, true]) {
         page,
     }) => {
         const {imports, uploads, sent} = await prepare(page, dark);
-        const dialog = await settings(page);
+        const dialog = await library(page);
         const importToggle = dialog
             .locator('[data-qa="speech-toolbar"]')
             .getByRole('button', {name: ru.voice.importModel, exact: true});
@@ -392,11 +496,18 @@ for (const dark of [false, true]) {
             },
         ]);
         await expect(dialog.getByText(ru.voice.imported, {exact: true})).toBeVisible();
-        await dialog.getByRole('combobox', {name: ru.voice.models.synthesis, exact: true}).click();
-        await page.getByRole('option', {name: 'Мой тестовый голос', exact: true}).click();
-        await expect(dialog.getByRole('combobox', {name: ru.voice.models.synthesis, exact: true})).toHaveText(
-            'Мой тестовый голос',
-        );
+        await dialog
+            .getByRole('button', {
+                name: ru.voice.selectAsset.replace('{name}', 'Мой тестовый голос'),
+                exact: true,
+            })
+            .click();
+        await expect(
+            dialog.getByRole('button', {
+                name: ru.voice.selectedAsset.replace('{name}', 'Мой тестовый голос'),
+                exact: true,
+            }),
+        ).toBeDisabled();
         expect(sent).toEqual([]);
     });
 
@@ -411,7 +522,6 @@ for (const dark of [false, true]) {
                 .locator('[data-qa="speech-preview"]')
                 .getByRole('button', {name: ru.voice.previewCheck, exact: true}),
         ).toBeDisabled();
-        await dialog.getByRole('tab', {name: ru.voice.tabs.recognition, exact: true}).click();
         await expect(
             dialog.getByRole('switch', {name: ru.voice.recognitionEnabled, exact: true}),
         ).not.toBeChecked();
@@ -428,9 +538,10 @@ for (const dark of [false, true]) {
             voiceReplyMode: 'random',
             voiceReplyProbability: 100,
         });
-        await chooseSettingsSection(page, 'voice');
-        await dialog.getByRole('tab', {name: ru.voice.tabs.runtime, exact: true}).click();
-        const download = dialog.getByRole('button', {
+        await dialog.getByRole('button', {name: ru.close, exact: true}).click();
+        const catalog = await library(page);
+        await catalog.getByRole('tab', {name: ru.voice.tabs.runtime, exact: true}).click();
+        const download = catalog.getByRole('button', {
             name: ru.voice.installAsset.replace('{name}', speech.assets[0].title),
             exact: true,
         });
@@ -438,14 +549,14 @@ for (const dark of [false, true]) {
         expect(initialHeight).toBe(36);
         await download.click();
         await expect(
-            dialog.getByRole('progressbar', {
+            catalog.getByRole('progressbar', {
                 name: ru.voice.assetProgress.replace('{name}', speech.assets[0].title),
                 exact: true,
             }),
         ).toHaveAttribute('aria-valuenow', '25');
         await expect
             .poll(() =>
-                dialog
+                catalog
                     .getByRole('button', {
                         name: ru.voice.cancelAsset.replace('{name}', speech.assets[0].title),
                         exact: true,
@@ -453,14 +564,14 @@ for (const dark of [false, true]) {
                     .evaluate((element) => element.getBoundingClientRect().height),
             )
             .toBe(initialHeight);
-        await capture(page, dialog.locator('[data-qa="speech-assets"]'), 'voice-settings', dark);
-        await dialog
+        await capture(page, catalog.locator('[data-qa="speech-assets"]'), 'voice-settings', dark);
+        await catalog
             .getByRole('button', {
                 name: ru.voice.cancelAsset.replace('{name}', speech.assets[0].title),
                 exact: true,
             })
             .click();
-        await expect(dialog.getByText(ru.voice.phases.cancelled, {exact: true})).toBeVisible();
+        await expect(catalog.getByText(ru.voice.phases.cancelled, {exact: true})).toBeVisible();
         expect(requests).toEqual(['POST sherpa-runtime', 'DELETE sherpa-runtime']);
     });
 
@@ -469,8 +580,7 @@ for (const dark of [false, true]) {
     }) => {
         const {sent} = await prepare(page, dark);
         await page.getByRole('button', {name: title, exact: true}).click();
-        const normal = page.getByRole('textbox', {name: ru.messagePlaceholder, exact: true});
-        await normal.fill('Мой обычный текст');
+        const textDraft = await prepareTextDraft(page, 'Мой подготовленный текст');
         await page.getByRole('button', {name: ru.draft, exact: true}).click();
         const generate = page.waitForRequest(
             (request) =>
@@ -486,7 +596,7 @@ for (const dark of [false, true]) {
         await expect
             .poll(() => preview.locator('audio').evaluate((element: HTMLAudioElement) => element.duration))
             .toBeGreaterThan(4);
-        await expect(preview.locator('audio')).toHaveAttribute('src', '/api/speech/audio/voice-job-1');
+        await expect(preview.locator('audio')).toHaveAttribute('src', '/api/speech/audio/voice-job-2');
         await preview.getByRole('button', {name: ru.voice.play, exact: true}).click();
         await expect
             .poll(() => preview.locator('audio').evaluate((element: HTMLAudioElement) => element.paused))
@@ -507,8 +617,8 @@ for (const dark of [false, true]) {
         await capture(page, preview, 'voice-draft', dark);
         await preview.getByRole('button', {name: ru.voice.sendDraft, exact: true}).click();
         await expect.poll(() => sent.length).toBe(1);
-        expect(sent[0]).toEqual({voiceId: 'voice-job-2'});
+        expect(sent[0]).toEqual({voiceId: 'voice-job-3'});
         await expect(preview).toHaveCount(0);
-        await expect(normal).toHaveValue('Мой обычный текст');
+        await expect(textDraft).toHaveText('Мой подготовленный текст');
     });
 }

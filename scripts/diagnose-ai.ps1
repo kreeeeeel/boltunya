@@ -126,7 +126,7 @@ if ($null -ne $state) {
     if ($selectedModel -and $selectedModel.supportsAutomation -eq $false) { $report.findings += 'DEFAULT_MODEL_DRAFTS_ONLY' }
     if ($selectedModel -and $report.system.memoryMb -and $selectedModel.memoryGb * 1024 -gt $report.system.memoryMb) { $report.findings += 'MODEL_EXCEEDS_SYSTEM_MEMORY_ESTIMATE' }
     if ($TestModel) {
-        $body = @{ text = 'Say hello in one short sentence.'; rule = @{ model = $selected; useDefaultModel = $false; internetAccess = $false; matchMyStyle = $false; useMemory = $false } } | ConvertTo-Json -Depth 4
+        $body = @{ text = 'Say hello in one short sentence.'; rule = @{ model = $selected; useDefaultModel = $false; matchMyStyle = $false; useMemory = $false } } | ConvertTo-Json -Depth 4
         $generationTimer = [Diagnostics.Stopwatch]::StartNew()
         $test = Invoke-DiagnosticRequest "$base/api/preview" $headers $body 190
         $report.generation.requestDurationMs = $generationTimer.ElapsedMilliseconds

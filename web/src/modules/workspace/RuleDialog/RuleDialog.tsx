@@ -1,41 +1,36 @@
-import {
-    Box,
-    Button,
-    Dialog,
-    Flex,
-    Icon,
-    Label,
-    Select,
-    Skeleton,
-    Slider,
-    Switch,
-    Text,
-    TextArea,
-} from '@gravity-ui/uikit';
-import {Sparkles} from '@gravity-ui/icons';
+import {Xmark} from '@gravity-ui/icons';
+import {Box, Button, Dialog, Flex, Icon, Select, Text} from '@gravity-ui/uikit';
 import {useTranslations} from 'next-intl';
 import {useState} from 'react';
 import type {RuleDialogProps} from '@/modules/workspace/RuleDialog/RuleDialog.types';
-import styles from '@/modules/workspace/RuleDialog/RuleDialog.module.css';
-import {api, errorMessage} from '@/shared/api/client';
-import type {Reply, ChatRule} from '@/shared/api/client';
-import {ReplySkeleton} from '@/shared/ui/ReplySkeleton/ReplySkeleton';
-import {communicationStyles} from '@/modules/workspace/model/communicationStyles';
-import {StyleOption} from '@/modules/workspace/StyleOption/StyleOption';
-import {ChatHistoryActions} from '@/modules/workspace/ChatHistoryActions';
+import {errorMessage} from '@/shared/api/client';
 import {SaveDialogFooter} from '@/shared/ui/SaveDialogFooter/SaveDialogFooter';
 import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
+import {ScrollArea} from '@/shared/ui/ScrollArea/ScrollArea';
+import {TelegramAvatar} from '@/shared/ui/TelegramAvatar/TelegramAvatar';
 import {normalizeCommunicationRule} from '@/modules/workspace/model/normalizeCommunicationRule';
 import {useModelProfiles} from '@/modules/settings/model/useModelProfiles';
-import {PromptBudgetNotice} from '@/modules/settings/PromptBudgetNotice/PromptBudgetNotice';
-import {ProactiveInterval} from '@/modules/settings/ProactiveInterval/ProactiveInterval';
-import {RichText} from '@/modules/workspace/RichText/RichText';
+import {RuleNavigation} from '@/modules/workspace/RuleDialog/components/RuleNavigation';
+import {ruleSections} from '@/modules/workspace/RuleDialog/model/ruleSections';
+import type {RuleSectionId} from '@/modules/workspace/RuleDialog/model/ruleSections';
+import {RuleReplyFields} from '@/modules/workspace/RuleDialog/sections/RuleReplyFields';
+import {RuleToneFields} from '@/modules/workspace/RuleDialog/sections/RuleToneFields';
+import {RuleModelFields} from '@/modules/workspace/RuleDialog/sections/RuleModelFields';
+import {RuleProactiveFields} from '@/modules/workspace/RuleDialog/sections/RuleProactiveFields';
+import {RuleMemoryFields} from '@/modules/workspace/RuleDialog/sections/RuleMemoryFields';
+import {RuleMediaFields} from '@/modules/workspace/RuleDialog/sections/RuleMediaFields';
+import {RuleGroupFields} from '@/modules/workspace/RuleDialog/sections/RuleGroupFields';
+import {RulePreviewFields} from '@/modules/workspace/RuleDialog/sections/RulePreviewFields';
+import {ChatVoiceFields} from '@/modules/workspace/RuleDialog/sections/ChatVoiceFields';
+import styles from '@/modules/workspace/RuleDialog/RuleDialog.module.css';
+
 export function RuleDialog({
     chat,
     engine,
     customStyles,
     defaultModel,
     defaultModelProfileId,
+    settings,
     onClose,
     onCollectContext,
     onDeleted,
@@ -49,11 +44,26 @@ export function RuleDialog({
             customStyles.map((style) => style.id),
         ),
     );
-    const [test, setTest] = useState('');
-    const [result, setResult] = useState<Reply | null>(null);
+    const [section, setSection] = useState<RuleSectionId>('replies');
+    const [visited, setVisited] = useState<RuleSectionId[]>(['replies']);
     const [busy, setBusy] = useState('');
     const [error, setError] = useState('');
     const feedback = useSaveFeedback(rule);
+    const sections = ruleSections.filter((id) => id !== 'groups' || (chat.kind && chat.kind !== 'private'));
+    const profileId = (rule.useDefaultModel ?? true) ? defaultModelProfileId : rule.modelProfileId;
+    const previewAvailable = profileId
+        ? profiles.profiles.some((profile) => profile.id === profileId && profile.enabled)
+        : !!engine?.models.some(
+              (model) =>
+                  model.id === ((rule.useDefaultModel ?? true) ? defaultModel : rule.model) &&
+                  model.installed,
+          );
+
+    function select(next: RuleSectionId) {
+        setSection(next);
+        setVisited((previous) => (previous.includes(next) ? previous : [...previous, next]));
+    }
+
     async function save() {
         setBusy('save');
         setError('');
@@ -67,466 +77,133 @@ export function RuleDialog({
             setBusy('');
         }
     }
-    async function preview() {
-        setBusy('test');
-        setError('');
-        try {
-            setResult(
-                await api.models.preview({
-                    preview: {text: test || t('testPlaceholder'), rule, chatId: chat.id},
-                }),
-            );
-        } catch (cause) {
-            setError(errorMessage(cause));
-        } finally {
-            setBusy('');
-        }
-    }
-    return (
-        <Dialog
-            modalClassName={styles.modal}
-            className={styles.dialog}
-            qa="communication-dialog"
-            contentOverflow="auto"
-            open
-            onClose={onClose}
-            maxWidth="s"
-            fullWidth
-            aria-label={t('ruleTitle', {name: chat.title})}
-        >
-            <Dialog.Header caption={t('ruleTitle', {name: chat.title})} />
-            <Dialog.Body>
-                <Flex direction="column" gap={5} className={styles.body}>
-                    <Text color="secondary">{t('ruleHint')}</Text>
-                    <Switch
-                        checked={rule.useMemory ?? true}
-                        onUpdate={(useMemory) => setRule({...rule, useMemory})}
-                    >
-                        {t('memory.useChat')}
-                    </Switch>
-                    <ChatHistoryActions
+
+    function content(id: RuleSectionId) {
+        const common = {value: rule, onUpdate: setRule};
+        switch (id) {
+            case 'replies':
+                return <RuleReplyFields {...common} />;
+            case 'model':
+                return (
+                    <RuleModelFields
+                        {...common}
+                        engine={engine}
+                        profiles={profiles.profiles}
+                        profileError={profiles.error}
+                        defaultModel={defaultModel}
+                        defaultModelProfileId={defaultModelProfileId}
+                    />
+                );
+            case 'tone':
+                return <RuleToneFields {...common} customStyles={customStyles} />;
+            case 'voice':
+                return <ChatVoiceFields {...common} settings={settings} />;
+            case 'proactive':
+                return <RuleProactiveFields {...common} />;
+            case 'preview':
+                return (
+                    <RulePreviewFields
+                        rule={rule}
+                        chatId={chat.id}
+                        available={previewAvailable}
+                        disabled={!!busy}
+                        onBusyChange={(active) => setBusy(active ? 'preview' : '')}
+                    />
+                );
+            case 'memory':
+                return (
+                    <RuleMemoryFields
+                        {...common}
                         chatId={chat.id}
                         disabled={!!busy}
                         onCollectContext={onCollectContext}
                         onDeleted={onDeleted}
                     />
-                    <Flex className={styles.enable} justifyContent="space-between" alignItems="center">
-                        <Flex gap={2} alignItems="center">
-                            <Icon data={Sparkles} />
-                            <Text variant="subheader-2">{t('enableAi')}</Text>
+                );
+            case 'media':
+                return <RuleMediaFields {...common} />;
+            case 'groups':
+                return <RuleGroupFields {...common} />;
+        }
+    }
+
+    return (
+        <Dialog
+            open
+            hasCloseButton={false}
+            contentOverflow="visible"
+            modalClassName={styles.modal}
+            className={styles.dialog}
+            qa="communication-dialog"
+            onClose={onClose}
+            aria-label={t('ruleTitle', {name: chat.title})}
+        >
+            <Flex className={styles.shell}>
+                <Box className={styles.sidebar}>
+                    <RuleNavigation chat={chat} selected={section} onSelect={select} />
+                </Box>
+                <Flex direction="column" className={styles.main}>
+                    <Flex direction="column" className={styles.mobileHeading} gap={3}>
+                        <Flex alignItems="center" gap={3}>
+                            <TelegramAvatar title={chat.title} url={chat.avatarUrl} size="m" />
+                            <Text className={styles.chatName}>{chat.title}</Text>
                         </Flex>
-                        <Switch
-                            checked={rule.enabled}
-                            onUpdate={(enabled) => setRule({...rule, enabled})}
-                            controlProps={{'aria-label': t('enableAi')}}
+                        <Select
+                            size="l"
+                            width="max"
+                            value={[section]}
+                            options={sections.map((id) => ({
+                                value: id,
+                                content: t('chatSettings.sections.' + id),
+                            }))}
+                            onUpdate={([id]) => {
+                                if (sections.some((section) => section === id)) {
+                                    select(id as RuleSectionId);
+                                }
+                            }}
+                            aria-label={t('chatSettings.navigation')}
                         />
                     </Flex>
-                    <Flex direction="column" gap={3}>
-                        <Text variant="subheader-2">{t('proactive.title')}</Text>
-                        <Select
-                            size="l"
-                            width="max"
-                            value={[rule.proactiveMode ?? 'inherit']}
-                            aria-label={t('proactive.mode')}
-                            options={(['inherit', 'disabled', 'enabled'] as const).map((mode) => ({
-                                value: mode,
-                                content: t('proactive.modes.' + mode),
-                            }))}
-                            onUpdate={([proactiveMode]) => {
-                                if (
-                                    proactiveMode === 'inherit' ||
-                                    proactiveMode === 'disabled' ||
-                                    proactiveMode === 'enabled'
-                                ) {
-                                    setRule({...rule, proactiveMode});
-                                }
-                            }}
-                        />
-                        <Text color="secondary">{t('proactive.hint')}</Text>
-                        <Switch
-                            checked={!rule.proactiveIntervalMinutes}
-                            onUpdate={(inherit) =>
-                                setRule({...rule, proactiveIntervalMinutes: inherit ? 0 : 60})
-                            }
-                        >
-                            {t('proactive.inheritInterval')}
-                        </Switch>
-                        {!!rule.proactiveIntervalMinutes && (
-                            <ProactiveInterval
-                                value={rule.proactiveIntervalMinutes}
-                                disabled={rule.proactiveMode === 'disabled'}
-                                onUpdate={(proactiveIntervalMinutes) =>
-                                    setRule({...rule, proactiveIntervalMinutes})
-                                }
-                            />
-                        )}
-                        <Text>{t('proactive.messageMode')}</Text>
-                        <Select
-                            size="l"
-                            width="max"
-                            value={[rule.proactiveMessageMode ?? 'ai']}
-                            options={(['ai', 'text'] as const).map((value) => ({
-                                value,
-                                content: t('proactive.messageModes.' + value),
-                            }))}
-                            aria-label={t('proactive.messageMode')}
-                            onUpdate={([proactiveMessageMode]) => {
-                                if (proactiveMessageMode === 'ai' || proactiveMessageMode === 'text') {
-                                    setRule({...rule, proactiveMessageMode});
-                                }
-                            }}
-                        />
-                        {rule.proactiveMessageMode === 'text' && (
-                            <Flex direction="column" gap={2}>
-                                <Text>{t('proactive.messageText')}</Text>
-                                <TextArea
-                                    value={rule.proactiveText ?? ''}
-                                    onUpdate={(proactiveText) => setRule({...rule, proactiveText})}
-                                    minRows={3}
-                                    maxRows={8}
-                                    controlProps={{'aria-label': t('proactive.messageText'), maxLength: 4096}}
-                                />
-                                <Text color="secondary">{t('proactive.messageTextHint')}</Text>
-                            </Flex>
-                        )}
-                    </Flex>
-                    {chat.kind && chat.kind !== 'private' && (
-                        <Box>
-                            <Text className={styles.label}>{t('groupReplies')}</Text>
-                            <Select
-                                size="l"
-                                width="max"
-                                value={[rule.groupReplies ?? 'inherit']}
-                                options={['inherit', 'disabled', 'mentions', 'all'].map((value) => ({
-                                    value,
-                                    content: t('groupMode.' + value),
-                                }))}
-                                onUpdate={([groupReplies]) =>
-                                    setRule({...rule, groupReplies: groupReplies as ChatRule['groupReplies']})
-                                }
-                                aria-label={t('groupReplies')}
-                            />
-                        </Box>
-                    )}
-                    <Flex direction="column" gap={2}>
-                        <Text>{t('replyInterruption.mode')}</Text>
-                        <Select
-                            size="l"
-                            width="max"
-                            value={[rule.replyInterruptionMode ?? 'inherit']}
-                            options={(['inherit', 'replace', 'finish', 'each'] as const).map((value) => ({
-                                value,
-                                content: t('replyInterruption.options.' + value),
-                            }))}
-                            aria-label={t('replyInterruption.mode')}
-                            onUpdate={([replyInterruptionMode]) => {
-                                if (
-                                    replyInterruptionMode === 'inherit' ||
-                                    replyInterruptionMode === 'replace' ||
-                                    replyInterruptionMode === 'finish' ||
-                                    replyInterruptionMode === 'each'
-                                ) {
-                                    setRule({...rule, replyInterruptionMode});
-                                }
-                            }}
-                        />
-                        <Text color="secondary">
-                            {t('replyInterruption.hints.' + (rule.replyInterruptionMode ?? 'inherit'))}
+                    <Flex direction="column" gap={2} className={styles.heading}>
+                        <Text as="h2" variant="header-1">
+                            {t('chatSettings.sections.' + section)}
                         </Text>
+                        <Text color="secondary">{t('chatSettings.hints.' + section)}</Text>
                     </Flex>
-                    <Box>
-                        <Text className={styles.label}>{t('style')}</Text>
-                        <Select
-                            width="max"
-                            size="l"
-                            controlClassName={styles.styleControl}
-                            renderOption={(option) => <>{option.content}</>}
-                            renderSelectedOption={(option) => <>{option.content}</>}
-                            value={[rule.styleId ? 'preset:' + rule.styleId : rule.style]}
-                            options={[
-                                ...communicationStyles.map(({value, emoji}) => ({
-                                    value,
-                                    text: t(value),
-                                    content: <StyleOption emoji={emoji} name={t(value)} />,
-                                })),
-                                ...customStyles.map((style) => ({
-                                    value: 'preset:' + style.id,
-                                    text: style.name,
-                                    content: <StyleOption emoji={style.emoji} name={style.name} />,
-                                })),
-                            ]}
-                            onUpdate={(value) => {
-                                if (value[0]?.startsWith('preset:')) {
-                                    setRule({...rule, style: 'custom', styleId: value[0].slice(7)});
-                                    return;
-                                }
-                                const style = communicationStyles.find(
-                                    (option) => option.value === value[0],
-                                )?.value;
-                                if (style) {
-                                    setRule({...rule, style, styleId: ''});
-                                }
-                            }}
-                            aria-label={t('style')}
-                        />
-                    </Box>
-                    <Box>
-                        <Text className={styles.label}>{t('model')}</Text>
-                        {!engine ? (
-                            <Skeleton height={36} />
-                        ) : (
-                            <Select
-                                width="max"
-                                size="l"
-                                value={[
-                                    (rule.useDefaultModel ?? true)
-                                        ? 'default'
-                                        : rule.modelProfileId
-                                          ? 'profile:' + rule.modelProfileId
-                                          : rule.model,
-                                ]}
-                                options={[
-                                    {
-                                        value: 'default',
-                                        content: t('modelDefaultOption', {
-                                            name:
-                                                profiles.profiles.find(
-                                                    (profile) => profile.id === defaultModelProfileId,
-                                                )?.name ??
-                                                engine.models.find((model) => model.id === defaultModel)
-                                                    ?.name ??
-                                                defaultModel,
-                                        }),
-                                    },
-                                    ...profiles.profiles
-                                        .filter((profile) => profile.enabled)
-                                        .map((profile) => ({
-                                            value: 'profile:' + profile.id,
-                                            content: profile.name + ' · ' + profile.model,
-                                        })),
-                                    ...(engine?.models ?? []).map((model) => ({
-                                        value: model.id,
-                                        content:
-                                            model.name + (model.installed ? '' : ' · ' + t('notInstalled')),
-                                    })),
-                                ]}
-                                onUpdate={([model]) =>
-                                    setRule({
-                                        ...rule,
-                                        model:
-                                            model === 'default'
-                                                ? defaultModel
-                                                : model.startsWith('profile:')
-                                                  ? rule.model
-                                                  : model,
-                                        modelProfileId: model.startsWith('profile:') ? model.slice(8) : '',
-                                        useDefaultModel: model === 'default',
-                                    })
-                                }
-                                aria-label={t('model')}
-                            />
-                        )}
-                        <Text className={styles.hint}>{t('modelDefaultHint')}</Text>
-                        {profiles.error && (
-                            <Text color="danger" role="alert">
-                                {profiles.error}
+                    {visited.map((id) => (
+                        <Box key={id} hidden={id !== section} className={styles.panel}>
+                            <ScrollArea className={styles.scroll} qa={'chat-settings-scroll-' + id}>
+                                <Box className={styles.content}>{content(id)}</Box>
+                            </ScrollArea>
+                        </Box>
+                    ))}
+                    <Box className={styles.footer} qa="chat-settings-footer">
+                        {error && (
+                            <Text color="danger" role="alert" className={styles.error}>
+                                {error}
                             </Text>
                         )}
-                    </Box>
-                    <Box>
-                        <Text className={styles.label}>{t('chatFeatures.delivery')}</Text>
-                        <Select
-                            size="l"
-                            width="max"
-                            value={[rule.deliveryMode ?? 'inherit']}
-                            options={['inherit', 'reply', 'send'].map((value) => ({
-                                value,
-                                content: t('settingsCenter.delivery.' + value),
-                            }))}
-                            onUpdate={([deliveryMode]) =>
-                                setRule({...rule, deliveryMode: deliveryMode as ChatRule['deliveryMode']})
-                            }
-                            aria-label={t('chatFeatures.delivery')}
+                        <SaveDialogFooter
+                            saved={feedback.saved}
+                            saveLabel={t('save')}
+                            cancelLabel={t('cancel')}
+                            onClose={onClose}
+                            onSave={() => void save()}
+                            busy={busy === 'save'}
+                            disabled={!!busy}
                         />
                     </Box>
-                    <Box>
-                        <Switch
-                            checked={rule.analyzePhotos ?? false}
-                            onUpdate={(analyzePhotos) => setRule({...rule, analyzePhotos})}
-                        >
-                            {t('chatFeatures.analyzePhotos')}
-                        </Switch>
-                        <Text className={styles.hint}>{t('chatFeatures.photosHint')}</Text>
-                    </Box>
-                    <Box>
-                        <Switch
-                            checked={rule.aiStickers ?? false}
-                            onUpdate={(aiStickers) => setRule({...rule, aiStickers})}
-                        >
-                            {t('chatFeatures.aiStickers')}
-                        </Switch>
-                        <Text className={styles.hint}>{t('chatFeatures.stickersHint')}</Text>
-                    </Box>
-                    <Box>
-                        <Text className={styles.label}>{t('instructions')}</Text>
-                        <TextArea
-                            value={rule.instructions}
-                            onUpdate={(instructions) => setRule({...rule, instructions})}
-                            minRows={3}
-                            maxRows={5}
-                            controlProps={{'aria-label': t('instructions'), maxLength: 4000}}
-                        />
-                    </Box>
-                    <PromptBudgetNotice request={{rule}} />
-                    <Box>
-                        <Switch
-                            checked={rule.matchMyStyle ?? true}
-                            onUpdate={(matchMyStyle) => setRule({...rule, matchMyStyle})}
-                        >
-                            {t('matchMyStyle')}
-                        </Switch>
-                        <Text className={styles.hint}>{t('matchMyStyleHint')}</Text>
-                    </Box>
-                    <Box>
-                        <Flex justifyContent="space-between" className={styles.label}>
-                            <Text>{t('depth')}</Text>
-                            <Label theme="info">{t('messagesCount', {count: rule.contextMessages})}</Label>
-                        </Flex>
-                        <Slider
-                            value={rule.contextMessages}
-                            min={4}
-                            max={60}
-                            onUpdate={(contextMessages) => setRule({...rule, contextMessages})}
-                            aria-label={t('depth')}
-                        />
-                        <Text className={styles.hint}>{t('contextNote')}</Text>
-                    </Box>
-                    <Box qa="response-length-setting">
-                        <Flex className={styles.label} justifyContent="space-between">
-                            <Text>{t('length')}</Text>
-                            <Text color="secondary">{rule.maxTokens}</Text>
-                        </Flex>
-                        <Slider
-                            value={rule.maxTokens}
-                            min={32}
-                            max={512}
-                            step={32}
-                            onUpdate={(maxTokens) => setRule({...rule, maxTokens})}
-                            aria-label={t('length')}
-                        />
-                    </Box>
-                    <Box qa="reply-delay-setting">
-                        <Flex className={styles.label} justifyContent="space-between">
-                            <Text>{t('delay')}</Text>
-                            <Text color="secondary">{t('seconds', {count: rule.delaySeconds})}</Text>
-                        </Flex>
-                        <Slider
-                            value={rule.delaySeconds}
-                            min={0}
-                            max={60}
-                            onUpdate={(delaySeconds) => setRule({...rule, delaySeconds})}
-                            aria-label={t('delay')}
-                        />
-                    </Box>
-                    <Box>
-                        <Flex className={styles.label} justifyContent="space-between">
-                            <Text>{t('creativity')}</Text>
-                            <Text color="secondary">{rule.creativity}%</Text>
-                        </Flex>
-                        <Slider
-                            value={rule.creativity}
-                            min={0}
-                            max={100}
-                            onUpdate={(creativity) => setRule({...rule, creativity})}
-                            aria-label={t('creativity')}
-                        />
-                    </Box>
-                    <Switch checked={rule.emoji} onUpdate={(emoji) => setRule({...rule, emoji})}>
-                        {t('emoji')}
-                    </Switch>
-                    <Box>
-                        <Switch
-                            checked={rule.internetAccess ?? true}
-                            onUpdate={(internetAccess) => setRule({...rule, internetAccess})}
-                        >
-                            {t('internetAccess')}
-                        </Switch>
-                        <Text className={styles.hint}>{t('internetAccessHint')}</Text>
-                    </Box>
-                    <Box>
-                        <Text className={styles.label}>{t('internetSearch.linksTitle')}</Text>
-                        <Select
-                            size="l"
-                            width="max"
-                            value={[rule.sourceLinks ?? 'requested']}
-                            options={['requested', 'always', 'never'].map((value) => ({
-                                value,
-                                content: t('internetSearch.modes.' + value),
-                            }))}
-                            onUpdate={([sourceLinks]) =>
-                                setRule({...rule, sourceLinks: sourceLinks as ChatRule['sourceLinks']})
-                            }
-                            disabled={!(rule.internetAccess ?? true)}
-                            aria-label={t('internetSearch.linksTitle')}
-                        />
-                        <Text className={styles.hint}>{t('internetSearch.linksHint')}</Text>
-                    </Box>
-                    <Flex direction="column" gap={3} className={styles.test}>
-                        <Text variant="subheader-2">{t('preview')}</Text>
-                        <Text className={styles.hint}>{t('previewHint')}</Text>
-                        <TextArea
-                            value={test}
-                            onUpdate={setTest}
-                            minRows={2}
-                            placeholder={t('testPlaceholder')}
-                            controlProps={{'aria-label': t('testMessage'), maxLength: 4096}}
-                        />
-                        <Button
-                            view="outlined-info"
-                            onClick={() => void preview()}
-                            loading={busy === 'test'}
-                            disabled={
-                                !!busy ||
-                                !engine?.models.some(
-                                    (model) =>
-                                        model.id ===
-                                            ((rule.useDefaultModel ?? true) ? defaultModel : rule.model) &&
-                                        model.installed,
-                                )
-                            }
-                        >
-                            <Icon data={Sparkles} />
-                            {t('test')}
-                        </Button>
-                        {busy === 'test' && (
-                            <Box className={styles.result}>
-                                <ReplySkeleton />
-                            </Box>
-                        )}
-                        {result && busy !== 'test' && (
-                            <Box className={styles.result}>
-                                <RichText text={result.text} entities={result.entities} />
-                                <Text className={styles.hint}>
-                                    {t('latency', {
-                                        ms: result.durationMs,
-                                        speed: result.tokensPerSecond.toFixed(1),
-                                    })}
-                                </Text>
-                            </Box>
-                        )}
-                    </Flex>
-                    {error && <Text color="danger">{error}</Text>}
                 </Flex>
-            </Dialog.Body>
-            <SaveDialogFooter
-                saved={feedback.saved}
-                saveLabel={t('save')}
-                cancelLabel={t('cancel')}
-                onClose={onClose}
-                onSave={() => void save()}
-                busy={busy === 'save'}
-                disabled={!!busy}
-            />
+                <Button
+                    className={styles.close}
+                    size="m"
+                    view="flat-secondary"
+                    onClick={onClose}
+                    aria-label={t('close')}
+                >
+                    <Icon data={Xmark} size={18} />
+                </Button>
+            </Flex>
         </Dialog>
     );
 }

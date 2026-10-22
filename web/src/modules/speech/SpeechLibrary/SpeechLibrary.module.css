@@ -1,0 +1,57 @@
+.root {
+    height: 100%;
+    min-width: 0;
+    background: transparent;
+}
+
+.content {
+    padding: 28px;
+    min-width: 0;
+}
+
+.header {
+    padding: 20px;
+    border-radius: 12px;
+    background: var(--tiho-panel);
+}
+
+.title {
+    margin: 0;
+    font-weight: 600;
+}
+
+.identity {
+    min-width: 0;
+    flex: 1 1 240px;
+}
+
+.icon {
+    flex-shrink: 0;
+    color: var(--tiho-green);
+}
+
+.heading {
+    min-width: 0;
+    gap: 4px;
+}
+
+.hint {
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.import:not([hidden]) {
+    padding: 20px;
+    border-radius: 16px;
+    background: var(--tiho-panel);
+}
+
+@media (width <= 600px) {
+    .content {
+        padding: 16px;
+    }
+
+    .header {
+        padding: 16px;
+    }
+}

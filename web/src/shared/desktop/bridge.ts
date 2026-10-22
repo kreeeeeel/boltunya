@@ -6,7 +6,7 @@ export interface DesktopWindowState {
     visible: boolean;
     minimized: boolean;
     fullscreen?: boolean;
-    role?: 'main' | 'media-viewer';
+    role?: 'main';
 }
 
 export interface DesktopBridge {
@@ -15,8 +15,6 @@ export interface DesktopBridge {
     quit: () => Promise<void>;
     action: (action: string) => Promise<void>;
     openStorageLocation: (id: string) => Promise<void>;
-    openMediaViewer?: (message: {chatId: string; messageId: string}) => Promise<void>;
-    closeMediaViewer?: () => Promise<void>;
     onState: (callback: (state: DesktopWindowState) => void) => () => void;
 }
 

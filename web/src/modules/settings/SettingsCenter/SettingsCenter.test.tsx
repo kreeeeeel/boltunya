@@ -93,23 +93,8 @@ it('keeps the voice preferences as a shared draft and saves them without enablin
         </NextIntlClientProvider>,
     );
     expect(screen.queryByRole('combobox', {name: ru.voice.replyMode})).not.toBeInTheDocument();
-    const importToggle = screen.getByRole('button', {name: ru.voice.importModel});
-    expect(importToggle).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.queryByRole('region', {name: ru.voice.importModel})).not.toBeInTheDocument();
-    fireEvent.click(importToggle);
-    const importForm = screen.getByRole('region', {name: ru.voice.importModel});
-    expect(importForm).toBeVisible();
-    expect(importToggle).toHaveAttribute('aria-controls', importForm.id);
-    expect(importToggle).toHaveAttribute('aria-expanded', 'true');
-    fireEvent.change(screen.getByRole('textbox', {name: ru.voice.importName}), {
-        target: {value: 'Мой голос'},
-    });
-    fireEvent.click(importToggle);
-    expect(screen.queryByRole('region', {name: ru.voice.importModel})).not.toBeInTheDocument();
-    fireEvent.click(importToggle);
-    expect(screen.getByRole('textbox', {name: ru.voice.importName})).toHaveValue('Мой голос');
-    fireEvent.click(importToggle);
-    fireEvent.click(screen.getByRole('tab', {name: ru.voice.tabs.recognition}));
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', {name: ru.voice.importModel})).not.toBeInTheDocument();
     expect(screen.getByRole('switch', {name: ru.voice.recognitionEnabled})).not.toBeChecked();
     fireEvent.click(screen.getByRole('switch', {name: ru.voice.recognitionEnabled}));
     fireEvent.click(screen.getByRole('menuitem', {name: ru.settingsCenter.sections.replies}));
@@ -149,6 +134,34 @@ it('shows a save failure once in the active section while preserving visited dra
     expect(screen.getAllByText('Cannot save')).toHaveLength(1);
     fireEvent.click(screen.getByRole('menuitem', {name: ru.settingsCenter.sections.prompt}));
     expect(screen.getAllByText('Cannot save')).toHaveLength(1);
+});
+
+it('preserves dirty settings before navigating to the separate speech library', async () => {
+    mocks.settings.mockResolvedValue({ok: true});
+    mocks.speechState.mockResolvedValue(speechState);
+    const open = vi.fn();
+    render(
+        <NextIntlClientProvider locale="ru" messages={ru}>
+            <ThemeProvider>
+                <SettingsCenter
+                    settings={workspaceState.settings}
+                    initialSection="voice"
+                    onClose={vi.fn()}
+                    onRefresh={async () => {}}
+                    onOpenSpeechLibrary={open}
+                />
+            </ThemeProvider>
+        </NextIntlClientProvider>,
+    );
+    const library = screen.getByRole('button', {name: ru.voice.openLibrary});
+    expect(library).toBeEnabled();
+    fireEvent.click(screen.getByRole('switch', {name: ru.voice.recognitionEnabled}));
+    expect(library).toBeDisabled();
+    expect(open).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', {name: ru.save}));
+    await waitFor(() => expect(library).toBeEnabled());
+    fireEvent.click(library);
+    expect(open).toHaveBeenCalledOnce();
 });
 it('keeps conversation support in a separate section and saves its draft after navigation', async () => {
     mocks.settings.mockResolvedValue({ok: true});

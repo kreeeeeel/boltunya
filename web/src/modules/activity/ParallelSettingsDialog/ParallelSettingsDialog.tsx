@@ -1,12 +1,10 @@
-import {Box, Dialog, Flex, Label, RadioGroup, Skeleton, Text} from '@gravity-ui/uikit';
-import {useEffect, useState} from 'react';
-import {useLocale, useTranslations} from 'next-intl';
+import {Box, Dialog, Flex, Label, RadioGroup, Text} from '@gravity-ui/uikit';
+import {useState} from 'react';
+import {useTranslations} from 'next-intl';
 import {api, errorMessage} from '@/shared/api/client';
-import type * as Contract from '@aigram/api-client';
 import {SaveDialogFooter} from '@/shared/ui/SaveDialogFooter/SaveDialogFooter';
 import {useSaveFeedback} from '@/shared/ui/SaveDialogFooter/useSaveFeedback';
 import styles from '@/modules/activity/ParallelSettingsDialog/ParallelSettingsDialog.module.css';
-const GIBIBYTE = 1024 ** 3;
 export function ParallelSettingsDialog({
     value,
     onClose,
@@ -18,36 +16,11 @@ export function ParallelSettingsDialog({
 }) {
     const t = useTranslations('events.parallel');
     const common = useTranslations();
-    const locale = useLocale();
     const [count, setCount] = useState(value);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [warning, setWarning] = useState('');
-    const [sample, setSample] = useState<Contract.MetricSample | null>(null);
-    const [metricsLoading, setMetricsLoading] = useState(true);
-    const [metricsError, setMetricsError] = useState(false);
     const feedback = useSaveFeedback(count);
-    useEffect(() => {
-        const controller = new AbortController();
-        void api.system
-            .getMetrics({
-                signal: controller.signal,
-            })
-            .then((result) => {
-                setSample(result.at(-1) ?? null);
-            })
-            .catch(() => {
-                if (!controller.signal.aborted) {
-                    setMetricsError(true);
-                }
-            })
-            .finally(() => {
-                if (!controller.signal.aborted) {
-                    setMetricsLoading(false);
-                }
-            });
-        return () => controller.abort();
-    }, []);
     async function save() {
         setBusy(true);
         setError('');
@@ -66,10 +39,6 @@ export function ParallelSettingsDialog({
         }
     }
     const load = ['light', 'medium', 'high', 'veryHigh'][count - 1] ?? 'light';
-    const bytes = (value: number) =>
-        common('metrics.gb', {
-            value: new Intl.NumberFormat(locale, {maximumFractionDigits: 1}).format(value / GIBIBYTE),
-        });
     return (
         <Dialog open onClose={onClose} maxWidth="s" fullWidth contentOverflow="auto" aria-label={t('title')}>
             <Dialog.Header caption={t('title')} />
@@ -113,30 +82,6 @@ export function ParallelSettingsDialog({
                     </Label>
                 </Flex>
                 <Text color="secondary">{t('estimateHint')}</Text>
-                {metricsLoading ? (
-                    <Skeleton height={20} />
-                ) : (
-                    <Flex direction="column" gap={1}>
-                        {sample && sample.appMemoryBytes + sample.ollamaMemoryBytes > 0 && (
-                            <Text color="secondary">
-                                {t('ram', {value: bytes(sample.appMemoryBytes + sample.ollamaMemoryBytes)})}
-                            </Text>
-                        )}
-                        {sample?.gpuMemoryUsedBytes != null &&
-                            sample.gpuMemoryTotalBytes != null &&
-                            sample.gpuMemoryTotalBytes > 0 && (
-                                <Text color="secondary">
-                                    {t('vram', {
-                                        used: bytes(sample.gpuMemoryUsedBytes),
-                                        total: bytes(sample.gpuMemoryTotalBytes),
-                                    })}
-                                </Text>
-                            )}
-                        {(metricsError || !sample) && (
-                            <Text color="secondary">{t('metricsUnavailable')}</Text>
-                        )}
-                    </Flex>
-                )}
             </Box>
             <SaveDialogFooter
                 saved={feedback.saved}

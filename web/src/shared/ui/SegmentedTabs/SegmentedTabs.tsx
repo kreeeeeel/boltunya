@@ -5,7 +5,7 @@ import {Box, Tab, TabList, Text} from '@gravity-ui/uikit';
 import type {SegmentedTabsProps} from '@/shared/ui/SegmentedTabs/SegmentedTabs.types';
 import styles from '@/shared/ui/SegmentedTabs/SegmentedTabs.module.css';
 
-export function SegmentedTabs({items, value, onUpdate, label}: SegmentedTabsProps) {
+export function SegmentedTabs({items, value, onUpdate, label, view = 'default'}: SegmentedTabsProps) {
     const root = useRef<HTMLDivElement>(null);
     const list = useRef<HTMLDivElement>(null);
     const [indicator, setIndicator] = useState<{
@@ -62,7 +62,11 @@ export function SegmentedTabs({items, value, onUpdate, label}: SegmentedTabsProp
     }, [items, value]);
 
     return (
-        <Box ref={root} className={styles.root} data-ready={Boolean(indicator)}>
+        <Box
+            ref={root}
+            className={`${styles.root} ${view === 'panel' ? styles.panel : ''}`}
+            data-ready={Boolean(indicator)}
+        >
             {indicator && (
                 <Box
                     aria-hidden="true"
@@ -85,16 +89,17 @@ export function SegmentedTabs({items, value, onUpdate, label}: SegmentedTabsProp
                 contentOverflow="wrap"
             >
                 {items.map((item) => (
-                    <Tab
-                        key={item.value}
-                        value={item.value}
-                        icon={item.icon && <Box className={styles.icon}>{item.icon}</Box>}
-                        disabled={item.disabled}
-                        className={styles.tab}
-                    >
-                        <Text as="span" variant="body-2" className={styles.label}>
-                            {item.label}
-                        </Text>
+                    <Tab key={item.value} value={item.value} disabled={item.disabled} className={styles.tab}>
+                        <Box as="span" className={styles.content}>
+                            {item.icon && (
+                                <Box as="span" className={styles.icon}>
+                                    {item.icon}
+                                </Box>
+                            )}
+                            <Text as="span" variant="body-2" className={styles.label}>
+                                {item.label}
+                            </Text>
+                        </Box>
                     </Tab>
                 ))}
             </TabList>

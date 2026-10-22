@@ -13,7 +13,6 @@
         "package": "npm run build && electron-builder --win portable --x64",
         "test:smoke": "node tests/smoke.cjs",
         "test:updater": "npm run build && node tests/updater-smoke.cjs && node tests/startup-updater-smoke.cjs && node tests/update-recovery-smoke.cjs && node tests/profile-migration-smoke.cjs",
-        "test:media": "npm run build && node tests/media-viewer-smoke.cjs",
         "test:speech": "node tests/speech-smoke.cjs"
     },
     "devDependencies": {
@@ -60,8 +59,8 @@
                 "to": "legal/speech"
             },
             {
-                "from": "../web/src/shared/assets/fonts/OFL.txt",
-                "to": "legal/fonts/OFL.txt"
+                "from": "../web/src/shared/assets/fonts/OFL-GolosText.txt",
+                "to": "licenses/GolosText-OFL.txt"
             }
         ],
         "win": {

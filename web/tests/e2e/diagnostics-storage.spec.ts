@@ -1,4 +1,4 @@
-import {chooseSettingsSection} from '../fixtures/settings';
+import {initializeTestTheme, chooseSettingsSection} from '../fixtures/settings';
 import {expect, test} from '@playwright/test';
 
 import {workspaceState} from '../fixtures/workspace';
@@ -32,6 +32,7 @@ const errors = [
 ];
 
 test.beforeEach(async ({page}) => {
+    await initializeTestTheme(page, false);
     const state = structuredClone(workspaceState);
     let entries = [...errors];
     await page.addInitScript(() => {
@@ -48,9 +49,7 @@ test.beforeEach(async ({page}) => {
     });
     await page.route('**/api/**', async (route) => {
         const path = new URL(route.request().url()).pathname;
-        if (path === '/api/appearance') {
-            await route.fulfill({json: {mode: 'system', tokens: {}, css: ''}});
-        } else if (path === '/api/model-profiles') {
+        if (path === '/api/model-profiles') {
             await route.fulfill({json: {profiles: [], presets: []}});
         } else if (path === '/api/state') {
             await route.fulfill({json: state});
@@ -116,8 +115,6 @@ test.beforeEach(async ({page}) => {
                     documentBytes: 0,
                 },
             });
-        } else if (path === '/api/search/connection') {
-            await route.fulfill({json: {configured: false, state: 'unchecked'}});
         } else if (path === '/api/settings') {
             Object.assign(state.settings, route.request().postDataJSON());
             await route.fulfill({json: {ok: true}});

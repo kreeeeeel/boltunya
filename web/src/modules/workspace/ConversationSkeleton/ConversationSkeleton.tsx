@@ -28,8 +28,6 @@ export function ConversationSkeleton() {
                     </Flex>
                 </Flex>
                 <Flex alignItems="center" gap={2}>
-                    <Skeleton className={styles.model} width={90} height={18} />
-                    <Skeleton width={32} height={32} />
                     <Skeleton width={32} height={32} />
                     <Skeleton className={styles.inspector} width={32} height={32} />
                 </Flex>
@@ -47,15 +45,18 @@ export function ConversationSkeleton() {
                     </Box>
                 ))}
             </Flex>
-            <Box className={styles.composerArea}>
-                <Flex alignItems="center" gap={1} className={styles.composer} qa="skeleton-message-composer">
-                    <Skeleton width={32} height={32} qa="skeleton-composer-control" />
-                    <Skeleton width={32} height={32} qa="skeleton-composer-control" />
-                    <Skeleton className={styles.input} height={18} />
-                    <Skeleton width={32} height={32} qa="skeleton-composer-control" />
-                    <Skeleton width={32} height={32} qa="skeleton-composer-control" />
+            <Flex alignItems="center" gap={3} className={styles.assistant} qa="skeleton-assistant-bar">
+                <Skeleton width={36} height={36} />
+                <Flex alignItems="center" gap={2} className={styles.model}>
+                    <Skeleton width={116} height={16} />
+                    <Skeleton width={126} height={18} />
                 </Flex>
-            </Box>
+                <Flex gap={1}>
+                    {[0, 1, 2].map((id) => (
+                        <Skeleton key={id} width={36} height={36} qa="skeleton-assistant-action" />
+                    ))}
+                </Flex>
+            </Flex>
         </Flex>
     );
 }

@@ -6,6 +6,8 @@ export const speechState: SpeechState = {
             id: 'sherpa-runtime',
             title: 'sherpa-onnx 1.13.8 · Windows x64 CPU',
             kind: 'runtime',
+            engine: 'sherpa',
+            format: 'JVM/JNI',
             languages: [],
             sizeBytes: 8277046,
             license:
@@ -18,6 +20,8 @@ export const speechState: SpeechState = {
             id: 'whisper-tiny',
             title: 'Whisper tiny · multilingual int8',
             kind: 'recognition',
+            engine: 'sherpa',
+            format: 'Whisper ONNX int8',
             languages: ['ru', 'en', 'uk', 'kk'],
             sizeBytes: 116204861,
             license: 'MIT · OpenAI Whisper',
@@ -29,6 +33,8 @@ export const speechState: SpeechState = {
             id: 'piper-ru-irina',
             title: 'Piper · Ирина · Russian',
             kind: 'synthesis',
+            engine: 'sherpa',
+            format: 'Piper/VITS ONNX',
             languages: ['ru'],
             sizeBytes: 21149417,
             license:

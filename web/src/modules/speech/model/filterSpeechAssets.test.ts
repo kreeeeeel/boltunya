@@ -25,3 +25,16 @@ it('localizes known languages and keeps user-provided unknown language labels re
     expect(speechLanguageName('en', 'ru')).toBe('английский');
     expect(speechLanguageName('русский', 'ru')).toBe('русский');
 });
+
+it('combines installed-only with the existing language, text and type filters', () => {
+    const assets = [
+        ...speechState.assets,
+        {...speechState.assets[2], id: 'not-installed', title: 'Piper pending', installed: false},
+        {...speechState.assets[2], id: 'english', title: 'Piper English', languages: ['en']},
+    ];
+    expect(
+        filterSpeechAssets(assets, 'synthesis', 'piper', 'ru', 'ru', true).map((asset) => asset.id),
+    ).toEqual(['piper-ru-irina']);
+    expect(filterSpeechAssets(assets, 'synthesis', 'pending', '', 'ru', true)).toEqual([]);
+    expect(assets.find((asset) => asset.id === 'not-installed')?.installed).toBe(false);
+});

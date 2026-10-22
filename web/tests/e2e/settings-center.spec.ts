@@ -2,7 +2,7 @@ import {test, expect} from '@playwright/test';
 import {workspaceState} from '../fixtures/workspace';
 import {modelProfiles, providerPreset} from '../fixtures/modelProfiles';
 import {chooseSettingsSection} from '../fixtures/settings';
-import {persistTestTheme} from '../fixtures/settings';
+import {expectSettingsSlider, persistTestTheme} from '../fixtures/settings';
 import {syntheticPromptBudget} from '../fixtures/promptBudget';
 import {computeDevices} from '../fixtures/computeDevices';
 import type * as Contract from '@aigram/api-client';
@@ -52,7 +52,6 @@ async function expectCompactMemoryActions(actions: Locator) {
 }
 test.beforeEach(async ({page}) => {
     const state = structuredClone(workspaceState);
-    let appearance: Contract.AppearanceSettings = {mode: 'light', tokens: {}, css: ''};
     const profiles = structuredClone(modelProfiles);
     const prompts = new Map<string, Contract.ModelPromptSettings>();
     let routing = {
@@ -60,7 +59,6 @@ test.beforeEach(async ({page}) => {
         parallelIndependentTasks: false,
         replyProfileId: '',
         memoryProfileId: '',
-        researchProfileId: '',
         visionProfileId: '',
     };
     await page.route('**/api/**', async (route) => {
@@ -69,13 +67,8 @@ test.beforeEach(async ({page}) => {
         const parts = path.split('/');
         if (path === '/api/state') {
             await route.fulfill({json: state});
-        } else if (path === '/api/appearance') {
-            if (request.method() === 'PUT') appearance = request.postDataJSON();
-            await route.fulfill({json: appearance});
         } else if (path === '/api/engine/devices') {
             await route.fulfill({json: computeDevices});
-        } else if (path === '/api/search/connection') {
-            await route.fulfill({json: {configured: false, state: 'unchecked'}});
         } else if (path === '/api/prompts/budget') {
             await route.fulfill({json: syntheticPromptBudget(request.postDataJSON())});
         } else if (path === '/api/model-prompts') {
@@ -172,35 +165,18 @@ test('center navigation preserves drafts and keeps actions visible on short scre
     await chooseSettingsSection(page, 'application');
     await page.screenshot({path: '../docs/resources/settings-center.png', animations: 'disabled'});
 });
-test('custom CSS stays scoped, blocks remote resources and persists with a safe reset', async ({page}) => {
-    await chooseSettingsSection(page, 'appearance');
+test('built-in theme switches directly and persists without custom appearance controls', async ({page}) => {
     const dialog = page.getByRole('dialog', {name: ru.settings, exact: true});
-    const css = dialog.getByRole('textbox', {name: ru.appearance.css, exact: true});
-    await css.fill('* { border-radius: 22px; }');
-    await dialog.getByRole('textbox', {name: ru.appearance.tokens.accent, exact: true}).fill('#a855f7');
-    await dialog.getByRole('button', {name: ru.appearance.preview, exact: true}).click();
-    expect(await dialog.evaluate((element) => element.closest('[data-aigram-css-scope]'))).toBeNull();
-    await expect(dialog.getByRole('button', {name: ru.appearance.reset, exact: true})).toBeVisible();
-    const style = page.locator('style[data-aigram-theme]');
-    await expect.poll(() => style.textContent()).toContain('[data-aigram-css-scope] *');
-    await dialog.getByRole('button', {name: ru.save, exact: true}).click();
-    await expect(dialog.getByRole('button', {name: ru.saved, exact: true})).toBeVisible();
-    await page.screenshot({path: '../docs/resources/appearance-editor.png', animations: 'disabled'});
+    await dialog.getByRole('button', {name: ru.close, exact: true}).click();
+    await page.getByRole('button', {name: ru.theme, exact: true}).click();
+    await expect(page.locator('body')).toContainClass('g-root_theme_dark');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.reload();
-    await expect.poll(() => page.locator('style[data-aigram-theme]').textContent()).toContain('#a855f7');
-    await page.getByRole('button', {name: ru.profileMenu, exact: true}).click();
-    await page.getByRole('menuitem', {name: ru.settings, exact: true}).click();
-    await chooseSettingsSection(page, 'appearance');
-    await css.fill('.x { background: url(https://example.com/tracker); }');
-    await dialog.getByRole('button', {name: ru.appearance.preview, exact: true}).click();
-    await expect(dialog.getByRole('alert')).toHaveText(ru.appearance.unsafeCss);
-    await css.fill('* { position: fixed; inset: 0; z-index: 2147483647; opacity: 0; }');
-    await dialog.getByRole('button', {name: ru.appearance.preview, exact: true}).click();
-    await dialog.getByRole('button', {name: ru.appearance.reset, exact: true}).click();
-    await expect(css).toHaveValue('');
-    await dialog.getByRole('button', {name: ru.save, exact: true}).click();
-    await expect.poll(() => page.locator('style[data-aigram-theme]').textContent()).toBe('');
+    await expect(page.locator('body')).toContainClass('g-root_theme_dark');
+    await expect(page.locator('style[data-aigram-theme]')).toHaveCount(0);
+    await expect(page.locator('[data-aigram-css-scope]')).toHaveCount(0);
 });
+
 test('profiles keep keys private, save separately and only test on explicit request', async ({page}) => {
     let tests = 0;
     page.on('request', (request) => {
@@ -361,38 +337,12 @@ for (const dark of [false, true]) {
             path: `../docs/resources/settings-compute-${dark ? 'dark' : 'light'}.png`,
             animations: 'disabled',
         });
-        await chooseSettingsSection(page, 'search');
-        await page.getByText(ru.internetSearch.optionalExa, {exact: true}).click();
-        await page.screenshot({
-            path: `../docs/resources/settings-search-${dark ? 'dark' : 'light'}.png`,
-            animations: 'disabled',
-        });
-        await chooseSettingsSection(page, 'appearance');
-        await expect(page.locator('[data-qa="appearance-live-preview"]')).toBeVisible();
-        const colorButton = page.locator('.g-color-picker__color-swatch').first();
-        await expect(colorButton).toHaveCSS('border-width', '0px');
-        const swatchBorders = await colorButton.evaluate((element) =>
-            ['::before', '::after'].map((pseudo) => ({
-                border: getComputedStyle(element, pseudo).borderWidth,
-                shadow: getComputedStyle(element, pseudo).boxShadow,
-            })),
-        );
-        expect(swatchBorders).toEqual([
-            {border: '0px', shadow: 'none'},
-            {border: '0px', shadow: 'none'},
-        ]);
-        expect(
-            (await page.locator('[data-qa="settings-actions"]:visible').boundingBox())!.height,
-        ).toBeLessThanOrEqual(60);
-        await page.screenshot({
-            path: `../docs/resources/settings-appearance-${dark ? 'dark' : 'light'}.png`,
-            animations: 'disabled',
-        });
-        await page.keyboard.press('Tab');
-        await colorButton.focus();
-        await expect(colorButton).toHaveCSS('outline-width', '2px');
         await chooseSettingsSection(page, 'replies');
         await expect(page.getByRole('switch', {name: ru.proactive.title, exact: true})).toHaveCount(0);
+        const sliders = page.locator('[data-qa="settings-content-replies"] [data-qa="settings-slider"]');
+        await expect(sliders).toHaveCount(2);
+        await expectSettingsSlider(sliders.nth(0));
+        await expectSettingsSlider(sliders.nth(1));
         await page.screenshot({
             path: `../docs/resources/settings-replies-${dark ? 'dark' : 'light'}.png`,
             animations: 'disabled',
@@ -468,30 +418,6 @@ for (const dark of [false, true]) {
         ).not.toBe('rgba(0, 0, 0, 0)');
     });
 }
-test('the color picker updates its field and live example before applying the whole theme', async ({
-    page,
-}) => {
-    await chooseSettingsSection(page, 'appearance');
-    const picker = page.getByRole('group', {
-        name: ru.appearance.pickColor.replace('{name}', ru.appearance.tokens.accent),
-    });
-    await picker.getByRole('button').click();
-    const color = page.locator('.g-color-picker__popup input').first();
-    await color.fill('#34d399ff');
-    await color.blur();
-    await expect(page.getByRole('textbox', {name: ru.appearance.tokens.accent, exact: true})).toHaveValue(
-        '#34d399ff',
-    );
-    await page.locator('[data-qa="appearance-live-preview"]').getByText(ru.appearance.exampleName).click();
-    await expect(page.locator('[data-qa="appearance-live-preview"]')).toContainText(
-        ru.appearance.exampleOutgoing,
-    );
-    await expect(page.locator('[data-qa="appearance-live-preview"] > :first-child > :first-child')).toHaveCSS(
-        'background-color',
-        'rgb(52, 211, 153)',
-    );
-    await page.screenshot({path: '../docs/resources/appearance-color-picker.png', animations: 'disabled'});
-});
 test('model additions save separately, preserve drafts and display token estimates', async ({page}) => {
     await chooseSettingsSection(page, 'prompt');
     await page.getByRole('textbox', {name: ru.globalPrompt, exact: true}).fill('Shared wording');

@@ -9,7 +9,6 @@ const mocks = vi.hoisted(() => ({
     settings: vi.fn(),
     pauseReplyQueue: vi.fn(),
     activityDetails: vi.fn(),
-    getMetrics: vi.fn(),
     activityHistorySettings: vi.fn(),
     activityHistory: vi.fn(),
 }));
@@ -25,16 +24,12 @@ vi.mock('@/shared/api/client', async (original) => ({
             activityHistorySettings: mocks.activityHistorySettings,
             activityHistory: mocks.activityHistory,
         },
-        system: {
-            getMetrics: mocks.getMetrics,
-        },
     },
 }));
 it('enables the assistant from the empty events description', async () => {
     mocks.settings.mockResolvedValue({ok: true});
     mocks.pauseReplyQueue.mockResolvedValue({ok: true});
     mocks.activityDetails.mockResolvedValue(historyPage());
-    mocks.getMetrics.mockResolvedValue(historyPage());
     mocks.activityHistorySettings.mockResolvedValue(historyPage());
     mocks.activityHistory.mockResolvedValue(historyPage());
     const refresh = vi.fn();

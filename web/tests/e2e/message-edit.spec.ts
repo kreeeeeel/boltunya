@@ -1,3 +1,4 @@
+import {initializeTestTheme} from '../fixtures/settings';
 import {expect, test} from '@playwright/test';
 import type {Page} from '@playwright/test';
 import {readFileSync} from 'node:fs';
@@ -28,6 +29,7 @@ const originalEntities: MessageEditOptions['entities'] = [
 ];
 
 async function prepare(page: Page, dark: boolean) {
+    await initializeTestTheme(page, dark);
     const state = structuredClone(workspaceState);
     let messages: Message[] = Array.from({length: 50}, (_, index) => ({
         id: String(80 + index),
@@ -82,8 +84,21 @@ async function prepare(page: Page, dark: boolean) {
         const parts = url.pathname.split('/');
         if (url.pathname === '/api/state') {
             await route.fulfill({json: state});
-        } else if (url.pathname === '/api/appearance') {
-            await route.fulfill({json: {mode: dark ? 'dark' : 'light', tokens: {}, css: ''}});
+        } else if (url.pathname === '/api/preview/jobs') {
+            await route.fulfill({
+                json: {
+                    id: 'preserved-ai-draft',
+                    status: 'ready',
+                    result: {
+                        text: 'Мой несохранённый ответ',
+                        entities: [],
+                        durationMs: 1,
+                        tokensPerSecond: 1,
+                    },
+                },
+            });
+        } else if (url.pathname === '/api/speech') {
+            await route.fulfill({json: {assets: [], downloads: []}});
         } else if (url.pathname === '/api/model-profiles') {
             await route.fulfill({json: {profiles: [], presets: []}});
         } else if (url.pathname === '/api/chats/41/messages') {
@@ -174,8 +189,10 @@ for (const dark of [false, true]) {
         page,
     }) => {
         const scenario = await prepare(page, dark);
-        const composer = page.locator('[data-qa="message-composer"]').getByRole('textbox');
-        await composer.fill('Мой несохранённый ответ');
+        await page.getByRole('button', {name: ru.draft, exact: true}).click();
+        await page.getByRole('menuitem', {name: ru.voice.generateText, exact: true}).click();
+        const composer = page.getByRole('textbox', {name: ru.assistantBar.draftText, exact: true});
+        await expect(composer).toHaveText('Мой несохранённый ответ');
         const viewport = page.locator('[data-qa="conversation-messages"]');
         await viewport.evaluate((element) => {
             element.scrollTop = 40;
@@ -268,7 +285,7 @@ for (const dark of [false, true]) {
         await expect(row.locator('[data-qa="message-edited"]')).toBeVisible();
         await dialog.getByRole('button', {name: ru.messageEdit.close, exact: true}).click();
         await expect(dialog).toBeHidden();
-        await expect(composer).toHaveValue('Мой несохранённый ответ');
+        await expect(composer).toHaveText('Мой несохранённый ответ');
         await assertScrollPreserved('after-edit-close');
     });
 }

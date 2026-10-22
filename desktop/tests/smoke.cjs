@@ -20,11 +20,11 @@ const path = require('node:path');
   await page.screenshot({path:path.join(root,'docs/resources/electron-welcome.png')});
   // Overlay only the desktop's status reader. The isolated backend remains signed out and cannot send messages.
   await application.evaluate(()=>{const require=process.getBuiltinModule('module').createRequire(process.resourcesPath+'/app.asar/package.json'); const path=require('node:path'); const {Backend}=require(path.join(process.resourcesPath,'app.asar/dist/backend.js')); const original=Backend.prototype.request; Backend.prototype.request=async function(route,...args){const result=await original.call(this,route,...args);return route==='/api/state'?{...result,telegram:{...result.telegram,state:'ready'}}:result;};});
-  await page.waitForTimeout(3000);
+  const tray=application.windows().find(window=>window!==page) ?? await application.waitForEvent('window');
+  if(!tray)throw new Error('Tray route missing');
+  await tray.waitForURL('**/tray/');
   const connected=await application.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows().length);
   if(connected!==2)throw new Error('Authenticated tray menu missing');
-  const tray=application.windows().find(w=>w.url().includes('/tray/'));
-  if(!tray)throw new Error('Tray route missing');
   await tray.getByRole('menuitem',{name:'Открыть',exact:true}).waitFor();
   const traySize=await application.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows().find(w=>w.webContents.getURL().includes('/tray/')).getSize());
   if(traySize[0]>230||traySize[1]>190)throw new Error('Tray is oversized');

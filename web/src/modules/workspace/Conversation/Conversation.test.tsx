@@ -9,11 +9,6 @@ import {workspaceState} from '@tests/fixtures/workspace';
 import ru from '@/shared/i18n/ru.json';
 import type {Message, Reply} from '@/shared/api/client';
 
-vi.mock('@/modules/media/MediaViewer/MediaViewerProvider', () => ({
-    MediaViewerProvider: ({children}: {children: import('react').ReactNode}) => children,
-    useMediaViewer: () => undefined,
-}));
-
 function renderConversation(onDraft: () => Promise<Reply>, onSend = vi.fn(), messages: Message[] = []) {
     return render(
         <NextIntlClientProvider locale="ru" messages={ru}>
@@ -57,7 +52,9 @@ it('shows cancelled preparation as a neutral block and clears it on a successful
     expect(screen.queryByRole('alert')).toBeNull();
     await requestDraft();
     await waitFor(() =>
-        expect(screen.getByRole('textbox', {name: ru.messagePlaceholder})).toHaveValue('Готовый ответ'),
+        expect(screen.getByRole('textbox', {name: ru.assistantBar.draftText})).toHaveTextContent(
+            'Готовый ответ',
+        ),
     );
     expect(screen.queryByRole('status', {name: ru.draftQueue.cancelled})).toBeNull();
 });
@@ -74,18 +71,20 @@ it('renders a generated draft as real formatting and sends its Telegram entity r
     );
     await requestDraft();
     await waitFor(() =>
-        expect(screen.getByRole('textbox', {name: ru.messagePlaceholder})).toHaveAttribute(
+        expect(screen.getByRole('textbox', {name: ru.assistantBar.draftText})).toHaveAttribute(
             'contenteditable',
             'true',
         ),
     );
-    const editor = screen.getByRole('textbox', {name: ru.messagePlaceholder});
+    const editor = screen.getByRole('textbox', {name: ru.assistantBar.draftText});
     await waitFor(() => expect(editor).toHaveTextContent('🙂 Привет, друг'));
     expect(editor).toHaveAttribute('contenteditable', 'true');
     await waitFor(() => expect(screen.getByRole('button', {name: ru.send})).toBeEnabled());
     fireEvent.click(screen.getByRole('button', {name: ru.send}));
     await waitFor(() => expect(send).toHaveBeenCalledWith('🙂 Привет, друг', entities));
-    await waitFor(() => expect(screen.getByRole('textbox', {name: ru.messagePlaceholder})).toHaveValue(''));
+    await waitFor(() =>
+        expect(screen.queryByRole('textbox', {name: ru.assistantBar.draftText})).not.toBeInTheDocument(),
+    );
 });
 
 it('clears old formatting when the next generated draft is plain text', async () => {
@@ -104,14 +103,16 @@ it('clears old formatting when the next generated draft is plain text', async ()
     );
     await requestDraft();
     await waitFor(() =>
-        expect(screen.getByRole('textbox', {name: ru.messagePlaceholder})).toHaveTextContent('Привет'),
+        expect(screen.getByRole('textbox', {name: ru.assistantBar.draftText})).toHaveTextContent('Привет'),
     );
     await requestDraft();
     await waitFor(() =>
-        expect(screen.getByRole('textbox', {name: ru.messagePlaceholder})).toHaveValue('Другой ответ'),
+        expect(screen.getByRole('textbox', {name: ru.assistantBar.draftText})).toHaveTextContent(
+            'Другой ответ',
+        ),
     );
     fireEvent.click(screen.getByRole('button', {name: ru.send}));
-    await waitFor(() => expect(send).toHaveBeenCalledWith('Другой ответ'));
+    await waitFor(() => expect(send).toHaveBeenCalledWith('Другой ответ', []));
 });
 
 it('blocks sending when a rich draft cannot preserve its entities', async () => {
@@ -131,15 +132,25 @@ it('blocks sending when a rich draft cannot preserve its entities', async () => 
     expect(send).not.toHaveBeenCalled();
 });
 
-it('keeps a typed reply and displays a generation failure with its reason', async () => {
-    renderConversation(vi.fn().mockRejectedValue(new Error('Модель не ответила.')));
-    const input = screen.getByRole('textbox', {name: ru.messagePlaceholder});
-    fireEvent.change(input, {target: {value: 'Мой черновик'}});
+it('keeps an existing AI draft when a later generation fails', async () => {
+    renderConversation(
+        vi
+            .fn()
+            .mockResolvedValueOnce({text: 'Мой черновик', durationMs: 1, tokensPerSecond: 1})
+            .mockRejectedValueOnce(new Error('Модель не ответила.')),
+    );
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    await requestDraft();
+    await waitFor(() =>
+        expect(screen.getByRole('textbox', {name: ru.assistantBar.draftText})).toHaveTextContent(
+            'Мой черновик',
+        ),
+    );
     await requestDraft();
     const notice = await screen.findByRole('alert', {name: ru.draftQueue.failed});
     expect(notice).toHaveTextContent('Модель не ответила.');
     expect(notice.querySelector('svg')).not.toBeNull();
-    expect(input).toHaveValue('Мой черновик');
+    expect(screen.getByRole('textbox', {name: ru.assistantBar.draftText})).toHaveTextContent('Мой черновик');
 });
 
 it('keeps the bottom on a resize without moving older history or an open message menu', async () => {

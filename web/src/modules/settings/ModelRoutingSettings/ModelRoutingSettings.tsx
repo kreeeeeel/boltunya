@@ -11,7 +11,6 @@ import type {Engine} from '@/shared/api/client';
 const tasks = [
     {profile: 'replyProfileId', model: 'replyModel'},
     {profile: 'memoryProfileId', model: 'memoryModel'},
-    {profile: 'researchProfileId', model: 'researchModel'},
     {profile: 'visionProfileId', model: 'visionModel'},
 ] as const;
 export function ModelRoutingSettings({engine}: {readonly engine?: Engine}) {

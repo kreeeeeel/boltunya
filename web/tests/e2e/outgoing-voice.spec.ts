@@ -62,7 +62,14 @@ for (const dark of [false, true]) {
                             .getBoundingClientRect();
                         const metadata = bubble.querySelector('[data-qa="message-meta"]')!;
                         const meta = metadata.getBoundingClientRect();
+                        const player = bubble.querySelector('[data-qa="message-audio"]')!;
+                        const playerBounds = player.getBoundingClientRect();
                         return {
+                            fixedResponsiveWidth:
+                                Math.abs(playerBounds.width - Math.min(300, bounds.width)) < 1,
+                            noDuplicatePadding:
+                                getComputedStyle(bubble).paddingLeft === '0px' &&
+                                getComputedStyle(bubble).paddingRight === '0px',
                             durationBaseline:
                                 Math.abs(duration.top + duration.height / 2 - meta.top - meta.height / 2) <=
                                 4,
@@ -76,6 +83,8 @@ for (const dark of [false, true]) {
                     }),
                 )
                 .toEqual({
+                    fixedResponsiveWidth: true,
+                    noDuplicatePadding: true,
                     durationBaseline: true,
                     belowWave: true,
                     noOverlap: true,

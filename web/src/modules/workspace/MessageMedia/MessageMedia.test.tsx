@@ -63,3 +63,12 @@ it('shows an already cached photo even with autoload disabled', () => {
     expect(screen.getByRole('img')).toBeInTheDocument();
     expect(mocks.downloadMedia).not.toHaveBeenCalled();
 });
+
+it('keeps images inline without a photo viewer action or overlay', () => {
+    mount({...message, media: {...message.media!, downloaded: true}});
+    fireEvent.load(screen.getByRole('img'));
+    fireEvent.click(screen.getByRole('img'));
+    expect(screen.queryByRole('button', {name: ru.openPhoto})).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('img')).toHaveAttribute('src', '/api/media/7?v=2');
+});

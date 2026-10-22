@@ -30,7 +30,6 @@
 .engineCard {
     padding: 20px;
     background: var(--tiho-panel);
-    border: 2px solid var(--tiho-line);
     border-radius: 12px;
 }
 
@@ -107,19 +106,14 @@
 
 .card {
     background: var(--tiho-panel);
-    border: 2px solid var(--tiho-line);
     border-radius: 16px;
     padding: 20px;
     flex: 1;
     min-width: 0;
 }
 
-.recommended {
-    border-color: #88bdf1;
-}
-
 .selected {
-    border-color: var(--g-color-text-brand);
+    background: color-mix(in srgb, var(--tiho-panel) 90%, var(--tiho-ink) 10%);
 }
 
 .searchRow {
@@ -128,7 +122,21 @@
 
 .filters {
     display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
     margin-top: 16px;
+}
+
+.filterSkeleton {
+    width: 320px;
+    max-width: 100%;
+}
+
+@media (width <= 600px) {
+    .filterSkeleton {
+        width: 100%;
+    }
 }
 
 .searchInput {
@@ -136,13 +144,13 @@
     min-width: min(260px, 100%);
     max-width: 440px;
     background: var(--tiho-panel);
-    border: 2px solid var(--tiho-line);
+    border: 0;
     border-radius: 12px;
-    transition: border-color var(--tiho-duration);
+    transition: background var(--tiho-duration);
 }
 
 .searchInput:focus-within {
-    border-color: var(--g-color-text-brand);
+    background: var(--g-color-base-generic);
 }
 
 .searchIcon {

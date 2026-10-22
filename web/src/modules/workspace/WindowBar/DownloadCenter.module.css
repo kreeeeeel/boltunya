@@ -1,0 +1,68 @@
+.button {
+    -webkit-app-region: no-drag;
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 28px;
+    max-width: 460px;
+    min-width: 0;
+    padding: 0 10px;
+    overflow: hidden;
+    border: 0;
+    border-radius: 8px;
+    background: var(--g-color-base-generic);
+    color: var(--g-color-text-secondary);
+    cursor: pointer;
+    font: inherit;
+}
+
+.fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: var(--g-color-base-selection);
+    transition: width 200ms ease;
+}
+
+.content,
+.cancel {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.content > :global(svg),
+.percent,
+.speed {
+    flex-shrink: 0;
+}
+
+.title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cancel {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+}
+
+.button:hover .content,
+.button:focus-visible .content {
+    opacity: 0;
+}
+
+.button:hover .cancel,
+.button:focus-visible .cancel {
+    opacity: 1;
+}
+
+@media (width <= 760px) {
+    .speed {
+        display: none;
+    }
+}

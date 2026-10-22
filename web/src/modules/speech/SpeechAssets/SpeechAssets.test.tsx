@@ -127,8 +127,38 @@ it('keeps search and language filters independent per tab without changing the s
     expect(select).not.toHaveBeenCalled();
     view.rerender(surface('runtime'));
     expect(screen.getByText(speechState.assets[0].title, {exact: true})).toBeVisible();
-    expect(screen.getByRole('combobox', {name: ru.voice.languageFilter})).toBeDisabled();
+    expect(screen.queryByRole('combobox', {name: ru.voice.languageFilter})).not.toBeInTheDocument();
     view.rerender(surface('synthesis'));
     expect(screen.getByText('English Voice', {exact: true})).toBeVisible();
     expect(screen.queryByText(speechState.assets[2].title, {exact: true})).not.toBeInTheDocument();
+});
+
+it('filters installed voices without installing or changing the selected voice', () => {
+    const pending = {...speechState.assets[2], id: 'pending-voice', title: 'Pending voice', installed: false};
+    const install = vi.fn();
+    const select = vi.fn();
+    const view = render(
+        <NextIntlClientProvider locale="ru" messages={ru}>
+            <ThemeProvider>
+                <SpeechAssets
+                    state={{assets: [...speechState.assets, pending], downloads: []}}
+                    error=""
+                    busy=""
+                    reload={vi.fn()}
+                    install={install}
+                    cancel={vi.fn()}
+                    kind="synthesis"
+                    selected={{synthesis: 'piper-ru-irina'}}
+                    onSelect={select}
+                />
+            </ThemeProvider>
+        </NextIntlClientProvider>,
+    );
+    expect(view.container.querySelectorAll('[data-qa="speech-asset"]')).toHaveLength(2);
+    fireEvent.click(screen.getByRole('switch', {name: ru.voice.installedOnly}));
+    expect(view.container.querySelectorAll('[data-qa="speech-asset"]')).toHaveLength(1);
+    expect(screen.queryByText('Pending voice')).toBeNull();
+    expect(screen.getByText(speechState.assets[2].title)).toBeVisible();
+    expect(install).not.toHaveBeenCalled();
+    expect(select).not.toHaveBeenCalled();
 });

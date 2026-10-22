@@ -4,6 +4,7 @@ export interface InspectorProps {
     readonly chat: Chat;
     readonly modelLabel?: string;
     readonly customStyles: NonNullable<AppState['settings']['customStyles']>;
+    readonly settings?: AppState['settings'];
     readonly onConfigure: () => void;
     readonly onEnable: (enabled: boolean) => void;
     readonly onClose: () => void;
