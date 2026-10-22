@@ -64,6 +64,7 @@ export const workspaceState: AppState = {
         paused: true,
         defaultModel: 'qwen3:1.7b',
         ollamaDevice: 'auto',
+        voiceConversionDevice: 'cpu',
         rules: {},
         replyDelaySeconds: 3,
         replyIntervalSeconds: 3,

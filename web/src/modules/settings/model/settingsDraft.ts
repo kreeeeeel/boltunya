@@ -13,6 +13,7 @@ export function createSettingsDraft(settings: AppState['settings']) {
         voiceRecognitionModel: settings.voiceRecognitionModel ?? 'whisper-tiny',
         voiceSynthesisModel: settings.voiceSynthesisModel ?? 'piper-ru-irina',
         voiceSpeechRate: settings.voiceSpeechRate ?? 1,
+        voiceConversionDevice: settings.voiceConversionDevice ?? 'cpu',
         ignoreAssistantTasks: settings.ignoreAssistantTasks ?? true,
         memoryEnabled: settings.memoryEnabled ?? true,
         memoryIntervalHours: settings.memoryIntervalHours ?? 6,

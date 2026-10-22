@@ -19,28 +19,37 @@ export function SpeechPreview({
     ready,
     assets,
     ref,
+    configurationKey = '',
+    blockedReason,
 }: {
     readonly modelId: string;
     readonly speed: number;
     readonly ready: boolean;
     readonly assets?: SpeechAsset[];
     readonly ref?: Ref<SpeechPreviewHandle>;
+    readonly configurationKey?: string;
+    readonly blockedReason?: string;
 }) {
     const t = useTranslations('voice');
     const [text, setText] = useState(() => t('previewSample'));
     const preview = useSpeechPreview();
     const input = useRef<HTMLTextAreaElement | null>(null);
-    const [submitted, setSubmitted] = useState({text: '', modelId: '', speed: 0});
+    const [submitted, setSubmitted] = useState({text: '', modelId: '', speed: 0, configurationKey: ''});
     const tooLong = text.length > 4096;
-    const current = text === submitted.text && modelId === submitted.modelId && speed === submitted.speed;
+    const current =
+        !blockedReason &&
+        text === submitted.text &&
+        modelId === submitted.modelId &&
+        speed === submitted.speed &&
+        configurationKey === submitted.configurationKey;
 
     async function check(selected = modelId) {
         const selectedReady = selected === modelId ? ready : speechReady(assets ?? [], selected);
-        if (preview.busy || !selectedReady || !text.trim() || tooLong) {
+        if (preview.busy || blockedReason || !selectedReady || !text.trim() || tooLong) {
             input.current?.focus({preventScroll: true});
             return;
         }
-        setSubmitted({text, modelId: selected, speed});
+        setSubmitted({text, modelId: selected, speed, configurationKey});
         await preview.run({text, modelId: selected, speed});
     }
 
@@ -64,6 +73,11 @@ export function SpeechPreview({
                 controlProps={{'aria-label': t('previewText')}}
             />
             {!ready && <Text color="secondary">{t('modelsRequired')}</Text>}
+            {blockedReason && (
+                <Text role="status" color="secondary">
+                    {blockedReason}
+                </Text>
+            )}
             {tooLong && (
                 <Text color="danger" role="alert">
                     {t('transcriptTooLong')}
@@ -73,7 +87,7 @@ export function SpeechPreview({
                 <Button
                     size="l"
                     view="flat-secondary"
-                    disabled={preview.busy || !ready || !text.trim() || tooLong}
+                    disabled={preview.busy || !!blockedReason || !ready || !text.trim() || tooLong}
                     onClick={() => void check()}
                 >
                     <Icon data={Check} size={20} />

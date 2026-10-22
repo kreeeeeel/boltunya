@@ -1,4 +1,6 @@
 import {initializeTestTheme} from './settings';
+import {speechCompute} from './speechCompute';
+import {computeDevices} from './computeDevices';
 import type {BrowserContext} from '@playwright/test';
 import type {
     Message,
@@ -50,6 +52,7 @@ export function createVoiceDemoState(): State {
             voiceRecognitionModel: 'whisper-tiny',
             voiceSynthesisModel: 'piper-ru-irina',
             voiceSpeechRate: 1,
+            voiceConversionDevice: 'cpu',
         },
         chats: [
             {
@@ -165,6 +168,12 @@ export async function installVoiceMocks(
         const path = new URL(request.url()).pathname;
         if (path === '/api/state') {
             await route.fulfill({json: state});
+        } else if (path === '/api/speech/compute') {
+            await route.fulfill({
+                json: {...speechCompute, selectedDevice: state.settings.voiceConversionDevice ?? 'cpu'},
+            });
+        } else if (path === '/api/engine/devices') {
+            await route.fulfill({json: computeDevices});
         } else if (path === '/api/speech') {
             if (interactive) {
                 speech.downloads.forEach((download) => {

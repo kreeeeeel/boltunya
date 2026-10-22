@@ -87,3 +87,59 @@ it('checks the explicit installed card voice with the current text and speed bef
         speed: 1.4,
     });
 });
+
+it('requires saved device preferences and invalidates old CPU audio after saving CUDA without losing text', async () => {
+    preview.run.mockClear();
+    preview.voice = undefined;
+    vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+    const ref = createRef<SpeechPreviewHandle>();
+    function surface(configurationKey: string, blockedReason?: string) {
+        return (
+            <NextIntlClientProvider locale="ru" messages={ru}>
+                <ThemeProvider>
+                    <SpeechPreview
+                        ref={ref}
+                        modelId="rvc-synthetic"
+                        speed={1}
+                        ready
+                        configurationKey={configurationKey}
+                        blockedReason={blockedReason}
+                    />
+                </ThemeProvider>
+            </NextIntlClientProvider>
+        );
+    }
+    const view = render(surface('cpu'));
+    const input = screen.getByRole('textbox', {name: ru.voice.previewText});
+    fireEvent.change(input, {target: {value: 'Keep this exact preview text 🙂'}});
+    fireEvent.click(screen.getByRole('button', {name: ru.voice.previewCheck}));
+    await waitFor(() => expect(preview.run).toHaveBeenCalledTimes(1));
+    preview.voice = generatedVoice;
+    view.rerender(surface('cpu'));
+    expect(view.container.querySelector('audio')).toHaveAttribute('src', generatedVoice.url);
+    view.rerender(surface('cpu', ru.voice.rvcDevice.saveBeforePreview));
+    expect(screen.getByRole('button', {name: ru.voice.previewCheck})).toBeDisabled();
+    expect(view.container.querySelector('audio')).toBeNull();
+    await act(async () => {
+        ref.current?.check('rvc-synthetic');
+    });
+    expect(preview.run).toHaveBeenCalledTimes(1);
+    view.rerender(surface('cuda'));
+    expect(screen.getByRole('textbox', {name: ru.voice.previewText})).toHaveValue(
+        'Keep this exact preview text 🙂',
+    );
+    expect(view.container.querySelector('audio')).toBeNull();
+    expect(screen.getByRole('button', {name: ru.voice.previewCheck})).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', {name: ru.voice.previewCheck}));
+    await waitFor(() => expect(preview.run).toHaveBeenCalledTimes(2));
+    expect(preview.run).toHaveBeenLastCalledWith({
+        text: 'Keep this exact preview text 🙂',
+        modelId: 'rvc-synthetic',
+        speed: 1,
+    });
+    preview.voice = {...generatedVoice, id: 'gpu-preview', url: '/api/speech/audio/gpu-preview'};
+    view.rerender(surface('cuda'));
+    expect(view.container.querySelector('audio')).toHaveAttribute('src', '/api/speech/audio/gpu-preview');
+    preview.voice = undefined;
+    vi.restoreAllMocks();
+});

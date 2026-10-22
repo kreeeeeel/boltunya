@@ -555,7 +555,7 @@
         }
     },
     "computeDevice": {
-        "title": "AI compute device",
+        "title": "Ollama device",
         "label": "Ollama device",
         "auto": "Automatic",
         "cpu": "CPU only",
@@ -646,7 +646,7 @@
             "styles": "Named styles with your own instructions.",
             "providers": "Local Ollama models and compatible APIs in one place.",
             "routing": "Use different models for replies, memory and images.",
-            "compute": "Choose the device for app-managed Ollama.",
+            "compute": "Separate device settings for app-managed Ollama and Applio/RVC voice conversion.",
             "memory": "Facts, preferences and relationships. Writing style is controlled by the selected style and a separate matching option.",
             "collection": "Update memory from new messages or collect conversation history.",
             "language": "Choose your interface language.",
@@ -807,6 +807,25 @@
         "updating": "Updating status…"
     },
     "voice": {
+        "rvcDevice": {
+            "title": "RVC device",
+            "label": "Voice conversion device",
+            "cpu": "Processor (CPU)",
+            "cuda": "Graphics card (NVIDIA CUDA)",
+            "refresh": "Check CUDA again",
+            "hint": "Applies only to Applio/RVC voices. Ollama, Piper and speech recognition are unchanged.",
+            "saved": "Saved: {device}",
+            "available": "CUDA available",
+            "memory": "{value} GiB VRAM",
+            "strict": "If CUDA is unavailable, synthesis fails. It does not fall back to CPU automatically.",
+            "loadFailed": "Could not check CUDA. Try again.",
+            "saveBeforePreview": "Save the device, then test the voice.",
+            "reasons": {
+                "not-installed": "Install the Applio/RVC engine from Speech models to check CUDA.",
+                "cuda-unavailable": "CUDA is unavailable in the installed engine. CPU remains available.",
+                "probe-failed": "Could not check the installed engine. Refresh its status."
+            }
+        },
         "recognitionEnabled": "Recognize voice messages",
         "recognitionHint": "Transcribes voice messages in conversation history for AI, regardless of the sender. Off by default; processed locally.",
         "replyMode": "Automatic reply format",

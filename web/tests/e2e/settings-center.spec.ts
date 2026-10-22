@@ -5,6 +5,7 @@ import {chooseSettingsSection} from '../fixtures/settings';
 import {expectSettingsSlider, persistTestTheme} from '../fixtures/settings';
 import {syntheticPromptBudget} from '../fixtures/promptBudget';
 import {computeDevices} from '../fixtures/computeDevices';
+import {speechCompute} from '../fixtures/speechCompute';
 import type * as Contract from '@aigram/api-client';
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
@@ -69,6 +70,8 @@ test.beforeEach(async ({page}) => {
             await route.fulfill({json: state});
         } else if (path === '/api/engine/devices') {
             await route.fulfill({json: computeDevices});
+        } else if (path === '/api/speech/compute') {
+            await route.fulfill({json: speechCompute});
         } else if (path === '/api/prompts/budget') {
             await route.fulfill({json: syntheticPromptBudget(request.postDataJSON())});
         } else if (path === '/api/model-prompts') {

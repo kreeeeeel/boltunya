@@ -6,15 +6,18 @@ import {useSpeechState} from '@/modules/speech/model/useSpeechState';
 import {speechReady} from '@/modules/speech/model/speechReady';
 import {SpeechPreview} from '@/modules/speech/SpeechPreview/SpeechPreview';
 import {SettingsSlider} from '@/shared/ui/SettingsSlider';
+import type {SpeechComputeDevice} from '@aigram/api-client';
 
 export function VoiceSettings({
     value,
     onUpdate,
     onOpenLibrary,
     libraryDisabled = false,
+    savedDevice,
 }: SettingsDraftSectionProps & {
     readonly onOpenLibrary?: () => void;
     readonly libraryDisabled?: boolean;
+    readonly savedDevice: SpeechComputeDevice;
 }) {
     const t = useTranslations('voice');
     const speech = useSpeechState();
@@ -96,6 +99,10 @@ export function VoiceSettings({
                 speed={value.voiceSpeechRate}
                 ready={speechReady(assets, value.voiceSynthesisModel)}
                 assets={assets}
+                configurationKey={savedDevice}
+                blockedReason={
+                    value.voiceConversionDevice !== savedDevice ? t('rvcDevice.saveBeforePreview') : undefined
+                }
             />
         </Flex>
     );

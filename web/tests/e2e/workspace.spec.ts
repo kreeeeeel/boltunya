@@ -13,6 +13,7 @@ import {testHistory} from '../fixtures/chats';
 import {testActivity} from '../fixtures/activity';
 import type {Message} from '@/shared/api/client';
 import {computeDevices} from '../fixtures/computeDevices';
+import {speechCompute} from '../fixtures/speechCompute';
 import {historyPage} from '../fixtures/activityHistory';
 import {syntheticPromptBudget} from '../fixtures/promptBudget';
 import ru from '../../src/shared/i18n/ru.json';
@@ -47,6 +48,8 @@ test.beforeEach(async ({page}) => {
             await route.fulfill({json: state});
         } else if (path === '/api/storage/locations') {
             await route.fulfill({json: {locations: []}});
+        } else if (path === '/api/speech/compute') {
+            await route.fulfill({json: speechCompute});
         } else if (path === '/api/engine/devices') {
             await route.fulfill({
                 json: {

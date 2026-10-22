@@ -45,3 +45,13 @@ it('keeps voice recognition opt-in and preserves every explicit speech preferenc
     };
     expect(createSettingsDraft({...workspaceState.settings, ...preferences})).toMatchObject(preferences);
 });
+
+it('keeps existing voice conversion on CPU and preserves explicit CUDA without altering other preferences', () => {
+    const legacy = {...workspaceState.settings};
+    delete legacy.voiceConversionDevice;
+    expect(createSettingsDraft(legacy).voiceConversionDevice).toBe('cpu');
+    const draft = createSettingsDraft({...legacy, voiceConversionDevice: 'cuda'});
+    expect(draft.voiceConversionDevice).toBe('cuda');
+    expect(draft.voiceSpeechRate).toBe(1);
+    expect(draft.ollamaDevice).toBe(workspaceState.settings.ollamaDevice);
+});

@@ -26,6 +26,7 @@ import {ModelRoutingSettings} from '@/modules/settings/ModelRoutingSettings/Mode
 import {CachePanel} from '@/modules/workspace/CachePanel/CachePanel';
 import {StorageLocations} from '@/modules/storage/StorageLocations/StorageLocations';
 import {ComputeDevicePanel} from '@/modules/workspace/ComputeDevicePanel/ComputeDevicePanel';
+import {RvcDevicePanel} from '@/modules/settings/RvcDevicePanel/RvcDevicePanel';
 import styles from '@/modules/settings/SettingsCenter/SettingsCenter.module.css';
 export function SettingsCenter({
     settings,
@@ -153,6 +154,7 @@ export function SettingsCenter({
                 {id === 'voice' && (
                     <VoiceSettings
                         {...common}
+                        savedDevice={settings.voiceConversionDevice ?? 'cpu'}
                         onOpenLibrary={onOpenSpeechLibrary}
                         libraryDisabled={dirty || busy}
                     />
@@ -182,11 +184,19 @@ export function SettingsCenter({
                     />
                 )}
                 {id === 'compute' && (
-                    <ComputeDevicePanel
-                        value={value.ollamaDevice}
-                        savedValue={settings.ollamaDevice ?? 'auto'}
-                        onUpdate={(ollamaDevice) => setValue({...value, ollamaDevice})}
-                    />
+                    <>
+                        <ComputeDevicePanel
+                            value={value.ollamaDevice}
+                            savedValue={settings.ollamaDevice ?? 'auto'}
+                            onUpdate={(ollamaDevice) => setValue({...value, ollamaDevice})}
+                        />
+                        <RvcDevicePanel
+                            active={section === 'compute'}
+                            value={value.voiceConversionDevice}
+                            savedValue={settings.voiceConversionDevice ?? 'cpu'}
+                            onUpdate={(voiceConversionDevice) => setValue({...value, voiceConversionDevice})}
+                        />
+                    </>
                 )}
                 {id === 'media' && <MediaSettings {...common} />}
                 {id === 'collection' && (

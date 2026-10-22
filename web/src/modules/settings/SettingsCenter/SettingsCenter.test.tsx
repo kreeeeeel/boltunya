@@ -1,17 +1,20 @@
 import {ThemeProvider} from '@gravity-ui/uikit';
 import {NextIntlClientProvider} from 'next-intl';
 import {fireEvent, render, screen, waitFor, within} from '@testing-library/react';
-import {expect, it, vi} from 'vitest';
+import {beforeEach, expect, it, vi} from 'vitest';
 import {useState} from 'react';
 import {SettingsCenter} from '@/modules/settings/SettingsCenter/SettingsCenter';
 import {workspaceState} from '@tests/fixtures/workspace';
 import ru from '@/shared/i18n/ru.json';
 import {speechState} from '@tests/fixtures/speech';
+import {speechCompute} from '@tests/fixtures/speechCompute';
+import {computeDevices} from '@tests/fixtures/computeDevices';
 const mocks = vi.hoisted(() => ({
     settings: vi.fn(),
     updateChatMemory: vi.fn(),
     updateGlobalMemory: vi.fn(),
     speechState: vi.fn(),
+    getSpeechComputeStatus: vi.fn(),
 }));
 vi.mock('@/shared/api/client', async (original) => ({
     ...(await original<typeof import('@/shared/api/client')>()),
@@ -19,7 +22,8 @@ vi.mock('@/shared/api/client', async (original) => ({
         settings: {
             settings: mocks.settings,
         },
-        speech: {speechState: mocks.speechState},
+        speech: {speechState: mocks.speechState, getSpeechComputeStatus: mocks.getSpeechComputeStatus},
+        models: {engineDevices: async () => computeDevices},
         memory: {
             updateChatMemory: mocks.updateChatMemory,
             updateGlobalMemory: mocks.updateGlobalMemory,
@@ -27,6 +31,62 @@ vi.mock('@/shared/api/client', async (original) => ({
     },
 }));
 vi.mock('@/modules/settings/ModelPromptEditor/ModelPromptEditor', () => ({ModelPromptEditor: () => null}));
+beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getSpeechComputeStatus.mockReset().mockResolvedValue(speechCompute);
+});
+
+it('saves CUDA only through the shared footer and keeps the dialog and preview text after persistence', async () => {
+    const persisted = {...workspaceState.settings, voiceConversionDevice: 'cpu' as const};
+    mocks.speechState.mockResolvedValue(speechState);
+    mocks.settings.mockReset().mockImplementation(async ({settingsUpdate}) => {
+        Object.assign(persisted, settingsUpdate);
+        return persisted;
+    });
+    function Example() {
+        const [settings, setSettings] = useState<typeof workspaceState.settings>(persisted);
+        return (
+            <NextIntlClientProvider locale="ru" messages={ru}>
+                <ThemeProvider>
+                    <SettingsCenter
+                        settings={settings}
+                        initialSection="voice"
+                        onClose={vi.fn()}
+                        onRefresh={async () => setSettings({...persisted})}
+                    />
+                </ThemeProvider>
+            </NextIntlClientProvider>
+        );
+    }
+    const view = render(<Example />);
+    const text = screen.getByRole('textbox', {name: ru.voice.previewText});
+    fireEvent.change(text, {target: {value: 'Preview text survives saving'}});
+    expect(mocks.getSpeechComputeStatus).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('menuitem', {name: ru.settingsCenter.sections.compute}));
+    await screen.findByText(ru.voice.rvcDevice.available);
+    fireEvent.click(screen.getByRole('combobox', {name: ru.voice.rvcDevice.label}));
+    fireEvent.click(await screen.findByRole('option', {name: ru.voice.rvcDevice.cuda}));
+    expect(mocks.settings).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('menuitem', {name: ru.settingsCenter.sections.voice}));
+    expect(screen.getByRole('button', {name: ru.voice.previewCheck})).toBeDisabled();
+    expect(screen.getByText(ru.voice.rvcDevice.saveBeforePreview)).toBeVisible();
+    fireEvent.click(screen.getByRole('button', {name: ru.save}));
+    await waitFor(() => expect(mocks.settings).toHaveBeenCalledTimes(1));
+    expect(mocks.settings.mock.calls[0][0].settingsUpdate.voiceConversionDevice).toBe('cuda');
+    await waitFor(() => expect(screen.getByRole('button', {name: ru.voice.previewCheck})).toBeEnabled());
+    expect(screen.getByRole('textbox', {name: ru.voice.previewText})).toHaveValue(
+        'Preview text survives saving',
+    );
+    expect(screen.getByRole('dialog', {name: ru.settings})).toBeVisible();
+    expect(mocks.getSpeechComputeStatus).toHaveBeenCalledTimes(1);
+    expect(persisted.paused).toBe(true);
+    view.unmount();
+    render(<Example />);
+    fireEvent.click(screen.getByRole('menuitem', {name: ru.settingsCenter.sections.compute}));
+    expect(await screen.findByRole('combobox', {name: ru.voice.rvcDevice.label})).toHaveTextContent(
+        ru.voice.rvcDevice.cuda,
+    );
+});
 it('preserves section drafts and success feedback when refreshed settings arrive', async () => {
     const onClose = vi.fn();
     mocks.settings.mockResolvedValue({ok: true});
