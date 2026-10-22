@@ -2,6 +2,20 @@
 
 Release versions are assigned by Windows CI. Each GitHub release includes the first dated entry below, the tested source commit and its verification run.
 
+## 2026-10-22 — Responsive queue controls during archive reads
+
+### Fixed
+
+- Read archived event details without retaining the queue gate or live activity-log monitor. Pause, cancellation and adding a live draft can proceed while archive access waits; the archive keeps its own synchronization and existing 32 MiB trace limit.
+- Capture one Telegram owner across the details lookup and reject a changed account before returning or enriching the result. An old account's event can no longer be combined with another account's current avatar in the reproduced race.
+- Refresh queue position, priority, wait time and feedback after loading, keeping the live-trace path, API and archive formats unchanged.
+
+### Verification and limitations
+
+- Opened the changed portable before project checks; Telegram authorization, credentials, settings, installed voices and manual notes were preserved with AI paused. All nine new concurrency/account/error regressions passed. Final local gates passed 649 Kotlin cases (18 optional/platform skips), 12 SDK, 346 UI, 40 Electron, the icon script and all 143 browser scenarios. Lint/styles/types/format, native window/tray/startup and four updater smokes passed. Event details, both themes, English/Russian and a narrow window were reviewed; incidental generated images were restored. No runtime correction or rebuild was needed after opening. Exact downloaded-payload verification follows successful Windows CI in the release notes.
+- Sequential old/new packaged-JAR measurements after local checks used identical synthetic 456-byte and 32,506,056-byte traces, dependencies, fake gateway and warmups. A separately injected 250 ms archive-monitor wait blocked pause/cancel/add-live for median 253/318 ms with the small/large trace; each new-package control median was below 0.6 ms and all six rounds completed controls before archive release. Expected queue outcomes and zero inference/sends were preserved; the synthetic account switch now raises the existing not-found exception. Large-trace read medians were 54.969 / 51.652 ms; the patch does not accelerate JSON parsing. Raw earlier and paired results, JAR/class provenance and source evidence are retained locally under `build/performance-queue`. This isolates lock coupling, not whole-application CPU, general latency percentiles or production incidence. Live response/status remains a snapshot at its read point; queue metadata is refreshed afterwards.
+- Rating writes and clearing completed history retain their existing storage boundaries. A separate React audit confirmed hidden memory polling and stale post-mutation display responses; its implementation remains the next bounded candidate. No dependencies, storage migration, model download or inference behavior change is included.
+
 ## 2026-10-22 — Shared model connections and fresh action results
 
 ### Fixed
